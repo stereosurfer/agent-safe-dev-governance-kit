@@ -1,0 +1,48 @@
+# Python / tooling caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Secrets and credentials
+.env
+.env.*
+!.env.example
+secrets/
+credentials/
+private_keys/
+*.pem
+*.key
+
+# Node / frontend caches
+node_modules/
+dist/
+build/
+
+# Runtime artifacts and private material
+runs/
+corpus/
+artifacts/
+ArtifactRoot/
+LocalStateRoot/
+*.sqlite
+*.sqlite3
+*.db
+
+# Local OS/editor files
+.DS_Store
+.idea/
+.vscode/
+
+# Logs and temporary files
+*.log
+*.tmp
+/tmp/
