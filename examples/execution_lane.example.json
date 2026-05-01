@@ -1,0 +1,8 @@
+{
+  "lane": "api_provider",
+  "live_external_call": true,
+  "provider": "openai",
+  "model": "configured-per-task",
+  "allow_flag_required": true,
+  "audit_required": true
+}

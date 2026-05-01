@@ -1,0 +1,23 @@
+task_id: "lane_03_backend"
+lane: "lane_03_backend"
+intelligence_level: "advanced"
+intelligence_level_reason: "Default level for this lane."
+durable_source_of_truth: "agent/task_packets/lane_03_backend.yaml"
+objective: "Implement bounded backend/runtime work."
+allowed_paths:
+  - "src/, backend/, tests/"
+expected_output: "A bounded PR or agent report for this lane."
+plan:
+  - "Inspect required files."
+  - "Make only scoped changes."
+checklist:
+  - "[ ] Scope confirmed."
+  - "[ ] Allowed paths checked."
+acceptance_sheet:
+  - "[ ] Output matches objective."
+  - "[ ] Validation run or not-run reason recorded."
+stop_conditions:
+  - "protected_path_change_required"
+  - "new_dependency_required"
+  - "conflicting_instructions"
+rollback_expectations: "Revert only lane-scoped changes or open follow-up issue."

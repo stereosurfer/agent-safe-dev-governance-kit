@@ -1,0 +1,16 @@
+{
+  "code_repo": ".",
+  "artifact_root": "/Users/example/Documents/ProjectArtifacts",
+  "local_state_root": "/Users/example/Library/Application Support/ProjectName",
+  "storage_mode": "local_workspace",
+  "sync_policy": {
+    "google_drive_sync_folder": false,
+    "app_managed_drive_api": false
+  },
+  "cache_policy": {
+    "page_renders": "local_only",
+    "model_cache": "local_only",
+    "sqlite_live_db": "local_only",
+    "temporary_jobs": "local_only"
+  }
+}

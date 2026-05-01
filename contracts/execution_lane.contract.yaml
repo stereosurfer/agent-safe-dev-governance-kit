@@ -1,0 +1,15 @@
+name: execution_lane
+version: 0.1.0
+required_fields:
+  - lane
+  - live_external_call
+  - provider
+  - model
+  - allow_flag_required
+  - audit_required
+lanes:
+  - deterministic
+  - codex_operated
+  - api_provider
+  - cloud_service
+  - future_only

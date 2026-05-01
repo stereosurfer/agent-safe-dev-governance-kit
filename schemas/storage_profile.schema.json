@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["code_repo", "artifact_root", "local_state_root", "storage_mode", "sync_policy", "cache_policy"],
+  "properties": {
+    "storage_mode": {"enum": ["local_workspace", "google_drive_sync_folder"]},
+    "artifact_root": {"type": "string"},
+    "local_state_root": {"type": "string"}
+  }
+}

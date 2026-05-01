@@ -1,0 +1,54 @@
+name: Agent task
+about: Bounded AI-agent work unit
+body:
+  - type: textarea
+    id: objective
+    attributes:
+      label: objective
+      description: One concrete result.
+  - type: textarea
+    id: durable_source_of_truth
+    attributes:
+      label: durable_source_of_truth
+      description: GitHub issue, PR, or repo document. Do not write see chat.
+  - type: input
+    id: lane
+    attributes:
+      label: lane
+  - type: dropdown
+    id: intelligence_level
+    attributes:
+      label: intelligence_level
+      options:
+        - fast_basic
+        - standard
+        - advanced
+        - frontier
+  - type: textarea
+    id: allowed_paths
+    attributes:
+      label: allowed_paths
+  - type: textarea
+    id: expected_output
+    attributes:
+      label: expected_output
+  - type: textarea
+    id: plan
+    attributes:
+      label: plan
+  - type: textarea
+    id: checklist
+    attributes:
+      label: checklist
+  - type: textarea
+    id: acceptance_sheet
+    attributes:
+      label: acceptance_sheet
+  - type: textarea
+    id: stop_conditions
+    attributes:
+      label: stop_conditions
+  - type: textarea
+    id: rollback_expectations
+    attributes:
+      label: rollback_expectations

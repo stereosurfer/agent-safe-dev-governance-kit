@@ -1,0 +1,10 @@
+name: artifact_contract
+version: 0.1.0
+required_fields:
+  - artifact_id
+  - artifact_type
+  - schema_version
+  - created_at
+  - provenance
+  - validation_status
+promotion_required: true

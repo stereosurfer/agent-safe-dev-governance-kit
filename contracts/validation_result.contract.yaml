@@ -1,0 +1,11 @@
+name: validation_result
+version: 0.1.0
+required_fields:
+  - status
+  - checked_at
+  - checks
+  - failures
+status_values:
+  - pass
+  - fail
+  - blocked

@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["status", "checked_at", "checks", "failures"],
+  "properties": {
+    "status": {"enum": ["pass", "fail", "blocked"]},
+    "checked_at": {"type": "string"},
+    "checks": {"type": "array"},
+    "failures": {"type": "array"}
+  }
+}

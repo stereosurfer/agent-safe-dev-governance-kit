@@ -1,0 +1,11 @@
+{
+  "artifact_id": "artifact-001",
+  "source_or_input_class": "community",
+  "claim_or_use_type": "usage_context",
+  "context_signals": 3,
+  "allowed_downstream_uses": ["reader_context", "audit_appendix"],
+  "blocked_downstream_uses": ["hard_technical_claim"],
+  "validation_status": "pass",
+  "promotion_status": "promoted",
+  "reason": "Community source can support usage context only."
+}

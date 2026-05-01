@@ -1,0 +1,8 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["issue", "lane", "intelligence_level", "durable_source_of_truth", "checks_passed", "allowed_paths_checked", "expected_output_checked", "storage_boundary", "runtime_artifact_boundary", "safety_review", "result", "reason"],
+  "properties": {
+    "result": {"enum": ["merge_allowed", "merge_blocked"]}
+  }
+}

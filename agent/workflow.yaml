@@ -1,0 +1,18 @@
+version: 0.1.0
+workflow:
+  - state: idea
+  - state: task_packet_ready
+  - state: agent_working
+  - state: pr_open
+  - state: needs_review
+  - state: accepted
+  - state: merged
+required_gates:
+  - issue_hygiene_gate
+  - architect_routing_decision
+  - task_packet_validation
+  - acceptance_sheet
+  - storage_boundary_check
+  - promotion_gate_when_artifacts_change
+  - readiness_audit_when_outputs_or_external_calls_change
+  - merge_decision_record

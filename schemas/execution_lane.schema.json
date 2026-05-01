@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["lane", "live_external_call", "provider", "model", "allow_flag_required", "audit_required"],
+  "properties": {
+    "lane": {"enum": ["deterministic", "codex_operated", "api_provider", "cloud_service", "future_only"]},
+    "live_external_call": {"type": "boolean"},
+    "provider": {"type": ["string", "null"]},
+    "model": {"type": ["string", "null"]},
+    "allow_flag_required": {"type": "boolean"},
+    "audit_required": {"type": "boolean"}
+  }
+}

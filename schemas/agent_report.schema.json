@@ -1,0 +1,5 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["task_id", "durable_source_of_truth", "summary", "validation_result", "acceptance_status"]
+}

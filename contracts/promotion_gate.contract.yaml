@@ -1,0 +1,15 @@
+name: promotion_gate
+version: 0.1.0
+required_fields:
+  - artifact_id
+  - source_or_input_class
+  - claim_or_use_type
+  - promotion_status
+  - reason
+blocked_statuses:
+  - blocked_thin_context
+  - blocked_route_audit_only
+  - blocked_class_use_mismatch
+  - blocked_variant_scope_missing
+  - blocked_unvalidated_input
+  - blocked_human_gate_required

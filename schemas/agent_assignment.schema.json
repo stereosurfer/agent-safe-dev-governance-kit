@@ -1,0 +1,9 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["lane", "intelligence_level", "reason", "allowed_paths", "expected_output", "durable_source_of_truth", "plan", "checklist", "acceptance_sheet"],
+  "properties": {
+    "lane": {"type": "string"},
+    "intelligence_level": {"type": "string"}
+  }
+}

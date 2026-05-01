@@ -1,0 +1,8 @@
+name: storage_profile
+version: 0.1.0
+rules:
+  - artifact_root and local_state_root must be separate paths
+  - local_state_root must not be a cloud sync folder
+  - google_drive_sync_folder is filesystem sync only
+  - app_managed_drive_api must be false unless a future human gate opens it
+  - page_renders, model_cache, sqlite_live_db, and temporary_jobs are local_only

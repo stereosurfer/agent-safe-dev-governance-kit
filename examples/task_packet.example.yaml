@@ -1,0 +1,33 @@
+task_id: "TASK-001"
+lane: "lane_00_controller"
+intelligence_level: "frontier"
+intelligence_level_reason: "Governance scaffold update requires architecture judgment."
+durable_source_of_truth: "docs/control/CONTROL_LAYER_V0.md"
+objective: "Add a missing governance rule."
+product_context: "Prevents AI over-simplification."
+current_repository_context: "Bootstrap docs exist."
+files_to_inspect_first:
+  - "AGENTS.md"
+  - "docs/control/CONTROL_LAYER_V0.md"
+allowed_paths:
+  - "docs/control/"
+expected_changes:
+  - "Update one control doc."
+expected_output: "Control doc contains the new rule."
+non_goals:
+  - "No runtime code changes."
+constraints:
+  - "No protected paths."
+plan:
+  - "Read control doc."
+  - "Patch rule."
+checklist:
+  - "[ ] Rule added."
+  - "[ ] Validation run."
+acceptance_sheet:
+  - "[ ] Required term appears."
+validation_commands:
+  - "python3 scripts/validate_bootstrap.py"
+stop_conditions:
+  - "protected_path_change_required"
+rollback_expectations: "Revert the doc patch only."

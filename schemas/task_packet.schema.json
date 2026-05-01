@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "task_id",
+    "lane",
+    "intelligence_level",
+    "durable_source_of_truth",
+    "objective",
+    "allowed_paths",
+    "expected_output",
+    "plan",
+    "checklist",
+    "acceptance_sheet",
+    "stop_conditions",
+    "rollback_expectations"
+  ],
+  "properties": {
+    "task_id": {"type": "string"},
+    "intelligence_level": {"enum": ["fast_basic", "standard", "advanced", "frontier"]},
+    "durable_source_of_truth": {"type": "string"},
+    "allowed_paths": {"type": "array", "items": {"type": "string"}}
+  }
+}

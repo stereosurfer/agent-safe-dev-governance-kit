@@ -1,0 +1,30 @@
+task_id: "TASK-000"
+lane: "lane_00_controller"
+intelligence_level: "frontier"
+intelligence_level_reason: "Architecture or governance work requires policy judgment."
+durable_source_of_truth: "GitHub issue or repo document URL/path"
+objective: "One concrete result."
+product_context: "Why this matters."
+current_repository_context: "Known files/state."
+files_to_inspect_first:
+  - "AGENTS.md"
+allowed_paths:
+  - "docs/"
+expected_changes:
+  - "Specific bounded change."
+expected_output: "Observable output."
+non_goals:
+  - "Do not expand scope."
+constraints:
+  - "No protected paths."
+plan:
+  - "Step 1"
+checklist:
+  - "[ ] Check item"
+acceptance_sheet:
+  - "[ ] Acceptance condition"
+validation_commands:
+  - "python3 scripts/validate_bootstrap.py"
+stop_conditions:
+  - "protected_path_change_required"
+rollback_expectations: "Revert only this task's changes or open follow-up issue."
