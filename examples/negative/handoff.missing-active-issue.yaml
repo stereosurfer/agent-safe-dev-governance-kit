@@ -1,0 +1,32 @@
+negative_case:
+  id: NEG-032-handoff-missing-active-issue
+  title: Handoff packet missing active_issue
+  expected_outcome: blocked
+  owner: asgk_handoff_check
+  should_block_positive_validation: false
+
+handoff_packet:
+  active_pr: "#000"
+  branch: "codex/example"
+  objective: "Bad example missing active_issue."
+  current_state: "Bad example."
+  completed:
+    - "Created bad fixture."
+  remaining:
+    - "Should be blocked."
+  allowed_paths:
+    - "docs/"
+  modified_files:
+    - "docs/example.md"
+  validation_status:
+    status: "not_run"
+    reason: "negative fixture"
+  blockers: "none"
+  next_safe_action: "Block this handoff packet."
+  must_read:
+    - "AGENTS.md"
+  must_not_do:
+    - "Do not proceed."
+  decisions:
+    - "This is a negative fixture."
+  open_questions: "none"
