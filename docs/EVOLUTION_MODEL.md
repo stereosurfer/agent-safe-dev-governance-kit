@@ -7,6 +7,14 @@ validation, runtime control, and productized governance. It also records the
 current maturity of PR auto-validation, framework self-consistency validation,
 and negative defense testing.
 
+## Snapshot Boundary
+
+This document is a governance model with bounded maturity snapshots. Update the
+model when the governance theory changes. Update maturity snapshots only through
+bounded readiness, audit, or stabilization work. Do not append chronological
+progress logs here; detailed history belongs in GitHub issues, PRs, comments,
+and merge commits.
+
 ## Core Thesis
 
 ```text
