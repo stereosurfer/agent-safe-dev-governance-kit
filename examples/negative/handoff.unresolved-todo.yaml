@@ -1,0 +1,33 @@
+negative_case:
+  id: NEG-038-handoff-unresolved-todo
+  title: Handoff packet still contains TODO markers when final check is requested
+  expected_outcome: blocked
+  owner: asgk_handoff_check
+  should_block_positive_validation: false
+
+handoff_packet:
+  active_issue: "#000"
+  active_pr: "#000"
+  branch: "codex/example"
+  objective: "Bad example with unresolved TODO."
+  current_state: "AI_TODO: summarize current state."
+  completed:
+    - "Created bad fixture."
+  remaining:
+    - "Should be blocked when --fail-on-todo is set."
+  allowed_paths:
+    - "docs/"
+  modified_files:
+    - "docs/example.md"
+  validation_status:
+    status: "not_run"
+    reason: "negative fixture"
+  blockers: "none"
+  next_safe_action: "Block this handoff packet when --fail-on-todo is set."
+  must_read:
+    - "AGENTS.md"
+  must_not_do:
+    - "Do not proceed."
+  decisions:
+    - "This is a negative fixture."
+  open_questions: "none"
