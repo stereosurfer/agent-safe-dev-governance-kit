@@ -100,6 +100,32 @@ forbidden_content:
 
 Use GitHub issues, PRs, and comments for history.
 
+## Work-unit Refresh Rule
+
+Every completed work unit must make a status-refresh decision before closeout.
+Do not blindly update `CURRENT_STATUS.md` for every PR, but do not leave it stale
+when repo-level recovery state has changed.
+
+```yaml
+status_refresh_decision:
+  update_required_when:
+    - active work, phase, milestone, or next safe action changes
+    - release, readiness, or stabilization status changes
+    - completed work exposes a new blocker, gate, or required sequence change
+    - several small PRs together change the repo-level recovery state
+    - a new session would make the wrong next move from current status alone
+  update_not_required_when:
+    - PR detail is fully represented by the issue or PR and repo-level next action is unchanged
+    - the change is map-only, wording-only, or fixture-only with no recovery impact
+    - updating current status would only duplicate durable GitHub history
+  required_evidence:
+    - PR Merge Decision Record states whether current status was updated or why not
+    - issue result comment records closeout evidence
+```
+
+If status refresh is required but cannot be made accurate inside the same PR,
+open a separate bounded status-refresh issue immediately after closeout.
+
 ## In-flight PR Boundary
 
 In-flight PR detail belongs in the PR body, PR comments, or a work-unit handoff
@@ -127,8 +153,9 @@ After a work unit completes:
 
 1. Update result evidence in the issue or PR comment.
 2. Close or merge the durable GitHub object when appropriate.
-3. Replace the active work section in `CURRENT_STATUS.md`.
-4. Do not append a completed-work history section unless it is a short link-only reference.
+3. Decide whether `CURRENT_STATUS.md` requires a repo-level refresh under the work-unit refresh rule.
+4. If refresh is required, replace the active work, snapshot, last-completed reference, and next safe action sections.
+5. Do not append a completed-work history section unless it is a short link-only reference.
 
 Recommended replacement pattern:
 
@@ -210,7 +237,7 @@ stale_when:
   - active_pr points to the PR that just merged this status file
   - next_safe_action points to completed work
   - next_safe_action points to pre-merge validation for an already merged PR
-  - last_updated is older than the last merged governance PR that changed work state
+  - last_updated is older than the last merged governance PR that changed repo-level recovery state
   - runtime-specific profile work appears as active in v1.x without a v2.0 issue
 ```
 
