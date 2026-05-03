@@ -26,6 +26,34 @@ Runtime-specific adapters may optimize how a tool consumes this packet in v2.0,
 but they must not bypass the fields, stop conditions, validation, or merge gates
 specified here.
 
+## Recommended Flow
+
+Use this sequence:
+
+```text
+handoff-template
+  -> AI fills judgment-heavy fields
+  -> handoff-check
+  -> human or next agent reads packet
+```
+
+The template command creates a safe draft. It does not claim final judgment and
+it does not write files automatically.
+
+```bash
+python3 scripts/asgk.py handoff-template \
+  --issue "#40 [TOOLS] Add handoff-template command" \
+  --pr "none; PR not opened yet" \
+  --branch "codex/add-handoff-template" \
+  --objective "Add an AI-fillable handoff packet template command."
+```
+
+After AI or a human fills the TODO fields, validate the result:
+
+```bash
+python3 scripts/asgk.py handoff-check --file handoff.yaml
+```
+
 ## Required Handoff Packet
 
 ```yaml
@@ -183,6 +211,23 @@ related_docs:
 
 `CURRENT_STATUS.md` is the repo-level handoff surface. A handoff packet is the
 work-unit-level recovery object.
+
+## Automation Boundary
+
+`handoff-template` may create a draft. It must not:
+
+- invent final decisions;
+- claim validation passed without evidence;
+- replace human judgment;
+- automatically write repository files;
+- call GitHub or external APIs;
+- fill runtime-specific adapter behavior.
+
+The first stable pattern is:
+
+```text
+Generate draft -> AI fills TODOs -> run handoff-check -> human/reviewer accepts.
+```
 
 ## Future Automation
 
