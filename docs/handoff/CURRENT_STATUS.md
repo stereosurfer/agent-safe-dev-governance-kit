@@ -2,7 +2,7 @@
 
 This is the canonical current-status surface for the repository.
 
-Last updated: `<UTC_TIMESTAMP>`
+Last updated: `2026-05-03T02:13:00Z`
 
 ## Durable source of truth
 
@@ -13,19 +13,36 @@ Last updated: `<UTC_TIMESTAMP>`
 ## Current snapshot
 
 ```text
-<current project state>
+Bootstrap Kit v2.1 has been imported into this repository and GitHub Actions bootstrap validation is active.
+The repository is running its first self-governance smoke test through issue #1.
+The smoke test intentionally changes only this handoff document to verify issue -> branch -> PR -> validation -> merge-decision flow.
 ```
 
 ## Active PRs
 
 ```text
-<PR number/title or none>
+Pending: self-governance smoke test PR for issue #1.
 ```
 
 ## Active milestone
 
 ```text
-<milestone or none>
+Phase 0 repository self-governance validation.
+```
+
+## Active work unit
+
+```yaml
+issue: "#1 [PHASE 0] Harden repository self-governance smoke test"
+lane: "lane_07_docs_handoff"
+intelligence_level: "standard"
+durable_source_of_truth: "GitHub issue #1"
+allowed_paths:
+  - "docs/handoff/CURRENT_STATUS.md"
+expected_output:
+  - "one docs-only PR"
+  - "Bootstrap validation passing"
+  - "Merge Decision Record included in PR"
 ```
 
 ## Closed gates
@@ -37,8 +54,14 @@ Last updated: `<UTC_TIMESTAMP>`
 - new dependencies
 - publication/release
 
+## Runtime artifact status
+
+```text
+No runtime artifacts, private source material, SQLite live DB, cache files, model cache, or external preparation outputs are authorized for this work unit.
+```
+
 ## Next safe work
 
 ```text
-<one next executable issue or task packet>
+Complete issue #1 by opening the docs-only PR, verifying Actions, recording the Merge Decision Record, and merging only if low-risk gates pass.
 ```
