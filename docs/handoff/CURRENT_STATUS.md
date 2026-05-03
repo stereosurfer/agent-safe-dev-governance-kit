@@ -4,7 +4,7 @@ This is the compact current-status surface for the repository. It is overwritten
 not appended. Historical detail belongs in GitHub issues, PRs, comments, and
 merge commits.
 
-Last updated: `2026-05-03T08:14:34Z`
+Last updated: `2026-05-03T09:17:34Z`
 
 ## Durable source of truth
 
@@ -20,16 +20,17 @@ profile: humans, Codex, ChatGPT Web, OpenGoat, Claude Code, Cursor, or other
 runtimes may perform work, but every repository change must pass through the
 same issue, PR, validation, Merge Decision Record, and handoff governance layer.
 
-Runtime-specific governance profiles are deferred to v2.0 as optional
-optimization adapters. They must be based on vendor documentation and observed
-behavior, and they must not bypass ASGK core governance.
+Release preparation is currently deferred. The next phase is v1.1 stabilization:
+parser hardening, status-check, positive handoff-template fixture,
+uncontrolled-document audit, and at least one real-world field test before
+license/release/tag work.
 
 ## Active work
 
 ```yaml
-issue: "#42 [DOCS] Add current status policy and compact current status"
+issue: "#46 [DOCS] Add v1.1 stabilization plan before release preparation"
 pr: "none; PR not opened yet"
-branch: "codex/current-status-policy"
+branch: "codex/v1-1-stabilization-plan"
 state: active
 ```
 
@@ -52,13 +53,14 @@ task-packet, and handoff-packet negative fixtures.
 - new dependencies
 - publication/release
 - automatic handoff final-judgment generation
+- release preparation before v1.1 stabilization and field test
 
 ## Last completed
 
 ```yaml
-issue: "#40 [TOOLS] Add handoff-template command"
-pr: "#41 tools: add handoff-template command"
-merge_commit: "1ec327eb6cd4034baef522482088257a54c85968"
+issue: "#44 [DOCS] Add v1.0 readiness audit"
+pr: "#45 docs: add v1 readiness audit"
+merge_commit: "4ec5ec0dd2e0563be9490a06739fb955d186b2d6"
 note: "Details are in GitHub; do not duplicate historical logs here."
 ```
 
@@ -69,6 +71,6 @@ cache, or external preparation outputs are authorized for the active work unit.
 
 ## Next safe action
 
-Open a docs-only PR for issue #42, verify Actions, update the Merge Decision
-Record, merge only if low-risk gates pass, then close issue #42 with result
+Open a docs-only PR for issue #46, verify Actions, update the Merge Decision
+Record, merge only if low-risk gates pass, then close issue #46 with result
 evidence.

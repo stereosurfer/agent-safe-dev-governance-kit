@@ -2,7 +2,7 @@
 
 Status: active readiness audit.
 
-This document defines what must be true before ASGK can be considered v1.0-ready. It is an audit surface, not an implementation task. It separates v1.0 blockers from v1.1 follow-ups and v2.0 runtime-specific work.
+This document defines what must be true before ASGK can be considered v1.0-ready. It is an audit surface, not an implementation task. It separates release-preparation sequence gates from v1.1 follow-ups and v2.0 runtime-specific work.
 
 ## Readiness Definition
 
@@ -16,17 +16,18 @@ v1.0 readiness does not require runtime-specific adapters, full YAML parsing, Sa
 
 ## Current Maturity Snapshot
 
-| Area | Current status | V1.0 impact |
+| Area | Current status | Release impact |
 |---|---:|---|
 | Governance core | mostly ready | required |
-| PR auto-validation | ready for v1.0 core | required |
+| PR auto-validation | ready for generic core | required |
 | Negative defense tests | ready for core cases | required |
 | Cross-agent handoff | ready for generic v0 | required |
 | Current-status control | policy exists | required |
 | CLI entrypoint | ready as minimal wrapper | required |
-| Parser robustness | partial | v1.1 follow-up unless blocking bug appears |
+| Parser robustness | partial | stabilize before release preparation if practical |
 | Runtime-specific adapters | deferred | v2.0 |
-| Product packaging | early | v1.1 or later |
+| Product packaging | early | release preparation |
+| Real-world field test | not yet completed | required before release preparation |
 
 ## V1.0 Readiness Dimensions
 
@@ -146,7 +147,7 @@ current_status_control:
     - docs/control/CURRENT_STATUS_POLICY.md
     - docs/handoff/CURRENT_STATUS.md
   follow_up:
-    - asgk status-check may become v1.1 tooling
+    - asgk status-check should be evaluated during v1.1 stabilization
 ```
 
 ### 6. CLI Entrypoint
@@ -221,47 +222,64 @@ human_judgment_boundaries:
     - runtime-specific adapter accuracy
 ```
 
-## V1.0 Blockers
+## Release Preparation Sequence Gate
 
-Current v1.0 blockers:
+Although the generic governance core is close to v1.0-ready, release preparation is deliberately deferred until v1.1 stabilization work and at least one real-world field test are completed or explicitly deferred with rationale.
 
 ```yaml
-v1_0_blockers: []
+release_preparation_gate:
+  status: deferred
+  required_before_release_preparation:
+    - review docs/control/V1_1_STABILIZATION_PLAN.md
+    - complete or explicitly defer parser hardening without dependencies
+    - complete or explicitly defer asgk status-check
+    - complete or explicitly defer positive handoff-template fixture
+    - complete or explicitly defer uncontrolled-document audit
+    - complete at least one real-world field test
+    - record field-test lessons
+    - update this audit after the field test
 ```
 
-No current blocker is identified for a generic, runtime-agnostic v1.0 core.
+## V1.0 Blockers
 
-This does not mean the project is finished. It means remaining known work can be classified as v1.1 or v2.0 unless a later audit discovers a defect in the core validation loop.
-
-## V1.1 Follow-ups
-
-Recommended v1.1 work:
+Current technical blockers in the generic governance core:
 
 ```yaml
-v1_1_follow_ups:
+v1_0_core_blockers: []
+```
+
+Sequence blockers before release preparation:
+
+```yaml
+release_preparation_sequence_blockers:
+  - v1_1_stabilization_not_completed
+  - real_world_field_test_not_completed
+```
+
+This distinction matters: the core is not known-broken, but release preparation should wait until the stabilization sequence is complete.
+
+## V1.1 Stabilization Work
+
+See `docs/control/V1_1_STABILIZATION_PLAN.md` for the active plan.
+
+Summary:
+
+```yaml
+v1_1_stabilization:
   parser_hardening_without_dependencies:
     reason: improve reliability of lightweight textual checks
-    blocker_for_v1_0: false
 
   asgk_status_check:
-    reason: automatically detect stale CURRENT_STATUS.md
-    blocker_for_v1_0: false
+    reason: automatically detect stale or oversized CURRENT_STATUS.md
 
   positive_handoff_template_fixture:
     reason: prove generated handoff-template output can be filled and checked
-    blocker_for_v1_0: false
-
-  install_or_template_usage_guide:
-    reason: improve external adoption
-    blocker_for_v1_0: false
-
-  release_notes_and_tagging_policy:
-    reason: package v1.0 more clearly
-    blocker_for_v1_0: false
 
   uncontrolled_document_audit:
     reason: inspect other status-like docs for growth risk
-    blocker_for_v1_0: false
+
+  real_world_field_test:
+    reason: prove ASGK outside pure docs/governance self-modification
 ```
 
 ## V2.0 Deferred Work
@@ -288,9 +306,9 @@ v2_0_deferred:
 ```yaml
 readiness_decision:
   version_target: v1.0
-  current_recommendation: proceed_to_v1_0_release_preparation
-  reason: generic governance core, CI entrypoint, negative defense, handoff recovery, and current-status control are in place
-  required_next_step: prepare v1.0 release checklist or tag policy
+  current_recommendation: proceed_to_v1_1_stabilization_before_release_preparation
+  reason: user chose to harden known v1.1 follow-ups and run a real-world field test before handling release preparation, licensing, tagging, and packaging gates
+  required_next_step: execute docs/control/V1_1_STABILIZATION_PLAN.md
 ```
 
 ## Audit Use
@@ -298,6 +316,8 @@ readiness_decision:
 Before declaring v1.0, review this file and update:
 
 - blocker list;
+- stabilization status;
+- field-test evidence;
 - follow-up list;
 - evidence list;
 - readiness decision.

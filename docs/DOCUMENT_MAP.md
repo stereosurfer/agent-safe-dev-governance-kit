@@ -143,6 +143,7 @@ usage. They are optimization layers, not the governance core.
 | `docs/control/PR_REVIEW_CHECKLIST.md` | canonical | repeatable PR review sequence and outcomes | no | PR review and merge readiness | `lane_00_controller` |
 | `docs/control/NEGATIVE_TEST_PLAN.md` | canonical | negative test matrix, expected outcomes, implementation phases | no | negative fixture or validator work | `lane_00_controller` |
 | `docs/control/V1_READINESS_AUDIT.md` | canonical | v1.0 readiness criteria, blockers, follow-ups, and v2.0 deferrals | no | v1.0 release preparation, readiness review, milestone planning | `lane_07_docs_handoff` |
+| `docs/control/V1_1_STABILIZATION_PLAN.md` | canonical | v1.1 stabilization sequence before release preparation | no | stabilization planning, field-test planning, release-prep deferral review | `lane_07_docs_handoff` |
 
 ## Merge And Human-Gate Documents
 
@@ -337,6 +338,14 @@ readiness_audit_task:
     - docs/handoff/CURRENT_STATUS.md
     - docs/control/V1_READINESS_AUDIT.md
     - docs/EVOLUTION_MODEL.md
+    - docs/DOCUMENT_MAP.md
+
+stabilization_planning_task:
+  read:
+    - AGENTS.md
+    - docs/handoff/CURRENT_STATUS.md
+    - docs/control/V1_1_STABILIZATION_PLAN.md
+    - docs/control/V1_READINESS_AUDIT.md
     - docs/DOCUMENT_MAP.md
 
 tooling_or_validation_task:
