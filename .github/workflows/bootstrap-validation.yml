@@ -13,3 +13,27 @@ jobs:
           python-version: '3.12'
       - name: ASGK doctor
         run: python3 scripts/asgk.py doctor
+      - name: Negative check PR body missing merge decision
+        run: |
+          if python3 scripts/asgk.py pr-body-check --file examples/negative/pr_body.no-merge-decision.md; then
+            echo "Expected PR-body missing Merge Decision fixture to fail, but it passed."
+            exit 1
+          fi
+      - name: Negative check PR body see chat
+        run: |
+          if python3 scripts/asgk.py pr-body-check --file examples/negative/pr_body.see-chat.md; then
+            echo "Expected PR-body see-chat fixture to fail, but it passed."
+            exit 1
+          fi
+      - name: Negative check task packet see chat
+        run: |
+          if python3 scripts/asgk.py task-packet-check --file examples/negative/task_packet.see-chat.yaml; then
+            echo "Expected task-packet see-chat fixture to fail, but it passed."
+            exit 1
+          fi
+      - name: Negative check task packet missing stop conditions
+        run: |
+          if python3 scripts/asgk.py task-packet-check --file examples/negative/task_packet.no-stop.yaml; then
+            echo "Expected task-packet missing stop_conditions fixture to fail, but it passed."
+            exit 1
+          fi
