@@ -17,6 +17,12 @@ local_state_root:
   may_be_google_drive_sync_folder: false
 ```
 
+## Record retention
+
+Use `docs/architecture/LOG_AND_RECORD_RETENTION_POLICY.md` for the canonical
+record-class matrix, Artifact Root directory structure, Local State Root
+directory structure, retention rules, and filename conventions.
+
 ## Google Drive sync-folder mode
 
 A Google Drive sync folder is treated as a normal filesystem path. This does not authorize Google Drive API usage.
