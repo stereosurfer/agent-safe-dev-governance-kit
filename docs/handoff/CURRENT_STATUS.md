@@ -4,7 +4,7 @@ This is the compact current-status surface for the repository. It is overwritten
 not appended. Historical detail belongs in GitHub issues, PRs, comments, and
 merge commits.
 
-Last updated: `2026-05-03T09:17:34Z`
+Last updated: `2026-05-03T13:09:30Z`
 
 ## Durable source of truth
 
@@ -20,17 +20,16 @@ profile: humans, Codex, ChatGPT Web, OpenGoat, Claude Code, Cursor, or other
 runtimes may perform work, but every repository change must pass through the
 same issue, PR, validation, Merge Decision Record, and handoff governance layer.
 
-Release preparation is currently deferred. The next phase is v1.1 stabilization:
-parser hardening, status-check, positive handoff-template fixture,
-uncontrolled-document audit, and at least one real-world field test before
-license/release/tag work.
+Release preparation is currently deferred. The next phase is v1.1 stabilization.
+Parser hardening and status-check are complete. The active work unit is the
+positive handoff-template fixture.
 
 ## Active work
 
 ```yaml
-issue: "#46 [DOCS] Add v1.1 stabilization plan before release preparation"
+issue: "#52 [TEST] Add positive handoff-template fixture"
 pr: "none; PR not opened yet"
-branch: "codex/v1-1-stabilization-plan"
+branch: "codex/positive-handoff-template-fixture"
 state: active
 ```
 
@@ -40,8 +39,11 @@ state: active
 python3 scripts/asgk.py doctor
 ```
 
-The workflow also runs expected-failure checks for changed-path, PR-body,
-task-packet, and handoff-packet negative fixtures.
+The target fixture check for this work unit is:
+
+```bash
+python3 scripts/asgk.py handoff-check --file examples/handoff_packet.valid.yaml --fail-on-todo
+```
 
 ## Closed gates
 
@@ -58,9 +60,9 @@ task-packet, and handoff-packet negative fixtures.
 ## Last completed
 
 ```yaml
-issue: "#44 [DOCS] Add v1.0 readiness audit"
-pr: "#45 docs: add v1 readiness audit"
-merge_commit: "4ec5ec0dd2e0563be9490a06739fb955d186b2d6"
+issue: "#50 [TOOL] Add asgk status-check"
+pr: "not listed in this compact status file"
+merge_commit: "a1e2ba4ba9d48555dd7c753aff971f45bd50f56c"
 note: "Details are in GitHub; do not duplicate historical logs here."
 ```
 
@@ -71,6 +73,6 @@ cache, or external preparation outputs are authorized for the active work unit.
 
 ## Next safe action
 
-Open a docs-only PR for issue #46, verify Actions, update the Merge Decision
-Record, merge only if low-risk gates pass, then close issue #46 with result
+Open a PR for issue #52, verify GitHub Actions, update the Merge Decision
+Record, merge only if low-risk gates pass, then close issue #52 with result
 evidence.
