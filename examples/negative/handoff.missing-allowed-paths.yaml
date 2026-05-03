@@ -1,0 +1,31 @@
+negative_case:
+  id: NEG-035-handoff-missing-allowed-paths
+  title: Handoff packet missing allowed_paths
+  expected_outcome: blocked
+  owner: asgk_handoff_check
+  should_block_positive_validation: false
+
+handoff_packet:
+  active_issue: "#000"
+  active_pr: "#000"
+  branch: "codex/example"
+  objective: "Bad example missing allowed_paths."
+  current_state: "Bad example."
+  completed:
+    - "Created bad fixture."
+  remaining:
+    - "Should be blocked."
+  modified_files:
+    - "docs/example.md"
+  validation_status:
+    status: "not_run"
+    reason: "negative fixture"
+  blockers: "none"
+  next_safe_action: "Block this handoff packet."
+  must_read:
+    - "AGENTS.md"
+  must_not_do:
+    - "Do not proceed."
+  decisions:
+    - "This is a negative fixture."
+  open_questions: "none"
