@@ -7,7 +7,7 @@ positive_case:
 
 handoff_packet:
   active_issue: "#52"
-  active_pr: "none; PR not opened at fixture authoring time"
+  active_pr: "#53"
   branch: "codex/positive-handoff-template-fixture"
   objective: "Add a positive handoff packet fixture proving that filled handoff-template output passes handoff-check."
   current_state: "Issue #52 authorizes a bounded v1.1 stabilization fixture under examples, workflow, and compact handoff status paths."
@@ -21,7 +21,6 @@ handoff_packet:
     - "docs/handoff/CURRENT_STATUS.md"
   modified_files:
     - "examples/handoff_packet.valid.yaml"
-    - ".github/workflows/bootstrap-validation.yml"
     - "docs/handoff/CURRENT_STATUS.md"
   validation_status:
     status: "not_run"
@@ -35,6 +34,7 @@ handoff_packet:
     - "docs/DOCUMENT_MAP.md"
     - "docs/control/V1_1_STABILIZATION_PLAN.md"
     - "GitHub issue #52"
+    - "GitHub PR #53"
   must_not_do:
     - "Do not add dependencies or redesign the parser for this fixture."
     - "Do not change paths outside the issue allowed paths."
