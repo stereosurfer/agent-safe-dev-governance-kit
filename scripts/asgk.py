@@ -195,7 +195,9 @@ def cmd_doctor(_args: argparse.Namespace) -> int:
             "python3", "scripts/governance_hygiene.py", "--paths-file",
             fixture, "--expect-blocked",
         ])
-    return run_many(commands)
+    baseline = run_many(commands)
+    textual = run_expected_failures(EXPECTED_FAILURE_CHECKS)
+    return 1 if baseline or textual else 0
 
 
 def cmd_validate(_args: argparse.Namespace) -> int:
@@ -336,7 +338,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="ASGK minimal validation CLI.")
     sub = parser.add_subparsers(dest="command", required=True)
 
-    p = sub.add_parser("doctor", help="Run baseline positive and changed-path negative checks.")
+    p = sub.add_parser("doctor", help="Run baseline positive and negative checks.")
     p.set_defaults(func=cmd_doctor)
 
     p = sub.add_parser("validate", help="Run bootstrap governance validation.")
