@@ -16,7 +16,29 @@ negative_fixture_rule:
   must_record_expected_outcome: true
 ```
 
-## How To Use Later
+## Current Opt-in Usage
+
+Changed-path negative fixtures can be checked directly with
+`governance_hygiene.py` in expected-blocked mode:
+
+```bash
+python3 scripts/governance_hygiene.py \
+  --paths-file examples/negative/changed_paths.runtime-artifact.txt \
+  --expect-blocked
+
+python3 scripts/governance_hygiene.py \
+  --paths-file examples/negative/changed_paths.protected.txt \
+  --expect-blocked
+
+python3 scripts/governance_hygiene.py \
+  --paths-file examples/negative/changed_paths.private-binary.txt \
+  --expect-blocked
+```
+
+Each command should return success because the file intentionally contains paths
+that must be blocked.
+
+## Future CLI Usage
 
 Future tools may run selected cases with commands such as:
 
