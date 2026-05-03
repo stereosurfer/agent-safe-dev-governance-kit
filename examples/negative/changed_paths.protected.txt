@@ -1,0 +1,12 @@
+# negative_case:
+#   id: NEG-009-protected-path
+#   title: Protected paths should be blocked
+#   expected_outcome: blocked
+#   owner: governance_hygiene.py
+#   should_block_positive_validation: false
+.env
+.env.local
+secrets/api-key.txt
+credentials/service-account.json
+private_keys/id_rsa
+.git/config
