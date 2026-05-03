@@ -167,6 +167,18 @@ If an accurate post-merge status cannot be written inside the same PR, leave
 handoff packet instead. Open a separate bounded status-refresh issue only when
 repo-level recovery would otherwise be unsafe.
 
+For local-only mechanical closeout checks, use:
+
+```bash
+python3 scripts/asgk.py closeout-check \
+  --completed-issue '#<issue>' \
+  --completed-pr '#<pr>' \
+  --completed-branch '<branch>'
+```
+
+The first version is deliberately local-only: it checks supplied markers against
+`CURRENT_STATUS.md` and does not query GitHub issue or PR state.
+
 ## Size And Compaction Rules
 
 `CURRENT_STATUS.md` should stay small enough to read every session.
@@ -262,19 +274,20 @@ status.
 Use `docs/control/HANDOFF_PACKET.md` when switching actors, tools, or sessions
 inside an active work unit.
 
-## Future Automation
+## Local Automation
 
-A future `asgk status-check` may verify:
+`asgk closeout-check` verifies the local, caller-supplied closeout state only.
+It may be used before merge or after merge when a completed issue, PR, or branch
+must not remain active in `CURRENT_STATUS.md`.
 
 ```yaml
-status_check_targets:
-  - active issue is open or marked none
-  - active PR is open or marked none
-  - active PR is not the PR that merged the current status change
+closeout_check_targets:
+  - supplied completed issue is not in active work
+  - supplied completed PR is not in active work
+  - supplied completed branch is not in active work
   - next_safe_action is present
   - next_safe_action does not point to completed pre-merge work
-  - file does not exceed soft size limit
-  - no forbidden history sections are present
 ```
 
-Do not implement that checker in this policy-only work unit.
+`asgk status-check` remains the broader compactness and stale-marker check for
+routine session startup and baseline validation.
