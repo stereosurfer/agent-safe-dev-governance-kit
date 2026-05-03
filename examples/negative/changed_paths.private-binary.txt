@@ -1,0 +1,10 @@
+# negative_case:
+#   id: NEG-010-private-binary-source
+#   title: Private/binary source-like files outside fixture paths should be blocked
+#   expected_outcome: blocked
+#   owner: governance_hygiene.py
+#   should_block_positive_validation: false
+source-material/manual.pdf
+private-notes/interview.docx
+captures/page.png
+scans/source.tif

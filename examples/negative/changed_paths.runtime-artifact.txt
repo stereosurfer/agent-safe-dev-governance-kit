@@ -1,0 +1,9 @@
+# negative_case:
+#   id: NEG-008-runtime-artifact-path
+#   title: Runtime artifact path should be blocked
+#   expected_outcome: blocked
+#   owner: governance_hygiene.py
+#   should_block_positive_validation: false
+runs/test-output.json
+corpus/private-source.txt
+artifacts/generated-report.md

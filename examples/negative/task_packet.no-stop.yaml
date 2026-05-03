@@ -1,0 +1,24 @@
+negative_case:
+  id: NEG-029-missing-stop-conditions
+  title: Task packet missing stop conditions
+  expected_outcome: blocked
+  owner: task_packet_validator_or_pr_review
+  should_block_positive_validation: false
+
+bad_input:
+  task_id: "NEG-029"
+  lane: "lane_00_controller"
+  intelligence_level: "standard"
+  intelligence_level_reason: "bad example"
+  durable_source_of_truth: "GitHub issue #000"
+  objective: "This should be blocked because stop_conditions is missing."
+  allowed_paths:
+    - "docs/"
+  expected_output: "blocked task packet"
+  plan:
+    - "Do work without stop conditions."
+  checklist:
+    - "[ ] invalid"
+  acceptance_sheet:
+    - "[ ] invalid"
+  rollback_expectations: "Close without work."
