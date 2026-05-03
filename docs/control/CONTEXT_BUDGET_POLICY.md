@@ -15,7 +15,8 @@ Do not read the whole repository by default.
 
 The default source for deciding which documents to read is
 `docs/DOCUMENT_MAP.md`. This policy turns that map into operational rules for
-agent sessions, task packets, reviews, merge decisions, and future CLI checks.
+agent sessions, task packets, reviews, merge decisions, handoff recovery, and
+future CLI checks.
 
 ## Why This Policy Exists
 
@@ -93,6 +94,59 @@ startup:
     - active issue names a specific file
 ```
 
+### `handoff_recovery`
+
+Use when a human, agent, model, browser session, IDE, or automation runner must
+resume work after interruption or tool/runtime switch.
+
+This profile is generic/runtime-agnostic. Runtime-specific adapters may later
+optimize how a tool consumes the packet in v2.0, but they must not change this
+minimum recovery set.
+
+```yaml
+handoff_recovery:
+  always_read:
+    - AGENTS.md
+    - docs/handoff/CURRENT_STATUS.md
+    - active GitHub issue
+    - active PR if one exists
+    - docs/control/HANDOFF_PACKET.md
+    - docs/DOCUMENT_MAP.md
+  read_from_packet:
+    - must_read
+    - modified_files
+    - allowed_paths
+  max_initial_documents: 6 plus active_issue active_pr and packet-listed files
+  expansion_allowed_when:
+    - handoff_packet.must_read names additional files
+    - active PR changed files are outside the handoff packet modified_files list
+    - validation_status is fail blocked or not_run
+    - active issue and handoff packet disagree
+    - next_safe_action references a specific canonical document
+  stop_if:
+    - active_issue_missing
+    - active_issue_says_see_chat
+    - next_safe_action_empty
+    - validation_status_unknown
+    - allowed_paths_missing
+    - must_read_missing
+    - handoff_packet_conflicts_with_active_pr
+    - human_gate_detected_without_approval
+```
+
+Required reporting when this profile is used:
+
+```yaml
+handoff_recovery_report:
+  handoff_packet_source:
+  active_issue:
+  active_pr:
+  branch:
+  validation_status:
+  next_safe_action:
+  context_expansion:
+```
+
 ### `docs_only`
 
 Use for bounded documentation changes that do not alter policy semantics,
@@ -118,7 +172,8 @@ docs_only:
 ### `control_policy`
 
 Use for governance/control documents such as work-unit state, low-risk merge,
-human gates, issue hygiene, context budget, or autonomous runbooks.
+human gates, issue hygiene, context budget, handoff packets, or autonomous
+runbooks.
 
 ```yaml
 control_policy:
@@ -133,7 +188,7 @@ control_policy:
   expansion_allowed_when:
     - canonical owner is unclear
     - target document references another control document
-    - change affects merge, human gates, or stop conditions
+    - change affects merge, human gates, handoff, or stop conditions
   stop_if:
     - policy conflict detected
     - human-gated operation would be expanded
@@ -161,7 +216,7 @@ schema_or_contract:
     - validator behavior is explicitly in scope
   stop_if:
     - schema_breaking_change_required
-    - new validator dependency_required
+    - new_validator_dependency_required
     - contract_semantics_unclear
 ```
 
@@ -291,9 +346,6 @@ tooling_or_validation:
     - validator_scope_changes_without_issue_authorization
 ```
 
-If `docs/control/VALIDATION_STRATEGY.md` does not yet exist, use the current
-issue as the durable scope and keep changes narrow.
-
 ## Context Expansion Rules
 
 Agents may expand context only when one of these is true:
@@ -305,7 +357,8 @@ context_expansion_allowed_when:
   - validation failure points to a specific file
   - PR diff touches a file outside the expected group
   - issue acceptance criteria name an additional file
-  - conflict exists between current issue, PR body, and repository file
+  - handoff packet must_read names an additional file
+  - conflict exists between current issue PR body handoff packet and repository file
   - human or reviewer explicitly asks for a broader audit
 ```
 
@@ -330,7 +383,7 @@ hard_limits:
 ```
 
 Full repository scans are not allowed as normal context gathering. Use targeted
-search, file lists, or scripts instead.
+search, file lists, handoff packet fields, or scripts instead.
 
 ## What Not To Load
 
@@ -348,6 +401,7 @@ do_not_load_by_default:
   - private source files
   - cache directories
   - local state directories
+  - runtime-specific adapters before v2.0
 ```
 
 ## Required Report Section
@@ -369,13 +423,12 @@ Files intentionally not read:
 - <category or path>
 ```
 
-For low-risk docs-only work, this section may be included in the Handoff Report
-instead of a top-level PR section.
+For handoff recovery, include the handoff packet source and the next safe action.
 
 ## Token-Saving Rules
 
-1. Prefer task packets, issue bodies, and current-status documents over full
-   conversation history.
+1. Prefer task packets, issue bodies, handoff packets, and current-status
+   documents over full conversation history.
 2. Prefer canonical documents over summaries.
 3. Prefer changed-file lists and validator output over reading unrelated docs.
 4. Prefer scripts for mechanical checks.
@@ -397,14 +450,14 @@ If the document map and this policy disagree:
 
 ## Future CLI Mapping
 
-A future CLI wrapper may expose this policy as commands such as:
+The CLI wrapper may expose this policy through commands such as:
 
 ```bash
-asgk context docs-only
-asgk context merge-decision --pr 12
-asgk doctor
-asgk validate
+python3 scripts/asgk.py doctor
+python3 scripts/asgk.py validate
+python3 scripts/asgk.py hygiene --paths-file changed-paths.txt
+python3 scripts/asgk.py handoff-check --file handoff.yaml
 ```
 
-Until then, agents should apply this policy manually and record context expansion
-in PRs or Agent Reports.
+Runtime-specific profile/adapters are v2.0 optimization work and should not
+alter the v1.x generic handoff recovery minimum set.
