@@ -84,7 +84,7 @@ roles:
 |---|---|---|---:|---|---|
 | `README.md` | summary | project positioning, install path, operating loop overview | yes | all new sessions | `lane_07_docs_handoff` |
 | `AGENTS.md` | canonical | agent startup order, source-of-truth rule, work-unit rule, stop conditions | yes | all agent sessions | `lane_00_controller` |
-| `docs/handoff/CURRENT_STATUS.md` | status | current repo state, active PRs, active milestones, next safe work | yes | all new sessions, handoff recovery, handoff updates | `lane_07_docs_handoff` |
+| `docs/handoff/CURRENT_STATUS.md` | status | compact current repo snapshot and next safe work | yes | all new sessions, handoff recovery, handoff updates | `lane_07_docs_handoff` |
 | current GitHub issue or PR | canonical | active task objective, allowed paths, acceptance, validation, merge state | yes | every work unit | active task lane |
 | `docs/QUICKSTART.md` | summary | first-use workflow and onboarding | no | onboarding and first repository smoke test | `lane_07_docs_handoff` |
 | `docs/EVOLUTION_MODEL.md` | canonical | docs-driven evolution, self-governance, self-validation maturity model | no | roadmap/evolution discussion | `lane_07_docs_handoff` |
@@ -93,8 +93,9 @@ roles:
 
 | Document | Role | Canonical for | Read by default | Read when | Owned by lane |
 |---|---|---|---:|---|---|
+| `docs/control/CURRENT_STATUS_POLICY.md` | canonical | current-status overwrite, compaction, stale-status, and size rules | no | current-status update, stale status repair, handoff policy work | `lane_07_docs_handoff` |
 | `docs/control/HANDOFF_PACKET.md` | canonical | generic work-unit handoff packet fields, validation status values, recovery stop conditions | no | interruption, model switch, tool switch, handoff recovery, `asgk.py handoff-check` | `lane_00_controller` |
-| `docs/handoff/CURRENT_STATUS.md` | status | repo-level current state and next safe work | yes | all sessions and handoff updates | `lane_07_docs_handoff` |
+| `docs/handoff/CURRENT_STATUS.md` | status | repo-level compact current state and next safe work | yes | all sessions and handoff updates | `lane_07_docs_handoff` |
 | `docs/handoff/DECISIONS.md` | status | durable architecture/governance decisions | no | decision lookup or update | `lane_07_docs_handoff` |
 | `docs/handoff/AGENT_LOG.md` | status | optional agent report log or links | no | handoff/reporting work | `lane_07_docs_handoff` |
 
@@ -103,6 +104,7 @@ Canonical ownership rule for handoff work:
 ```yaml
 handoff_canonical_sources:
   repo_level_status: docs/handoff/CURRENT_STATUS.md
+  repo_level_status_policy: docs/control/CURRENT_STATUS_POLICY.md
   work_unit_packet_spec: docs/control/HANDOFF_PACKET.md
   recovery_context: docs/control/CONTEXT_BUDGET_POLICY.md
   source_of_truth_rule: AGENTS.md
