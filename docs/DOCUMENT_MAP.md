@@ -142,6 +142,7 @@ usage. They are optimization layers, not the governance core.
 | `docs/control/VALIDATION_STRATEGY.md` | canonical | validation layer responsibilities, blocking vs warning, negative test targets | no | validation/tooling work | `lane_06_ci_github` |
 | `docs/control/PR_REVIEW_CHECKLIST.md` | canonical | repeatable PR review sequence and outcomes | no | PR review and merge readiness | `lane_00_controller` |
 | `docs/control/NEGATIVE_TEST_PLAN.md` | canonical | negative test matrix, expected outcomes, implementation phases | no | negative fixture or validator work | `lane_00_controller` |
+| `docs/control/UNCONTROLLED_DOCUMENT_AUDIT.md` | canonical | uncontrolled-document growth-risk classification and audit record | no | uncontrolled-document audit or status-like document growth review | `lane_07_docs_handoff` |
 | `docs/control/V1_READINESS_AUDIT.md` | canonical | v1.0 readiness criteria, blockers, follow-ups, and v2.0 deferrals | no | v1.0 release preparation, readiness review, milestone planning | `lane_07_docs_handoff` |
 | `docs/control/V1_1_STABILIZATION_PLAN.md` | canonical | v1.1 stabilization sequence before release preparation | no | stabilization planning, field-test planning, release-prep deferral review | `lane_07_docs_handoff` |
 
@@ -253,7 +254,7 @@ disagree, stop and open a schema/contract alignment issue.
 | `scripts/check_project.py` | script | required directory scaffold check | no | CI/tooling/debug validation | `lane_06_ci_github` |
 | `scripts/validate_bootstrap.py` | script | bootstrap governance validation behavior | no | CI/tooling/debug validation | `lane_06_ci_github` |
 | `scripts/governance_hygiene.py` | script | changed-path and protected-path hygiene | no | path hygiene, negative changed-path checks, future CLI work | `lane_06_ci_github` |
-| `scripts/asgk.py` | script | minimal ASGK CLI wrapper for doctor/validate/hygiene/negative/status/pr-body/task-packet/handoff checks | no | local validation, status-check, handoff-check, PR-body/task-packet checks, future CLI work | `lane_06_ci_github` |
+| `scripts/asgk.py` | script | minimal ASGK CLI wrapper for doctor/validate/hygiene/negative/status/closeout/pr-body/task-packet/handoff checks | no | local validation, status-check, closeout-check, handoff-check, PR-body/task-packet checks, future CLI work | `lane_06_ci_github` |
 | `.github/workflows/bootstrap-validation.yml` | template/script | GitHub Actions bootstrap validation workflow | no | CI/workflow changes | `lane_06_ci_github` |
 | `.github/PULL_REQUEST_TEMPLATE.md` | template | required PR body sections and Merge Decision Record surface | no | PR creation/review, template changes, `asgk.py pr-body-check` | `lane_06_ci_github` |
 
@@ -291,6 +292,14 @@ handoff_recovery_task:
     - docs/control/HANDOFF_PACKET.md
     - docs/DOCUMENT_MAP.md
     - files listed in handoff_packet.must_read
+
+closeout_or_status_repair_task:
+  read:
+    - AGENTS.md
+    - docs/handoff/CURRENT_STATUS.md
+    - docs/control/CURRENT_STATUS_POLICY.md
+    - current issue or PR
+    - scripts/asgk.py when using `closeout-check`
 
 schema_or_contract_task:
   read:
