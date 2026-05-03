@@ -1,0 +1,25 @@
+{
+  "negative_case": {
+    "id": "NEG-013-storage-roots-equal",
+    "title": "Artifact Root equals Local State Root",
+    "expected_outcome": "blocked",
+    "owner": "validate_bootstrap.py",
+    "should_block_positive_validation": false
+  },
+  "bad_input": {
+    "code_repo": ".",
+    "artifact_root": "/tmp/project-state",
+    "local_state_root": "/tmp/project-state",
+    "storage_mode": "local_workspace",
+    "sync_policy": {
+      "google_drive_sync_folder": false,
+      "app_managed_drive_api": false
+    },
+    "cache_policy": {
+      "page_renders": "local_only",
+      "model_cache": "local_only",
+      "sqlite_live_db": "local_only",
+      "temporary_jobs": "local_only"
+    }
+  }
+}
