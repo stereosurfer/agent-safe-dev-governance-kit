@@ -1,5 +1,13 @@
 # 12 Productization Notes
 
+Status: reference-only productization framing.
+
+Boundary:
+
+- Use this file for stable product-positioning notes and v1.x/v2.0 scope framing.
+- Do not use it as a release diary, roadmap queue, or status log.
+- Productization decisions and release-preparation history belong in GitHub issues, PRs, comments, merge commits, or a dedicated release-preparation document.
+
 This kit is easier to productize as:
 
 ```text
