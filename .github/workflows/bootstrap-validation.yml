@@ -11,15 +11,5 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Check project scaffold
-        run: python3 scripts/check_project.py
-      - name: Validate bootstrap governance
-        run: python3 scripts/validate_bootstrap.py
-      - name: Check whitespace
-        run: git diff --check
-      - name: Negative check runtime artifact paths
-        run: python3 scripts/governance_hygiene.py --paths-file examples/negative/changed_paths.runtime-artifact.txt --expect-blocked
-      - name: Negative check protected paths
-        run: python3 scripts/governance_hygiene.py --paths-file examples/negative/changed_paths.protected.txt --expect-blocked
-      - name: Negative check private binary paths
-        run: python3 scripts/governance_hygiene.py --paths-file examples/negative/changed_paths.private-binary.txt --expect-blocked
+      - name: ASGK doctor
+        run: python3 scripts/asgk.py doctor
