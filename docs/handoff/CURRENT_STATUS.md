@@ -4,7 +4,7 @@ This is the compact current-status surface for the repository. It is overwritten
 not appended. Historical detail belongs in GitHub issues, PRs, comments, and
 merge commits.
 
-Last updated: `2026-05-03T13:14:20Z`
+Last updated: `2026-05-03T13:40:30Z`
 
 ## Durable source of truth
 
@@ -15,22 +15,19 @@ Last updated: `2026-05-03T13:14:20Z`
 
 ## Current snapshot
 
-ASGK v1.x is the runtime-agnostic governance core. It uses a generic repo-agent
-profile: humans, Codex, ChatGPT Web, OpenGoat, Claude Code, Cursor, or other
-runtimes may perform work, but every repository change must pass through the
-same issue, PR, validation, Merge Decision Record, and handoff governance layer.
-
-Release preparation is currently deferred. The next phase is v1.1 stabilization.
-Parser hardening and status-check are complete. The active work unit is the
-positive handoff-template fixture.
+ASGK v1.x is the runtime-agnostic governance core. Release preparation remains
+deferred while v1.1 stabilization continues. Parser hardening, `asgk
+status-check`, and the positive handoff-template fixture are complete. The next
+work should address governance-loop correctness before continuing the remaining
+stabilization items.
 
 ## Active work
 
 ```yaml
-issue: "#52 [TEST] Add positive handoff-template fixture"
-pr: "#53 test: add positive handoff packet fixture"
-branch: "codex/positive-handoff-template-fixture"
-state: active
+issue: none
+pr: none
+branch: main
+state: idle
 ```
 
 ## Current validation entrypoint
@@ -39,11 +36,8 @@ state: active
 python3 scripts/asgk.py doctor
 ```
 
-The target fixture check for this work unit is:
-
-```bash
-python3 scripts/asgk.py handoff-check --file examples/handoff_packet.valid.yaml --fail-on-todo
-```
+The workflow also runs the positive handoff fixture and core negative checks for
+changed paths, PR bodies, task packets, and handoff packets.
 
 ## Closed gates
 
@@ -60,18 +54,18 @@ python3 scripts/asgk.py handoff-check --file examples/handoff_packet.valid.yaml 
 ## Last completed
 
 ```yaml
-issue: "#50 [TOOL] Add asgk status-check"
-pr: "not listed in this compact status file"
-merge_commit: "a1e2ba4ba9d48555dd7c753aff971f45bd50f56c"
+issue: "#52 [TEST] Add positive handoff-template fixture"
+pr: "#53 test: add positive handoff packet fixture"
+merge_commit: "c2f9dcb3929d173069dfa49d083efa0fa1fb1820"
 note: "Details are in GitHub; do not duplicate historical logs here."
 ```
 
 ## Runtime artifact status
 
 No runtime artifacts, private source material, SQLite live DB, cache files, model
-cache, or external preparation outputs are authorized for the active work unit.
+cache, or external preparation outputs are authorized by the current idle state.
 
 ## Next safe action
 
-Verify GitHub Actions for PR #53, update the Merge Decision Record, merge only
-if low-risk gates pass, then close issue #52 with result evidence.
+Open the next bounded issue or PR for governance-loop correctness before
+continuing uncontrolled-document audit or field-test work.

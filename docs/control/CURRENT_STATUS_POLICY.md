@@ -22,6 +22,32 @@ What must not be done?
 Where is the durable history?
 ```
 
+## Progressive Disclosure Rule
+
+`CURRENT_STATUS.md` is the first disclosure layer, not the full work-unit record.
+It should expose the smallest sufficient repo-level state and point to durable
+GitHub objects only when more detail is needed.
+
+```yaml
+progressive_disclosure_layers:
+  layer_1_repo_recovery:
+    surface: docs/handoff/CURRENT_STATUS.md
+    purpose: next-session orientation and next safe action
+    content_limit: compact repo state only
+  layer_2_work_unit_detail:
+    surface: GitHub issue or PR body
+    purpose: objective, allowed paths, validation, and Merge Decision Record
+    content_limit: current work unit only
+  layer_3_history:
+    surface: GitHub comments, merged PRs, and merge commits
+    purpose: durable evidence and historical detail
+    content_limit: append history outside CURRENT_STATUS.md
+```
+
+Do not promote lower-layer detail into `CURRENT_STATUS.md` unless it is required
+for safe recovery. If more context is needed, the next actor should open the
+referenced issue, PR, or canonical document instead of expanding this file.
+
 ## Ownership
 
 ```yaml
@@ -65,6 +91,7 @@ forbidden_content:
   - long chronological work logs
   - repeated completed work-unit summaries
   - old active issue blocks after merge
+  - self-referential active PR blocks that become stale immediately after merge
   - raw CI logs
   - large design discussions
   - chat transcript summaries
@@ -72,6 +99,27 @@ forbidden_content:
 ```
 
 Use GitHub issues, PRs, and comments for history.
+
+## In-flight PR Boundary
+
+In-flight PR detail belongs in the PR body, PR comments, or a work-unit handoff
+packet, not necessarily in `CURRENT_STATUS.md`.
+
+A PR that changes `CURRENT_STATUS.md` must not merge a self-referential active
+work block that points to the same PR as active, because the status becomes stale
+as soon as the PR merges.
+
+```yaml
+self_staling_status_update:
+  forbidden_when:
+    - current_status.active_pr == this_pr
+    - this_pr_is_expected_to_merge
+    - no post_merge_status_repair is included
+  preferred_pattern:
+    - keep in-flight details in the PR body and Merge Decision Record
+    - make CURRENT_STATUS.md accurate for the repository state after merge
+    - use GitHub comments for closeout evidence
+```
 
 ## Overwrite-not-append Rule
 
@@ -96,6 +144,28 @@ last_completed:
   merge_commit: "1ec327e"
   note: "Details are in GitHub; do not duplicate here."
 ```
+
+## Post-merge Closeout Rule
+
+Before a low-risk PR is marked merge-allowed, check whether the PR changes
+`docs/handoff/CURRENT_STATUS.md`.
+
+```yaml
+post_merge_closeout_check:
+  if_current_status_changed:
+    - current_status_must_be_valid_after_this_pr_merges
+    - active_issue_must_not_be_the_issue_closed_by_this_pr_unless_followup_keeps_it_open
+    - active_pr_must_not_be_this_pr
+    - next_safe_action_must_not_point_to_this_prs_pre_merge_steps
+  evidence_location:
+    - PR Merge Decision Record
+    - issue result comment
+```
+
+If an accurate post-merge status cannot be written inside the same PR, leave
+`CURRENT_STATUS.md` unchanged and record work-unit state in the PR body or a
+handoff packet instead. Open a separate bounded status-refresh issue only when
+repo-level recovery would otherwise be unsafe.
 
 ## Size And Compaction Rules
 
@@ -125,7 +195,9 @@ A status file is stale when:
 stale_when:
   - active_issue is closed but still listed as active
   - active_pr is merged or closed but still listed as active
+  - active_pr points to the PR that just merged this status file
   - next_safe_action points to completed work
+  - next_safe_action points to pre-merge validation for an already merged PR
   - last_updated is older than the last merged governance PR that changed work state
   - runtime-specific profile work appears as active in v1.x without a v2.0 issue
 ```
@@ -198,7 +270,9 @@ A future `asgk status-check` may verify:
 status_check_targets:
   - active issue is open or marked none
   - active PR is open or marked none
+  - active PR is not the PR that merged the current status change
   - next_safe_action is present
+  - next_safe_action does not point to completed pre-merge work
   - file does not exceed soft size limit
   - no forbidden history sections are present
 ```
