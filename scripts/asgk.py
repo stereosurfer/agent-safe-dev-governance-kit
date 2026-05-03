@@ -30,6 +30,17 @@ HANDOFF_REQUIRED_LIST_FIELDS = [
     "completed", "remaining", "allowed_paths", "modified_files", "must_read",
     "must_not_do", "decisions", "open_questions",
 ]
+STATUS_REQUIRED_HEADINGS = [
+    "Durable source of truth", "Current snapshot", "Active work",
+    "Current validation entrypoint", "Closed gates", "Last completed",
+    "Runtime artifact status", "Next safe action",
+]
+STATUS_FORBIDDEN_HISTORY_HEADINGS = [
+    "History", "Work Log", "Chronological Log", "Completed Work Log",
+]
+STATUS_FORBIDDEN_PHRASES = [
+    "full PR body", "raw CI log", "chat transcript", "see chat",
+]
 NEGATIVE_CHANGED_PATH_FIXTURES = [
     "examples/negative/changed_paths.runtime-artifact.txt",
     "examples/negative/changed_paths.protected.txt",
@@ -189,6 +200,7 @@ def cmd_doctor(_args: argparse.Namespace) -> int:
         ["python3", "scripts/check_project.py"],
         ["python3", "scripts/validate_bootstrap.py"],
         ["git", "diff", "--check"],
+        ["python3", "scripts/asgk.py", "status-check"],
     ]
     for fixture in NEGATIVE_CHANGED_PATH_FIXTURES:
         commands.append([
@@ -225,6 +237,49 @@ def cmd_negative(args: argparse.Namespace) -> int:
         return 1 if changed or textual else 0
     print(f"FAIL: unsupported negative case group: {args.case}")
     return 1
+
+
+def cmd_status_check(args: argparse.Namespace) -> int:
+    status_path = rel(args.file)
+    failures: list[str] = []
+    if not status_path.exists():
+        return print_failures([f"missing current status file: {args.file}"])
+
+    text = status_path.read_text(encoding="utf-8")
+    headings = markdown_headings(text)
+
+    for heading in STATUS_REQUIRED_HEADINGS:
+        if heading not in headings:
+            failures.append(f"missing current status heading: ## {heading}")
+
+    line_count = len(text.splitlines())
+    if line_count > args.max_lines:
+        failures.append(f"current status is too long: {line_count} lines > {args.max_lines}")
+
+    if "python3 scripts/asgk.py doctor" not in text:
+        failures.append("current status does not name python3 scripts/asgk.py doctor")
+
+    if re.search(r"issue:\s*['\"]?#23\b", text):
+        failures.append("current status appears to retain stale issue #23 active state")
+
+    for heading in STATUS_FORBIDDEN_HISTORY_HEADINGS:
+        if heading in headings:
+            failures.append(f"forbidden history-log heading in current status: ## {heading}")
+
+    lower_text = text.lower()
+    for phrase in STATUS_FORBIDDEN_PHRASES:
+        if phrase.lower() in lower_text:
+            failures.append(f"forbidden current-status phrase: {phrase}")
+
+    next_action_match = re.search(
+        r"^## Next safe action\s+(.+?)(?:\n## |\Z)",
+        text,
+        flags=re.MULTILINE | re.DOTALL,
+    )
+    if not next_action_match or not next_action_match.group(1).strip():
+        failures.append("current status next safe action is empty")
+
+    return print_failures(failures)
 
 
 def cmd_pr_body_check(args: argparse.Namespace) -> int:
@@ -352,6 +407,11 @@ def build_parser() -> argparse.ArgumentParser:
     p = sub.add_parser("negative", help="Run opt-in negative checks.")
     p.add_argument("case", nargs="?", default="changed-paths", choices=["changed-paths", "textual", "all"])
     p.set_defaults(func=cmd_negative)
+
+    p = sub.add_parser("status-check", help="Check docs/handoff/CURRENT_STATUS.md for compactness and stale markers.")
+    p.add_argument("--file", default="docs/handoff/CURRENT_STATUS.md")
+    p.add_argument("--max-lines", type=int, default=120)
+    p.set_defaults(func=cmd_status_check)
 
     p = sub.add_parser("pr-body-check", help="Check PR body and Merge Decision Record.")
     p.add_argument("--file", required=True)
