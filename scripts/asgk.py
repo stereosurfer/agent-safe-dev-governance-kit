@@ -26,10 +26,27 @@ HANDOFF_REQUIRED_FIELDS = [
     "validation_status", "blockers", "next_safe_action", "must_read",
     "must_not_do", "decisions", "open_questions",
 ]
+HANDOFF_REQUIRED_LIST_FIELDS = [
+    "completed", "remaining", "allowed_paths", "modified_files", "must_read",
+    "must_not_do", "decisions", "open_questions",
+]
 NEGATIVE_CHANGED_PATH_FIXTURES = [
     "examples/negative/changed_paths.runtime-artifact.txt",
     "examples/negative/changed_paths.protected.txt",
     "examples/negative/changed_paths.private-binary.txt",
+]
+EXPECTED_FAILURE_CHECKS = [
+    ["python3", "scripts/asgk.py", "pr-body-check", "--file", "examples/negative/pr_body.no-merge-decision.md"],
+    ["python3", "scripts/asgk.py", "pr-body-check", "--file", "examples/negative/pr_body.see-chat.md"],
+    ["python3", "scripts/asgk.py", "task-packet-check", "--file", "examples/negative/task_packet.see-chat.yaml"],
+    ["python3", "scripts/asgk.py", "task-packet-check", "--file", "examples/negative/task_packet.no-stop.yaml"],
+    ["python3", "scripts/asgk.py", "handoff-check", "--file", "examples/negative/handoff.missing-active-issue.yaml"],
+    ["python3", "scripts/asgk.py", "handoff-check", "--file", "examples/negative/handoff.empty-next-safe-action.yaml"],
+    ["python3", "scripts/asgk.py", "handoff-check", "--file", "examples/negative/handoff.unknown-validation-status.yaml"],
+    ["python3", "scripts/asgk.py", "handoff-check", "--file", "examples/negative/handoff.missing-allowed-paths.yaml"],
+    ["python3", "scripts/asgk.py", "handoff-check", "--file", "examples/negative/handoff.missing-must-read.yaml"],
+    ["python3", "scripts/asgk.py", "handoff-check", "--file", "examples/negative/handoff.empty-required-lists.yaml"],
+    ["python3", "scripts/asgk.py", "handoff-check", "--file", "examples/negative/handoff.unresolved-todo.yaml", "--fail-on-todo"],
 ]
 
 
@@ -59,12 +76,31 @@ def run_many(commands: list[list[str]]) -> int:
     return 0
 
 
+def run_expected_failures(commands: list[list[str]]) -> int:
+    unexpected_passes = 0
+    for command in commands:
+        print("+ expect failure: " + " ".join(command))
+        result = subprocess.run(command, cwd=ROOT)
+        if result.returncode == 0:
+            print("FAIL: expected command to fail, but it passed.")
+            unexpected_passes += 1
+    if unexpected_passes:
+        print(f"FAIL: {unexpected_passes} expected-failure check(s) unexpectedly passed.")
+        return 1
+    print(f"Expected-failure checks passed: {len(commands)} command(s) failed as expected.")
+    return 0
+
+
 def read_text(path: str | Path) -> str:
     return rel(path).read_text(encoding="utf-8")
 
 
 def has_see_chat(text: str) -> bool:
     return bool(re.search(r"\bsee\s+chat\b", text, flags=re.IGNORECASE))
+
+
+def has_unresolved_todo(text: str) -> bool:
+    return bool(re.search(r"\b(?:AI_TODO|TODO)\b", text))
 
 
 def markdown_headings(text: str) -> set[str]:
@@ -97,6 +133,46 @@ def field_value(text: str, field: str) -> str | None:
     if not match:
         return None
     return match.group(1).strip().strip('"').strip("'")
+
+
+def field_block_lines(text: str, field: str) -> list[str] | None:
+    """Return indented child lines for a lightweight YAML-like field block."""
+
+    lines = text.splitlines()
+    for index, line in enumerate(lines):
+        match = re.match(rf"^([ \t]*){re.escape(field)}[ \t]*:", line)
+        if not match:
+            continue
+        field_indent = len(match.group(1).replace("\t", "    "))
+        block: list[str] = []
+        for child in lines[index + 1:]:
+            stripped = child.strip()
+            if not stripped:
+                continue
+            child_indent = len(re.match(r"^[ \t]*", child).group(0).replace("\t", "    "))
+            if child_indent <= field_indent and re.match(r"^[A-Za-z0-9_\-]+[ \t]*:", stripped):
+                break
+            if child_indent > field_indent:
+                block.append(child)
+        return block
+    return None
+
+
+def list_field_has_material_item(text: str, field: str) -> bool:
+    value = field_value(text, field)
+    if value:
+        return True
+    block = field_block_lines(text, field)
+    if block is None:
+        return False
+    for line in block:
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        item = re.match(r"^-\s*(.*?)\s*$", stripped)
+        if item and item.group(1).strip().strip('"').strip("'"):
+            return True
+    return False
 
 
 def print_failures(failures: list[str]) -> int:
@@ -134,13 +210,19 @@ def cmd_hygiene(args: argparse.Namespace) -> int:
 
 
 def cmd_negative(args: argparse.Namespace) -> int:
-    if args.case not in ("changed-paths", "all"):
-        print(f"FAIL: unsupported negative case group: {args.case}")
-        return 1
-    return run_many([
-        ["python3", "scripts/governance_hygiene.py", "--paths-file", fixture, "--expect-blocked"]
-        for fixture in NEGATIVE_CHANGED_PATH_FIXTURES
-    ])
+    if args.case == "changed-paths":
+        return run_many([
+            ["python3", "scripts/governance_hygiene.py", "--paths-file", fixture, "--expect-blocked"]
+            for fixture in NEGATIVE_CHANGED_PATH_FIXTURES
+        ])
+    if args.case == "textual":
+        return run_expected_failures(EXPECTED_FAILURE_CHECKS)
+    if args.case == "all":
+        changed = cmd_negative(argparse.Namespace(case="changed-paths"))
+        textual = cmd_negative(argparse.Namespace(case="textual"))
+        return 1 if changed or textual else 0
+    print(f"FAIL: unsupported negative case group: {args.case}")
+    return 1
 
 
 def cmd_pr_body_check(args: argparse.Namespace) -> int:
@@ -189,6 +271,8 @@ def cmd_handoff_check(args: argparse.Namespace) -> int:
             failures.append(f"missing handoff field: {field}")
     if has_see_chat(text):
         failures.append("handoff packet contains forbidden chat-only authority phrase: see chat")
+    if args.fail_on_todo and has_unresolved_todo(text):
+        failures.append("handoff packet contains unresolved TODO or AI_TODO marker")
     next_safe_action = field_value(text, "next_safe_action")
     if next_safe_action is not None and not next_safe_action:
         failures.append("next_safe_action is empty")
@@ -201,6 +285,9 @@ def cmd_handoff_check(args: argparse.Namespace) -> int:
         value = field_value(text, field)
         if value is not None and not value:
             failures.append(f"{field} is empty")
+    for field in HANDOFF_REQUIRED_LIST_FIELDS:
+        if line_field_exists(text, field) and not list_field_has_material_item(text, field):
+            failures.append(f"{field} has no material list item")
     return print_failures(failures)
 
 
@@ -261,7 +348,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.set_defaults(func=cmd_hygiene)
 
     p = sub.add_parser("negative", help="Run opt-in negative checks.")
-    p.add_argument("case", nargs="?", default="changed-paths", choices=["changed-paths", "all"])
+    p.add_argument("case", nargs="?", default="changed-paths", choices=["changed-paths", "textual", "all"])
     p.set_defaults(func=cmd_negative)
 
     p = sub.add_parser("pr-body-check", help="Check PR body and Merge Decision Record.")
@@ -274,6 +361,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     p = sub.add_parser("handoff-check", help="Check generic handoff packet completeness.")
     p.add_argument("--file", required=True)
+    p.add_argument("--fail-on-todo", action="store_true", help="Fail if TODO or AI_TODO markers remain.")
     p.set_defaults(func=cmd_handoff_check)
 
     p = sub.add_parser("handoff-template", help="Print an AI-fillable handoff packet draft.")
