@@ -1,5 +1,11 @@
 # Lane Status
 
+Status: current snapshot.
+
+This file is overwritten, not appended. It is a compact lane-level status board,
+not a lane history log. Lane movement history belongs in GitHub issues, PRs,
+comments, and merge commits.
+
 | Lane | Status | Owner | Durable source | Allowed paths | Blocker | Next action |
 |---|---|---|---|---|---|---|
 | lane_00_controller | active | controller | docs/control/AUTONOMOUS_RUNBOOK.md | docs/control/, docs/handoff/ | none | maintain queue |
