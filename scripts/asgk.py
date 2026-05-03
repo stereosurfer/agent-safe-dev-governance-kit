@@ -72,11 +72,23 @@ def markdown_headings(text: str) -> set[str]:
 
 
 def line_field_exists(text: str, field: str) -> bool:
-    return bool(re.search(rf"^\s*{re.escape(field)}\s*:", text, flags=re.MULTILINE))
+    return bool(re.search(rf"^[ \t]*{re.escape(field)}[ \t]*:", text, flags=re.MULTILINE))
 
 
 def field_value(text: str, field: str) -> str | None:
-    match = re.search(rf"^\s*{re.escape(field)}\s*:\s*(.*?)\s*$", text, flags=re.MULTILINE)
+    """Return a same-line scalar value for a lightweight YAML-like field.
+
+    This deliberately avoids ``\s`` around the colon because ``\s`` can consume
+    newlines. A field like ``next_safe_action:`` followed by another field on the
+    next line must be treated as an empty value, not as if the next field were the
+    value.
+    """
+
+    match = re.search(
+        rf"^[ \t]*{re.escape(field)}[ \t]*:[ \t]*(.*?)[ \t]*$",
+        text,
+        flags=re.MULTILINE,
+    )
     if not match:
         return None
     return match.group(1).strip().strip('"').strip("'")
@@ -178,7 +190,7 @@ def cmd_handoff_check(args: argparse.Namespace) -> int:
     validation_status_value = field_value(text, "validation_status")
     if validation_status_value and validation_status_value.lower() == "unknown":
         failures.append("validation_status must not be unknown")
-    if re.search(r"^\s*status\s*:\s*['\"]?unknown['\"]?\s*$", text, flags=re.MULTILINE):
+    if re.search(r"^[ \t]*status[ \t]*:[ \t]*['\"]?unknown['\"]?[ \t]*$", text, flags=re.MULTILINE):
         failures.append("validation_status.status must not be unknown")
     for field in ("active_issue", "allowed_paths", "must_read"):
         value = field_value(text, field)
