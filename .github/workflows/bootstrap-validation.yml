@@ -37,3 +37,33 @@ jobs:
             echo "Expected task-packet missing stop_conditions fixture to fail, but it passed."
             exit 1
           fi
+      - name: Negative check handoff missing active issue
+        run: |
+          if python3 scripts/asgk.py handoff-check --file examples/negative/handoff.missing-active-issue.yaml; then
+            echo "Expected handoff missing active_issue fixture to fail, but it passed."
+            exit 1
+          fi
+      - name: Negative check handoff empty next safe action
+        run: |
+          if python3 scripts/asgk.py handoff-check --file examples/negative/handoff.empty-next-safe-action.yaml; then
+            echo "Expected handoff empty next_safe_action fixture to fail, but it passed."
+            exit 1
+          fi
+      - name: Negative check handoff unknown validation status
+        run: |
+          if python3 scripts/asgk.py handoff-check --file examples/negative/handoff.unknown-validation-status.yaml; then
+            echo "Expected handoff unknown validation_status fixture to fail, but it passed."
+            exit 1
+          fi
+      - name: Negative check handoff missing allowed paths
+        run: |
+          if python3 scripts/asgk.py handoff-check --file examples/negative/handoff.missing-allowed-paths.yaml; then
+            echo "Expected handoff missing allowed_paths fixture to fail, but it passed."
+            exit 1
+          fi
+      - name: Negative check handoff missing must read
+        run: |
+          if python3 scripts/asgk.py handoff-check --file examples/negative/handoff.missing-must-read.yaml; then
+            echo "Expected handoff missing must_read fixture to fail, but it passed."
+            exit 1
+          fi
