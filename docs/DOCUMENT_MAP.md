@@ -142,6 +142,7 @@ usage. They are optimization layers, not the governance core.
 | `docs/control/VALIDATION_STRATEGY.md` | canonical | validation layer responsibilities, blocking vs warning, negative test targets | no | validation/tooling work | `lane_06_ci_github` |
 | `docs/control/PR_REVIEW_CHECKLIST.md` | canonical | repeatable PR review sequence and outcomes | no | PR review and merge readiness | `lane_00_controller` |
 | `docs/control/NEGATIVE_TEST_PLAN.md` | canonical | negative test matrix, expected outcomes, implementation phases | no | negative fixture or validator work | `lane_00_controller` |
+| `docs/control/V1_READINESS_AUDIT.md` | canonical | v1.0 readiness criteria, blockers, follow-ups, and v2.0 deferrals | no | v1.0 release preparation, readiness review, milestone planning | `lane_07_docs_handoff` |
 
 ## Merge And Human-Gate Documents
 
@@ -329,6 +330,14 @@ promotion_or_output_readiness_task:
     - docs/bootstrap/16_downstream_promotion_matrix.md
     - docs/bootstrap/17_readiness_audit_policy.md
     - relevant promotion/validation schemas
+
+readiness_audit_task:
+  read:
+    - AGENTS.md
+    - docs/handoff/CURRENT_STATUS.md
+    - docs/control/V1_READINESS_AUDIT.md
+    - docs/EVOLUTION_MODEL.md
+    - docs/DOCUMENT_MAP.md
 
 tooling_or_validation_task:
   read:
