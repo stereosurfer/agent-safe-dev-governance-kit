@@ -171,6 +171,7 @@ summary_only:
 | Document | Role | Canonical for | Read by default | Read when | Owned by lane |
 |---|---|---|---:|---|---|
 | `docs/architecture/STORAGE_PROFILE.md` | canonical | Code Repo / Artifact Root / Local State Root model | no | storage, workspace, artifact, cache, or sync work | `lane_01_architecture` |
+| `docs/architecture/LOG_AND_RECORD_RETENTION_POLICY.md` | canonical | log and record placement, Artifact Root structure, Local State Root structure, retention, and naming conventions | no | log/record placement, artifact/local-state planning, field-test storage planning | `lane_05_security` |
 | `docs/architecture/CACHE_AND_STATE_POLICY.md` | canonical | cache and live local state placement | no | cache, SQLite, preview, model-cache work | `lane_05_security` |
 | `docs/architecture/WORKSPACE_LOCK_POLICY.md` | canonical | workspace lock behavior and sync-folder warning | no | artifact root writes, app runtime validation | `lane_05_security` |
 | `docs/architecture/RUNTIME_ARTIFACT_POLICY.md` | canonical | runtime artifact commit boundaries | no | PR hygiene, artifact path changes | `lane_05_security` |
@@ -182,6 +183,7 @@ Canonical ownership rule for storage work:
 
 ```yaml
 storage_canonical_source: docs/architecture/STORAGE_PROFILE.md
+retention_canonical_source: docs/architecture/LOG_AND_RECORD_RETENTION_POLICY.md
 storage_summaries:
   - docs/bootstrap/02_storage_roots.md
 storage_specialized_policies:
@@ -315,6 +317,7 @@ security_or_storage_task:
     - AGENTS.md
     - docs/bootstrap/01_physical_boundaries.md
     - docs/architecture/STORAGE_PROFILE.md
+    - docs/architecture/LOG_AND_RECORD_RETENTION_POLICY.md
     - docs/control/HUMAN_GATED_OPERATIONS.md
     - relevant cache/runtime/storage policy
 
