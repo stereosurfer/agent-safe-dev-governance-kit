@@ -1,0 +1,380 @@
+# Validation Strategy
+
+Status: active control policy.
+
+This document defines validation layers, validator responsibilities, negative
+validation targets, blocking behavior, and future CLI mapping for this repository.
+It exists to keep validation behavior explicit before more scripts, fixtures, or
+CLI commands are added.
+
+## Core Principle
+
+```text
+Policy becomes useful when it can be checked.
+Validation turns governance from advice into a repeatable gate.
+```
+
+This strategy does not modify validator behavior by itself. It defines what each
+current and future validator is expected to own.
+
+## Validation Layers
+
+```yaml
+validation_layers:
+  scaffold_validation:
+    script: scripts/check_project.py
+    current_status: implemented
+    purpose: required repository directory scaffold exists
+
+  bootstrap_validation:
+    script: scripts/validate_bootstrap.py
+    current_status: implemented
+    purpose: required files, required terms, JSON validity, task packet fields, PR headings, issue template fields, storage profile invariants
+
+  path_hygiene:
+    script: scripts/governance_hygiene.py
+    current_status: implemented_basic
+    purpose: changed-path and protected-path checks
+
+  github_actions:
+    workflow: .github/workflows/bootstrap-validation.yml
+    current_status: implemented
+    purpose: run repository validation on push and pull request
+
+  negative_validation:
+    current_status: planned
+    purpose: prove that known-bad inputs are blocked
+
+  cli_wrapper:
+    current_status: future
+    purpose: expose validation through stable local commands
+```
+
+## `scripts/check_project.py`
+
+### Owns
+
+```yaml
+owns:
+  - required directory presence
+  - minimum scaffold shape
+  - dependency-light local execution
+```
+
+### Does Not Own
+
+```yaml
+does_not_own:
+  - policy terms
+  - JSON validity
+  - PR template contents
+  - path hygiene
+  - semantic consistency
+  - GitHub API checks
+```
+
+### Blocking Behavior
+
+Failure blocks bootstrap validation and PR merge.
+
+### Expected Use
+
+```bash
+python3 scripts/check_project.py
+```
+
+## `scripts/validate_bootstrap.py`
+
+### Owns
+
+```yaml
+owns:
+  - required file presence
+  - required policy terms
+  - JSON parse validity for schemas and examples
+  - YAML-like required fields in task packets
+  - PR template required headings
+  - issue template required fields
+  - control document required sections
+  - storage profile invariants in examples
+```
+
+### Does Not Own
+
+```yaml
+does_not_own:
+  - full JSON Schema validation
+  - full YAML parsing
+  - GitHub PR status checks
+  - live issue or PR API checks
+  - runtime artifact discovery from git diff
+  - security review
+  - human approval decisions
+```
+
+### Blocking Behavior
+
+Failure blocks bootstrap validation and PR merge.
+
+### Expected Use
+
+```bash
+python3 scripts/validate_bootstrap.py
+```
+
+## `scripts/governance_hygiene.py`
+
+### Owns
+
+```yaml
+owns:
+  - changed-path inspection from a paths file
+  - protected-path detection
+  - runtime artifact path detection
+  - private/binary source-like file detection outside fixture/example paths
+```
+
+### Does Not Own
+
+```yaml
+does_not_own:
+  - creating the changed-path list
+  - GitHub PR diff retrieval
+  - PR body validation
+  - semantic policy review
+  - human-gated operation detection beyond path patterns
+```
+
+### Current Limitation
+
+The script currently expects an explicit `--paths-file`. It does not yet call
+`git diff --name-only` or the GitHub API by itself.
+
+### Blocking Behavior
+
+When run for a PR or local changed-path list, failures should block low-risk
+autonomous merge.
+
+### Expected Use
+
+```bash
+python3 scripts/governance_hygiene.py --paths-file changed-paths.txt
+```
+
+## GitHub Actions
+
+### Owns
+
+```yaml
+owns:
+  - repeatable CI execution of scaffold validation
+  - repeatable CI execution of bootstrap validation
+  - whitespace/diff check
+```
+
+### Does Not Own
+
+```yaml
+does_not_own:
+  - PR semantic review
+  - issue hygiene
+  - human approval
+  - low-risk merge decision by itself
+  - external system checks
+```
+
+### Blocking Behavior
+
+A failing required workflow blocks low-risk autonomous merge.
+
+Current workflow:
+
+```text
+.github/workflows/bootstrap-validation.yml
+```
+
+## Blocking vs Warning
+
+Use this classification until scripts become more granular.
+
+| Finding | Classification | Reason |
+|---|---|---|
+| Required file missing | blocking | scaffold incomplete |
+| Required directory missing | blocking | scaffold incomplete |
+| Required term missing from canonical policy | blocking | policy may have been simplified |
+| Invalid JSON in schema/example | blocking | machine-readable contract broken |
+| Missing PR template required heading | blocking | merge/review surface degraded |
+| Missing issue template required field | blocking | task packet capture degraded |
+| Artifact Root equals Local State Root | blocking | storage boundary broken |
+| Cache policy not `local_only` where required | blocking | storage/cache boundary broken |
+| `app_managed_drive_api` enabled in v0 profile | blocking | external API gate opened |
+| Protected path in changed-path list | blocking | safety boundary touched |
+| Runtime artifact path in changed-path list | blocking | runtime output leakage |
+| Summary doc stale against canonical doc | warning unless acceptance depends on it | requires targeted docs issue |
+| Example stale against schema | blocking when example is part of validation; otherwise warning | depends on validator coverage |
+| Missing optional doc | warning | not part of required scaffold |
+
+## Negative Validation Targets
+
+Negative tests should prove that known-bad inputs are blocked. These are planned
+targets for future fixtures and script hardening.
+
+```yaml
+negative_validation_targets:
+  see_chat_source_of_truth:
+    bad_input: "durable_source_of_truth: see chat"
+    expected: blocked
+    owner: validate_bootstrap_or_task_packet_validator
+
+  missing_merge_decision:
+    bad_input: "PR body without Merge Decision section"
+    expected: blocked
+    owner: validate_bootstrap_or_future_pr_validator
+
+  missing_pr_required_heading:
+    bad_input: "PR template missing required heading"
+    expected: blocked
+    owner: validate_bootstrap
+
+  runtime_artifact_path:
+    bad_input: "runs/test-output.json"
+    expected: blocked
+    owner: governance_hygiene
+
+  protected_path:
+    bad_input: ".env"
+    expected: blocked
+    owner: governance_hygiene
+
+  private_binary_source_file:
+    bad_input: "source.pdf outside tests/fixtures or examples"
+    expected: blocked
+    owner: governance_hygiene
+
+  invalid_json_schema:
+    bad_input: "malformed JSON under schemas/"
+    expected: blocked
+    owner: validate_bootstrap
+
+  storage_roots_equal:
+    bad_input: "artifact_root == local_state_root"
+    expected: blocked
+    owner: validate_bootstrap
+
+  drive_api_enabled_by_default:
+    bad_input: "sync_policy.app_managed_drive_api: true"
+    expected: blocked
+    owner: validate_bootstrap
+
+  external_call_gate_without_approval:
+    bad_input: "policy or fixture enabling live API/cloud/MCP without human gate"
+    expected: blocked_or_human_gated
+    owner: future_validator_or_human_gate_review
+```
+
+## Negative Fixture Rules
+
+Negative fixtures must not break normal CI unless the validator is designed to
+read them as expected failures.
+
+Required pattern:
+
+```yaml
+negative_fixture_rule:
+  location: examples/negative/ or tests/fixtures/negative/
+  must_be_opt_in: true
+  must_record_expected_failure: true
+  must_not_be_loaded_by_positive_validation_as_valid_example: true
+```
+
+Do not add malformed files into normal schema/example paths unless
+`validate_bootstrap.py` is updated to treat them as expected-failure fixtures.
+
+## Future Validation Commands
+
+The future CLI should wrap existing scripts without changing their meaning.
+
+```yaml
+future_cli_mapping:
+  asgk doctor:
+    runs:
+      - python3 scripts/check_project.py
+      - python3 scripts/validate_bootstrap.py
+
+  asgk validate:
+    runs:
+      - python3 scripts/validate_bootstrap.py
+
+  asgk hygiene --paths changed-paths.txt:
+    runs:
+      - python3 scripts/governance_hygiene.py --paths-file changed-paths.txt
+
+  asgk check-pr <number>:
+    future_behavior:
+      - fetch changed file list
+      - run governance hygiene
+      - verify PR template headings
+      - verify Merge Decision Record
+      - report low-risk/human-gated status
+```
+
+CLI work must not add new dependencies in its first version unless a separate
+issue explicitly authorizes them.
+
+## Validation Expansion Rules
+
+Validation may be expanded only when:
+
+```yaml
+validation_expansion_allowed_when:
+  - current issue authorizes script or workflow changes
+  - negative test plan identifies a gap
+  - CI failure reveals missing required coverage
+  - document map identifies a canonical ownership mismatch
+  - human or reviewer asks for stricter validation
+```
+
+Validation must not be loosened without explicit human approval.
+
+## Validator Change Requirements
+
+Any PR changing validation behavior must include:
+
+```yaml
+validator_change_record:
+  script_changed:
+  behavior_added:
+  behavior_removed:
+  blocking_or_warning:
+  positive_cases:
+  negative_cases:
+  rollback_plan:
+```
+
+For validation-script changes, the PR should include examples or test evidence
+that prove the new behavior.
+
+## Relationship To Context Budget
+
+Validation output should reduce token usage. Agents should prefer validator
+reports over manually rereading unrelated files.
+
+Expected pattern:
+
+```text
+run validator -> read compact failure output -> inspect only files named by failure
+```
+
+## Current Known Gaps
+
+```yaml
+known_gaps:
+  - governance_hygiene.py does not yet fetch git diff by itself
+  - no negative fixtures are currently wired into CI
+  - no PR-body validator exists yet
+  - no task-packet schema validator is wired as a full JSON/YAML validator
+  - no CLI wrapper exists yet
+```
+
+These gaps are not blockers for docs-only governance work. They should become
+separate issues before tool implementation.
