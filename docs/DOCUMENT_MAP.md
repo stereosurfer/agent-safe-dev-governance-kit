@@ -3,10 +3,11 @@
 Status: active repository navigation and source-ownership map.
 
 This file defines which documents are canonical, which documents are summaries,
-which documents are examples, and which documents should be read only for
-specific task types. Its main purpose is to reduce token use, prevent document
-role drift, and stop agents from treating repeated summaries as competing
-authority.
+which documents are examples, which files are executable governance surfaces,
+and which files should be read only for specific task types.
+
+Its main purpose is to reduce token use, prevent document role drift, and stop
+agents from treating repeated summaries as competing authority.
 
 ## Core Rule
 
@@ -22,7 +23,7 @@ summary document is stale and should be fixed in a separate issue.
 ## Default Startup Set
 
 Every new agent session should start with only this minimal set unless the
-current issue or PR points elsewhere:
+current issue, PR, or handoff packet points elsewhere:
 
 ```yaml
 default_startup_set:
@@ -34,50 +35,47 @@ default_startup_set:
 
 Additional documents should be pulled by task type, not by habit.
 
-## Profile Boundary
+## Profile And Adapter Boundary
 
-ASGK v1.x uses a generic repo-agent profile. Runtime-specific profile documents
-for Codex, ChatGPT Web/GitHub connector, OpenGoat, Claude Code, Cursor, or other
-runtimes are v2.0 planned/optional work and are not part of the current default
-startup set.
+ASGK v1.x uses a generic repo-agent governance core. Runtime-specific profile or
+adapter documents for Codex, ChatGPT Web/GitHub connector, OpenGoat, Claude Code,
+Cursor, Copilot, or other runtimes are v2.0 planned/optional work and are not
+part of the current default startup set.
 
 ```yaml
 profile_boundary:
   v1_x:
     current_profile: generic_repo_agent
+    current_adapter_mode: generic_handoff_and_validation
     read_by_default: false
     purpose: runtime-agnostic governance core
   v2_0:
-    planned_profiles:
+    planned_profiles_or_adapters:
       - codex-app
       - chatgpt-web-github-connector
       - opengoat
       - claude-code
       - cursor
-    rule: profiles are optimization adapters and must not bypass core governance
+      - copilot
+    rule:
+      - profiles and adapters are optimization layers
+      - profiles and adapters must not bypass core governance
+      - runtime-specific content requires vendor docs and observed tests
 ```
 
 ## Document Roles
 
-Role meanings:
-
 ```yaml
-canonical:
-  meaning: "Primary source of truth for a topic."
-summary:
-  meaning: "Short orientation document that points to canonical sources."
-example:
-  meaning: "Non-authoritative sample for humans and agents."
-schema:
-  meaning: "Machine-readable structure contract."
-template:
-  meaning: "Reusable starting point for work units or GitHub surfaces."
-status:
-  meaning: "Current handoff or state surface."
-script:
-  meaning: "Executable validation or hygiene behavior."
-future_optional:
-  meaning: "Planned future capability, not part of current v1.x governance core."
+roles:
+  canonical: Primary source of truth for a topic.
+  summary: Short orientation document that points to canonical sources.
+  example: Non-authoritative sample for humans and agents.
+  schema: Machine-readable structure contract.
+  contract: Semantic rules and invariants.
+  template: Reusable starting point for work units or GitHub surfaces.
+  status: Current handoff or state surface.
+  script: Executable validation or hygiene behavior.
+  future_optional: Planned future capability, not part of current v1.x core.
 ```
 
 ## Entry And Startup Documents
@@ -86,22 +84,46 @@ future_optional:
 |---|---|---|---:|---|---|
 | `README.md` | summary | project positioning, install path, operating loop overview | yes | all new sessions | `lane_07_docs_handoff` |
 | `AGENTS.md` | canonical | agent startup order, source-of-truth rule, work-unit rule, stop conditions | yes | all agent sessions | `lane_00_controller` |
-| `docs/handoff/CURRENT_STATUS.md` | status | current repo state, active PRs, active milestones, next safe work | yes | all new sessions and handoff updates | `lane_07_docs_handoff` |
+| `docs/handoff/CURRENT_STATUS.md` | status | current repo state, active PRs, active milestones, next safe work | yes | all new sessions, handoff recovery, handoff updates | `lane_07_docs_handoff` |
 | current GitHub issue or PR | canonical | active task objective, allowed paths, acceptance, validation, merge state | yes | every work unit | active task lane |
+| `docs/QUICKSTART.md` | summary | first-use workflow and onboarding | no | onboarding and first repository smoke test | `lane_07_docs_handoff` |
+| `docs/EVOLUTION_MODEL.md` | canonical | docs-driven evolution, self-governance, self-validation maturity model | no | roadmap/evolution discussion | `lane_07_docs_handoff` |
 
-## Runtime Profiles
+## Handoff And Recovery Documents
 
 | Document | Role | Canonical for | Read by default | Read when | Owned by lane |
 |---|---|---|---:|---|---|
+| `docs/control/HANDOFF_PACKET.md` | canonical | generic work-unit handoff packet fields, validation status values, recovery stop conditions | no | interruption, model switch, tool switch, handoff recovery, `asgk.py handoff-check` | `lane_00_controller` |
+| `docs/handoff/CURRENT_STATUS.md` | status | repo-level current state and next safe work | yes | all sessions and handoff updates | `lane_07_docs_handoff` |
+| `docs/handoff/DECISIONS.md` | status | durable architecture/governance decisions | no | decision lookup or update | `lane_07_docs_handoff` |
+| `docs/handoff/AGENT_LOG.md` | status | optional agent report log or links | no | handoff/reporting work | `lane_07_docs_handoff` |
+
+Canonical ownership rule for handoff work:
+
+```yaml
+handoff_canonical_sources:
+  repo_level_status: docs/handoff/CURRENT_STATUS.md
+  work_unit_packet_spec: docs/control/HANDOFF_PACKET.md
+  recovery_context: docs/control/CONTEXT_BUDGET_POLICY.md
+  source_of_truth_rule: AGENTS.md
+```
+
+## Adapter Mechanism And Future Runtime Profiles
+
+| Document | Role | Canonical for | Read by default | Read when | Owned by lane |
+|---|---|---|---:|---|---|
+| `docs/adapters/README.md` | canonical | v1.x generic adapter mechanism and v2.0 adapter boundary | no | adapter mechanism planning, v2.0 prep, handoff tool switch discussion | `lane_01_architecture` |
+| `docs/adapters/ADAPTER_TEMPLATE.md` | template | future v2.0 runtime adapter structure | no | creating v2.0 adapter specs after vendor docs and observed tests exist | `lane_01_architecture` |
 | `profiles/PROFILE_SPEC.md` | future_optional | v2.0 runtime profile schema and required fields | no | v2.0 profile work only | `lane_01_architecture` |
-| `profiles/generic-repo-agent/` | future_optional | optional generic profile packaging for v1.x rules | no | v2.0 profile packaging work only | `lane_01_architecture` |
+| `profiles/generic-repo-agent/` | future_optional | optional packaging of generic v1.x profile | no | v2.0 profile packaging work only | `lane_01_architecture` |
 | `profiles/codex-app/` | future_optional | Codex-specific execution optimization | no | v2.0 runtime profile work after vendor docs and observed tests | `lane_01_architecture` |
 | `profiles/chatgpt-web-github-connector/` | future_optional | ChatGPT Web/GitHub connector execution optimization | no | v2.0 runtime profile work after vendor docs and observed tests | `lane_01_architecture` |
 | `profiles/opengoat/` | future_optional | OpenGoat-specific execution optimization | no | v2.0 runtime profile work after vendor docs and observed tests | `lane_01_architecture` |
 | `profiles/claude-code/` | future_optional | Claude Code-specific execution optimization | no | v2.0 runtime profile work after vendor docs and observed tests | `lane_01_architecture` |
 | `profiles/cursor/` | future_optional | Cursor-specific execution optimization | no | v2.0 runtime profile work after vendor docs and observed tests | `lane_01_architecture` |
 
-Runtime profile docs must not be treated as prerequisites for v1.x usage.
+Runtime profile or adapter docs must not be treated as prerequisites for v1.x
+usage. They are optimization layers, not the governance core.
 
 ## Control Documents
 
@@ -113,6 +135,11 @@ Runtime profile docs must not be treated as prerequisites for v1.x usage.
 | `docs/control/LANE_STATUS.md` | status | lane queue, owner, blocker, next action | no | multi-lane coordination | `lane_00_controller` |
 | `docs/control/ISSUE_HYGIENE_GATE.md` | canonical | stale issue detection and issue-start gate | no | before selecting or closing issues | `lane_00_controller` |
 | `docs/control/FAILURE_THRESHOLDS.md` | canonical | stop thresholds and notification conditions | no | repeated failures, autonomous run blockers | `lane_00_controller` |
+| `docs/control/CONTEXT_BUDGET_POLICY.md` | canonical | task context profiles, handoff recovery read set, context expansion rules | no | context selection, handoff recovery, token-budget review | `lane_00_controller` |
+| `docs/control/AGENT_CAPABILITY_MATRIX.md` | canonical | task type to intelligence level/risk/human gate mapping | no | agent assignment, escalation, downscoping | `lane_00_controller` |
+| `docs/control/VALIDATION_STRATEGY.md` | canonical | validation layer responsibilities, blocking vs warning, negative test targets | no | validation/tooling work | `lane_06_ci_github` |
+| `docs/control/PR_REVIEW_CHECKLIST.md` | canonical | repeatable PR review sequence and outcomes | no | PR review and merge readiness | `lane_00_controller` |
+| `docs/control/NEGATIVE_TEST_PLAN.md` | canonical | negative test matrix, expected outcomes, implementation phases | no | negative fixture or validator work | `lane_00_controller` |
 
 ## Merge And Human-Gate Documents
 
@@ -120,7 +147,7 @@ Runtime profile docs must not be treated as prerequisites for v1.x usage.
 |---|---|---|---:|---|---|
 | `docs/control/LOW_RISK_AUTONOMOUS_MERGE_POLICY.md` | canonical | low-risk merge gates, allowed necessary operations, merge blockers | no | merge decisions, PR closeout | `lane_00_controller` |
 | `docs/control/HUMAN_GATED_OPERATIONS.md` | canonical | operations requiring explicit human approval | no | high-risk change, restricted capability, unclear merge | `lane_05_security` |
-| `docs/control/MERGE_DECISION_RECORD.md` | canonical | required merge decision YAML fields | no | any merge-eligible PR | `lane_06_ci_github` |
+| `docs/control/MERGE_DECISION_RECORD.md` | canonical | required merge decision YAML fields | no | any merge-eligible PR, `asgk.py pr-body-check` | `lane_06_ci_github` |
 | `docs/bootstrap/11_auto_merge_policy.md` | summary | short bootstrap-level auto-merge overview | no | bootstrap orientation only | `lane_00_controller` |
 
 Canonical ownership rule for merge work:
@@ -173,32 +200,11 @@ storage_specialized_policies:
 | `docs/bootstrap/09_safety_checks.md` | summary | minimum safety check overview | no | safety orientation only | `lane_05_security` |
 | `docs/bootstrap/10_roadmap.md` | template | roadmap hierarchy | no | milestone/roadmap planning | `lane_00_controller` |
 | `docs/bootstrap/12_productization_notes.md` | reference | productization framing, v1.x/v2.0 product boundary | no | productization planning only | `lane_07_docs_handoff` |
-
-## Artifact Promotion And Readiness Documents
-
-| Document | Role | Canonical for | Read by default | Read when | Owned by lane |
-|---|---|---|---:|---|---|
 | `docs/bootstrap/13_artifact_promotion_policy.md` | summary | promotion chain overview and status values | no | artifact/data/evidence-heavy work | `lane_02_schema_contracts` |
+| `docs/bootstrap/14_execution_lanes.md` | canonical | execution lanes and external-call boundaries | no | execution lane/API/provider discussions | `lane_05_security` |
 | `docs/bootstrap/15_source_or_input_class_matrix.md` | optional module | source/input class use boundaries | no | evidence, source, claim, or context-pack projects | `lane_02_schema_contracts` |
 | `docs/bootstrap/16_downstream_promotion_matrix.md` | optional module | downstream artifact eligibility | no | artifact promotion or output eligibility work | `lane_02_schema_contracts` |
 | `docs/bootstrap/17_readiness_audit_policy.md` | canonical | readiness audit before output, API, import, publication, or external calls | no | API/model/provider/output readiness changes | `lane_05_security` |
-| `contracts/promotion_gate.contract.yaml` | contract | promotion gate required fields and blocked statuses | no | promotion contract changes | `lane_02_schema_contracts` |
-| `schemas/promotion_gate.schema.json` | schema | machine-readable promotion gate shape | no | promotion validation work | `lane_02_schema_contracts` |
-
-Canonical ownership rule for generic software projects:
-
-```yaml
-promotion_docs_are_optional_for:
-  - simple application repos
-  - docs-only repos
-  - UI-only repos
-promotion_docs_are_recommended_for:
-  - data pipelines
-  - evidence pipelines
-  - research systems
-  - artifact export systems
-  - AI-generated output systems
-```
 
 ## Task Packet, Agent, And Template Documents
 
@@ -206,12 +212,12 @@ promotion_docs_are_recommended_for:
 |---|---|---|---:|---|---|
 | `docs/control/TASK_PACKET_FORMAT.md` | canonical | human-readable task packet requirements | no | creating or validating task packets | `lane_00_controller` |
 | `schemas/task_packet.schema.json` | schema | machine-readable task packet structure | no | task packet validation changes | `lane_02_schema_contracts` |
-| `agent/task_packet.template.yaml` | template | reusable task packet starting point | no | creating repo task packets | `lane_00_controller` |
+| `agent/task_packet.template.yaml` | template | reusable task packet starting point | no | creating repo task packets, `asgk.py task-packet-check` | `lane_00_controller` |
 | `.github/ISSUE_TEMPLATE/agent_task.yml` | template | GitHub issue capture form | no | issue-template changes | `lane_06_ci_github` |
-| `examples/task_packet.example.yaml` | example | sample task packet | no | onboarding, examples, docs | `lane_07_docs_handoff` |
+| `examples/task_packet.example.yaml` | example | sample task packet | no | onboarding, task packet examples | `lane_07_docs_handoff` |
 | `docs/control/AGENT_REPORT_FORMAT.md` | canonical | required agent report sections | no | PR handoff/reporting work | `lane_00_controller` |
 | `schemas/agent_report.schema.json` | schema | machine-readable report fields | no | report validation work | `lane_02_schema_contracts` |
-| `examples/agent_report.example.md` | example | sample report | no | onboarding, examples, docs | `lane_07_docs_handoff` |
+| `examples/agent_report.example.md` | example | sample report | no | onboarding, report examples | `lane_07_docs_handoff` |
 | `agent/agent_rules.yaml` | canonical | roles, intelligence levels, sub-agent required fields, stop conditions | no | agent routing, sub-agent, or role changes | `lane_00_controller` |
 | `agent/workflow.yaml` | canonical | workflow gate sequence | no | workflow automation changes | `lane_00_controller` |
 | `agent/task_packets/*.yaml` | template/status | lane-specific assignment packets | no | lane work or autonomous runs | specific lane |
@@ -242,17 +248,19 @@ disagree, stop and open a schema/contract alignment issue.
 |---|---|---|---:|---|---|
 | `scripts/check_project.py` | script | required directory scaffold check | no | CI/tooling/debug validation | `lane_06_ci_github` |
 | `scripts/validate_bootstrap.py` | script | bootstrap governance validation behavior | no | CI/tooling/debug validation | `lane_06_ci_github` |
-| `scripts/governance_hygiene.py` | script | changed-path and protected-path hygiene | no | path hygiene or future CLI work | `lane_06_ci_github` |
+| `scripts/governance_hygiene.py` | script | changed-path and protected-path hygiene | no | path hygiene, negative changed-path checks, future CLI work | `lane_06_ci_github` |
+| `scripts/asgk.py` | script | minimal ASGK CLI wrapper for doctor/validate/hygiene/negative/pr-body/task-packet/handoff checks | no | local validation, handoff-check, PR-body/task-packet checks, future CLI work | `lane_06_ci_github` |
 | `.github/workflows/bootstrap-validation.yml` | template/script | GitHub Actions bootstrap validation workflow | no | CI/workflow changes | `lane_06_ci_github` |
-| `.github/PULL_REQUEST_TEMPLATE.md` | template | required PR body sections and Merge Decision Record surface | no | PR creation/review, template changes | `lane_06_ci_github` |
+| `.github/PULL_REQUEST_TEMPLATE.md` | template | required PR body sections and Merge Decision Record surface | no | PR creation/review, template changes, `asgk.py pr-body-check` | `lane_06_ci_github` |
 
-## Examples
+## Examples And Fixtures
 
 | Path | Role | Canonical for | Read by default | Read when | Owned by lane |
 |---|---|---|---:|---|---|
 | `examples/*.json` | example | valid sample payloads | no | onboarding, validator examples, fixture design | `lane_07_docs_handoff` |
 | `examples/*.yaml` | example | valid sample task packets | no | onboarding, task packet examples | `lane_07_docs_handoff` |
 | `examples/*.md` | example | report or documentation examples | no | onboarding, report examples | `lane_07_docs_handoff` |
+| `examples/negative/*` | example | opt-in expected-failure fixtures | no | negative validation work, `asgk.py negative`, governance hygiene tests | `lane_02_schema_contracts` |
 
 Examples are not policy. If an example conflicts with a canonical policy,
 contract, or schema, fix the example.
@@ -269,6 +277,16 @@ docs_only_task:
     - current issue or PR
     - target file
     - .github/PULL_REQUEST_TEMPLATE.md
+
+handoff_recovery_task:
+  read:
+    - AGENTS.md
+    - docs/handoff/CURRENT_STATUS.md
+    - active issue
+    - active PR if one exists
+    - docs/control/HANDOFF_PACKET.md
+    - docs/DOCUMENT_MAP.md
+    - files listed in handoff_packet.must_read
 
 schema_or_contract_task:
   read:
@@ -309,6 +327,14 @@ promotion_or_output_readiness_task:
     - docs/bootstrap/16_downstream_promotion_matrix.md
     - docs/bootstrap/17_readiness_audit_policy.md
     - relevant promotion/validation schemas
+
+tooling_or_validation_task:
+  read:
+    - AGENTS.md
+    - current issue or PR
+    - target script or workflow file
+    - docs/control/VALIDATION_STRATEGY.md
+    - relevant examples/negative fixture if named by the issue
 ```
 
 ## Maintenance Rules
@@ -323,4 +349,7 @@ promotion_or_output_readiness_task:
    and this map together.
 5. If an agent task reads more than the task-type reading guide requires, the
    agent report should state why.
-6. Do not add runtime-specific profile docs to the default read set before v2.0.
+6. Do not add runtime-specific profile or adapter docs to the default read set
+   before v2.0.
+7. When a new CLI command becomes canonical for a check, record it in Scripts And
+   CI and in the relevant task-type reading guide.
