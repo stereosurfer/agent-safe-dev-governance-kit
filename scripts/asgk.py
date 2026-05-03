@@ -30,6 +30,7 @@ HANDOFF_REQUIRED_LIST_FIELDS = [
     "completed", "remaining", "allowed_paths", "modified_files", "must_read",
     "must_not_do", "decisions", "open_questions",
 ]
+HANDOFF_REQUIRED_SCALAR_FIELDS = ["active_issue"]
 STATUS_REQUIRED_HEADINGS = [
     "Durable source of truth", "Current snapshot", "Active work",
     "Current validation entrypoint", "Closed gates", "Last completed",
@@ -130,7 +131,7 @@ def line_field_exists(text: str, field: str) -> bool:
 def field_value(text: str, field: str) -> str | None:
     """Return a same-line scalar value for a lightweight YAML-like field.
 
-    This deliberately avoids ``\s`` around the colon because ``\s`` can consume
+    This deliberately avoids ``\\s`` around the colon because ``\\s`` can consume
     newlines. A field like ``next_safe_action:`` followed by another field on the
     next line must be treated as an empty value, not as if the next field were the
     value.
@@ -338,7 +339,7 @@ def cmd_handoff_check(args: argparse.Namespace) -> int:
         failures.append("validation_status must not be unknown")
     if re.search(r"^[ \t]*status[ \t]*:[ \t]*['\"]?unknown['\"]?[ \t]*$", text, flags=re.MULTILINE):
         failures.append("validation_status.status must not be unknown")
-    for field in ("active_issue", "allowed_paths", "must_read"):
+    for field in HANDOFF_REQUIRED_SCALAR_FIELDS:
         value = field_value(text, field)
         if value is not None and not value:
             failures.append(f"{field} is empty")
