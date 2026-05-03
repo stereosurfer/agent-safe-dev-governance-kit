@@ -15,30 +15,22 @@ handoff_packet:
     - "Created a concrete positive handoff fixture from the handoff-template shape."
   remaining:
     - "Run handoff-check, doctor, and GitHub Actions before merge."
-  allowed_paths:
-    - "examples/handoff_packet.valid.yaml"
-    - ".github/workflows/bootstrap-validation.yml"
-    - "docs/handoff/CURRENT_STATUS.md"
+  allowed_paths: "examples/handoff_packet.valid.yaml; .github/workflows/bootstrap-validation.yml; docs/handoff/CURRENT_STATUS.md"
   modified_files:
     - "examples/handoff_packet.valid.yaml"
+    - ".github/workflows/bootstrap-validation.yml"
     - "docs/handoff/CURRENT_STATUS.md"
   validation_status:
     status: "not_run"
     evidence: "Validation is expected to be run by local command or CI after this fixture is added."
   blockers: "none"
   next_safe_action: "Run python3 scripts/asgk.py handoff-check --file examples/handoff_packet.valid.yaml --fail-on-todo."
-  must_read:
-    - "AGENTS.md"
-    - "README.md"
-    - "docs/handoff/CURRENT_STATUS.md"
-    - "docs/DOCUMENT_MAP.md"
-    - "docs/control/V1_1_STABILIZATION_PLAN.md"
-    - "GitHub issue #52"
-    - "GitHub PR #53"
+  must_read: "AGENTS.md; README.md; docs/handoff/CURRENT_STATUS.md; docs/DOCUMENT_MAP.md; docs/control/V1_1_STABILIZATION_PLAN.md; GitHub issue #52; GitHub PR #53"
   must_not_do:
     - "Do not add dependencies or redesign the parser for this fixture."
     - "Do not change paths outside the issue allowed paths."
   decisions:
     - "The fixture uses concrete non-placeholder values so --fail-on-todo can enforce template fill quality."
+    - "The allowed_paths and must_read fields intentionally use same-line scalar values because the current lightweight handoff checker treats empty same-line list headers as empty during scalar required-field checks."
   open_questions:
     - "None for this fixture."
