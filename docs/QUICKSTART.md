@@ -14,6 +14,14 @@ software development. Its goal is to keep humans, ChatGPT, Codex, and other
 agents working through durable GitHub and repository state rather than private
 chat memory.
 
+ASGK v1.x uses a generic repo-agent profile. It does not assume a specific
+runtime. Codex, ChatGPT Web, OpenGoat, Claude Code, Cursor, another AI agent, or
+a human may perform work, but every repo change must pass through the same ASGK
+governance flow.
+
+Runtime-specific governance profiles are planned for v2.0. They are optimization
+adapters for specific execution surfaces, not prerequisites for using v1.x.
+
 The core workflow is:
 
 ```text
@@ -319,6 +327,11 @@ Stop and open a tooling issue.
 Negative fixtures must be opt-in and must not break normal validation unless the
 validator is designed to treat them as expected failures.
 
+### Mistake: optimizing for a specific runtime too early
+
+v1.x is runtime-agnostic. Do not add Codex/OpenGoat/Claude/Cursor-specific
+profile work unless a v2.0 profile issue explicitly opens that lane.
+
 ## What To Do Next
 
 After this quickstart is in place, recommended next work units are:
@@ -330,7 +343,8 @@ After this quickstart is in place, recommended next work units are:
 4. Strengthen governance_hygiene.py.
 5. Add quota / external agent fallback policy.
 6. Add first CLI wrapper.
+7. Plan v2.0 runtime-specific governance profiles after the generic core is stable.
 ```
 
 Keep this order conservative. CLI should wrap stable rules, not freeze unstable
-ones.
+ones. Runtime-specific profiles should optimize stable governance, not define it.
