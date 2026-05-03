@@ -1,0 +1,26 @@
+negative_case:
+  id: NEG-037-handoff-empty-required-lists
+  title: Handoff packet has required list fields with no material items
+  expected_outcome: blocked
+  owner: asgk_handoff_check
+  should_block_positive_validation: false
+
+handoff_packet:
+  active_issue: "#000"
+  active_pr: "#000"
+  branch: "codex/example"
+  objective: "Bad example with empty required list fields."
+  current_state: "Bad example."
+  completed:
+  remaining:
+  allowed_paths:
+  modified_files:
+  validation_status:
+    status: "not_run"
+    reason: "negative fixture"
+  blockers: "none"
+  next_safe_action: "Block this handoff packet."
+  must_read:
+  must_not_do:
+  decisions:
+  open_questions:
