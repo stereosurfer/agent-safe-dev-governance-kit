@@ -253,7 +253,7 @@ disagree, stop and open a schema/contract alignment issue.
 | `scripts/check_project.py` | script | required directory scaffold check | no | CI/tooling/debug validation | `lane_06_ci_github` |
 | `scripts/validate_bootstrap.py` | script | bootstrap governance validation behavior | no | CI/tooling/debug validation | `lane_06_ci_github` |
 | `scripts/governance_hygiene.py` | script | changed-path and protected-path hygiene | no | path hygiene, negative changed-path checks, future CLI work | `lane_06_ci_github` |
-| `scripts/asgk.py` | script | minimal ASGK CLI wrapper for doctor/validate/hygiene/negative/pr-body/task-packet/handoff checks | no | local validation, handoff-check, PR-body/task-packet checks, future CLI work | `lane_06_ci_github` |
+| `scripts/asgk.py` | script | minimal ASGK CLI wrapper for doctor/validate/hygiene/negative/status/pr-body/task-packet/handoff checks | no | local validation, status-check, handoff-check, PR-body/task-packet checks, future CLI work | `lane_06_ci_github` |
 | `.github/workflows/bootstrap-validation.yml` | template/script | GitHub Actions bootstrap validation workflow | no | CI/workflow changes | `lane_06_ci_github` |
 | `.github/PULL_REQUEST_TEMPLATE.md` | template | required PR body sections and Merge Decision Record surface | no | PR creation/review, template changes, `asgk.py pr-body-check` | `lane_06_ci_github` |
 
