@@ -2,6 +2,10 @@
 
 Runtime outputs are not source code.
 
+Use `docs/architecture/LOG_AND_RECORD_RETENTION_POLICY.md` for the canonical
+record-class matrix and for where reviewed artifacts, runtime outputs, logs,
+caches, scratch files, and local state may live.
+
 ## Do not commit
 
 ```text
