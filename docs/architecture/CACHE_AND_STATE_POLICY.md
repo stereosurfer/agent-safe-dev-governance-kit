@@ -2,6 +2,10 @@
 
 Runtime cache and live state must not leak into the code repo or Artifact Root.
 
+Use `docs/architecture/LOG_AND_RECORD_RETENTION_POLICY.md` for the canonical
+Local State Root directory structure and naming conventions for live DBs,
+preview caches, model caches, temporary jobs, scratch files, and session state.
+
 ## Local-only state
 
 ```yaml
