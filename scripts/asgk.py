@@ -42,6 +42,14 @@ STATUS_FORBIDDEN_HISTORY_HEADINGS = [
 STATUS_FORBIDDEN_PHRASES = [
     "full PR body", "raw CI log", "chat transcript", "see chat",
 ]
+CLOSEOUT_PRE_MERGE_NEXT_ACTION_PATTERNS = [
+    r"verify\s+github\s+actions",
+    r"wait\s+for\s+github\s+actions",
+    r"update\s+(?:the\s+)?merge\s+decision",
+    r"merge\s+only\s+if",
+    r"merge\s+pr\s+#?\d+",
+    r"close\s+issue\s+#?\d+",
+]
 NEGATIVE_CHANGED_PATH_FIXTURES = [
     "examples/negative/changed_paths.runtime-artifact.txt",
     "examples/negative/changed_paths.protected.txt",
@@ -59,6 +67,13 @@ EXPECTED_FAILURE_CHECKS = [
     ["python3", "scripts/asgk.py", "handoff-check", "--file", "examples/negative/handoff.missing-must-read.yaml"],
     ["python3", "scripts/asgk.py", "handoff-check", "--file", "examples/negative/handoff.empty-required-lists.yaml"],
     ["python3", "scripts/asgk.py", "handoff-check", "--file", "examples/negative/handoff.unresolved-todo.yaml", "--fail-on-todo"],
+    [
+        "python3", "scripts/asgk.py", "closeout-check",
+        "--file", "examples/negative/current_status.stale-closeout.md",
+        "--completed-issue", "#52",
+        "--completed-pr", "#53",
+        "--completed-branch", "codex/positive-handoff-template-fixture",
+    ],
 ]
 
 
@@ -122,6 +137,15 @@ def markdown_headings(text: str) -> set[str]:
         if match:
             found.add(match.group(1).strip())
     return found
+
+
+def markdown_section(text: str, heading: str) -> str:
+    match = re.search(
+        rf"^## {re.escape(heading)}\s+(.+?)(?:\n## |\Z)",
+        text,
+        flags=re.MULTILINE | re.DOTALL,
+    )
+    return match.group(1).strip() if match else ""
 
 
 def line_field_exists(text: str, field: str) -> bool:
@@ -272,13 +296,41 @@ def cmd_status_check(args: argparse.Namespace) -> int:
         if phrase.lower() in lower_text:
             failures.append(f"forbidden current-status phrase: {phrase}")
 
-    next_action_match = re.search(
-        r"^## Next safe action\s+(.+?)(?:\n## |\Z)",
-        text,
-        flags=re.MULTILINE | re.DOTALL,
-    )
-    if not next_action_match or not next_action_match.group(1).strip():
+    next_action = markdown_section(text, "Next safe action")
+    if not next_action:
         failures.append("current status next safe action is empty")
+
+    return print_failures(failures)
+
+
+def cmd_closeout_check(args: argparse.Namespace) -> int:
+    status_path = rel(args.file)
+    if not status_path.exists():
+        return print_failures([f"missing closeout status file: {args.file}"])
+
+    text = status_path.read_text(encoding="utf-8")
+    active_work = markdown_section(text, "Active work")
+    next_safe_action = markdown_section(text, "Next safe action")
+    failures: list[str] = []
+
+    for issue in args.completed_issue:
+        if issue and issue in active_work:
+            failures.append(f"completed issue still appears in active work: {issue}")
+
+    for pr in args.completed_pr:
+        if pr and pr in active_work:
+            failures.append(f"completed PR still appears in active work: {pr}")
+
+    for branch in args.completed_branch:
+        if branch and branch in active_work:
+            failures.append(f"completed branch still appears in active work: {branch}")
+
+    if not next_safe_action:
+        failures.append("next safe action is empty")
+    else:
+        for pattern in CLOSEOUT_PRE_MERGE_NEXT_ACTION_PATTERNS:
+            if re.search(pattern, next_safe_action, flags=re.IGNORECASE):
+                failures.append(f"next safe action appears to describe pre-merge closeout work: {pattern}")
 
     return print_failures(failures)
 
@@ -413,6 +465,13 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--file", default="docs/handoff/CURRENT_STATUS.md")
     p.add_argument("--max-lines", type=int, default=120)
     p.set_defaults(func=cmd_status_check)
+
+    p = sub.add_parser("closeout-check", help="Check local closeout status for stale active work markers.")
+    p.add_argument("--file", default="docs/handoff/CURRENT_STATUS.md")
+    p.add_argument("--completed-issue", action="append", default=[])
+    p.add_argument("--completed-pr", action="append", default=[])
+    p.add_argument("--completed-branch", action="append", default=[])
+    p.set_defaults(func=cmd_closeout_check)
 
     p = sub.add_parser("pr-body-check", help="Check PR body and Merge Decision Record.")
     p.add_argument("--file", required=True)
