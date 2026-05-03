@@ -38,6 +38,11 @@ def rel(path: str | Path) -> Path:
     return p if p.is_absolute() else ROOT / p
 
 
+def yaml_quote(value: str) -> str:
+    escaped = value.replace("\\", "\\\\").replace('"', '\\"')
+    return f'"{escaped}"'
+
+
 def run_command(args: list[str], *, cwd: Path = ROOT) -> int:
     print("+ " + " ".join(args))
     return subprocess.run(args, cwd=cwd).returncode
@@ -199,6 +204,47 @@ def cmd_handoff_check(args: argparse.Namespace) -> int:
     return print_failures(failures)
 
 
+def cmd_handoff_template(args: argparse.Namespace) -> int:
+    active_issue = args.issue or "AI_TODO: active issue, e.g. #40"
+    active_pr = args.pr or "AI_TODO: active PR or none with reason"
+    branch = args.branch or "AI_TODO: current branch"
+    objective = args.objective or "AI_TODO: summarize objective from durable source"
+
+    packet = f"""handoff_packet:
+  active_issue: {yaml_quote(active_issue)}
+  active_pr: {yaml_quote(active_pr)}
+  branch: {yaml_quote(branch)}
+  objective: {yaml_quote(objective)}
+  current_state: "AI_TODO: summarize current state from issue, PR, and repo files."
+  completed:
+    - "AI_TODO: completed step or output."
+  remaining:
+    - "AI_TODO: remaining bounded work."
+  allowed_paths:
+    - "AI_TODO: copy allowed path from issue."
+  modified_files:
+    - "AI_TODO: list modified file or none."
+  validation_status:
+    status: "not_run"
+    evidence: "TODO: pass/fail/blocked/not_run evidence. Do not write unknown."
+  blockers: "AI_TODO: blocker list or none."
+  next_safe_action: "AI_TODO: one concrete next safe action."
+  must_read:
+    - "AGENTS.md"
+    - "docs/handoff/CURRENT_STATUS.md"
+    - "docs/control/HANDOFF_PACKET.md"
+    - "docs/DOCUMENT_MAP.md"
+  must_not_do:
+    - "AI_TODO: forbidden action for the next actor."
+  decisions:
+    - "AI_TODO: durable decision already made, or none."
+  open_questions:
+    - "AI_TODO: open question requiring human/reviewer judgment, or none."
+"""
+    print(packet, end="")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="ASGK minimal validation CLI.")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -229,6 +275,13 @@ def build_parser() -> argparse.ArgumentParser:
     p = sub.add_parser("handoff-check", help="Check generic handoff packet completeness.")
     p.add_argument("--file", required=True)
     p.set_defaults(func=cmd_handoff_check)
+
+    p = sub.add_parser("handoff-template", help="Print an AI-fillable handoff packet draft.")
+    p.add_argument("--issue", default=None)
+    p.add_argument("--pr", default=None)
+    p.add_argument("--branch", default=None)
+    p.add_argument("--objective", default=None)
+    p.set_defaults(func=cmd_handoff_template)
 
     return parser
 
