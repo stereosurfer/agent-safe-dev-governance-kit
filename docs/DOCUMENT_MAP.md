@@ -34,6 +34,29 @@ default_startup_set:
 
 Additional documents should be pulled by task type, not by habit.
 
+## Profile Boundary
+
+ASGK v1.x uses a generic repo-agent profile. Runtime-specific profile documents
+for Codex, ChatGPT Web/GitHub connector, OpenGoat, Claude Code, Cursor, or other
+runtimes are v2.0 planned/optional work and are not part of the current default
+startup set.
+
+```yaml
+profile_boundary:
+  v1_x:
+    current_profile: generic_repo_agent
+    read_by_default: false
+    purpose: runtime-agnostic governance core
+  v2_0:
+    planned_profiles:
+      - codex-app
+      - chatgpt-web-github-connector
+      - opengoat
+      - claude-code
+      - cursor
+    rule: profiles are optimization adapters and must not bypass core governance
+```
+
 ## Document Roles
 
 Role meanings:
@@ -53,6 +76,8 @@ status:
   meaning: "Current handoff or state surface."
 script:
   meaning: "Executable validation or hygiene behavior."
+future_optional:
+  meaning: "Planned future capability, not part of current v1.x governance core."
 ```
 
 ## Entry And Startup Documents
@@ -63,6 +88,20 @@ script:
 | `AGENTS.md` | canonical | agent startup order, source-of-truth rule, work-unit rule, stop conditions | yes | all agent sessions | `lane_00_controller` |
 | `docs/handoff/CURRENT_STATUS.md` | status | current repo state, active PRs, active milestones, next safe work | yes | all new sessions and handoff updates | `lane_07_docs_handoff` |
 | current GitHub issue or PR | canonical | active task objective, allowed paths, acceptance, validation, merge state | yes | every work unit | active task lane |
+
+## Runtime Profiles
+
+| Document | Role | Canonical for | Read by default | Read when | Owned by lane |
+|---|---|---|---:|---|---|
+| `profiles/PROFILE_SPEC.md` | future_optional | v2.0 runtime profile schema and required fields | no | v2.0 profile work only | `lane_01_architecture` |
+| `profiles/generic-repo-agent/` | future_optional | optional generic profile packaging for v1.x rules | no | v2.0 profile packaging work only | `lane_01_architecture` |
+| `profiles/codex-app/` | future_optional | Codex-specific execution optimization | no | v2.0 runtime profile work after vendor docs and observed tests | `lane_01_architecture` |
+| `profiles/chatgpt-web-github-connector/` | future_optional | ChatGPT Web/GitHub connector execution optimization | no | v2.0 runtime profile work after vendor docs and observed tests | `lane_01_architecture` |
+| `profiles/opengoat/` | future_optional | OpenGoat-specific execution optimization | no | v2.0 runtime profile work after vendor docs and observed tests | `lane_01_architecture` |
+| `profiles/claude-code/` | future_optional | Claude Code-specific execution optimization | no | v2.0 runtime profile work after vendor docs and observed tests | `lane_01_architecture` |
+| `profiles/cursor/` | future_optional | Cursor-specific execution optimization | no | v2.0 runtime profile work after vendor docs and observed tests | `lane_01_architecture` |
+
+Runtime profile docs must not be treated as prerequisites for v1.x usage.
 
 ## Control Documents
 
@@ -133,7 +172,7 @@ storage_specialized_policies:
 | `docs/bootstrap/08_acceptance_criteria.md` | canonical | three-layer acceptance model and definition of done | no | issue/PR acceptance changes | `lane_00_controller` |
 | `docs/bootstrap/09_safety_checks.md` | summary | minimum safety check overview | no | safety orientation only | `lane_05_security` |
 | `docs/bootstrap/10_roadmap.md` | template | roadmap hierarchy | no | milestone/roadmap planning | `lane_00_controller` |
-| `docs/bootstrap/12_productization_notes.md` | reference | productization framing | no | productization planning only | `lane_07_docs_handoff` |
+| `docs/bootstrap/12_productization_notes.md` | reference | productization framing, v1.x/v2.0 product boundary | no | productization planning only | `lane_07_docs_handoff` |
 
 ## Artifact Promotion And Readiness Documents
 
@@ -284,3 +323,4 @@ promotion_or_output_readiness_task:
    and this map together.
 5. If an agent task reads more than the task-type reading guide requires, the
    agent report should state why.
+6. Do not add runtime-specific profile docs to the default read set before v2.0.

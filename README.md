@@ -1,6 +1,6 @@
 # Bootstrap Kit v2.1
 
-Repo-native AI development governance scaffold for projects that allow AI agents, Codex, sub-agents, or automation to modify a repository.
+Repo-native AI development governance scaffold for projects that allow humans, AI agents, Codex, sub-agents, or automation to modify a repository.
 
 This version is designed against a specific failure mode: **AI over-simplification**. It does not only state principles. It turns the principles into required fields, stop conditions, promotion gates, validation scripts, examples, and merge records.
 
@@ -10,6 +10,18 @@ This version is designed against a specific failure mode: **AI over-simplificati
 Chat is not the control plane.
 GitHub issues, pull requests, repository files, and handoff documents are the durable source of truth.
 ```
+
+## Product boundary
+
+ASGK v1.x is runtime-agnostic. It assumes a **generic repo agent profile**: any human or AI runtime may work on the repository, but every repo change must pass through the same issue, PR, validation, merge-decision, and handoff governance layer.
+
+Runtime-specific profiles for Codex, ChatGPT Web/GitHub connector, OpenGoat, Claude Code, Cursor, or similar tools are planned for **v2.0**. They are optimization adapters, not the v1.x foundation.
+
+```text
+Agent runtimes will commoditize. Repo governance is the durable layer.
+```
+
+ASGK does not replace agent runtimes. It governs what they are allowed to change, how changes are validated, and when changes may merge.
 
 ## What v2.1 adds over v2
 
@@ -65,4 +77,4 @@ Project Brief
 
 ## Non-goal
 
-This kit is not project architecture. It is a control layer. Each project still needs its own domain schemas, tests, product strategy, and data-quality rules.
+This kit is not project architecture, not an agent runtime, not a multi-agent chat UI, and not a replacement for Codex, OpenGoat, Claude Code, Cursor, or any other execution layer. It is a governance layer. Each project still needs its own domain schemas, tests, product strategy, and data-quality rules.
