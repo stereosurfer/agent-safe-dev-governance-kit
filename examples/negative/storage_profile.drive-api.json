@@ -1,0 +1,25 @@
+{
+  "negative_case": {
+    "id": "NEG-014-drive-api-enabled-default",
+    "title": "Drive API enabled by default",
+    "expected_outcome": "blocked",
+    "owner": "validate_bootstrap.py",
+    "should_block_positive_validation": false
+  },
+  "bad_input": {
+    "code_repo": ".",
+    "artifact_root": "/Users/example/Google Drive/ProjectArtifacts",
+    "local_state_root": "/Users/example/Library/Application Support/ProjectName",
+    "storage_mode": "google_drive_sync_folder",
+    "sync_policy": {
+      "google_drive_sync_folder": true,
+      "app_managed_drive_api": true
+    },
+    "cache_policy": {
+      "page_renders": "local_only",
+      "model_cache": "local_only",
+      "sqlite_live_db": "local_only",
+      "temporary_jobs": "local_only"
+    }
+  }
+}
