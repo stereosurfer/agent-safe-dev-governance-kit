@@ -4,7 +4,7 @@ This is the compact current-status surface for the repository. It is overwritten
 not appended. Historical detail belongs in GitHub issues, PRs, comments, and
 merge commits.
 
-Last updated: `2026-05-03T13:09:30Z`
+Last updated: `2026-05-03T13:14:20Z`
 
 ## Durable source of truth
 
@@ -28,7 +28,7 @@ positive handoff-template fixture.
 
 ```yaml
 issue: "#52 [TEST] Add positive handoff-template fixture"
-pr: "none; PR not opened yet"
+pr: "#53 test: add positive handoff packet fixture"
 branch: "codex/positive-handoff-template-fixture"
 state: active
 ```
@@ -73,6 +73,5 @@ cache, or external preparation outputs are authorized for the active work unit.
 
 ## Next safe action
 
-Open a PR for issue #52, verify GitHub Actions, update the Merge Decision
-Record, merge only if low-risk gates pass, then close issue #52 with result
-evidence.
+Verify GitHub Actions for PR #53, update the Merge Decision Record, merge only
+if low-risk gates pass, then close issue #52 with result evidence.
