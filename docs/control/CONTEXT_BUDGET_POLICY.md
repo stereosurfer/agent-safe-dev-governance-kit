@@ -18,6 +18,19 @@ The default source for deciding which documents to read is
 agent sessions, task packets, reviews, merge decisions, handoff recovery, and
 future CLI checks.
 
+## Terminology Guard
+
+In this policy, the term `context profile` means a context-budget read-set only.
+It does not mean a runtime profile, behavior profile, vendor adapter, subagent
+policy, goal workflow, or platform-specific optimization layer.
+
+All repository work still uses the generic repo-agent governance core defined in
+`AGENTS.md`. Context profiles only decide what additional documents may be read
+for a bounded work unit.
+
+Runtime-specific profiles and adapters remain v2.0 planned/optional work and
+must not be added to the v1.x default startup context.
+
 ## Why This Policy Exists
 
 Large context does not automatically improve agent quality. It can create four
@@ -55,14 +68,17 @@ default_startup_context:
 
 Additional files are added only because the current work unit requires them.
 
-## Context Profile Selection
+## Context Read-Set Selection
 
 Before changing files, the agent must classify the work unit into one primary
-context profile. If multiple profiles apply, choose the narrowest profile that
+context read set. If multiple read sets apply, choose the narrowest read set that
 covers the risk.
 
+This selection is not runtime profile routing and must not change allowed paths,
+merge behavior, source-of-truth rules, or the Generic Operating Profile.
+
 ```yaml
-context_profile_selection:
+context_read_set_selection:
   required_inputs:
     - current_issue_or_pr
     - task_type
@@ -76,6 +92,9 @@ context_profile_selection:
 ```
 
 ## Context Profiles
+
+These profiles are context-budget read sets only. They do not define runtime
+behavior profiles.
 
 ### `startup`
 
@@ -412,7 +431,7 @@ is non-trivial:
 ```md
 ## Context Budget
 
-Profile: <profile>
+Context read set: <profile>
 Initial files read:
 - <path>
 Expanded files read:
