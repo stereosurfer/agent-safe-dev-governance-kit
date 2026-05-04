@@ -76,6 +76,13 @@ EXPECTED_FAILURE_CHECKS = [
         "--completed-branch", "codex/positive-handoff-template-fixture",
     ],
 ]
+POLICY_GATE_NEGATIVE_FIXTURES = [
+    "examples/negative/policy_gate/pr_body.missing-merge-decision.md",
+    "examples/negative/policy_gate/pr_body.missing-current-status-impact.md",
+    "examples/negative/policy_gate/pr_body.checks-pending.md",
+    "examples/negative/policy_gate/pr_body.human-gates-pending.md",
+    "examples/negative/policy_gate/pr_body.see-chat-authority.md",
+]
 TARGET_INSTALL_REQUIRED_FILES = [
     "AGENTS.md",
     "README.md",
@@ -530,10 +537,16 @@ def cmd_negative(args: argparse.Namespace) -> int:
         ])
     if args.case == "textual":
         return run_expected_failures(EXPECTED_FAILURE_CHECKS)
+    if args.case == "policy-gate":
+        return run_expected_failures([
+            ["python3", "scripts/policy_gate_check.py", "--pr-body", fixture]
+            for fixture in POLICY_GATE_NEGATIVE_FIXTURES
+        ])
     if args.case == "all":
         changed = cmd_negative(argparse.Namespace(case="changed-paths"))
         textual = cmd_negative(argparse.Namespace(case="textual"))
-        return 1 if changed or textual else 0
+        policy_gate = cmd_negative(argparse.Namespace(case="policy-gate"))
+        return 1 if changed or textual or policy_gate else 0
     print(f"FAIL: unsupported negative case group: {args.case}")
     return 1
 
@@ -738,7 +751,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.set_defaults(func=cmd_hygiene)
 
     p = sub.add_parser("negative", help="Run opt-in negative checks.")
-    p.add_argument("case", nargs="?", default="changed-paths", choices=["changed-paths", "textual", "all"])
+    p.add_argument("case", nargs="?", default="changed-paths", choices=["changed-paths", "textual", "policy-gate", "all"])
     p.set_defaults(func=cmd_negative)
 
     p = sub.add_parser("status-check", help="Check docs/handoff/CURRENT_STATUS.md for compactness and stale markers.")

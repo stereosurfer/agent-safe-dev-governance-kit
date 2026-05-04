@@ -52,11 +52,11 @@ validation_layers:
     purpose: run repository validation on push and pull request
 
   negative_validation:
-    current_status: implemented_opt_in_fixtures
+    current_status: implemented_opt_in_fixtures_and_policy_gate_command
     purpose: prove that known-bad inputs are blocked
 
   cli_wrapper:
-    current_status: partial
+    current_status: partial_policy_gate_negative_wrapped
     purpose: expose validation through stable local commands
 ```
 
@@ -277,6 +277,11 @@ Use this classification until scripts become more granular.
 
 Negative tests should prove that known-bad inputs are blocked. Current policy-gate
 PR-body fixtures are opt-in expected failures under `examples/negative/policy_gate/`.
+They can be run without default CI wiring through:
+
+```bash
+python3 scripts/asgk.py negative policy-gate
+```
 
 ```yaml
 negative_validation_targets:
@@ -399,6 +404,16 @@ future_cli_mapping:
       - report whether declared PR-body gates are mechanically coherent
       - never infer low-risk status from prose
 
+  asgk negative policy-gate:
+    runs:
+      - python3 scripts/policy_gate_check.py --pr-body examples/negative/policy_gate/pr_body.missing-merge-decision.md
+      - python3 scripts/policy_gate_check.py --pr-body examples/negative/policy_gate/pr_body.missing-current-status-impact.md
+      - python3 scripts/policy_gate_check.py --pr-body examples/negative/policy_gate/pr_body.checks-pending.md
+      - python3 scripts/policy_gate_check.py --pr-body examples/negative/policy_gate/pr_body.human-gates-pending.md
+      - python3 scripts/policy_gate_check.py --pr-body examples/negative/policy_gate/pr_body.see-chat-authority.md
+    expected: all commands fail
+    default_ci: false
+
   asgk check-pr <number>:
     future_behavior:
       - fetch changed file list
@@ -461,7 +476,7 @@ run validator -> read compact failure output -> inspect only files named by fail
 ```yaml
 known_gaps:
   - governance_hygiene.py does not yet fetch git diff by itself
-  - policy_gate_check.py is not yet wrapped by scripts/asgk.py
+  - policy_gate_check.py has opt-in negative fixture coverage through scripts/asgk.py but no positive wrapper command
   - policy_gate_check.py is not yet wired into default CI
   - policy-gate fixtures are opt-in and not wired into default CI
   - no full GitHub PR status validator exists yet
