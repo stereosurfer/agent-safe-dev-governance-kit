@@ -52,7 +52,7 @@ validation_layers:
     purpose: run repository validation on push and pull request
 
   negative_validation:
-    current_status: planned
+    current_status: implemented_opt_in_fixtures
     purpose: prove that known-bad inputs are blocked
 
   cli_wrapper:
@@ -275,8 +275,8 @@ Use this classification until scripts become more granular.
 
 ## Negative Validation Targets
 
-Negative tests should prove that known-bad inputs are blocked. These are planned
-targets for future fixtures and script hardening.
+Negative tests should prove that known-bad inputs are blocked. Current policy-gate
+PR-body fixtures are opt-in expected failures under `examples/negative/policy_gate/`.
 
 ```yaml
 negative_validation_targets:
@@ -289,21 +289,31 @@ negative_validation_targets:
     bad_input: "PR body without Merge Decision section"
     expected: blocked
     owner: validate_bootstrap_or_pr_validator
+    fixture: examples/negative/policy_gate/pr_body.missing-merge-decision.md
 
   missing_current_status_impact:
     bad_input: "PR body without Current Status Impact section"
     expected: blocked
     owner: policy_gate_check
+    fixture: examples/negative/policy_gate/pr_body.missing-current-status-impact.md
 
   pending_or_unknown_merge_gate:
     bad_input: "checks_passed: pending or unknown"
     expected: blocked
     owner: policy_gate_check
+    fixture: examples/negative/policy_gate/pr_body.checks-pending.md
 
   human_gate_unresolved:
     bad_input: "human_gates_checked: pending or false"
     expected: blocked
     owner: policy_gate_check
+    fixture: examples/negative/policy_gate/pr_body.human-gates-pending.md
+
+  chat_authority_in_pr_body:
+    bad_input: "PR body says see chat"
+    expected: blocked
+    owner: policy_gate_check
+    fixture: examples/negative/policy_gate/pr_body.see-chat-authority.md
 
   missing_pr_required_heading:
     bad_input: "PR template missing required heading"
@@ -453,7 +463,7 @@ known_gaps:
   - governance_hygiene.py does not yet fetch git diff by itself
   - policy_gate_check.py is not yet wrapped by scripts/asgk.py
   - policy_gate_check.py is not yet wired into default CI
-  - no negative fixtures are currently wired into CI
+  - policy-gate fixtures are opt-in and not wired into default CI
   - no full GitHub PR status validator exists yet
   - no task-packet schema validator is wired as a full JSON/YAML validator
 ```
