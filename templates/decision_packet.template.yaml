@@ -20,6 +20,7 @@ decision_packet:
   evidence:
     - type: "AI_TODO: ci_result | command_output | review_comment | file_diff | external_record | human_approval"
       source: "AI_TODO: durable source URL, file path, command, or comment reference"
+      claim_source: "AI_TODO: freshly_rerun | recorded_in_pr_body | github_actions | existing_durable_record | inferred_from_merged_pr | not_run | not_applicable"
       timestamp: "AI_TODO: ISO-8601 timestamp if known"
       reproducible: false
       sufficient_for_decision: false
@@ -62,7 +63,12 @@ decision_packet:
     required_commands:
       - "AI_TODO: command or check required before decision can proceed"
     status: "not_run"
-    evidence: "AI_TODO: validation result or none"
+    evidence:
+      - command: "AI_TODO: command or check name"
+        status: "AI_TODO: passed | failed | not_run | not_applicable"
+        source: "AI_TODO: freshly_rerun | recorded_in_pr_body | github_actions | external_ci | existing_durable_record | inferred_from_merged_pr | not_run | not_applicable"
+        evidence: "AI_TODO: command output summary, CI URL, PR body reference, issue comment, repo file, or reason not run"
+        current_work_unit_rerun: false
 
   result:
     status: "blocked"
