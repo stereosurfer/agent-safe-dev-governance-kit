@@ -4,7 +4,7 @@ This is the compact current-status surface for the repository. It is overwritten
 not appended. Historical detail belongs in GitHub issues, PRs, comments, and
 merge commits.
 
-Last updated: `2026-05-04T10:45:00Z`
+Last updated: `2026-05-04T11:20:00Z`
 
 ## Durable source of truth
 
@@ -18,17 +18,17 @@ Last updated: `2026-05-04T10:45:00Z`
 ASGK v1.x remains in v1.1 stabilization before release preparation. The generic
 repo-governance core has been strengthened through parser/status/handoff checks,
 document navigation split, target-install checklist, read-only target-install
-check, and read-only target-install plan. The active milestone is now **Vertical
-Governance Completion**, which adds a thin decision-point registry and reusable
-decision packet template so major decision points can be resumed and reviewed
-consistently across projects using ASGK.
+check, read-only target-install plan, and the initial Vertical Governance
+Completion layer. The active bounded work now adds a Current Status freshness gate
+so milestone-impacting PRs must update `CURRENT_STATUS.md`, mark it not
+applicable, or explicitly defer the update with a follow-up path.
 
 ## Active work
 
 ```yaml
-issue: "#88 [MILESTONE] Vertical Governance Completion"
+issue: "#90 [DOCS] Add current-status update gate"
 pr: none
-branch: docs/vertical-governance-88
+branch: docs/current-status-update-gate-90
 state: in_progress
 ```
 
@@ -58,10 +58,10 @@ changed paths, closeout status, PR bodies, task packets, and handoff packets.
 ## Last completed
 
 ```yaml
-issue: "#86 [TOOLING] Add read-only target install planner"
-pr: "#87 tooling: add read-only target install planner"
-merge_commit: "d4798690e027a8220ffc140bb2e1a111646f6400"
-note: "Read-only target-install plan is available as scripts/target_install_plan.py. Details are in GitHub; do not duplicate historical logs here."
+issue: "#88 [MILESTONE] Vertical Governance Completion"
+pr: "#89 docs: add vertical governance decision layer"
+merge_commit: "37748fb37f93b1c511cebcaed860c01d6e20b3ee"
+note: "Initial decision-point registry and decision-packet template are merged. Details are in GitHub; do not duplicate historical logs here."
 ```
 
 ## Runtime artifact status
@@ -71,8 +71,7 @@ cache, or external preparation outputs are authorized by the current active work
 
 ## Next safe action
 
-Review and complete the Vertical Governance Completion PR for issue #88. The
-bounded work should remain docs/template only: add and review
-`docs/control/DECISION_POINT_REGISTRY.md`, `templates/decision_packet.template.yaml`,
-and related roadmap/status/context/registry updates. Do not add decision-check
-CLI, schema, installer scaffold, or runtime adapter work in this work unit.
+Review and complete the Current Status freshness gate PR for issue #90. The
+bounded work should remain docs-only: update `CURRENT_STATUS_POLICY.md`, PR
+template, PR review checklist, document registry, and this current status file.
+Do not add a new validator or CLI command in this work unit.
