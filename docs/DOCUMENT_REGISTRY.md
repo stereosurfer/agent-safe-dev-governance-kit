@@ -159,7 +159,7 @@ usage. They are optimization layers, not the governance core.
 | `docs/control/FAILURE_THRESHOLDS.md` | canonical | stop thresholds and notification conditions | no | repeated failures, autonomous run blockers | `lane_00_controller` |
 | `docs/control/CONTEXT_BUDGET_POLICY.md` | canonical | context read sets, handoff recovery read set, context expansion rules | no | context selection, handoff recovery, token-budget review | `lane_00_controller` |
 | `docs/control/AGENT_CAPABILITY_MATRIX.md` | canonical | task risk classification, minimum assignment intelligence level, worker-assignment eligibility, low-risk merge compatibility, human-gate requirement, escalation/downscope decisions, context read-set binding | no | task risk review, agent assignment, escalation, downscoping, merge eligibility review | `lane_00_controller` |
-| `docs/control/VALIDATION_STRATEGY.md` | canonical | validation layer responsibilities, blocking vs warning, negative test targets | no | validation/tooling work | `lane_06_ci_github` |
+| `docs/control/VALIDATION_STRATEGY.md` | canonical | validation layer responsibilities, blocking vs warning, negative test targets, fail-closed policy-gate validation | no | validation/tooling work, policy-gate checker review | `lane_06_ci_github` |
 | `docs/control/PR_REVIEW_CHECKLIST.md` | canonical | repeatable PR review sequence, current-status freshness review, and outcomes | no | PR review, current-status impact review, merge readiness | `lane_00_controller` |
 | `docs/control/NEGATIVE_TEST_PLAN.md` | canonical | negative test matrix, expected outcomes, implementation phases | no | negative fixture or validator work | `lane_00_controller` |
 | `docs/control/UNCONTROLLED_DOCUMENT_AUDIT.md` | canonical | uncontrolled-document growth-risk classification and audit record | no | uncontrolled-document audit or status-like document growth review | `lane_07_docs_handoff` |
@@ -302,6 +302,7 @@ disagree, stop and open a schema/contract alignment issue.
 | `scripts/check_project.py` | script | required directory scaffold check | no | CI/tooling/debug validation | `lane_06_ci_github` |
 | `scripts/validate_bootstrap.py` | script | bootstrap governance validation behavior | no | CI/tooling/debug validation | `lane_06_ci_github` |
 | `scripts/governance_hygiene.py` | script | changed-path and protected-path hygiene | no | path hygiene, negative changed-path checks, future CLI work | `lane_06_ci_github` |
+| `scripts/policy_gate_check.py` | script | read-only fail-closed PR-body policy gate check without low-risk inference | no | policy-gate validation, PR-body gate coherence review | `lane_06_ci_github` |
 | `scripts/asgk.py` | script | ASGK CLI wrapper for doctor/validate/hygiene/negative/status/closeout/pr-body/task-packet/handoff/target-install checks | no | local validation, status-check, closeout-check, handoff-check, PR-body/task-packet checks, target-install-check | `lane_06_ci_github` |
 | `scripts/target_install_plan.py` | script | standalone read-only target-install plan generation | no | target-install planning, scaffold preparation, install-plan review | `lane_06_ci_github` |
 | `.github/workflows/bootstrap-validation.yml` | template/script | GitHub Actions bootstrap validation workflow | no | CI/workflow changes | `lane_06_ci_github` |
@@ -315,6 +316,7 @@ disagree, stop and open a schema/contract alignment issue.
 | `examples/*.yaml` | example | valid sample task packets | no | onboarding, task packet examples | `lane_07_docs_handoff` |
 | `examples/*.md` | example | report or documentation examples | no | onboarding, report examples | `lane_07_docs_handoff` |
 | `examples/negative/*` | example | opt-in expected-failure fixtures | no | negative validation work, `asgk.py negative`, governance hygiene tests | `lane_02_schema_contracts` |
+| `examples/negative/policy_gate/*` | example | opt-in expected-failure PR-body policy-gate fixtures | no | policy-gate negative validation work | `lane_06_ci_github` |
 
 Examples are not policy. If an example conflicts with a canonical policy,
 contract, or schema, fix the example.
