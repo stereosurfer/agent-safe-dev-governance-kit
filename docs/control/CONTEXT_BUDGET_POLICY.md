@@ -216,6 +216,43 @@ control_policy:
     - validation behavior change is required but not scoped
 ```
 
+### `decision_point`
+
+Use when a work unit reaches a major decision point that changes authority, risk,
+scope, installation state, release state, external capability, or rollback
+expectations.
+
+This read set is a vertical-governance router. It must not become a reason to
+read every policy document. Use `docs/control/DECISION_POINT_REGISTRY.md` to
+identify the narrow canonical documents for the specific decision type.
+
+```yaml
+decision_point:
+  read:
+    - AGENTS.md
+    - docs/handoff/CURRENT_STATUS.md
+    - current GitHub issue or PR
+    - docs/control/DECISION_POINT_REGISTRY.md
+    - templates/decision_packet.template.yaml when creating a packet
+  optional_read:
+    - docs/DOCUMENT_MAP.md
+    - docs/DOCUMENT_REGISTRY.md
+    - canonical documents named by DECISION_POINT_REGISTRY.md for the selected decision_type
+  max_initial_documents: 7 plus selected canonical documents
+  expansion_allowed_when:
+    - selected decision type names additional canonical documents
+    - authority conflict is detected
+    - evidence is missing or ambiguous
+    - human gate status is unclear
+  stop_if:
+    - decision_type_unclear
+    - durable_source_of_truth_missing
+    - required_evidence_missing
+    - human_gate_required_but_missing
+    - rollback_plan_required_but_missing
+    - authority_conflict_unresolved
+```
+
 ### `schema_or_contract`
 
 Use for schema, contract, fixture, or validation-structure work.
@@ -408,6 +445,14 @@ install_surface_task:
     - templates/agent_rules.template.yaml
     - docs/DOCUMENT_MAP.md
 
+decision_point_task:
+  read:
+    - AGENTS.md
+    - docs/handoff/CURRENT_STATUS.md
+    - current issue or PR
+    - docs/control/DECISION_POINT_REGISTRY.md
+    - templates/decision_packet.template.yaml when creating a packet
+
 schema_or_contract_task:
   read:
     - AGENTS.md
@@ -483,6 +528,7 @@ context_expansion_allowed_when:
   - target file references another canonical file
   - DOCUMENT_MAP.md routes to a relevant canonical source
   - DOCUMENT_REGISTRY.md says the related file is canonical for the current topic
+  - DECISION_POINT_REGISTRY.md names canonical documents for the selected decision_type
   - validation failure points to a specific file
   - PR diff touches a file outside the expected group
   - issue acceptance criteria name an additional file

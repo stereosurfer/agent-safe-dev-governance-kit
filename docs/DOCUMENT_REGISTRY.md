@@ -86,6 +86,7 @@ roles:
 | `templates/DOCUMENT_MAP.template.md` | template | target-project document-map router starter structure | no | installing ASGK into another repository, target-repo document-map creation | `lane_07_docs_handoff` |
 | `templates/DOCUMENT_REGISTRY.template.md` | template | target-project document-registry starter structure | no | installing ASGK into another repository, target-repo document-registry creation | `lane_07_docs_handoff` |
 | `templates/agent_rules.template.yaml` | template | target-project clean assignment/worker rules starter structure | no | installing ASGK into another repository, target-repo agent-rules creation | `lane_07_docs_handoff` |
+| `templates/decision_packet.template.yaml` | template | reusable vertical-governance decision packet starting point | no | creating a decision packet for a major decision point | `lane_07_docs_handoff` |
 
 Template ownership rule:
 
@@ -100,10 +101,12 @@ template_scope:
   asgk_internal_agent_rules: agent/agent_rules.yaml
   target_project_agent_rules_template: templates/agent_rules.template.yaml
   target_project_finished_agent_rules: target_repo/agent/agent_rules.yaml
+  decision_packet_template: templates/decision_packet.template.yaml
 rule:
   - do not copy ASGK's repo-local router or registry unchanged into a target project
   - do not copy ASGK's internal agent_rules.yaml as the target default
   - target repositories must customize their own router, registry, and agent rules
+  - decision packets are used for major decision points and must reference durable sources of truth
 ```
 
 ## Handoff And Recovery Documents
@@ -163,6 +166,7 @@ usage. They are optimization layers, not the governance core.
 | `docs/control/V1_READINESS_AUDIT.md` | canonical | v1.0 readiness criteria, blockers, follow-ups, and v2.0 deferrals | no | v1.0 release preparation, readiness review, milestone planning | `lane_07_docs_handoff` |
 | `docs/control/V1_1_STABILIZATION_PLAN.md` | canonical | v1.1 stabilization sequence before release preparation | no | stabilization planning, field-test planning, release-prep deferral review | `lane_07_docs_handoff` |
 | `docs/control/DOCUMENT_MAP_POLICY.md` | canonical | document-map router/registry split, size limits, and maintenance rules | no | document-map structure changes, registry split work, target-template navigation changes | `lane_07_docs_handoff` |
+| `docs/control/DECISION_POINT_REGISTRY.md` | canonical | vertical-governance decision point router, authority order, decision packet trigger conditions | no | major decision point, decision packet creation, vertical-governance planning | `lane_07_docs_handoff` |
 | `docs/control/TARGET_INSTALL_CHECKLIST.md` | canonical | target-project install readiness checklist and structural acceptance conditions | no | target install review, field-test preparation, target-install validation planning | `lane_07_docs_handoff` |
 | `docs/control/TARGET_INSTALL_VALIDATION_PLAN.md` | canonical | target-install checker/planner behavior, future validator check categories, and output contract | no | target-install checker/planner behavior review, validator implementation planning, validation roadmap | `lane_06_ci_github` |
 
@@ -244,7 +248,7 @@ storage_specialized_policies:
 | `docs/bootstrap/07_contract_first.md` | canonical | contract-first rule | no | contract/schema/artifact work | `lane_02_schema_contracts` |
 | `docs/bootstrap/08_acceptance_criteria.md` | canonical | three-layer acceptance model and definition of done | no | issue/PR acceptance changes | `lane_00_controller` |
 | `docs/bootstrap/09_safety_checks.md` | summary | minimum safety check overview | no | safety orientation only | `lane_05_security` |
-| `docs/bootstrap/10_roadmap.md` | template | roadmap hierarchy | no | milestone/roadmap planning | `lane_00_controller` |
+| `docs/bootstrap/10_roadmap.md` | canonical | roadmap hierarchy and active milestone register | no | milestone/roadmap planning, active milestone review | `lane_00_controller` |
 | `docs/bootstrap/12_productization_notes.md` | reference | productization framing, v1.x/v2.0 product boundary | no | productization planning only | `lane_07_docs_handoff` |
 | `docs/bootstrap/13_artifact_promotion_policy.md` | summary | promotion chain overview and status values | no | artifact/data/evidence-heavy work | `lane_02_schema_contracts` |
 | `docs/bootstrap/14_execution_lanes.md` | canonical | execution lanes and external-call boundaries | no | execution lane/API/provider discussions | `lane_05_security` |
@@ -278,6 +282,7 @@ task_packet_github_surface: .github/ISSUE_TEMPLATE/agent_task.yml
 task_packet_example: examples/task_packet.example.yaml
 asgk_internal_agent_rules: agent/agent_rules.yaml
 target_project_agent_rules_template: templates/agent_rules.template.yaml
+decision_packet_template: templates/decision_packet.template.yaml
 ```
 
 ## Contracts And Schemas

@@ -2,7 +2,10 @@
 
 Status: active stabilization plan.
 
-This document defines the stabilization work that should happen before ASGK enters v1.0 release preparation. The purpose is to harden the generic governance core through small tooling improvements and at least one real-world field test.
+This document defines stabilization work before ASGK enters v1.0 release
+preparation. The purpose is to harden the generic governance core through small
+tooling improvements, install-surface readiness, vertical decision governance,
+and at least one real-world field test.
 
 ## Decision
 
@@ -11,8 +14,10 @@ Do not proceed directly to release preparation.
 ```yaml
 decision:
   release_preparation_status: deferred
-  reason: known v1.1 hardening work and real-world field testing should happen first
+  reason: known v1.1 hardening work, install-surface safety, vertical decision governance, and real-world field testing should happen first
   next_phase: v1.1 stabilization
+  active_milestone: Vertical Governance Completion
+  controller_issue: "#88"
 ```
 
 ## Stabilization Goals
@@ -23,12 +28,45 @@ v1_1_stabilization_goals:
   - add status-check coverage for CURRENT_STATUS.md staleness and size risks
   - prove handoff-template output can become a valid checked handoff packet
   - audit status-like documents for uncontrolled growth risk
+  - split document navigation into router registry and context read sets
+  - define target-project install surface, checklist, checker, and read-only plan
+  - add vertical governance for major decision points without policy sprawl
   - run one real-world field test before release preparation
+```
+
+## Completed Stabilization Work
+
+```yaml
+completed:
+  parser_hardening_without_dependencies: true
+  asgk_status_check: true
+  positive_handoff_template_fixture: true
+  uncontrolled_document_audit: true
+  document_navigation_split: true
+  target_install_checklist_and_validation_plan: true
+  read_only_target_install_check: true
+  read_only_target_install_plan: true
+```
+
+## Active Stabilization Work
+
+```yaml
+active_work:
+  milestone: Vertical Governance Completion
+  controller_issue: "#88"
+  objective: "Add a thin decision-point registry and reusable decision packet template so major decision points can be resumed and reviewed consistently."
+  non_goals:
+    - decision-check CLI in first work unit
+    - decision schema
+    - one policy document per decision type
+    - installer scaffold behavior
 ```
 
 ## Work Items
 
 ### 1. Parser hardening without dependencies
+
+Status: completed.
 
 Objective:
 
@@ -36,35 +74,9 @@ Objective:
 Improve `scripts/asgk.py` lightweight textual checks without introducing PyYAML or other dependencies.
 ```
 
-Candidate checks:
-
-```yaml
-parser_hardening:
-  - list fields are not only present but materially non-empty when required
-  - validation_status.status is scoped to the validation_status block when possible
-  - TODO / AI_TODO detection can be configured for final packet checks
-  - field parsing avoids cross-line capture
-  - command errors are clear enough for humans and AI agents
-```
-
-Acceptance:
-
-```yaml
-acceptance:
-  - no new dependency
-  - no full parser redesign
-  - existing negative checks still pass
-  - at least one new positive and one new negative parser fixture if needed
-```
-
-Classification:
-
-```yaml
-release_classification: v1_1_stabilization
-v1_0_blocker: false
-```
-
 ### 2. `asgk status-check`
+
+Status: completed.
 
 Objective:
 
@@ -72,36 +84,9 @@ Objective:
 Add a lightweight check for `docs/handoff/CURRENT_STATUS.md` so stale active work and uncontrolled growth are easier to detect.
 ```
 
-Candidate checks:
-
-```yaml
-status_check_targets:
-  - file exists
-  - next safe action exists
-  - active work block exists
-  - no obvious stale issue marker from known completed work when detectable locally
-  - line count below soft limit from CURRENT_STATUS_POLICY.md
-  - forbidden sections such as long chronological logs are absent
-```
-
-Acceptance:
-
-```yaml
-acceptance:
-  - no GitHub API dependency in first version
-  - no network calls
-  - no new dependency
-  - command reports warning/block clearly
-```
-
-Classification:
-
-```yaml
-release_classification: v1_1_stabilization
-v1_0_blocker: false
-```
-
 ### 3. Positive handoff-template fixture
+
+Status: completed.
 
 Objective:
 
@@ -109,29 +94,9 @@ Objective:
 Prove that `handoff-template` output can be filled into a valid packet that passes `handoff-check`.
 ```
 
-Candidate artifact:
-
-```text
-examples/handoff_packet.valid.yaml
-```
-
-Acceptance:
-
-```yaml
-acceptance:
-  - positive handoff fixture exists
-  - `python3 scripts/asgk.py handoff-check --file examples/handoff_packet.valid.yaml` passes
-  - CI may run the positive check if stable
-```
-
-Classification:
-
-```yaml
-release_classification: v1_1_stabilization
-v1_0_blocker: false
-```
-
 ### 4. Uncontrolled-document audit
+
+Status: completed.
 
 Objective:
 
@@ -139,57 +104,78 @@ Objective:
 Inspect status-like or log-like documents for CURRENT_STATUS-style growth risk.
 ```
 
-Initial candidates:
+### 5. Install/template usage and target-install safety
+
+Status: completed for checklist, validation plan, read-only checker, and read-only planner. Scaffold/installer remains intentionally deferred.
+
+Objective:
+
+```text
+Ensure target repositories can adopt ASGK through an explicit install surface and read-only planning/checking before any file-writing scaffold exists.
+```
+
+Completed outputs:
 
 ```yaml
-candidate_docs:
-  - docs/handoff/AGENT_LOG.md
-  - docs/handoff/DECISIONS.md
-  - docs/control/LANE_STATUS.md
-  - docs/bootstrap/12_productization_notes.md
-  - docs/EVOLUTION_MODEL.md
+target_install_outputs:
+  - docs/INSTALL_SURFACE.md
+  - docs/control/TARGET_INSTALL_CHECKLIST.md
+  - docs/control/TARGET_INSTALL_VALIDATION_PLAN.md
+  - python3 scripts/asgk.py target-install-check
+  - python3 scripts/target_install_plan.py
+```
+
+Deferred outputs:
+
+```yaml
+deferred:
+  - python3 scripts/asgk.py target-install-plan wrapper
+  - target-install negative fixtures
+  - opt-in CI job
+  - scaffold/installer script
+```
+
+### 6. Vertical Governance Completion
+
+Status: active milestone.
+
+Objective:
+
+```text
+Add a thin vertical governance layer so major decision points can be resumed, reviewed, and checked consistently across projects using ASGK.
+```
+
+Initial deliverables:
+
+```yaml
+vertical_governance_initial_deliverables:
+  - docs/control/DECISION_POINT_REGISTRY.md
+  - templates/decision_packet.template.yaml
+  - docs/DOCUMENT_REGISTRY.md registration
+  - docs/control/CONTEXT_BUDGET_POLICY.md decision_point read set
+  - docs/handoff/CURRENT_STATUS.md active milestone update
 ```
 
 Acceptance:
 
 ```yaml
 acceptance:
-  - classify each candidate as current_snapshot, durable_decision_log, append_allowed, compact_policy_needed, or reference_only
-  - add policy only where needed
-  - do not rewrite large docs unless a specific issue authorizes it
+  - decision registry remains a router/index rather than a parallel policy system
+  - decision packet template captures decision type, lifecycle, durable source, canonical docs, evidence, authority, allowed/forbidden actions, stop conditions, rollback, human gate, validation, and next safe action
+  - no decision-check CLI, schema, dependency, or file-writing automation is introduced in the first work unit
+  - `python3 scripts/asgk.py doctor` passes
 ```
 
 Classification:
 
 ```yaml
 release_classification: v1_1_stabilization
-v1_0_blocker: false
+v1_0_blocker: required_before_release_preparation
 ```
 
-### 5. Install/template usage guide, if needed before field test
+### 7. Real-world field test
 
-Objective:
-
-```text
-Ensure the field test has enough instructions to apply ASGK to a real or semi-real repository without relying on chat memory.
-```
-
-Acceptance:
-
-```yaml
-acceptance:
-  - either existing QUICKSTART is sufficient for field test
-  - or add a small install/template usage guide before testing
-```
-
-Classification:
-
-```yaml
-release_classification: conditional_v1_1_stabilization
-v1_0_blocker: false
-```
-
-### 6. Real-world field test
+Status: pending after Vertical Governance Completion initial layer.
 
 Objective:
 
@@ -217,6 +203,7 @@ field_test_minimum:
   - `asgk doctor` or equivalent validation
   - at least one handoff packet or handoff-template usage
   - result comment on issue
+  - issue closeout
   - lessons learned recorded
 ```
 
@@ -239,14 +226,16 @@ v1_0_blocker: not_a_bug_but_required_sequence_gate
 ## Suggested Order
 
 ```text
-1. Parser hardening without dependencies
-2. asgk status-check
-3. Positive handoff-template fixture
-4. Uncontrolled-document audit
-5. Install/template usage guide only if field test needs it
-6. Real-world field test
-7. Update V1_READINESS_AUDIT.md
-8. Start release checklist / licensing gate
+1. Parser hardening without dependencies [completed]
+2. asgk status-check [completed]
+3. Positive handoff-template fixture [completed]
+4. Uncontrolled-document audit [completed]
+5. Document navigation split [completed]
+6. Target install checklist/check/plan [completed through read-only plan]
+7. Vertical Governance Completion initial layer [active]
+8. Real-world field test
+9. Update V1_READINESS_AUDIT.md
+10. Start release checklist / licensing gate
 ```
 
 ## Release Preparation Gate
@@ -259,6 +248,9 @@ release_preparation_gate:
   - status_check_completed_or_explicitly_deferred
   - positive_handoff_fixture_completed_or_explicitly_deferred
   - uncontrolled_document_audit_completed_or_explicitly_deferred
+  - document_navigation_split_completed
+  - target_install_read_only_check_and_plan_completed
+  - vertical_governance_initial_layer_completed
   - real_world_field_test_completed
   - field_test_lessons_recorded
   - V1_READINESS_AUDIT.md updated after field test
@@ -276,6 +268,7 @@ non_goals:
   - license selection
   - package publishing
   - SaaS or GitHub App work
+  - installer scaffold before checker/planner and decision governance are stable
 ```
 
 Those belong to release preparation or v2.0, not this stabilization plan.
