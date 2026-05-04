@@ -9,14 +9,16 @@ and at least one real-world field test.
 
 ## Decision
 
-Do not proceed directly to release preparation.
+Release preparation is not started by this plan. After the real-world field-test
+closeout and readiness audit update, the next safe work is to create a separate
+release-preparation planning issue.
 
 ```yaml
 decision:
-  release_preparation_status: deferred
-  reason: known v1.1 hardening work, install-surface safety, vertical decision governance, and real-world field testing should happen first
-  next_phase: v1.1 stabilization
-  active_milestone: Real-world field test
+  release_preparation_status: not_started
+  reason: v1_1_stabilization_sequence_is_satisfied_enough_to_plan_release_preparation_but_release_work_requires_a_separate_gated_issue
+  next_phase: release_preparation_planning
+  active_milestone: Release preparation planning
   controller_issue: pending
 ```
 
@@ -46,26 +48,36 @@ completed:
   target_install_checklist_and_validation_plan: true
   read_only_target_install_check: true
   read_only_target_install_plan: true
+  policy_gate_negative_fixtures: true
+  target_install_negative_command: true
   vertical_governance_initial_layer: true
   decision_packet_exercise: true
   vertical_governance_policy_sprawl_reviewed: true
   vertical_governance_completion: true
+  real_world_field_test: true
+  field_test_lessons_recorded: true
+  post_field_test_readiness_audit_updated: true
 ```
 
 ## Active Stabilization Work
 
 ```yaml
 active_work:
-  milestone: Real-world field test
+  milestone: Release preparation planning
   controller_issue: pending
   phase_state: pending_issue
-  prerequisite_completed: Vertical Governance Completion
-  completed_by: "#102"
-  objective: "Use ASGK to manage a real non-trivial work unit outside pure documentation-only governance additions."
-  next_work_unit_candidate: "Create a field-test issue with durable source, allowed paths, PR/MDR, validation, handoff usage, closeout, and lessons learned."
+  prerequisite_completed:
+    - Vertical Governance Completion
+    - Real-world field test
+    - Post-field-test readiness audit update
+  completed_by:
+    vertical_governance_completion: "#102 / PR #103"
+    real_world_field_test: "#112 / PR #113"
+    field_test_readiness_audit: "#114"
+  objective: "Open a separate release-preparation planning issue covering license, tag, package, final readiness review, and explicit deferrals."
   non_goals:
-    - release preparation
-    - publication or tagging
+    - release tagging without a release-preparation issue
+    - publication or packaging without approval
     - runtime-specific adapter work
     - installer scaffold behavior unless explicitly scoped
 ```
@@ -114,7 +126,7 @@ Inspect status-like or log-like documents for CURRENT_STATUS-style growth risk.
 
 ### 5. Install/template usage and target-install safety
 
-Status: completed for checklist, validation plan, read-only checker, and read-only planner. Scaffold/installer remains intentionally deferred.
+Status: completed for checklist, validation plan, read-only checker, read-only planner, opt-in target-install checker fixtures, and opt-in target-install negative command. Scaffold/installer remains intentionally deferred.
 
 Objective:
 
@@ -131,6 +143,7 @@ target_install_outputs:
   - docs/control/TARGET_INSTALL_VALIDATION_PLAN.md
   - python3 scripts/asgk.py target-install-check
   - python3 scripts/target_install_plan.py
+  - python3 scripts/asgk.py negative target-install
 ```
 
 Deferred outputs:
@@ -138,7 +151,6 @@ Deferred outputs:
 ```yaml
 deferred:
   - python3 scripts/asgk.py target-install-plan wrapper
-  - target-install negative fixtures
   - opt-in CI job
   - scaffold/installer script
 ```
@@ -186,7 +198,7 @@ vertical_governance_completed_exit_criteria:
     result: "Decision-check tooling should be opened only by a later issue after field-test evidence proves it is needed."
   readiness_and_field_test_path:
     status: completed
-    result: "The next active stabilization gate is the real-world field test; release preparation remains deferred."
+    result: "The next active stabilization gate became the real-world field test; release preparation remained deferred until field-test closeout."
 ```
 
 Control-line coverage:
@@ -201,28 +213,9 @@ vertical_control_lines:
   future_escalation_rule: "Promote any line to standalone policy or checker only after a later issue proves the need from field-test evidence."
 ```
 
-Acceptance:
-
-```yaml
-acceptance:
-  - decision registry remains a router/index rather than a parallel policy system
-  - decision packet template captures decision type, lifecycle, durable source, canonical docs, evidence, authority, allowed/forbidden actions, stop conditions, rollback, human gate, validation, and next safe action
-  - #88 / PR #89 is treated as initial-layer completion
-  - #100 / PR #101 is treated as the real decision-packet exercise
-  - no decision-check CLI, schema, dependency, or file-writing automation is introduced before field-test evidence proves the need
-  - `python3 scripts/asgk.py doctor` passes
-```
-
-Classification:
-
-```yaml
-release_classification: v1_1_stabilization
-v1_0_blocker: required_before_release_preparation
-```
-
 ### 7. Real-world field test
 
-Status: active next gate after Vertical Governance Completion.
+Status: completed.
 
 Objective:
 
@@ -230,44 +223,49 @@ Objective:
 Use ASGK to manage a real non-trivial work unit outside pure documentation-only governance additions.
 ```
 
-Candidate field-test types:
+Completed result:
 
 ```yaml
-field_test_candidates:
-  - small script/tooling change
-  - schema or contract update
-  - install/use ASGK in a small separate repo
-  - manage a bounded change in another active project using ASGK handoff and validation flow
-```
-
-Minimum requirements:
-
-```yaml
-field_test_minimum:
-  - GitHub issue with durable source of truth
-  - allowed paths
-  - PR with Merge Decision Record
-  - `asgk doctor` or equivalent validation
-  - at least one handoff packet or handoff-template usage
-  - result comment on issue
-  - issue closeout
-  - lessons learned recorded
+real_world_field_test_result:
+  implementation:
+    issue: "#112"
+    pr: "#113"
+    merge_commit: "1dcdbd08a20a41a903d474ff8080317eefd87185"
+    issue_state: closed_completed
+  work_type: real_tooling_validation_work
+  command_added: python3 scripts/asgk.py negative target-install
+  validation_evidence:
+    - python3 scripts/asgk.py negative target-install
+    - python3 scripts/asgk.py negative all
+    - python3 scripts/asgk.py doctor
+    - GitHub Actions validate passed for PR #113
+  lessons_learned:
+    - ASGK can manage a bounded non-docs-only tooling/validation change through durable issue authority, branch, PR, validation evidence, decision packet, Merge Decision Record, merge, and closeout.
+    - Decision-packet-shaped evidence was useful for recording source, limits, forbidden actions, rollback, and human-gate status.
+    - Opt-in negative command flow is safer before default CI wiring.
+    - Field-test implementation and field-test readiness audit must be separate closeout steps.
+  known_limits:
+    - did not prove target installation in a real external repository
+    - did not wire target-install negative fixtures into default CI
+    - did not add installer scaffold or target repository writes
+  follow_up_issues: none_required_for_v1_release_preparation_gate
 ```
 
 Acceptance:
 
 ```yaml
 acceptance:
-  - field test completes or is blocked for a useful reason
-  - blockers are converted into issues
-  - V1_READINESS_AUDIT.md is updated after the test
+  - field test completed
+  - lessons recorded in V1_READINESS_AUDIT.md
+  - no blockers requiring new issue before release-preparation planning
+  - release preparation not started by the field-test implementation PR
 ```
 
 Classification:
 
 ```yaml
 release_classification: required_before_release_preparation
-v1_0_blocker: not_a_bug_but_required_sequence_gate
+v1_0_blocker: satisfied_sequence_gate
 ```
 
 ## Suggested Order
@@ -281,30 +279,41 @@ v1_0_blocker: not_a_bug_but_required_sequence_gate
 6. Target install checklist/check/plan [completed through read-only plan]
 7. Vertical Governance Completion initial layer [completed by #88 / PR #89]
 8. Decision-packet exercise for one real decision point [completed by #100 / PR #101]
-9. Vertical Governance Completion closeout [completed by #102]
-10. Real-world field test [active next gate]
-11. Update V1_READINESS_AUDIT.md after field test
-12. Start release checklist / licensing gate
+9. Vertical Governance Completion closeout [completed by #102 / PR #103]
+10. Real-world field test [completed by #112 / PR #113]
+11. Update V1_READINESS_AUDIT.md after field test [completed by #114]
+12. Start release-preparation planning issue [next]
 ```
 
 ## Release Preparation Gate
 
-Release preparation may resume only when:
+Release preparation may be planned only through a separate release-preparation issue. This stabilization plan does not itself tag, publish, package, choose a license, or start release work.
 
 ```yaml
 release_preparation_gate:
-  - parser_hardening_completed_or_explicitly_deferred
-  - status_check_completed_or_explicitly_deferred
-  - positive_handoff_fixture_completed_or_explicitly_deferred
-  - uncontrolled_document_audit_completed_or_explicitly_deferred
-  - document_navigation_split_completed
-  - target_install_read_only_check_and_plan_completed
-  - vertical_governance_initial_layer_completed
-  - decision_packet_exercise_completed
-  - vertical_governance_policy_sprawl_reviewed
-  - real_world_field_test_completed
-  - field_test_lessons_recorded
-  - V1_READINESS_AUDIT.md updated after field test
+  status: ready_to_open_release_preparation_planning_issue
+  satisfied:
+    - parser_hardening_completed_or_sufficient_for_v1_core
+    - status_check_completed
+    - positive_handoff_fixture_completed
+    - uncontrolled_document_audit_completed
+    - document_navigation_split_completed
+    - target_install_read_only_check_and_plan_completed
+    - vertical_governance_initial_layer_completed
+    - decision_packet_exercise_completed
+    - vertical_governance_policy_sprawl_reviewed
+    - real_world_field_test_completed
+    - field_test_lessons_recorded
+    - V1_READINESS_AUDIT.md updated after field test
+  next_required_issue:
+    title: "[RELEASE] Plan v1.0 release preparation"
+    must_cover:
+      - final readiness review
+      - license selection
+      - tag/release process
+      - package or distribution boundary
+      - explicit v2.0 deferrals
+      - remaining human gates
 ```
 
 ## Non-goals
