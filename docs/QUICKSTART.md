@@ -39,25 +39,28 @@ issue
 
 ## Installing Into Another Repository
 
-`docs/DOCUMENT_MAP.md` is repo-local.
+Use `docs/INSTALL_SURFACE.md` as the canonical installation boundary.
 
-The ASGK repository's `docs/DOCUMENT_MAP.md` governs this repository only. Do not
-copy it unchanged into a target project and treat it as that project's canonical
-document map.
+`docs/DOCUMENT_MAP.md` is repo-local. The ASGK repository's
+`docs/DOCUMENT_MAP.md` governs this repository only. Do not copy it unchanged
+into a target project and treat it as that project's canonical document map.
 
 When ASGK is installed or adapted into another repository:
 
 ```text
-1. Copy or generate the minimal ASGK governance scaffold.
-2. Create the target repository's own docs/DOCUMENT_MAP.md.
-3. Use templates/DOCUMENT_MAP.template.md as the starting point.
-4. Delete placeholder rows that do not exist in the target repository.
-5. Add the target repository's actual canonical documents, summaries, examples,
-   schemas, contracts, status documents, scripts, and task-specific read sets.
-6. Keep the target repository map local to that repository.
+1. Read docs/INSTALL_SURFACE.md.
+2. Copy only files listed as copy_as_is when they fit the target repository.
+3. Create the target repository's own docs/DOCUMENT_MAP.md from
+   templates/DOCUMENT_MAP.template.md.
+4. Create the target repository's own agent/agent_rules.yaml from
+   templates/agent_rules.template.yaml.
+5. Customize bootstrap, physical-boundary, storage, tech-stack, current-status,
+   and task-packet files for the target repository.
+6. Do not copy ASGK repo-local handoff logs, readiness audits, stabilization
+   plans, runtime profiles, or adapter placeholders as target-project authority.
 ```
 
-The three distinct artifacts are:
+The three distinct document-map artifacts are:
 
 ```text
 ASGK docs/DOCUMENT_MAP.md
@@ -68,6 +71,16 @@ templates/DOCUMENT_MAP.template.md
 
 target repo docs/DOCUMENT_MAP.md
   = repo-local map owned by the target project after installation
+```
+
+The two distinct agent-rule artifacts are:
+
+```text
+ASGK agent/agent_rules.yaml
+  = ASGK internal compatibility file; may retain legacy keys
+
+templates/agent_rules.template.yaml
+  = clean target-project starter using assignment/worker terminology
 ```
 
 ## Prerequisites
@@ -96,8 +109,9 @@ For humans:
 ```text
 1. README.md
 2. docs/QUICKSTART.md
-3. docs/DOCUMENT_MAP.md
-4. docs/control/CONTEXT_BUDGET_POLICY.md
+3. docs/INSTALL_SURFACE.md when installing into another repository
+4. docs/DOCUMENT_MAP.md
+5. docs/control/CONTEXT_BUDGET_POLICY.md
 ```
 
 For AI agents starting a work unit:
