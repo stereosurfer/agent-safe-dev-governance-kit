@@ -2,18 +2,36 @@
 
 Status: active control policy.
 
-This document maps task types to the minimum acceptable agent intelligence
-level, sub-agent eligibility, low-risk merge eligibility, human-gate
-requirements, and context profile. It exists to prevent agents from treating all
-work as the same risk class.
+This document maps task types to the minimum acceptable assignment intelligence
+level, worker eligibility, low-risk merge eligibility, human-gate requirements,
+and context read set. It exists to prevent agents from treating all work as the
+same risk class.
+
+## Terminology Rule
+
+This matrix uses generic ASGK assignment terminology.
+
+```yaml
+preferred_terms:
+  assignment_intelligence_level: "fast_basic | standard | advanced | frontier"
+  worker_assignment: "bounded delegated work packet inside ASGK governance"
+  context_read_set: "document read set from CONTEXT_BUDGET_POLICY.md"
+legacy_or_informal_terms:
+  sub_agent: "means generic worker assignment in this document, not Codex/Claude platform-native subagents"
+  context_profile: "means context read set, not runtime profile"
+```
+
+Platform-native subagents, runtime-specific agents, goal workflows, and vendor
+adapters are not defined here. Those remain v2.0 optional/runtime-adapter work
+and must not bypass the generic repo governance core.
 
 ## Relationship To Other Documents
 
 Canonical related sources:
 
 ```yaml
-agent_level_definitions: agent/agent_rules.yaml
-context_profiles: docs/control/CONTEXT_BUDGET_POLICY.md
+assignment_level_definitions: agent/agent_rules.yaml
+context_read_sets: docs/control/CONTEXT_BUDGET_POLICY.md
 low_risk_merge: docs/control/LOW_RISK_AUTONOMOUS_MERGE_POLICY.md
 human_gates: docs/control/HUMAN_GATED_OPERATIONS.md
 document_ownership: docs/DOCUMENT_MAP.md
@@ -37,16 +55,16 @@ controller issue. Do not silently choose the more permissive rule.
 columns:
   task_type: "Class of work."
   minimum_level: "Lowest acceptable intelligence level."
-  subagent_allowed: "Whether the work may be assigned to a worker/sub-agent."
+  worker_assignment_allowed: "Whether the work may be assigned to a bounded worker packet."
   low_risk_merge_possible: "Whether low-risk autonomous merge may apply if all gates pass."
   human_gate_required: "Whether explicit human approval is required before merge or implementation."
-  context_profile: "Required profile from CONTEXT_BUDGET_POLICY.md."
+  context_read_set: "Required read set from CONTEXT_BUDGET_POLICY.md."
   notes: "Extra constraints."
 ```
 
 ## Capability Matrix
 
-| Task type | Minimum level | Sub-agent allowed | Low-risk merge possible | Human gate required | Context profile | Notes |
+| Task type | Minimum level | Worker assignment allowed | Low-risk merge possible | Human gate required | Context read set | Notes |
 |---|---:|---:|---:|---:|---|---|
 | typo / formatting in docs | `fast_basic` | yes | yes | no | `docs_only` | Must stay inside allowed paths. |
 | small docs extraction or inventory | `fast_basic` | yes | no PR unless output committed | no | `docs_only` | Report output; avoid policy interpretation. |
@@ -85,7 +103,7 @@ columns:
 | CLI command that writes files | `frontier` | no final authority | no unless explicitly scoped | yes if destructive or broad | `tooling_or_validation` | Requires dry-run and path boundary checks. |
 | productization positioning docs | `standard` | yes | yes | no | `docs_only` | No release decision. |
 | roadmap planning | `advanced` | yes | no merge unless docs-only and scoped | maybe | `control_policy` | Future-only work must be labeled. |
-| multi-agent lane dispatch | `frontier` | controller only | no by itself | maybe | `multi_agent_or_lane` | Worker tasks still need durable packets. |
+| multi-lane dispatch | `frontier` | controller only | no by itself | maybe | `multi_agent_or_lane` | Worker tasks still need durable packets. |
 
 ## Escalation Rules
 
@@ -121,13 +139,14 @@ downscope_examples:
 
 A downscoped PR must explicitly list deferred work in `Known Gaps`.
 
-## Sub-agent Rules
+## Worker Assignment Rules
 
-Sub-agents may perform bounded work only when all required assignment fields are
-present:
+Worker assignments may perform bounded work only when all required assignment
+fields are present. In this document, worker assignment means a generic ASGK work
+packet, not a platform-native Codex/Claude/Cursor subagent policy.
 
 ```yaml
-subagent_assignment_required_fields:
+assignment_required_fields:
   - lane
   - intelligence_level
   - intelligence_level_reason
@@ -141,7 +160,7 @@ subagent_assignment_required_fields:
   - rollback_expectations
 ```
 
-Sub-agents must not be final authority for:
+Worker assignments must not be final authority for:
 
 - security gates;
 - merge authority changes;
@@ -185,15 +204,15 @@ human_gate:
   approved_at:
 ```
 
-## Context Profile Binding
+## Context Read-Set Binding
 
-The `context_profile` column is binding. If a task uses a different profile, the
-PR or Agent Report must include:
+The `context_read_set` column is binding. If a task uses a different read set,
+the PR or Agent Report must include:
 
 ```yaml
-context_profile_override:
-  original_profile:
-  used_profile:
+context_read_set_override:
+  original_read_set:
+  used_read_set:
   reason:
   additional_files_read:
 ```
@@ -204,10 +223,10 @@ Before completing a task, ask:
 
 1. Is the minimum level sufficient for the actual work performed?
 2. Did the task cross into a higher-risk category?
-3. Are all sub-agent required fields present if a sub-agent was used?
+3. Are all worker-assignment required fields present if worker assignment was used?
 4. Is low-risk merge allowed by both this matrix and the merge policy?
 5. Does any human-gated operation apply?
-6. Was the required context profile used or was an override recorded?
+6. Was the required context read set used or was an override recorded?
 7. Are deferred high-risk items listed as known gaps?
 
 ## Maintenance Rule
