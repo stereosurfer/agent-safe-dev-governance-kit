@@ -9,6 +9,19 @@ Its purpose is to prevent ASGK repo-local state, internal compatibility keys,
 oversized internal registries, v2.0 placeholders, and self-governance history
 from leaking into target projects.
 
+## Related Control Documents
+
+```yaml
+related_controls:
+  target_install_checklist: docs/control/TARGET_INSTALL_CHECKLIST.md
+  target_install_validation_plan: docs/control/TARGET_INSTALL_VALIDATION_PLAN.md
+```
+
+Use `docs/control/TARGET_INSTALL_CHECKLIST.md` to decide whether a target
+repository installation is structurally ready. Use
+`docs/control/TARGET_INSTALL_VALIDATION_PLAN.md` as the future mechanical
+validator specification.
+
 ## Core Rule
 
 ```text
@@ -191,10 +204,13 @@ vendor documentation, observed tests, and explicit acceptance criteria.
 
 ## Target Installation Checklist
 
-Before the target repository treats ASGK as active governance, confirm:
+Before the target repository treats ASGK as active governance, use the complete
+checklist in `docs/control/TARGET_INSTALL_CHECKLIST.md`.
+
+Minimum summary:
 
 ```yaml
-target_installation_checklist:
+target_installation_checklist_summary:
   - AGENTS.md exists and points to target repo state, not chat memory.
   - docs/DOCUMENT_MAP.md was generated from templates/DOCUMENT_MAP.template.md and kept as a compact router.
   - docs/DOCUMENT_REGISTRY.md was generated from templates/DOCUMENT_REGISTRY.template.md and customized.
@@ -206,7 +222,13 @@ target_installation_checklist:
   - ASGK repo-local history was not copied as target-project authority.
 ```
 
+## Future Mechanical Validation
+
+The future validator specification lives in
+`docs/control/TARGET_INSTALL_VALIDATION_PLAN.md`. Do not implement validator or
+installer behavior from this document alone.
+
 ## Maintenance Rule
 
 If installation behavior changes, update this document, `docs/QUICKSTART.md`,
-`docs/DOCUMENT_MAP.md`, and the affected target templates in the same PR.
+`docs/DOCUMENT_REGISTRY.md`, and the affected target templates in the same PR.
