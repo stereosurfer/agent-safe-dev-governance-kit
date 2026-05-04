@@ -4,7 +4,7 @@ This is the compact current-status surface for the repository. It is overwritten
 not appended. Historical detail belongs in GitHub issues, PRs, comments, and
 merge commits.
 
-Last updated: `2026-05-04T22:30:00Z`
+Last updated: `2026-05-04T23:10:00Z`
 
 ## Durable source of truth
 
@@ -16,20 +16,20 @@ Last updated: `2026-05-04T22:30:00Z`
 ## Current snapshot
 
 ASGK v1.x stabilization, Vertical Governance Completion, the first real-world
-field test, post-field-test readiness audit, and planning-only v1.0 release
-preparation are complete. The active work is final v1.0 readiness review.
+field test, post-field-test readiness audit, planning-only v1.0 release
+preparation, and final v1.0 readiness review are complete.
 
-This review may conclude that release execution can be proposed in a later
-separate human-gated issue. It must not choose a license, tag, publish, package,
-create a GitHub release, or start release execution.
+The final readiness review records that no v1.0 core blocker is currently known
+and that release execution may be proposed only through a later separate
+human-gated issue. Release execution has not started.
 
 ## Active work
 
 ```yaml
-issue: "#120 [RELEASE] Final v1.0 readiness review"
+issue: none
 pr: none
-branch: docs/final-v1-readiness-review-120
-state: in_progress
+branch: none
+state: no_active_work
 ```
 
 ## Current validation entrypoint
@@ -61,10 +61,10 @@ remain opt-in through `python3 scripts/asgk.py negative target-install`.
 ## Last completed
 
 ```yaml
-issue: "#118 [DOCS] Refresh current status after release preparation planning"
-pr: "#119 docs: refresh current status after release preparation planning"
-merge_commit: "13c67bc961593036c535093f710b6840e7441fbd"
-note: "Current status now records no active work after release-preparation planning; next release decisions remain gated."
+issue: "#120 [RELEASE] Final v1.0 readiness review"
+pr: "#121 docs: perform final v1 readiness review"
+merge_commit: "f3b1a6cf909b431230443fdf80462555fa456eb8"
+note: "Final v1.0 readiness review records ready_to_propose_release_execution, but release execution remains blocked until a separate human-gated issue exists."
 ```
 
 ## Runtime artifact status
@@ -74,6 +74,7 @@ cache, or external preparation outputs are currently authorized.
 
 ## Next safe action
 
-Complete the final v1.0 readiness review PR for issue #120. Keep the work review-only:
-record whether release execution may be proposed, but do not tag, publish,
-package, choose a license, create a GitHub release, or start release execution.
+Open a separate human-gated release decision issue. The likely next issue is
+`[RELEASE] Decide v1.0 license and release execution path`. Do not tag, publish,
+package, choose a license, create a GitHub release, or start release execution
+without explicit human approval in that issue.
