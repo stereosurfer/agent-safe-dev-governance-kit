@@ -108,7 +108,8 @@ roles:
 | `AGENTS.md` | canonical | agent startup order, source-of-truth rule, work-unit rule, stop conditions | yes | all agent sessions | `lane_00_controller` |
 | `docs/handoff/CURRENT_STATUS.md` | status | compact current repo snapshot and next safe work | yes | all new sessions, handoff recovery, handoff updates | `lane_07_docs_handoff` |
 | current GitHub issue or PR | canonical | active task objective, allowed paths, acceptance, validation, merge state | yes | every work unit | active task lane |
-| `docs/QUICKSTART.md` | summary | first-use workflow, onboarding, and target-repo document-map installation boundary | no | onboarding and first repository smoke test | `lane_07_docs_handoff` |
+| `docs/QUICKSTART.md` | summary | first-use workflow, onboarding, and target-repo install-surface orientation | no | onboarding and first repository smoke test | `lane_07_docs_handoff` |
+| `docs/INSTALL_SURFACE.md` | canonical | target-project install surface, copy/template/customize/do-not-copy boundaries | no | installing ASGK into another repository, field-test preparation, target-repo scaffold planning | `lane_07_docs_handoff` |
 | `docs/EVOLUTION_MODEL.md` | canonical | docs-driven evolution, self-governance, self-validation maturity model | no | roadmap/evolution discussion | `lane_07_docs_handoff` |
 
 ## Installation And Target Project Templates
@@ -116,6 +117,7 @@ roles:
 | Document | Role | Canonical for | Read by default | Read when | Owned by lane |
 |---|---|---|---:|---|---|
 | `templates/DOCUMENT_MAP.template.md` | template | target-project document-map starter structure | no | installing ASGK into another repository, target-repo document-map creation | `lane_07_docs_handoff` |
+| `templates/agent_rules.template.yaml` | template | target-project clean assignment/worker rules starter structure | no | installing ASGK into another repository, target-repo agent-rules creation | `lane_07_docs_handoff` |
 
 Template ownership rule:
 
@@ -124,9 +126,13 @@ template_scope:
   asgk_repo_local_map: docs/DOCUMENT_MAP.md
   target_project_document_map_template: templates/DOCUMENT_MAP.template.md
   target_project_finished_map: target_repo/docs/DOCUMENT_MAP.md
+  asgk_internal_agent_rules: agent/agent_rules.yaml
+  target_project_agent_rules_template: templates/agent_rules.template.yaml
+  target_project_finished_agent_rules: target_repo/agent/agent_rules.yaml
 rule:
   - do not copy ASGK's repo-local map unchanged into a target project
-  - target repositories must customize their own document map
+  - do not copy ASGK's internal agent_rules.yaml as the target default
+  - target repositories must customize their own document map and agent rules
 ```
 
 ## Handoff And Recovery Documents
@@ -256,6 +262,7 @@ storage_specialized_policies:
 |---|---|---|---:|---|---|
 | `docs/bootstrap/00_project_brief.md` | canonical | project mission and non-goals | no | project initialization, mission changes | `lane_01_architecture` |
 | `docs/bootstrap/01_physical_boundaries.md` | canonical | writable paths, protected paths, forbidden actions | no | path, security, filesystem, CI, PR hygiene work | `lane_05_security` |
+| `docs/bootstrap/02_storage_roots.md` | summary | short bootstrap-level storage overview | no | bootstrap orientation only | `lane_01_architecture` |
 | `docs/bootstrap/03_tech_stack.md` | canonical | declared stack and dependency policy | no | dependency or toolchain changes | `lane_03_backend` |
 | `docs/bootstrap/04_file_structure.md` | canonical | top-level file layout and dependency direction | no | new directories, repo structure changes | `lane_01_architecture` |
 | `docs/bootstrap/05_context_budget.md` | summary | basic task context limits | no | task scoping, token-budget review | `lane_00_controller` |
@@ -283,11 +290,11 @@ storage_specialized_policies:
 | `docs/control/AGENT_REPORT_FORMAT.md` | canonical | required agent report sections | no | PR handoff/reporting work | `lane_00_controller` |
 | `schemas/agent_report.schema.json` | schema | machine-readable report fields | no | report validation work | `lane_02_schema_contracts` |
 | `examples/agent_report.example.md` | example | sample report | no | onboarding, report examples | `lane_07_docs_handoff` |
-| `agent/agent_rules.yaml` | canonical | roles, intelligence levels, sub-agent required fields, stop conditions | no | agent routing, sub-agent, or role changes | `lane_00_controller` |
+| `agent/agent_rules.yaml` | canonical | ASGK internal compatibility roles, intelligence levels, legacy compatibility keys, stop conditions | no | ASGK internal agent-rule compatibility work only; target projects should use `templates/agent_rules.template.yaml` | `lane_00_controller` |
 | `agent/workflow.yaml` | canonical | workflow gate sequence | no | workflow automation changes | `lane_00_controller` |
 | `agent/task_packets/*.yaml` | template/status | lane-specific assignment packets | no | lane work or autonomous runs | specific lane |
 
-Canonical ownership rule for task packets:
+Canonical ownership rule for task packets and agent rules:
 
 ```yaml
 task_packet_canonical_human_spec: docs/control/TASK_PACKET_FORMAT.md
@@ -295,6 +302,8 @@ task_packet_canonical_schema: schemas/task_packet.schema.json
 task_packet_machine_template: agent/task_packet.template.yaml
 task_packet_github_surface: .github/ISSUE_TEMPLATE/agent_task.yml
 task_packet_example: examples/task_packet.example.yaml
+asgk_internal_agent_rules: agent/agent_rules.yaml
+target_project_agent_rules_template: templates/agent_rules.template.yaml
 ```
 
 ## Contracts And Schemas
@@ -360,6 +369,15 @@ closeout_or_status_repair_task:
     - docs/control/CURRENT_STATUS_POLICY.md
     - current issue or PR
     - scripts/asgk.py when using `closeout-check`
+
+install_surface_task:
+  read:
+    - AGENTS.md
+    - docs/INSTALL_SURFACE.md
+    - docs/QUICKSTART.md
+    - templates/DOCUMENT_MAP.template.md
+    - templates/agent_rules.template.yaml
+    - docs/DOCUMENT_MAP.md
 
 schema_or_contract_task:
   read:
@@ -445,4 +463,7 @@ tooling_or_validation_task:
    CI and in the relevant task-type reading guide.
 8. Do not treat this ASGK repository-local map as the target-project map during
    installation. Use `templates/DOCUMENT_MAP.template.md` and customize it in the
+   target repository.
+9. Do not treat ASGK's internal `agent/agent_rules.yaml` as the target-project
+   default. Use `templates/agent_rules.template.yaml` and customize it in the
    target repository.
