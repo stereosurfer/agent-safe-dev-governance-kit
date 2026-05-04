@@ -83,6 +83,10 @@ POLICY_GATE_NEGATIVE_FIXTURES = [
     "examples/negative/policy_gate/pr_body.human-gates-pending.md",
     "examples/negative/policy_gate/pr_body.see-chat-authority.md",
 ]
+TARGET_INSTALL_NEGATIVE_FIXTURES = [
+    "examples/negative/target_install/missing_required_files",
+    "examples/negative/target_install/repo_local_readiness_surface",
+]
 TARGET_INSTALL_REQUIRED_FILES = [
     "AGENTS.md",
     "README.md",
@@ -542,11 +546,17 @@ def cmd_negative(args: argparse.Namespace) -> int:
             ["python3", "scripts/policy_gate_check.py", "--pr-body", fixture]
             for fixture in POLICY_GATE_NEGATIVE_FIXTURES
         ])
+    if args.case == "target-install":
+        return run_expected_failures([
+            ["python3", "scripts/asgk.py", "target-install-check", "--repo-root", fixture]
+            for fixture in TARGET_INSTALL_NEGATIVE_FIXTURES
+        ])
     if args.case == "all":
         changed = cmd_negative(argparse.Namespace(case="changed-paths"))
         textual = cmd_negative(argparse.Namespace(case="textual"))
         policy_gate = cmd_negative(argparse.Namespace(case="policy-gate"))
-        return 1 if changed or textual or policy_gate else 0
+        target_install = cmd_negative(argparse.Namespace(case="target-install"))
+        return 1 if changed or textual or policy_gate or target_install else 0
     print(f"FAIL: unsupported negative case group: {args.case}")
     return 1
 
@@ -751,7 +761,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.set_defaults(func=cmd_hygiene)
 
     p = sub.add_parser("negative", help="Run opt-in negative checks.")
-    p.add_argument("case", nargs="?", default="changed-paths", choices=["changed-paths", "textual", "policy-gate", "all"])
+    p.add_argument("case", nargs="?", default="changed-paths", choices=["changed-paths", "textual", "policy-gate", "target-install", "all"])
     p.set_defaults(func=cmd_negative)
 
     p = sub.add_parser("status-check", help="Check docs/handoff/CURRENT_STATUS.md for compactness and stale markers.")

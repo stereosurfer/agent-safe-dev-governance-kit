@@ -283,6 +283,14 @@ They can be run without default CI wiring through:
 python3 scripts/asgk.py negative policy-gate
 ```
 
+Target-install fixtures are also opt-in expected failures under
+`examples/negative/target_install/`. They can be run without default CI wiring
+through:
+
+```bash
+python3 scripts/asgk.py negative target-install
+```
+
 ```yaml
 negative_validation_targets:
   see_chat_source_of_truth:
@@ -319,6 +327,18 @@ negative_validation_targets:
     expected: blocked
     owner: policy_gate_check
     fixture: examples/negative/policy_gate/pr_body.see-chat-authority.md
+
+  missing_target_install_required_files:
+    bad_input: "target repository missing required ASGK governance files"
+    expected: blocked
+    owner: target_install_check
+    fixture: examples/negative/target_install/missing_required_files/
+
+  target_install_repo_local_readiness_surface:
+    bad_input: "target repository includes ASGK repo-local V1 readiness audit"
+    expected: blocked
+    owner: target_install_check
+    fixture: examples/negative/target_install/repo_local_readiness_surface/
 
   missing_pr_required_heading:
     bad_input: "PR template missing required heading"
