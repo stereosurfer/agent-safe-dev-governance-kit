@@ -1,6 +1,6 @@
 # Document Map
 
-Status: active ASGK repository-local navigation and source-ownership map.
+Status: active ASGK repository-local navigation router and transitional registry surface.
 
 This file defines which documents are canonical, which documents are summaries,
 which documents are examples, which files are executable governance surfaces,
@@ -20,16 +20,23 @@ unchanged into repositories that install or adopt ASGK.
 
 When ASGK is installed into a target repository, that target repository must own
 its own `docs/DOCUMENT_MAP.md` based on its actual files. Use
-`templates/DOCUMENT_MAP.template.md` as a starter template, then delete
-placeholder rows and replace them with target-repository documents.
+`templates/DOCUMENT_MAP.template.md` as a starter template, then keep the target
+map as a compact router. Use `templates/DOCUMENT_REGISTRY.template.md` to create
+the target repository's full registry.
 
-The three distinct artifacts are:
+The document-navigation split is:
 
 ```yaml
-asgk_repo_local_map: docs/DOCUMENT_MAP.md
-target_project_template: templates/DOCUMENT_MAP.template.md
-target_repo_local_map: docs/DOCUMENT_MAP.md in the target repository
+asgk_repo_local_router: docs/DOCUMENT_MAP.md
+asgk_repo_local_registry: docs/DOCUMENT_REGISTRY.md
+target_project_router_template: templates/DOCUMENT_MAP.template.md
+target_project_registry_template: templates/DOCUMENT_REGISTRY.template.md
+target_repo_local_router: docs/DOCUMENT_MAP.md in the target repository
+target_repo_local_registry: docs/DOCUMENT_REGISTRY.md in the target repository
 ```
+
+Migration note: this file still contains full registry tables until the bounded
+registry-migration work unit moves them to `docs/DOCUMENT_REGISTRY.md`.
 
 ## Core Rule
 
@@ -41,6 +48,27 @@ Read the smallest set of canonical documents required by the work unit.
 If two documents appear to disagree, prefer the document marked `canonical` for
 that topic. If a summary document disagrees with a canonical document, the
 summary document is stale and should be fixed in a separate issue.
+
+## Progressive Disclosure Surfaces
+
+```yaml
+progressive_disclosure_surfaces:
+  router:
+    path: docs/DOCUMENT_MAP.md
+    purpose: compact repo-local navigation router
+  registry:
+    path: docs/DOCUMENT_REGISTRY.md
+    purpose: complete repo-local document registry after migration
+  policy:
+    path: docs/control/DOCUMENT_MAP_POLICY.md
+    purpose: document-map size limits, split ownership, and maintenance rules
+  read_sets:
+    path: docs/control/CONTEXT_BUDGET_POLICY.md
+    purpose: context read sets and task-specific reading guide
+  install_surface:
+    path: docs/INSTALL_SURFACE.md
+    purpose: target-project copy/template/customize/do-not-copy boundary
+```
 
 ## Default Startup Set
 
@@ -110,29 +138,35 @@ roles:
 | current GitHub issue or PR | canonical | active task objective, allowed paths, acceptance, validation, merge state | yes | every work unit | active task lane |
 | `docs/QUICKSTART.md` | summary | first-use workflow, onboarding, and target-repo install-surface orientation | no | onboarding and first repository smoke test | `lane_07_docs_handoff` |
 | `docs/INSTALL_SURFACE.md` | canonical | target-project install surface, copy/template/customize/do-not-copy boundaries | no | installing ASGK into another repository, field-test preparation, target-repo scaffold planning | `lane_07_docs_handoff` |
+| `docs/DOCUMENT_REGISTRY.md` | canonical | complete repo-local document registry after migration | no | canonical ownership lookup, registry repair, document-map split work | `lane_07_docs_handoff` |
+| `docs/control/DOCUMENT_MAP_POLICY.md` | canonical | document-map router/registry split, size limits, and maintenance rules | no | document-map structure changes, registry split work, target-template navigation changes | `lane_07_docs_handoff` |
 | `docs/EVOLUTION_MODEL.md` | canonical | docs-driven evolution, self-governance, self-validation maturity model | no | roadmap/evolution discussion | `lane_07_docs_handoff` |
 
 ## Installation And Target Project Templates
 
 | Document | Role | Canonical for | Read by default | Read when | Owned by lane |
 |---|---|---|---:|---|---|
-| `templates/DOCUMENT_MAP.template.md` | template | target-project document-map starter structure | no | installing ASGK into another repository, target-repo document-map creation | `lane_07_docs_handoff` |
+| `templates/DOCUMENT_MAP.template.md` | template | target-project document-map router starter structure | no | installing ASGK into another repository, target-repo document-map creation | `lane_07_docs_handoff` |
+| `templates/DOCUMENT_REGISTRY.template.md` | template | target-project document-registry starter structure | no | installing ASGK into another repository, target-repo document-registry creation | `lane_07_docs_handoff` |
 | `templates/agent_rules.template.yaml` | template | target-project clean assignment/worker rules starter structure | no | installing ASGK into another repository, target-repo agent-rules creation | `lane_07_docs_handoff` |
 
 Template ownership rule:
 
 ```yaml
 template_scope:
-  asgk_repo_local_map: docs/DOCUMENT_MAP.md
-  target_project_document_map_template: templates/DOCUMENT_MAP.template.md
-  target_project_finished_map: target_repo/docs/DOCUMENT_MAP.md
+  asgk_repo_local_router: docs/DOCUMENT_MAP.md
+  asgk_repo_local_registry: docs/DOCUMENT_REGISTRY.md
+  target_project_router_template: templates/DOCUMENT_MAP.template.md
+  target_project_registry_template: templates/DOCUMENT_REGISTRY.template.md
+  target_project_finished_router: target_repo/docs/DOCUMENT_MAP.md
+  target_project_finished_registry: target_repo/docs/DOCUMENT_REGISTRY.md
   asgk_internal_agent_rules: agent/agent_rules.yaml
   target_project_agent_rules_template: templates/agent_rules.template.yaml
   target_project_finished_agent_rules: target_repo/agent/agent_rules.yaml
 rule:
-  - do not copy ASGK's repo-local map unchanged into a target project
+  - do not copy ASGK's repo-local router or registry unchanged into a target project
   - do not copy ASGK's internal agent_rules.yaml as the target default
-  - target repositories must customize their own document map and agent rules
+  - target repositories must customize their own router, registry, and agent rules
 ```
 
 ## Handoff And Recovery Documents
@@ -191,6 +225,7 @@ usage. They are optimization layers, not the governance core.
 | `docs/control/UNCONTROLLED_DOCUMENT_AUDIT.md` | canonical | uncontrolled-document growth-risk classification and audit record | no | uncontrolled-document audit or status-like document growth review | `lane_07_docs_handoff` |
 | `docs/control/V1_READINESS_AUDIT.md` | canonical | v1.0 readiness criteria, blockers, follow-ups, and v2.0 deferrals | no | v1.0 release preparation, readiness review, milestone planning | `lane_07_docs_handoff` |
 | `docs/control/V1_1_STABILIZATION_PLAN.md` | canonical | v1.1 stabilization sequence before release preparation | no | stabilization planning, field-test planning, release-prep deferral review | `lane_07_docs_handoff` |
+| `docs/control/DOCUMENT_MAP_POLICY.md` | canonical | document-map router/registry split, size limits, and maintenance rules | no | document-map structure changes, registry split work, target-template navigation changes | `lane_07_docs_handoff` |
 
 Capability matrix boundary rule:
 
