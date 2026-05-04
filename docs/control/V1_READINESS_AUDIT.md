@@ -23,12 +23,12 @@ v1.0 readiness does not require runtime-specific adapters, full YAML parsing, Sa
 | Negative defense tests | ready for core cases | required |
 | Cross-agent handoff | ready for generic v0 | required |
 | Current-status control | policy exists | required |
-| Vertical governance | thin layer completed | required before field test |
+| Vertical governance | thin layer completed | required |
 | CLI entrypoint | ready as minimal wrapper | required |
 | Parser robustness | partial | stabilize before release preparation if practical |
 | Runtime-specific adapters | deferred | v2.0 |
 | Product packaging | early | release preparation |
-| Real-world field test | not yet completed | required before release preparation |
+| Real-world field test | completed | required before release preparation |
 
 ## V1.0 Readiness Dimensions
 
@@ -82,7 +82,7 @@ vertical_governance:
   evidence:
     initial_layer: "#88 / PR #89"
     decision_exercise: "#100 / PR #101"
-    closeout: "#102"
+    closeout: "#102 / PR #103"
     documents:
       - docs/control/DECISION_POINT_REGISTRY.md
       - templates/decision_packet.template.yaml
@@ -134,6 +134,8 @@ Required v1.0 core cases:
 - Task packet `see chat` authority is blocked.
 - Task packet missing `stop_conditions` is blocked.
 - Handoff packet missing critical recovery fields is blocked.
+- Policy-gate fixtures are available as opt-in expected failures.
+- Target-install fixtures are available as opt-in expected failures.
 
 Current assessment:
 
@@ -146,6 +148,8 @@ negative_defense:
     - pr_body
     - task_packet
     - handoff_packet
+    - policy_gate_opt_in
+    - target_install_opt_in
   known_gap: full semantic policy contradiction detection is not automated
 ```
 
@@ -190,8 +194,7 @@ current_status_control:
   evidence:
     - docs/control/CURRENT_STATUS_POLICY.md
     - docs/handoff/CURRENT_STATUS.md
-  follow_up:
-    - asgk status-check should be evaluated during v1.1 stabilization
+    - PR #105 current-status closeout after vertical governance completion
 ```
 
 ### 6. CLI Entrypoint
@@ -203,10 +206,13 @@ python3 scripts/asgk.py doctor
 python3 scripts/asgk.py validate
 python3 scripts/asgk.py hygiene --paths-file changed-paths.txt
 python3 scripts/asgk.py negative
+python3 scripts/asgk.py negative policy-gate
+python3 scripts/asgk.py negative target-install
 python3 scripts/asgk.py pr-body-check --file pr.md
 python3 scripts/asgk.py task-packet-check --file task.yaml
 python3 scripts/asgk.py handoff-check --file handoff.yaml
 python3 scripts/asgk.py handoff-template
+python3 scripts/asgk.py target-install-check
 ```
 
 Current assessment:
@@ -220,6 +226,7 @@ cli_entrypoint:
     - no full YAML parser
     - no GitHub API integration
     - no automatic file write for handoff-template
+    - target-install negative fixtures are opt-in, not default CI
 ```
 
 ### 7. Documentation Ownership And Context Budget
@@ -239,6 +246,7 @@ docs_context:
   blocker: false
   evidence:
     - docs/DOCUMENT_MAP.md
+    - docs/DOCUMENT_REGISTRY.md
     - docs/control/CONTEXT_BUDGET_POLICY.md
 ```
 
@@ -266,13 +274,59 @@ human_judgment_boundaries:
     - runtime-specific adapter accuracy
 ```
 
+### 9. Real-world Field Test
+
+Required sequence gate before release preparation:
+
+- Real non-docs-only work unit.
+- GitHub issue as durable authority.
+- Bounded allowed paths.
+- PR with Merge Decision Record.
+- Validation evidence with limits.
+- Decision packet or decision-packet-shaped section.
+- Closeout and readiness audit update.
+
+Current assessment:
+
+```yaml
+real_world_field_test:
+  status: completed
+  blocker: false
+  implementation:
+    issue: "#112"
+    pr: "#113"
+    merge_commit: "1dcdbd08a20a41a903d474ff8080317eefd87185"
+    issue_state: closed_completed
+  work_type: real_tooling_validation_work
+  command_added: python3 scripts/asgk.py negative target-install
+  validation_evidence:
+    local:
+      - python3 scripts/asgk.py negative target-install
+      - python3 scripts/asgk.py negative all
+      - python3 scripts/asgk.py doctor
+    ci:
+      - GitHub Actions validate passed for PR #113
+  evidence_limits:
+    - did not prove target installation in a real external repository
+    - did not wire target-install negative fixtures into default CI
+    - did not add installer scaffold or target repository writes
+  lessons_learned:
+    - ASGK can manage a bounded non-docs-only tooling/validation change through issue, branch, PR, validation evidence, decision packet, merge decision, merge, and closeout.
+    - Decision packet fields were useful for recording validation source, evidence limits, forbidden actions, rollback, and human-gate status without creating new policy families.
+    - Opt-in negative command flow is a safe intermediate step before default CI wiring.
+    - Readiness audit closeout is a separate required step after implementation merge; otherwise field-test implementation can be mistaken for full field-test completion.
+  follow_up_issues:
+    - none_required_for_v1_release_preparation_gate
+  release_readiness_impact: field_test_sequence_gate_satisfied
+```
+
 ## Release Preparation Sequence Gate
 
-Although the generic governance core is close to v1.0-ready, release preparation is deliberately deferred until v1.1 stabilization work and at least one real-world field test are completed or explicitly deferred with rationale.
+The generic governance core and the required v1.1 sequence gates are now satisfied enough to open release-preparation planning. Release preparation is not started by this audit; it must be a separate gated work unit.
 
 ```yaml
 release_preparation_gate:
-  status: deferred
+  status: ready_to_open_release_preparation_issue
   required_before_release_preparation:
     - review docs/control/V1_1_STABILIZATION_PLAN.md
     - complete or explicitly defer parser hardening without dependencies
@@ -283,6 +337,10 @@ release_preparation_gate:
     - complete at least one real-world field test
     - record field-test lessons
     - update this audit after the field test
+  satisfied_by:
+    vertical_governance_completion: "#102 / PR #103"
+    field_test_implementation: "#112 / PR #113"
+    field_test_readiness_audit: "#114"
 ```
 
 ## V1.0 Blockers
@@ -293,21 +351,21 @@ Current technical blockers in the generic governance core:
 v1_0_core_blockers: []
 ```
 
-Sequence blockers before release preparation:
+Sequence blockers before opening release-preparation planning:
 
 ```yaml
-release_preparation_sequence_blockers:
-  - v1_1_stabilization_not_completed
-  - real_world_field_test_not_completed
+release_preparation_sequence_blockers: []
 completed_sequence_gates:
   - vertical_governance_completion
+  - real_world_field_test
+  - post_field_test_readiness_audit
 ```
 
-This distinction matters: the core is not known-broken, but release preparation should wait until the stabilization sequence is complete.
+This distinction matters: the core is not being released by this audit. The audit only records that the next appropriate gate is release-preparation planning, including licensing, tagging, packaging, and any final readiness review.
 
 ## V1.1 Stabilization Work
 
-See `docs/control/V1_1_STABILIZATION_PLAN.md` for the active plan.
+See `docs/control/V1_1_STABILIZATION_PLAN.md` for the stabilization plan.
 
 Summary:
 
@@ -315,15 +373,19 @@ Summary:
 v1_1_stabilization:
   parser_hardening_without_dependencies:
     reason: improve reliability of lightweight textual checks
+    status: completed_or_sufficient_for_v1_core
 
   asgk_status_check:
     reason: automatically detect stale or oversized CURRENT_STATUS.md
+    status: completed
 
   positive_handoff_template_fixture:
     reason: prove generated handoff-template output can be filled and checked
+    status: completed
 
   uncontrolled_document_audit:
     reason: inspect other status-like docs for growth risk
+    status: completed
 
   vertical_governance_completion:
     reason: complete decision/evidence/authority/lifecycle/capability-risk routing without policy sprawl
@@ -331,7 +393,7 @@ v1_1_stabilization:
 
   real_world_field_test:
     reason: prove ASGK outside pure docs/governance self-modification
-    status: active_next_gate
+    status: completed
 ```
 
 ## V2.0 Deferred Work
@@ -358,9 +420,9 @@ v2_0_deferred:
 ```yaml
 readiness_decision:
   version_target: v1.0
-  current_recommendation: proceed_to_v1_1_stabilization_before_release_preparation
-  reason: Vertical Governance Completion is satisfied at the thin-router layer; release preparation still waits for a real-world field test, field-test lessons, and a post-test audit update before licensing, tagging, and packaging gates
-  required_next_step: execute the Real-world field test milestone
+  current_recommendation: open_release_preparation_planning_issue
+  reason: Vertical Governance Completion and the first real-world field test are complete; release preparation can be planned as a separate gated work unit but is not started by this audit.
+  required_next_step: create a release-preparation planning issue covering license, tag, package, final readiness review, and any remaining explicit deferrals.
 ```
 
 ## Audit Use
