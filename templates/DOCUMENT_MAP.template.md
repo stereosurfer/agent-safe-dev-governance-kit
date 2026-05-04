@@ -1,14 +1,13 @@
 # Document Map
 
-Status: target-project template.
+Status: target-project navigation router template.
 
 This template is for a repository that installs or adopts ASGK governance. It is
 not the ASGK repository's own document map.
 
-Replace every placeholder and delete every row that does not exist in the target
-repository. The finished file must describe the target repository's actual
-canonical documents, summaries, examples, templates, schemas, contracts, status
-surfaces, scripts, and task-specific read sets.
+The finished target-project `docs/DOCUMENT_MAP.md` should remain a small
+repo-local navigation router. Put full registry tables in
+`docs/DOCUMENT_REGISTRY.md`, not here.
 
 ## Scope Rule
 
@@ -17,7 +16,8 @@ DOCUMENT_MAP.md is repo-local.
 ```
 
 ASGK's internal `docs/DOCUMENT_MAP.md` governs only the ASGK repository. A target
-project must own its own `docs/DOCUMENT_MAP.md` after installation.
+project must own its own `docs/DOCUMENT_MAP.md` and `docs/DOCUMENT_REGISTRY.md`
+after installation.
 
 Do not copy ASGK's internal document map unchanged into a target repository.
 
@@ -29,8 +29,9 @@ Read the smallest set of canonical documents required by the work unit.
 ```
 
 If two documents appear to disagree, prefer the document marked `canonical` for
-that topic. If a summary document disagrees with a canonical document, the
-summary document is stale and should be fixed in a separate issue.
+that topic in `docs/DOCUMENT_REGISTRY.md`. If a summary document disagrees with a
+canonical document, the summary document is stale and should be fixed in a
+separate issue.
 
 ## Default Startup Set
 
@@ -47,6 +48,43 @@ default_startup_set:
 
 Additional documents should be pulled by task type, not by habit.
 
+## Navigation Surfaces
+
+```yaml
+navigation_surfaces:
+  router:
+    path: docs/DOCUMENT_MAP.md
+    read_by_default: false
+    read_when:
+      - document ownership is unclear
+      - current issue asks for map/router work
+  registry:
+    path: docs/DOCUMENT_REGISTRY.md
+    read_by_default: false
+    read_when:
+      - canonical ownership must be inspected or changed
+      - registry row must be added or repaired
+  read_sets:
+    path: docs/control/CONTEXT_BUDGET_POLICY.md
+    read_by_default: false
+    read_when:
+      - task-specific context selection is needed
+      - context expansion is required
+```
+
+## Target Registry
+
+The target repository should create its complete registry from
+`templates/DOCUMENT_REGISTRY.template.md`:
+
+```text
+templates/DOCUMENT_REGISTRY.template.md
+  -> target repo docs/DOCUMENT_REGISTRY.md
+```
+
+`docs/DOCUMENT_MAP.md` should point to the registry, not duplicate the full
+registry tables.
+
 ## Document Roles
 
 ```yaml
@@ -62,73 +100,28 @@ roles:
   future_optional: Planned future capability, not part of the current core.
 ```
 
-## Entry And Startup Documents
+## Compact Entry Summary
 
-| Document | Role | Canonical for | Read by default | Read when | Owned by lane |
-|---|---|---|---:|---|---|
-| `README.md` | summary | project positioning and onboarding | yes | all new sessions | `<lane>` |
-| `AGENTS.md` | canonical | generic operating profile, source-of-truth rule, escalation triggers, stop conditions | yes | all agent sessions | `<lane>` |
-| `docs/handoff/CURRENT_STATUS.md` | status | compact current repo snapshot and next safe work | yes | all new sessions, handoff recovery | `<lane>` |
-| current GitHub issue or PR | canonical | active task objective, allowed paths, acceptance, validation, merge state | yes | every work unit | active task lane |
-
-## Project-Specific Documents
-
-Add target repository documents here.
-
-| Document | Role | Canonical for | Read by default | Read when | Owned by lane |
-|---|---|---|---:|---|---|
-| `<path>` | `<role>` | `<topic>` | no | `<condition>` | `<lane>` |
-
-## Schemas And Contracts
-
-Add only the schemas and contracts that exist in the target repository.
-
-| Path | Role | Canonical for | Read by default | Read when | Owned by lane |
-|---|---|---|---:|---|---|
-| `schemas/*.json` | schema | machine-readable validation structures | no | schema validation, fixtures, tooling | `<lane>` |
-| `contracts/*.yaml` | contract | semantic contract rules and invariants | no | contract, schema, validation, artifact work | `<lane>` |
-
-## Scripts And CI
-
-Add only the scripts and workflows that exist in the target repository.
-
-| Document | Role | Canonical for | Read by default | Read when | Owned by lane |
-|---|---|---|---:|---|---|
-| `scripts/asgk.py` | script | ASGK validation wrapper if installed | no | local validation and CI debugging | `<lane>` |
-| `.github/workflows/<workflow>.yml` | script | CI validation behavior | no | CI/workflow changes | `<lane>` |
-
-## Task-type Reading Guide
-
-Start small. Add task-specific read sets only when the target repository needs
-them.
+Keep this section short. Full rows belong in `docs/DOCUMENT_REGISTRY.md`.
 
 ```yaml
-docs_only_task:
-  read:
+entry_summary:
+  default_startup:
     - AGENTS.md
+    - README.md
     - docs/handoff/CURRENT_STATUS.md
-    - current issue or PR
-    - target file
-    - .github/PULL_REQUEST_TEMPLATE.md
-
-merge_decision_task:
-  read:
-    - current PR body
-    - changed file list
-    - current GitHub issue
-    - docs/control/LOW_RISK_AUTONOMOUS_MERGE_POLICY.md
-    - docs/control/HUMAN_GATED_OPERATIONS.md
-    - docs/control/MERGE_DECISION_RECORD.md
+    - current GitHub issue or PR
+  full_registry: docs/DOCUMENT_REGISTRY.md
+  context_read_sets: docs/control/CONTEXT_BUDGET_POLICY.md
 ```
 
 ## Maintenance Rules
 
-1. Do not leave placeholder rows in the final target repository map.
-2. Do not copy ASGK's internal document registry into a target project unless the
-   target project actually contains those files.
-3. Summary documents should point to canonical documents rather than repeating
+1. Keep this file small enough to act as a router.
+2. Add full document rows to `docs/DOCUMENT_REGISTRY.md`, not this file.
+3. Add task-type read sets to `docs/control/CONTEXT_BUDGET_POLICY.md`, not this
+   file.
+4. Summary documents should point to canonical documents rather than repeating
    full policy text.
-4. If a document becomes canonical for a new topic, update this map in the same
-   PR.
-5. If validation behavior changes, update the relevant script, schema, example,
-   and this map together.
+5. If a document becomes canonical for a new topic, update
+   `docs/DOCUMENT_REGISTRY.md` in the same PR.
