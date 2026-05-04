@@ -178,13 +178,31 @@ usage. They are optimization layers, not the governance core.
 | `docs/control/ISSUE_HYGIENE_GATE.md` | canonical | stale issue detection and issue-start gate | no | before selecting or closing issues | `lane_00_controller` |
 | `docs/control/FAILURE_THRESHOLDS.md` | canonical | stop thresholds and notification conditions | no | repeated failures, autonomous run blockers | `lane_00_controller` |
 | `docs/control/CONTEXT_BUDGET_POLICY.md` | canonical | context read sets, handoff recovery read set, context expansion rules | no | context selection, handoff recovery, token-budget review | `lane_00_controller` |
-| `docs/control/AGENT_CAPABILITY_MATRIX.md` | canonical | task type to intelligence level/risk/human gate mapping | no | agent assignment, escalation, downscoping | `lane_00_controller` |
+| `docs/control/AGENT_CAPABILITY_MATRIX.md` | canonical | task risk classification, minimum assignment intelligence level, worker-assignment eligibility, low-risk merge compatibility, human-gate requirement, escalation/downscope decisions, context read-set binding | no | task risk review, agent assignment, escalation, downscoping, merge eligibility review | `lane_00_controller` |
 | `docs/control/VALIDATION_STRATEGY.md` | canonical | validation layer responsibilities, blocking vs warning, negative test targets | no | validation/tooling work | `lane_06_ci_github` |
 | `docs/control/PR_REVIEW_CHECKLIST.md` | canonical | repeatable PR review sequence and outcomes | no | PR review and merge readiness | `lane_00_controller` |
 | `docs/control/NEGATIVE_TEST_PLAN.md` | canonical | negative test matrix, expected outcomes, implementation phases | no | negative fixture or validator work | `lane_00_controller` |
 | `docs/control/UNCONTROLLED_DOCUMENT_AUDIT.md` | canonical | uncontrolled-document growth-risk classification and audit record | no | uncontrolled-document audit or status-like document growth review | `lane_07_docs_handoff` |
 | `docs/control/V1_READINESS_AUDIT.md` | canonical | v1.0 readiness criteria, blockers, follow-ups, and v2.0 deferrals | no | v1.0 release preparation, readiness review, milestone planning | `lane_07_docs_handoff` |
 | `docs/control/V1_1_STABILIZATION_PLAN.md` | canonical | v1.1 stabilization sequence before release preparation | no | stabilization planning, field-test planning, release-prep deferral review | `lane_07_docs_handoff` |
+
+Capability matrix boundary rule:
+
+```yaml
+agent_capability_matrix_binding_for:
+  - task risk classification
+  - minimum assignment intelligence level
+  - worker-assignment eligibility
+  - low-risk merge compatibility
+  - human-gate requirement
+  - escalation and downscope decisions
+  - context read-set binding
+not_binding_for:
+  - runtime-native subagent orchestration
+  - vendor-specific profile routing
+  - goal workflow behavior
+  - platform tool scheduling
+```
 
 ## Merge And Human-Gate Documents
 
