@@ -4,7 +4,7 @@ This is the compact current-status surface for the repository. It is overwritten
 not appended. Historical detail belongs in GitHub issues, PRs, comments, and
 merge commits.
 
-Last updated: `2026-05-04T11:20:00Z`
+Last updated: `2026-05-04T11:50:00Z`
 
 ## Durable source of truth
 
@@ -18,17 +18,18 @@ Last updated: `2026-05-04T11:20:00Z`
 ASGK v1.x remains in v1.1 stabilization before release preparation. The generic
 repo-governance core has been strengthened through parser/status/handoff checks,
 document navigation split, target-install checklist, read-only target-install
-check, read-only target-install plan, and the initial Vertical Governance
-Completion layer. The active bounded work now adds a Current Status freshness gate
-so milestone-impacting PRs must update `CURRENT_STATUS.md`, mark it not
-applicable, or explicitly defer the update with a follow-up path.
+check, read-only target-install plan, initial vertical governance, and Current
+Status freshness gate. The active bounded work mechanizes existing low-risk /
+auto-merge policy gates with a standalone read-only checker. The checker must not
+infer low-risk status; it only confirms mechanically checkable PR-body gates and
+keeps missing, unknown, pending, ambiguous, or unverifiable gates human-gated.
 
 ## Active work
 
 ```yaml
-issue: "#90 [DOCS] Add current-status update gate"
+issue: "#92 [TOOLING] Mechanize existing low-risk policy gates"
 pr: none
-branch: docs/current-status-update-gate-90
+branch: tooling/policy-gate-check-92
 state: in_progress
 ```
 
@@ -54,14 +55,15 @@ changed paths, closeout status, PR bodies, task packets, and handoff packets.
 - release preparation before v1.1 stabilization, vertical governance completion,
   and field test
 - installer scaffold before checker/planner and decision governance are stable
+- low-risk status by agent declaration
 
 ## Last completed
 
 ```yaml
-issue: "#88 [MILESTONE] Vertical Governance Completion"
-pr: "#89 docs: add vertical governance decision layer"
-merge_commit: "37748fb37f93b1c511cebcaed860c01d6e20b3ee"
-note: "Initial decision-point registry and decision-packet template are merged. Details are in GitHub; do not duplicate historical logs here."
+issue: "#90 [DOCS] Add current-status update gate"
+pr: "#91 docs: add current status freshness gate"
+merge_commit: "7b02cc97823857c39af90c9f1c3f31a3d354f422"
+note: "Current Status Impact is now a PR template and review gate. Details are in GitHub; do not duplicate historical logs here."
 ```
 
 ## Runtime artifact status
@@ -71,7 +73,8 @@ cache, or external preparation outputs are authorized by the current active work
 
 ## Next safe action
 
-Review and complete the Current Status freshness gate PR for issue #90. The
-bounded work should remain docs-only: update `CURRENT_STATUS_POLICY.md`, PR
-template, PR review checklist, document registry, and this current status file.
-Do not add a new validator or CLI command in this work unit.
+Review and complete the fail-closed policy gate checker PR for issue #92. The
+bounded work should remain a standalone read-only checker plus docs updates. Do
+not add new risk categories, auto-merge behavior, GitHub API calls, workflow
+changes, schemas, dependencies, or `scripts/asgk.py` integration in this work
+unit.
