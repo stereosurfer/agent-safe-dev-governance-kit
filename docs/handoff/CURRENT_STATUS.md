@@ -4,7 +4,7 @@ This is the compact current-status surface for the repository. It is overwritten
 not appended. Historical detail belongs in GitHub issues, PRs, comments, and
 merge commits.
 
-Last updated: `2026-05-04T13:27:44Z`
+Last updated: `2026-05-04T13:32:06Z`
 
 ## Durable source of truth
 
@@ -21,20 +21,22 @@ document navigation split, target-install checklist, read-only target-install
 check, read-only target-install plan, policy-gate negative fixtures, and
 Vertical Governance Completion at the thin-router layer.
 
-Vertical Governance Completion is being closed through issue #102. The milestone
-does not claim five new standalone policy systems. It records that Decision
-Control is completed as a thin registry/template layer, while Evidence,
-Authority, Lifecycle, and Capability/Risk controls are covered inside that layer
-and should become standalone policy or tooling only after field-test evidence
-proves the need.
+Vertical Governance Completion is complete. The milestone did not add five new
+standalone policy systems. Decision Control is complete as a thin
+registry/template layer, while Evidence, Authority, Lifecycle, and
+Capability/Risk controls are covered inside that layer and should become
+standalone policy or tooling only after field-test evidence proves the need.
+
+The next stabilization gate is a real-world field test before release
+preparation.
 
 ## Active work
 
 ```yaml
-issue: "#102 [DOCS] Complete Vertical Governance Completion milestone"
+issue: none
 pr: none
-branch: docs/complete-vertical-governance-102
-state: in_progress
+branch: none
+state: no_active_work
 ```
 
 ## Current validation entrypoint
@@ -58,29 +60,28 @@ Policy-gate negative fixtures remain opt-in through
 - new dependencies
 - publication/release
 - automatic handoff final-judgment generation
-- release preparation before v1.1 stabilization, vertical governance completion,
-  and field test
+- release preparation before v1.1 stabilization, real-world field test, and
+  post-test readiness audit update
 - installer scaffold before checker/planner and decision governance are stable
 - low-risk status by agent declaration
 
 ## Last completed
 
 ```yaml
-issue: "#100 [DOCS] Clarify vertical governance milestone phase state"
-pr: "#101 docs: clarify vertical governance milestone phase"
-merge_commit: "84c0cad9fa92ece44161e3e2521059bdb506a3d5"
-note: "PR #101 clarified that #88 / PR #89 completed only the initial vertical governance layer, and issue #102 is closing the remaining milestone criteria."
+issue: "#102 [DOCS] Complete Vertical Governance Completion milestone"
+pr: "#103 docs: complete vertical governance milestone"
+merge_commit: "2def8c2edb569dde5e9629ae0f59e7b0c12bbe4f"
+note: "Vertical Governance Completion is complete at the thin-router layer. The next active gate is the real-world field test."
 ```
 
 ## Runtime artifact status
 
 No runtime artifacts, private source material, SQLite live DB, cache files, model
-cache, or external preparation outputs are authorized by the current active work.
+cache, or external preparation outputs are currently authorized.
 
 ## Next safe action
 
-Complete issue #102 by opening a docs-only PR that marks Vertical Governance
-Completion complete, records the five vertical control lines as thin-layer
-coverage, and moves the next active stabilization gate to the real-world field
-test. If low-risk merge gates pass, merge and close #102; otherwise stop for
-human review.
+Create or run the real-world field test work unit. It must have a durable GitHub
+issue, allowed paths, PR Merge Decision Record, validation evidence, handoff
+usage, issue closeout, lessons learned, and a post-test update to
+`docs/control/V1_READINESS_AUDIT.md`. Do not start release preparation first.
