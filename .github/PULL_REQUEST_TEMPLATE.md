@@ -10,6 +10,18 @@
 
 ## Scope Boundaries
 
+## Current Status Impact
+
+```yaml
+current_status_impact:
+  status: updated | not_applicable | deferred
+  reason:
+  current_status_updated_in_this_pr: true | false
+  follow_up_issue: none | "#<number>"
+```
+
+Use `docs/control/CURRENT_STATUS_POLICY.md`.
+
 ## Runtime Output Status
 
 ## Merge Decision
