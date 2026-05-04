@@ -20,6 +20,21 @@ installation. They must not treat ASGK's internal `docs/DOCUMENT_MAP.md`,
 `docs/handoff/*`, stabilization plans, readiness audits, or compatibility-only
 agent rule keys as target-project truth.
 
+## Progressive Disclosure Rule
+
+Target repositories should use the same router + registry split as ASGK:
+
+```yaml
+target_document_navigation:
+  docs/DOCUMENT_MAP.md: compact repo-local navigation router
+  docs/DOCUMENT_REGISTRY.md: complete repo-local document registry
+  docs/control/CONTEXT_BUDGET_POLICY.md: context read sets and expansion rules
+```
+
+Do not create a target-project `docs/DOCUMENT_MAP.md` that contains the full
+document registry. Use `templates/DOCUMENT_MAP.template.md` as the router starter
+and `templates/DOCUMENT_REGISTRY.template.md` as the registry starter.
+
 ## Install Surface Classes
 
 ```yaml
@@ -67,7 +82,10 @@ path and edit them before treating them as authoritative.
 template_then_customize:
   - source: templates/DOCUMENT_MAP.template.md
     target: docs/DOCUMENT_MAP.md
-    required_action: "Replace placeholders with target-repository documents."
+    required_action: "Create a compact repo-local router; do not place full registry tables here."
+  - source: templates/DOCUMENT_REGISTRY.template.md
+    target: docs/DOCUMENT_REGISTRY.md
+    required_action: "Replace placeholders with target-repository document rows."
   - source: templates/agent_rules.template.yaml
     target: agent/agent_rules.yaml
     required_action: "Review assignment levels, roles, allowed paths, and stop conditions for the target repo."
@@ -108,6 +126,7 @@ must not become target-project authority without a dedicated adaptation issue.
 ```yaml
 do_not_copy_as_is:
   - docs/DOCUMENT_MAP.md
+  - docs/DOCUMENT_REGISTRY.md
   - docs/handoff/AGENT_LOG.md
   - docs/handoff/DECISIONS.md
   - docs/control/V1_1_STABILIZATION_PLAN.md
@@ -123,7 +142,8 @@ Reasons:
 
 ```yaml
 reasons:
-  docs_DOCUMENT_MAP_md: "ASGK repo-local map; use templates/DOCUMENT_MAP.template.md instead."
+  docs_DOCUMENT_MAP_md: "ASGK repo-local router; use templates/DOCUMENT_MAP.template.md instead."
+  docs_DOCUMENT_REGISTRY_md: "ASGK repo-local registry; use templates/DOCUMENT_REGISTRY.template.md instead."
   handoff_logs_and_decisions: "ASGK repository history, not target project state."
   stabilization_and_readiness_docs: "ASGK internal maturity state, not target project readiness."
   uncontrolled_document_audit: "ASGK internal audit result."
@@ -176,7 +196,8 @@ Before the target repository treats ASGK as active governance, confirm:
 ```yaml
 target_installation_checklist:
   - AGENTS.md exists and points to target repo state, not chat memory.
-  - docs/DOCUMENT_MAP.md was generated from templates/DOCUMENT_MAP.template.md and customized.
+  - docs/DOCUMENT_MAP.md was generated from templates/DOCUMENT_MAP.template.md and kept as a compact router.
+  - docs/DOCUMENT_REGISTRY.md was generated from templates/DOCUMENT_REGISTRY.template.md and customized.
   - agent/agent_rules.yaml was generated from templates/agent_rules.template.yaml or reviewed for clean assignment terminology.
   - docs/handoff/CURRENT_STATUS.md is a fresh target snapshot.
   - allowed paths and protected paths match the target repo.
