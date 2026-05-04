@@ -4,7 +4,7 @@ This is the compact current-status surface for the repository. It is overwritten
 not appended. Historical detail belongs in GitHub issues, PRs, comments, and
 merge commits.
 
-Last updated: `2026-05-04T12:47:17Z`
+Last updated: `2026-05-04T12:54:58Z`
 
 ## Durable source of truth
 
@@ -20,16 +20,15 @@ repo-governance core has been strengthened through parser/status/handoff checks,
 document navigation split, target-install checklist, read-only target-install
 check, read-only target-install plan, initial vertical governance, Current Status
 freshness gate, standalone fail-closed policy-gate checker, and opt-in negative
-policy-gate fixtures. The active bounded work adds an ASGK CLI command for those
-policy-gate fixtures without changing checker semantics, default CI wiring,
-auto-merge behavior, schemas, dependencies, or GitHub API behavior.
+policy-gate fixtures. The active bounded work refreshes this compact handoff
+surface after PR #97 merged so completed #96 work is no longer listed as active.
 
 ## Active work
 
 ```yaml
-issue: "#96 [TOOLING] Add opt-in policy-gate negative command"
+issue: "#98 [DOCS] Refresh current status after policy-gate command merge"
 pr: none
-branch: tooling/policy-gate-negative-command-96
+branch: docs/current-status-closeout-98
 state: in_progress
 ```
 
@@ -62,10 +61,10 @@ Policy-gate negative fixtures remain opt-in through
 ## Last completed
 
 ```yaml
-issue: "#94 [TEST] Add negative policy-gate fixtures"
-pr: "#95 test: add negative policy-gate fixtures"
-merge_commit: "d6f7c726245ae45616dda8666ad5096f13efd82b"
-note: "Policy-gate expected-failure fixtures are merged. Details are in GitHub; do not duplicate historical logs here."
+issue: "#96 [TOOLING] Add opt-in policy-gate negative command"
+pr: "#97 tooling: add opt-in policy-gate negative command"
+merge_commit: "56961fe65086483f29b726e34b6ae34dfdd37e79"
+note: "Opt-in policy-gate negative command is merged. Details are in GitHub; do not duplicate historical logs here."
 ```
 
 ## Runtime artifact status
@@ -75,7 +74,6 @@ cache, or external preparation outputs are authorized by the current active work
 
 ## Next safe action
 
-Complete issue #96 by opening a PR for the opt-in policy-gate negative command,
-then wait for CI and human review. Do not change `scripts/policy_gate_check.py`
-semantics, workflows, schemas, dependencies, auto-merge behavior, default CI
-wiring, or GitHub API behavior in this work unit.
+Complete issue #98 by opening a status-only PR, then wait for CI and human
+review. Do not modify scripts, validation behavior, schemas, workflows,
+templates, governance policy, or runtime artifacts in this work unit.
