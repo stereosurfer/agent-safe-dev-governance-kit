@@ -4,7 +4,7 @@ This is the compact current-status surface for the repository. It is overwritten
 not appended. Historical detail belongs in GitHub issues, PRs, comments, and
 merge commits.
 
-Last updated: `2026-05-04T14:16:25Z`
+Last updated: `2026-05-04T14:30:00Z`
 
 ## Durable source of truth
 
@@ -15,30 +15,25 @@ Last updated: `2026-05-04T14:16:25Z`
 
 ## Current snapshot
 
-ASGK v1.x remains in v1.1 stabilization before release preparation. The generic
-repo-governance core has been strengthened through parser/status/handoff checks,
-document navigation split, target-install checklist, read-only target-install
-check, read-only target-install plan, policy-gate negative fixtures, and
-Vertical Governance Completion at the thin-router layer. PR validation templates
-now distinguish validation evidence source and include anti-flattening guidance
-so structured fields do not replace free-text judgment.
+ASGK v1.x stabilization has completed the required thin vertical-governance layer
+and the first real-world field test. The field test used issue #112 and PR #113
+to add `python3 scripts/asgk.py negative target-install` as a bounded, non-docs-only
+tooling/validation change with validation evidence, decision-packet-shaped merge
+inputs, and issue closeout.
 
-Vertical Governance Completion is complete. The milestone did not add five new
-standalone policy systems. Decision Control is complete as a thin
-registry/template layer, while Evidence, Authority, Lifecycle, and
-Capability/Risk controls are covered inside that layer and should become
-standalone policy or tooling only after field-test evidence proves the need.
-
-The next stabilization gate is a real-world field test before release
-preparation.
+The post-field-test readiness audit now records the field-test result and lessons
+learned. This does not start release preparation. The next gate is a separate
+release-preparation planning issue covering final readiness review, license,
+tag/release process, package/distribution boundary, explicit v2.0 deferrals, and
+remaining human gates.
 
 ## Active work
 
 ```yaml
-issue: "#112 [FIELD TEST] Add opt-in target-install negative command"
+issue: none
 pr: none
-branch: field-test/target-install-negative-112
-state: in_progress
+branch: none
+state: no_active_work
 ```
 
 ## Current validation entrypoint
@@ -50,7 +45,8 @@ python3 scripts/asgk.py doctor
 The workflow also runs the positive handoff fixture and core negative checks for
 changed paths, closeout status, PR bodies, task packets, and handoff packets.
 Policy-gate negative fixtures remain opt-in through
-`python3 scripts/asgk.py negative policy-gate`.
+`python3 scripts/asgk.py negative policy-gate`. Target-install negative fixtures
+remain opt-in through `python3 scripts/asgk.py negative target-install`.
 
 ## Closed gates
 
@@ -60,20 +56,18 @@ Policy-gate negative fixtures remain opt-in through
 - MCP write capability
 - schema breaking changes
 - new dependencies
-- publication/release
+- publication/release without explicit release-preparation issue
 - automatic handoff final-judgment generation
-- release preparation before v1.1 stabilization, real-world field test, and
-  post-test readiness audit update
 - installer scaffold before checker/planner and decision governance are stable
 - low-risk status by agent declaration
 
 ## Last completed
 
 ```yaml
-issue: "#108 [DOCS] Add anti-flattening guardrail to validation templates"
-pr: "#109 docs: guard against validation evidence flattening"
-merge_commit: "721c84ba107249856757f5220081e270b907b2f3"
-note: "Validation templates now require evidence source attribution and anti-flattening limits/reason guidance. The next active gate is still the real-world field test."
+issue: "#112 [FIELD TEST] Add opt-in target-install negative command"
+pr: "#113 tooling: add target-install negative command"
+merge_commit: "1dcdbd08a20a41a903d474ff8080317eefd87185"
+note: "First real-world ASGK field test completed as a bounded tooling/validation change. Post-field-test readiness audit is recorded in issue #114."
 ```
 
 ## Runtime artifact status
@@ -83,11 +77,8 @@ cache, or external preparation outputs are currently authorized.
 
 ## Next safe action
 
-Create or run the real-world field test work unit. It must have a durable GitHub
-issue, allowed paths, PR Merge Decision Record, validation evidence, handoff
-usage, issue closeout, lessons learned, and a post-test update to
-`docs/control/V1_READINESS_AUDIT.md`. Do not start release preparation first.
-
-Current field-test implementation work is issue #112. Complete the opt-in
-`python3 scripts/asgk.py negative target-install` command, validate it, and open
-a PR with a decision packet and Merge Decision Record.
+Create a release-preparation planning issue. It must remain planning-only unless
+explicitly authorized, and should cover final readiness review, license selection,
+tag/release process, package/distribution boundary, explicit v2.0 deferrals, and
+remaining human gates. Do not tag, publish, package, or choose a license without
+that gated issue.

@@ -31,48 +31,46 @@ milestone:
 
 ```yaml
 active_milestone:
-  name: Real-world field test
+  name: Release preparation planning
   controller_issue: "pending"
   milestone_status: pending_issue
-  goal: "Use ASGK to manage a real non-trivial work unit outside pure documentation-only governance additions."
-  reason: "Vertical Governance Completion is complete at the thin-router layer; release preparation remains blocked until ASGK is field-tested on real work."
+  goal: "Plan v1.0 release preparation after the real-world field test and readiness-audit closeout."
+  reason: "Vertical Governance Completion and the first real-world field test are complete; release work still requires a separate gated issue before tagging, publishing, packaging, licensing, or release decisions."
   deliverables:
-    - GitHub issue with durable source of truth
-    - allowed paths
-    - PR with Merge Decision Record
-    - `python3 scripts/asgk.py doctor` or equivalent validation
-    - at least one handoff packet or handoff-template usage
-    - result comment on issue
-    - issue closeout
-    - lessons learned recorded
-    - docs/control/V1_READINESS_AUDIT.md updated after the field test
+    - final readiness review
+    - license-selection decision path
+    - tag/release process plan
+    - package or distribution boundary
+    - explicit v2.0 deferrals
+    - remaining human gates
   non_goals:
-    - release preparation
-    - publication or tagging
+    - immediate release tagging
+    - package publishing
     - runtime-specific adapters
-    - target-install scaffold or installer behavior
+    - installer scaffold or target repository writes
     - new dependencies unless explicitly human-gated
   acceptance:
-    - field test completes or is blocked for a useful reason
-    - blockers are converted into GitHub issues
-    - field-test lessons are recorded in durable repo or GitHub surfaces
-    - V1_READINESS_AUDIT.md is updated after the field test
+    - release-preparation issue exists
+    - release gates are explicit
+    - v2.0 deferrals are preserved
     - `python3 scripts/asgk.py doctor` passes
   risks:
-    - field test may expose missing target-install or handoff ergonomics
-    - release preparation may start too early if the field-test gate is skipped
+    - release preparation may accidentally become release execution
+    - license/package decisions may require human approval
+    - v2.0 runtime adapter expectations may be confused with v1.0 readiness
   rollback_plan:
-    - keep v1.1 stabilization active
-    - convert blockers into bounded issues
-    - do not start release preparation until the audit is updated
+    - keep v1.1 stabilization records intact
+    - do not tag or publish until explicit release issue approval
+    - convert any unclear release gate into a separate issue
   human_gates:
-    - release or publication decision
-    - new dependency or external capability
-    - schema-breaking or protected-path change
+    - license selection
+    - release tagging
+    - package publication
+    - external distribution
   phase_exit_criteria:
-    - real_world_field_test_completed_or_usefully_blocked
-    - field_test_lessons_recorded
-    - readiness_audit_updated_after_field_test
+    - release_preparation_plan_approved
+    - release_blockers_explicit
+    - release_execution_issue_created_or_deferred
 ```
 
 ## Completed Recent Milestones / Gates
@@ -86,7 +84,7 @@ completed_recent:
   vertical_governance_initial_layer:
     result: "PR #89 added the decision-point registry, decision packet template, registry links, and decision-point read set. This is the initial layer, not full milestone completion."
   vertical_governance_completion:
-    result: "Issue #100 / PR #101 exercised a real low-risk autonomous merge decision; issue #102 closes the milestone by recording thin-layer coverage and deferring heavier decision-check tooling until a future field test proves the need."
+    result: "Issue #100 / PR #101 exercised a real low-risk autonomous merge decision; issue #102 / PR #103 closed the milestone by recording thin-layer coverage and deferring heavier decision-check tooling until a future field test proves the need."
     completed_control_lines:
       decision_control: "completed as a thin decision-point router and packet template"
       evidence_control: "covered as packet evidence fields and required-evidence table entries, not a standalone policy"
@@ -94,4 +92,10 @@ completed_recent:
       lifecycle_control: "covered by lifecycle_position fields and decision-point table"
       capability_risk_control: "covered by minimum-level, human-gate, and stop-condition routing to existing canonical docs"
     policy_sprawl_result: "No new per-decision policy files, decision-check CLI, schema, workflow, script, dependency, runtime adapter, or installer scaffold was added."
+  real_world_field_test:
+    result: "Issue #112 / PR #113 completed a bounded non-docs-only tooling/validation field test by adding `python3 scripts/asgk.py negative target-install` with opt-in expected-failure fixtures. Issue #114 records the readiness-audit closeout."
+    lessons:
+      - "ASGK can manage a bounded tooling/validation change through durable issue authority, PR, validation evidence, decision packet, Merge Decision Record, merge, and closeout."
+      - "Opt-in negative command flow is safer before default CI wiring."
+      - "Field-test implementation and readiness-audit closeout should remain separate steps."
 ```
