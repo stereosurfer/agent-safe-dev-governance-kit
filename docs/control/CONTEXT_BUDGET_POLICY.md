@@ -13,10 +13,11 @@ Use the smallest sufficient context set.
 Do not read the whole repository by default.
 ```
 
-The default source for deciding which documents to read is
-`docs/DOCUMENT_MAP.md`. This policy turns that map into operational rules for
-agent sessions, task packets, reviews, merge decisions, handoff recovery, and
-future CLI checks.
+The default router for deciding which document surface to inspect is
+`docs/DOCUMENT_MAP.md`. Full canonical ownership rows live in
+`docs/DOCUMENT_REGISTRY.md`. This policy turns those navigation surfaces into
+operational read-set rules for agent sessions, task packets, reviews, merge
+decisions, handoff recovery, and future CLI checks.
 
 ## Terminology Rule
 
@@ -77,6 +78,10 @@ default_startup_context:
     - all contracts/*
     - all examples/*
     - all agent/task_packets/*
+    - docs/DOCUMENT_REGISTRY.md
+    - docs/INSTALL_SURFACE.md
+    - profiles/*
+    - docs/adapters/*
 ```
 
 Additional files are added only because the current work unit requires them.
@@ -199,7 +204,7 @@ control_policy:
     - docs/DOCUMENT_MAP.md
     - current GitHub issue or PR
     - target control document
-    - related canonical control document named by DOCUMENT_MAP.md
+    - related canonical control document named by DOCUMENT_MAP.md or DOCUMENT_REGISTRY.md
   max_initial_documents: 7
   expansion_allowed_when:
     - canonical owner is unclear
@@ -362,6 +367,113 @@ tooling_or_validation:
     - validator_scope_changes_without_issue_authorization
 ```
 
+## Task-type Reading Guide
+
+Use this guide to reduce token consumption. These are task-specific read sets,
+not runtime profiles.
+
+```yaml
+docs_only_task:
+  read:
+    - AGENTS.md
+    - docs/handoff/CURRENT_STATUS.md
+    - current issue or PR
+    - target file
+    - .github/PULL_REQUEST_TEMPLATE.md
+
+handoff_recovery_task:
+  read:
+    - AGENTS.md
+    - docs/handoff/CURRENT_STATUS.md
+    - active issue
+    - active PR if one exists
+    - docs/control/HANDOFF_PACKET.md
+    - docs/DOCUMENT_MAP.md
+    - files listed in handoff_packet.must_read
+
+closeout_or_status_repair_task:
+  read:
+    - AGENTS.md
+    - docs/handoff/CURRENT_STATUS.md
+    - docs/control/CURRENT_STATUS_POLICY.md
+    - current issue or PR
+    - scripts/asgk.py when using `closeout-check`
+
+install_surface_task:
+  read:
+    - AGENTS.md
+    - docs/INSTALL_SURFACE.md
+    - docs/QUICKSTART.md
+    - templates/DOCUMENT_MAP.template.md
+    - templates/agent_rules.template.yaml
+    - docs/DOCUMENT_MAP.md
+
+schema_or_contract_task:
+  read:
+    - AGENTS.md
+    - docs/bootstrap/07_contract_first.md
+    - relevant contract
+    - relevant schema
+    - relevant examples or fixtures
+    - docs/control/TASK_PACKET_FORMAT.md
+
+security_or_storage_task:
+  read:
+    - AGENTS.md
+    - docs/bootstrap/01_physical_boundaries.md
+    - docs/architecture/STORAGE_PROFILE.md
+    - docs/architecture/LOG_AND_RECORD_RETENTION_POLICY.md
+    - docs/control/HUMAN_GATED_OPERATIONS.md
+    - relevant cache/runtime/storage policy
+
+merge_decision_task:
+  read:
+    - current PR body
+    - changed file list
+    - docs/control/LOW_RISK_AUTONOMOUS_MERGE_POLICY.md
+    - docs/control/HUMAN_GATED_OPERATIONS.md
+    - docs/control/MERGE_DECISION_RECORD.md
+
+multi_agent_or_lane_task:
+  read:
+    - AGENTS.md
+    - docs/control/AUTONOMOUS_RUNBOOK.md
+    - docs/control/LANE_STATUS.md
+    - relevant agent/task_packets/*.yaml
+
+promotion_or_output_readiness_task:
+  read:
+    - AGENTS.md
+    - docs/bootstrap/13_artifact_promotion_policy.md
+    - docs/bootstrap/16_downstream_promotion_matrix.md
+    - docs/bootstrap/17_readiness_audit_policy.md
+    - relevant promotion/validation schemas
+
+readiness_audit_task:
+  read:
+    - AGENTS.md
+    - docs/handoff/CURRENT_STATUS.md
+    - docs/control/V1_READINESS_AUDIT.md
+    - docs/EVOLUTION_MODEL.md
+    - docs/DOCUMENT_MAP.md
+
+stabilization_planning_task:
+  read:
+    - AGENTS.md
+    - docs/handoff/CURRENT_STATUS.md
+    - docs/control/V1_1_STABILIZATION_PLAN.md
+    - docs/control/V1_READINESS_AUDIT.md
+    - docs/DOCUMENT_MAP.md
+
+tooling_or_validation_task:
+  read:
+    - AGENTS.md
+    - current issue or PR
+    - target script or workflow file
+    - docs/control/VALIDATION_STRATEGY.md
+    - relevant examples/negative fixture if named by the issue
+```
+
 ## Context Expansion Rules
 
 Agents may expand context only when one of these is true:
@@ -369,7 +481,8 @@ Agents may expand context only when one of these is true:
 ```yaml
 context_expansion_allowed_when:
   - target file references another canonical file
-  - DOCUMENT_MAP.md says the related file is canonical for the current topic
+  - DOCUMENT_MAP.md routes to a relevant canonical source
+  - DOCUMENT_REGISTRY.md says the related file is canonical for the current topic
   - validation failure points to a specific file
   - PR diff touches a file outside the expected group
   - issue acceptance criteria name an additional file
@@ -418,6 +531,8 @@ do_not_load_by_default:
   - cache directories
   - local state directories
   - runtime-specific adapters before v2.0
+  - docs/DOCUMENT_REGISTRY.md
+  - docs/INSTALL_SURFACE.md
 ```
 
 ## Required Report Section
@@ -453,12 +568,13 @@ For handoff recovery, include the handoff packet source and the next safe action
 6. When a policy is stable, move it from prompt text into a document, schema, or
    script.
 
-## Relationship To DOCUMENT_MAP.md
+## Relationship To Document Navigation
 
-`docs/DOCUMENT_MAP.md` defines document ownership. This policy defines how to
-consume that ownership under a context budget.
+`docs/DOCUMENT_MAP.md` routes document-navigation decisions.
+`docs/DOCUMENT_REGISTRY.md` defines full canonical ownership rows.
+This policy defines how to consume those surfaces under a context budget.
 
-If the document map and this policy disagree:
+If the document map, document registry, and this policy disagree:
 
 1. Stop the task.
 2. Open or update a docs/control issue.
