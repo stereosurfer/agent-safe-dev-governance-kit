@@ -31,54 +31,48 @@ milestone:
 
 ```yaml
 active_milestone:
-  name: Vertical Governance Completion
-  controller_issue: "#88"
-  milestone_status: active
-  phase_state: initial_layer_completed
-  goal: "Add thin vertical governance so important decision points can be resumed, reviewed, and checked consistently across projects using ASGK."
-  reason: "Horizontal repo governance is now strong; the next gap is consistent recovery of major decision points across target projects."
-  completed_initial_layer:
-    issue: "#88"
-    pr: "#89"
-    outputs:
-      - docs/control/DECISION_POINT_REGISTRY.md
-      - templates/decision_packet.template.yaml
-      - docs/DOCUMENT_REGISTRY.md registration
-      - docs/control/CONTEXT_BUDGET_POLICY.md decision-point read set
-      - docs/control/V1_1_STABILIZATION_PLAN.md milestone alignment
-      - docs/handoff/CURRENT_STATUS.md status alignment
-  remaining_exit_criteria:
-    - exercise a decision packet in one real decision point
-    - confirm the decision-point layer routes to existing canonical docs without policy sprawl
-    - explicitly defer or scope any future decision-check CLI after the exercise
-    - update readiness and field-test path after the decision-packet exercise
+  name: Real-world field test
+  controller_issue: "pending"
+  milestone_status: pending_issue
+  goal: "Use ASGK to manage a real non-trivial work unit outside pure documentation-only governance additions."
+  reason: "Vertical Governance Completion is complete at the thin-router layer; release preparation remains blocked until ASGK is field-tested on real work."
+  deliverables:
+    - GitHub issue with durable source of truth
+    - allowed paths
+    - PR with Merge Decision Record
+    - `python3 scripts/asgk.py doctor` or equivalent validation
+    - at least one handoff packet or handoff-template usage
+    - result comment on issue
+    - issue closeout
+    - lessons learned recorded
+    - docs/control/V1_READINESS_AUDIT.md updated after the field test
   non_goals:
-    - decision-check CLI in the first work unit
-    - decision schema
-    - one policy document per decision type
-    - target-install scaffold or installer behavior
+    - release preparation
+    - publication or tagging
     - runtime-specific adapters
+    - target-install scaffold or installer behavior
+    - new dependencies unless explicitly human-gated
   acceptance:
-    - decision-point layer remains a thin router/index
-    - decision packet template captures inputs, evidence, authority, stop conditions, rollback, human gate, validation, and next safe action
-    - current status and roadmap distinguish initial-layer completion from milestone completion
-    - next work can be discovered from repository state without prior chat history
+    - field test completes or is blocked for a useful reason
+    - blockers are converted into GitHub issues
+    - field-test lessons are recorded in durable repo or GitHub surfaces
+    - V1_READINESS_AUDIT.md is updated after the field test
     - `python3 scripts/asgk.py doctor` passes
   risks:
-    - policy sprawl if each decision type becomes its own policy document
-    - token bloat if decision-point work reads all canonical documents by default
-    - confusion with existing Merge Decision Record if the registry duplicates rather than routes
+    - field test may expose missing target-install or handoff ergonomics
+    - release preparation may start too early if the field-test gate is skipped
   rollback_plan:
-    - revert the decision registry/template PR if it introduces policy conflict or bloated context behavior
-    - keep existing horizontal governance unchanged
+    - keep v1.1 stabilization active
+    - convert blockers into bounded issues
+    - do not start release preparation until the audit is updated
   human_gates:
-    - any tooling, schema, or file-writing automation beyond the docs/template layer
+    - release or publication decision
+    - new dependency or external capability
+    - schema-breaking or protected-path change
   phase_exit_criteria:
-    - decision registry merged
-    - decision packet template merged
-    - decision packet exercised in a real decision point
-    - policy-sprawl risk reviewed after the exercise
-    - readiness or field-test path updated after the exercise
+    - real_world_field_test_completed_or_usefully_blocked
+    - field_test_lessons_recorded
+    - readiness_audit_updated_after_field_test
 ```
 
 ## Completed Recent Milestones / Gates
@@ -91,4 +85,13 @@ completed_recent:
     result: "INSTALL_SURFACE, TARGET_INSTALL_CHECKLIST, TARGET_INSTALL_VALIDATION_PLAN, target-install-check, and standalone target-install-plan are in place."
   vertical_governance_initial_layer:
     result: "PR #89 added the decision-point registry, decision packet template, registry links, and decision-point read set. This is the initial layer, not full milestone completion."
+  vertical_governance_completion:
+    result: "Issue #100 / PR #101 exercised a real low-risk autonomous merge decision; issue #102 closes the milestone by recording thin-layer coverage and deferring heavier decision-check tooling until a future field test proves the need."
+    completed_control_lines:
+      decision_control: "completed as a thin decision-point router and packet template"
+      evidence_control: "covered as packet evidence fields and required-evidence table entries, not a standalone policy"
+      authority_control: "covered by registry authority order and packet authority fields"
+      lifecycle_control: "covered by lifecycle_position fields and decision-point table"
+      capability_risk_control: "covered by minimum-level, human-gate, and stop-condition routing to existing canonical docs"
+    policy_sprawl_result: "No new per-decision policy files, decision-check CLI, schema, workflow, script, dependency, runtime adapter, or installer scaffold was added."
 ```
