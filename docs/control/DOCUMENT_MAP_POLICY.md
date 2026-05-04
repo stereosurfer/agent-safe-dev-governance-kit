@@ -54,10 +54,10 @@ document_map_may_contain:
   - compact maintenance summary
 ```
 
-It must not contain, after the registry split is complete:
+It must not contain:
 
 ```yaml
-document_map_must_not_contain_after_split:
+document_map_must_not_contain:
   - full document registry tables
   - complete task-type reading guide
   - install-surface checklist details
@@ -158,9 +158,11 @@ Target repositories must not copy ASGK's internal `docs/DOCUMENT_MAP.md` or
    `docs/DOCUMENT_REGISTRY.md`, and target templates if their split behavior
    changes.
 
-## Migration Note
+## Migration Status
 
-The first split stage may leave existing full registry tables in
-`docs/DOCUMENT_MAP.md` temporarily while this policy and registry structure are
-introduced. The next bounded work unit should move the full registry tables to
-`docs/DOCUMENT_REGISTRY.md` and leave `docs/DOCUMENT_MAP.md` as a compact router.
+```yaml
+migration_status:
+  registry_tables_moved_to_DOCUMENT_REGISTRY: true
+  task_type_reading_guide_moved_to_CONTEXT_BUDGET_POLICY: true
+  DOCUMENT_MAP_is_compact_router: true
+```
