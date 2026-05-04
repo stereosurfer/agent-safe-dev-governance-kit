@@ -4,7 +4,7 @@ This is the compact current-status surface for the repository. It is overwritten
 not appended. Historical detail belongs in GitHub issues, PRs, comments, and
 merge commits.
 
-Last updated: `2026-05-04T13:32:06Z`
+Last updated: `2026-05-04T14:04:54Z`
 
 ## Durable source of truth
 
@@ -19,7 +19,9 @@ ASGK v1.x remains in v1.1 stabilization before release preparation. The generic
 repo-governance core has been strengthened through parser/status/handoff checks,
 document navigation split, target-install checklist, read-only target-install
 check, read-only target-install plan, policy-gate negative fixtures, and
-Vertical Governance Completion at the thin-router layer.
+Vertical Governance Completion at the thin-router layer. PR validation templates
+now distinguish validation evidence source and include anti-flattening guidance
+so structured fields do not replace free-text judgment.
 
 Vertical Governance Completion is complete. The milestone did not add five new
 standalone policy systems. Decision Control is complete as a thin
@@ -68,10 +70,10 @@ Policy-gate negative fixtures remain opt-in through
 ## Last completed
 
 ```yaml
-issue: "#102 [DOCS] Complete Vertical Governance Completion milestone"
-pr: "#103 docs: complete vertical governance milestone"
-merge_commit: "2def8c2edb569dde5e9629ae0f59e7b0c12bbe4f"
-note: "Vertical Governance Completion is complete at the thin-router layer. The next active gate is the real-world field test."
+issue: "#108 [DOCS] Add anti-flattening guardrail to validation templates"
+pr: "#109 docs: guard against validation evidence flattening"
+merge_commit: "721c84ba107249856757f5220081e270b907b2f3"
+note: "Validation templates now require evidence source attribution and anti-flattening limits/reason guidance. The next active gate is still the real-world field test."
 ```
 
 ## Runtime artifact status
