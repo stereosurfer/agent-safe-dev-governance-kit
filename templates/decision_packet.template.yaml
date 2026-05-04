@@ -25,6 +25,7 @@ decision_packet:
       reproducible: false
       sufficient_for_decision: false
       notes: "AI_TODO: evidence summary"
+      limits: "AI_TODO: what this evidence does not prove; do not write only none, n/a, passed, all good, or merge_allowed"
 
   authority:
     source_order:
@@ -68,8 +69,9 @@ decision_packet:
         status: "AI_TODO: passed | failed | not_run | not_applicable"
         source: "AI_TODO: freshly_rerun | recorded_in_pr_body | github_actions | external_ci | existing_durable_record | inferred_from_merged_pr | not_run | not_applicable"
         evidence: "AI_TODO: command output summary, CI URL, PR body reference, issue comment, repo file, or reason not run"
+        limits: "AI_TODO: what this validation does not prove"
         current_work_unit_rerun: false
 
   result:
     status: "blocked"
-    reason: "AI_TODO: merge_allowed | merge_blocked | decision_allowed | decision_blocked with reason"
+    reason: "AI_TODO: free-text reason naming evidence, limits, and unverified items; do not only restate enum values"

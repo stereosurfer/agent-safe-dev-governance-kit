@@ -26,11 +26,18 @@ merge_decision:
 ```
 
 A missing or blocked Merge Decision Record blocks autonomous merge.
+A Merge Decision Record is also incomplete when structured fields replace
+judgment. The `reason` field must be free text that names the relevant evidence,
+limits, and any unverified items. It must not only repeat enum values such as
+`passed`, `none`, `n/a`, `all good`, or `merge_allowed`.
 
 ## Validation Evidence Source
 
 Validation claims must say where the evidence came from. Do not collapse
 different evidence sources into a generic `passed` statement.
+Structured validation fields are attribution aids, not a substitute for
+judgment. Reviewers should treat empty or generic evidence, limits, or reason
+text as merge-blocking until clarified.
 
 Use this vocabulary when practical:
 
@@ -52,7 +59,22 @@ validation:
   local_doctor:
     status: passed | failed | not_run | not_applicable
     source: freshly_rerun | recorded_in_pr_body | existing_durable_record | not_run | not_applicable
+    evidence: "Concrete command output summary, PR body reference, issue comment, or durable record."
+    limits: "What this validation does not prove."
   github_actions:
     status: passed | failed | pending | not_applicable
     source: github_actions | external_ci | not_run | not_applicable
+    evidence: "Named check, run URL, or reason not applicable."
+    limits: "What CI does not prove."
+```
+
+Examples of invalid validation summaries:
+
+```yaml
+invalid_validation_summaries:
+  - evidence: "passed"
+  - limits: "none"
+  - limits: "n/a"
+  - reason: "all good"
+  - reason: "merge_allowed"
 ```
