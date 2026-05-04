@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 import argparse
+import json
 import re
 import subprocess
 from pathlib import Path
@@ -75,6 +76,47 @@ EXPECTED_FAILURE_CHECKS = [
         "--completed-branch", "codex/positive-handoff-template-fixture",
     ],
 ]
+TARGET_INSTALL_REQUIRED_FILES = [
+    "AGENTS.md",
+    "README.md",
+    "docs/DOCUMENT_MAP.md",
+    "docs/DOCUMENT_REGISTRY.md",
+    "docs/handoff/CURRENT_STATUS.md",
+    "docs/control/CONTEXT_BUDGET_POLICY.md",
+    "docs/control/AGENT_CAPABILITY_MATRIX.md",
+    "docs/control/LOW_RISK_AUTONOMOUS_MERGE_POLICY.md",
+    "docs/control/HUMAN_GATED_OPERATIONS.md",
+    "docs/control/MERGE_DECISION_RECORD.md",
+    "docs/control/TASK_PACKET_FORMAT.md",
+    "docs/control/AGENT_REPORT_FORMAT.md",
+    "agent/agent_rules.yaml",
+    ".github/PULL_REQUEST_TEMPLATE.md",
+    ".github/ISSUE_TEMPLATE/agent_task.yml",
+]
+TARGET_INSTALL_LEGACY_AGENT_KEYS = [
+    "require_subagent_intelligence_level",
+    "subagent_intelligence_levels",
+    "subagent_assignment_required_fields",
+]
+TARGET_INSTALL_PREFERRED_AGENT_KEYS = [
+    "require_assignment_intelligence_level",
+    "assignment_intelligence_levels",
+    "worker_assignment_required_fields",
+]
+TARGET_INSTALL_FORBIDDEN_BLOCKING_PATHS = [
+    "docs/control/V1_1_STABILIZATION_PLAN.md",
+    "docs/control/V1_READINESS_AUDIT.md",
+    "docs/control/UNCONTROLLED_DOCUMENT_AUDIT.md",
+    "docs/EVOLUTION_MODEL.md",
+]
+TARGET_INSTALL_FORBIDDEN_WARNING_PATHS = [
+    "docs/handoff/AGENT_LOG.md",
+    "docs/handoff/DECISIONS.md",
+    "examples/negative",
+    "profiles",
+    "docs/adapters",
+]
+TARGET_INSTALL_DEFERRED_V2_SURFACES = ["profiles/", "docs/adapters/"]
 
 
 def rel(path: str | Path) -> Path:
@@ -218,6 +260,238 @@ def print_failures(failures: list[str]) -> int:
         return 1
     print("Check passed.")
     return 0
+
+
+def add_target_install_finding(
+    findings: list[dict[str, str | bool]],
+    severity: str,
+    category: str,
+    path: str,
+    reason: str,
+    recommended_fix: str,
+    *,
+    blocking: bool,
+) -> None:
+    findings.append({
+        "severity": severity,
+        "category": category,
+        "file": path,
+        "reason": reason,
+        "recommended_fix": recommended_fix,
+        "blocking": blocking,
+    })
+
+
+def repo_path(root: Path, path: str) -> Path:
+    return root / path
+
+
+def read_repo_text(root: Path, path: str) -> str:
+    return repo_path(root, path).read_text(encoding="utf-8")
+
+
+def target_install_findings(root: Path) -> list[dict[str, str | bool]]:
+    findings: list[dict[str, str | bool]] = []
+
+    for required in TARGET_INSTALL_REQUIRED_FILES:
+        if not repo_path(root, required).exists():
+            add_target_install_finding(
+                findings,
+                "FAIL",
+                "required_files",
+                required,
+                "required target-install file is missing",
+                "Create the file from the ASGK install surface or explicitly document why it is not applicable.",
+                blocking=True,
+            )
+
+    document_map_path = repo_path(root, "docs/DOCUMENT_MAP.md")
+    if document_map_path.exists():
+        text = document_map_path.read_text(encoding="utf-8")
+        required_refs = ["docs/DOCUMENT_REGISTRY.md", "docs/control/CONTEXT_BUDGET_POLICY.md"]
+        for ref in required_refs:
+            if ref not in text:
+                add_target_install_finding(
+                    findings,
+                    "FAIL",
+                    "document_navigation_split",
+                    "docs/DOCUMENT_MAP.md",
+                    f"compact router does not reference {ref}",
+                    f"Update docs/DOCUMENT_MAP.md to route readers to {ref}.",
+                    blocking=True,
+                )
+        forbidden_markers = [
+            "| Document | Role | Canonical for | Read by default | Read when | Owned by lane |",
+            "## Task-type Reading Guide",
+        ]
+        for marker in forbidden_markers:
+            if marker in text:
+                add_target_install_finding(
+                    findings,
+                    "FAIL",
+                    "document_navigation_split",
+                    "docs/DOCUMENT_MAP.md",
+                    f"document map still contains non-router marker: {marker}",
+                    "Move full registry rows to docs/DOCUMENT_REGISTRY.md and task read sets to docs/control/CONTEXT_BUDGET_POLICY.md.",
+                    blocking=True,
+                )
+        template_markers = ["target-project navigation router template", "<lane>", "<path>", "<topic>"]
+        for marker in template_markers:
+            if marker in text:
+                add_target_install_finding(
+                    findings,
+                    "WARN",
+                    "template_derived_files",
+                    "docs/DOCUMENT_MAP.md",
+                    f"document map still contains template marker: {marker}",
+                    "Customize docs/DOCUMENT_MAP.md for the target repository.",
+                    blocking=False,
+                )
+
+    document_registry_path = repo_path(root, "docs/DOCUMENT_REGISTRY.md")
+    if document_registry_path.exists():
+        text = document_registry_path.read_text(encoding="utf-8")
+        for marker in ["# Document Registry", "DOCUMENT_REGISTRY.md is repo-local"]:
+            if marker not in text:
+                add_target_install_finding(
+                    findings,
+                    "FAIL",
+                    "document_navigation_split",
+                    "docs/DOCUMENT_REGISTRY.md",
+                    f"document registry missing marker: {marker}",
+                    "Create docs/DOCUMENT_REGISTRY.md from templates/DOCUMENT_REGISTRY.template.md and customize it.",
+                    blocking=True,
+                )
+        if "| Document | Role | Canonical for | Read by default | Read when | Owned by lane |" not in text:
+            add_target_install_finding(
+                findings,
+                "WARN",
+                "document_navigation_split",
+                "docs/DOCUMENT_REGISTRY.md",
+                "document registry does not appear to contain registry rows",
+                "Add target-repository document rows or document why the registry is intentionally minimal.",
+                blocking=False,
+            )
+        for marker in ["target-project template", "<lane>", "<path>", "<topic>"]:
+            if marker in text:
+                add_target_install_finding(
+                    findings,
+                    "WARN",
+                    "template_derived_files",
+                    "docs/DOCUMENT_REGISTRY.md",
+                    f"document registry still contains template marker: {marker}",
+                    "Customize docs/DOCUMENT_REGISTRY.md for the target repository.",
+                    blocking=False,
+                )
+
+    agent_rules_path = repo_path(root, "agent/agent_rules.yaml")
+    if agent_rules_path.exists():
+        text = agent_rules_path.read_text(encoding="utf-8")
+        has_migration_note = "target_legacy_key_migration" in text or "legacy_key_migration" in text
+        for key in TARGET_INSTALL_LEGACY_AGENT_KEYS:
+            if key in text and not has_migration_note:
+                add_target_install_finding(
+                    findings,
+                    "FAIL",
+                    "legacy_key_guard",
+                    "agent/agent_rules.yaml",
+                    f"target agent rules contain ASGK internal compatibility key: {key}",
+                    "Use templates/agent_rules.template.yaml or add a scoped target_legacy_key_migration note.",
+                    blocking=True,
+                )
+        if not any(key in text for key in TARGET_INSTALL_PREFERRED_AGENT_KEYS):
+            add_target_install_finding(
+                findings,
+                "WARN",
+                "legacy_key_guard",
+                "agent/agent_rules.yaml",
+                "target agent rules do not contain the preferred assignment/worker keys",
+                "Review templates/agent_rules.template.yaml and use assignment_intelligence_levels / worker_assignment_required_fields.",
+                blocking=False,
+            )
+        if "status: target-project-template" in text:
+            add_target_install_finding(
+                findings,
+                "FAIL",
+                "template_derived_files",
+                "agent/agent_rules.yaml",
+                "agent rules still look like an uncustomized target-project template",
+                "Customize roles, allowed paths, and stop conditions for the target repository.",
+                blocking=True,
+            )
+
+    for forbidden in TARGET_INSTALL_FORBIDDEN_BLOCKING_PATHS:
+        if repo_path(root, forbidden).exists():
+            add_target_install_finding(
+                findings,
+                "FAIL",
+                "forbidden_repo_local_surfaces",
+                forbidden,
+                "ASGK repo-local governance file is present in the target repository surface",
+                "Remove this file from target authority or document an explicit adaptation issue.",
+                blocking=True,
+            )
+
+    for forbidden in TARGET_INSTALL_FORBIDDEN_WARNING_PATHS:
+        if repo_path(root, forbidden).exists():
+            add_target_install_finding(
+                findings,
+                "WARN",
+                "forbidden_repo_local_surfaces",
+                forbidden,
+                "ASGK repo-local or deferred surface is present",
+                "Keep only if intentionally adapted; otherwise remove from the target install surface.",
+                blocking=False,
+            )
+
+    for startup_path in ["AGENTS.md", "docs/DOCUMENT_MAP.md"]:
+        path = repo_path(root, startup_path)
+        if not path.exists():
+            continue
+        text = path.read_text(encoding="utf-8")
+        for surface in TARGET_INSTALL_DEFERRED_V2_SURFACES:
+            if "default_startup_set" in text and surface in text:
+                add_target_install_finding(
+                    findings,
+                    "FAIL",
+                    "deferred_v2_guard",
+                    startup_path,
+                    f"default startup surface appears to reference deferred v2 path: {surface}",
+                    "Remove runtime-specific profiles/adapters from the v1.x default startup path.",
+                    blocking=True,
+                )
+
+    if not any(repo_path(root, candidate).exists() for candidate in ["scripts/asgk.py", ".github/workflows"]):
+        add_target_install_finding(
+            findings,
+            "WARN",
+            "validation_command_presence",
+            ".",
+            "no obvious validation command or workflow surface found",
+            "Document the target repository validation command before relying on ASGK governance.",
+            blocking=False,
+        )
+
+    return findings
+
+
+def print_target_install_findings(findings: list[dict[str, str | bool]], *, as_json: bool) -> int:
+    blocking_count = sum(1 for finding in findings if bool(finding["blocking"]))
+    warning_count = sum(1 for finding in findings if not bool(finding["blocking"]))
+    result = "fail" if blocking_count else ("warning" if warning_count else "pass")
+    if as_json:
+        print(json.dumps({"result": result, "findings": findings}, indent=2, sort_keys=True))
+    else:
+        if not findings:
+            print("Target install check passed.")
+        else:
+            for finding in findings:
+                print(
+                    f"{finding['severity']}: [{finding['category']}] {finding['file']} - "
+                    f"{finding['reason']} Fix: {finding['recommended_fix']}"
+                )
+            print(f"Target install check result: {result} ({blocking_count} blocking, {warning_count} warning).")
+    return 1 if blocking_count else 0
 
 
 def cmd_doctor(_args: argparse.Namespace) -> int:
@@ -442,6 +716,12 @@ def cmd_handoff_template(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_target_install_check(args: argparse.Namespace) -> int:
+    root = Path(args.repo_root).resolve()
+    findings = target_install_findings(root)
+    return print_target_install_findings(findings, as_json=args.json)
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="ASGK minimal validation CLI.")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -492,6 +772,11 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--branch", default=None)
     p.add_argument("--objective", default=None)
     p.set_defaults(func=cmd_handoff_template)
+
+    p = sub.add_parser("target-install-check", help="Read-only target ASGK installation check.")
+    p.add_argument("--repo-root", default=str(ROOT), help="Repository root to inspect. Defaults to this repository.")
+    p.add_argument("--json", action="store_true", help="Emit machine-readable JSON output.")
+    p.set_defaults(func=cmd_target_install_check)
 
     return parser
 
