@@ -4,7 +4,7 @@ This is the compact current-status surface for the repository. It is overwritten
 not appended. Historical detail belongs in GitHub issues, PRs, comments, and
 merge commits.
 
-Last updated: `2026-05-04T11:50:00Z`
+Last updated: `2026-05-04T12:15:00Z`
 
 ## Durable source of truth
 
@@ -18,18 +18,18 @@ Last updated: `2026-05-04T11:50:00Z`
 ASGK v1.x remains in v1.1 stabilization before release preparation. The generic
 repo-governance core has been strengthened through parser/status/handoff checks,
 document navigation split, target-install checklist, read-only target-install
-check, read-only target-install plan, initial vertical governance, and Current
-Status freshness gate. The active bounded work mechanizes existing low-risk /
-auto-merge policy gates with a standalone read-only checker. The checker must not
-infer low-risk status; it only confirms mechanically checkable PR-body gates and
-keeps missing, unknown, pending, ambiguous, or unverifiable gates human-gated.
+check, read-only target-install plan, initial vertical governance, Current Status
+freshness gate, and standalone fail-closed policy-gate checker. The active
+bounded work adds opt-in negative fixtures proving `scripts/policy_gate_check.py`
+blocks known-bad PR bodies without inferring low-risk status or wiring the check
+into default CI.
 
 ## Active work
 
 ```yaml
-issue: "#92 [TOOLING] Mechanize existing low-risk policy gates"
+issue: "#94 [TEST] Add negative policy-gate fixtures"
 pr: none
-branch: tooling/policy-gate-check-92
+branch: test/policy-gate-negative-fixtures-94
 state: in_progress
 ```
 
@@ -60,10 +60,10 @@ changed paths, closeout status, PR bodies, task packets, and handoff packets.
 ## Last completed
 
 ```yaml
-issue: "#90 [DOCS] Add current-status update gate"
-pr: "#91 docs: add current status freshness gate"
-merge_commit: "7b02cc97823857c39af90c9f1c3f31a3d354f422"
-note: "Current Status Impact is now a PR template and review gate. Details are in GitHub; do not duplicate historical logs here."
+issue: "#92 [TOOLING] Mechanize existing low-risk policy gates"
+pr: "#93 tooling: mechanize existing low-risk policy gates"
+merge_commit: "c37826a3065be8aba60bd2a1472ce1629572eba9"
+note: "Standalone fail-closed policy-gate checker is merged. Details are in GitHub; do not duplicate historical logs here."
 ```
 
 ## Runtime artifact status
@@ -73,8 +73,7 @@ cache, or external preparation outputs are authorized by the current active work
 
 ## Next safe action
 
-Review and complete the fail-closed policy gate checker PR for issue #92. The
-bounded work should remain a standalone read-only checker plus docs updates. Do
-not add new risk categories, auto-merge behavior, GitHub API calls, workflow
-changes, schemas, dependencies, or `scripts/asgk.py` integration in this work
-unit.
+Review and complete the policy-gate negative fixtures PR for issue #94. The
+bounded work should remain fixture/docs/status only. Do not modify
+`scripts/policy_gate_check.py`, `scripts/asgk.py`, workflows, schemas,
+dependencies, auto-merge behavior, or default CI wiring in this work unit.
