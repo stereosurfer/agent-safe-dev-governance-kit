@@ -4,7 +4,7 @@ This is the compact current-status surface for the repository. It is overwritten
 not appended. Historical detail belongs in GitHub issues, PRs, comments, and
 merge commits.
 
-Last updated: `2026-05-03T15:00:00Z`
+Last updated: `2026-05-04T10:45:00Z`
 
 ## Durable source of truth
 
@@ -15,19 +15,21 @@ Last updated: `2026-05-03T15:00:00Z`
 
 ## Current snapshot
 
-ASGK v1.x remains in v1.1 stabilization before release preparation. Recent
-governance-loop hardening is complete: handoff-template/check list alignment,
-local closeout-check, uncontrolled-document audit, and document-map sync have
-landed. The next bounded work should prepare the real-world field test, including
-checking whether existing QUICKSTART/install guidance is sufficient.
+ASGK v1.x remains in v1.1 stabilization before release preparation. The generic
+repo-governance core has been strengthened through parser/status/handoff checks,
+document navigation split, target-install checklist, read-only target-install
+check, and read-only target-install plan. The active milestone is now **Vertical
+Governance Completion**, which adds a thin decision-point registry and reusable
+decision packet template so major decision points can be resumed and reviewed
+consistently across projects using ASGK.
 
 ## Active work
 
 ```yaml
-issue: none
+issue: "#88 [MILESTONE] Vertical Governance Completion"
 pr: none
-branch: main
-state: idle
+branch: docs/vertical-governance-88
+state: in_progress
 ```
 
 ## Current validation entrypoint
@@ -49,24 +51,28 @@ changed paths, closeout status, PR bodies, task packets, and handoff packets.
 - new dependencies
 - publication/release
 - automatic handoff final-judgment generation
-- release preparation before v1.1 stabilization and field test
+- release preparation before v1.1 stabilization, vertical governance completion,
+  and field test
+- installer scaffold before checker/planner and decision governance are stable
 
 ## Last completed
 
 ```yaml
-issue: "#62 [DOCS] Sync document map after closeout-check and uncontrolled-document audit"
-pr: "#63 docs: sync document map for closeout and audit"
-merge_commit: "dfaae5dc1833b1b805a4ec2817cd742c3d44b4fe"
-note: "Details are in GitHub; do not duplicate historical logs here."
+issue: "#86 [TOOLING] Add read-only target install planner"
+pr: "#87 tooling: add read-only target install planner"
+merge_commit: "d4798690e027a8220ffc140bb2e1a111646f6400"
+note: "Read-only target-install plan is available as scripts/target_install_plan.py. Details are in GitHub; do not duplicate historical logs here."
 ```
 
 ## Runtime artifact status
 
 No runtime artifacts, private source material, SQLite live DB, cache files, model
-cache, or external preparation outputs are authorized by the current idle state.
+cache, or external preparation outputs are authorized by the current active work.
 
 ## Next safe action
 
-Open a bounded issue to prepare the real-world field test. First determine
-whether existing QUICKSTART/install guidance is sufficient for the field test, or
-whether a small usage guide is needed before testing.
+Review and complete the Vertical Governance Completion PR for issue #88. The
+bounded work should remain docs/template only: add and review
+`docs/control/DECISION_POINT_REGISTRY.md`, `templates/decision_packet.template.yaml`,
+and related roadmap/status/context/registry updates. Do not add decision-check
+CLI, schema, installer scaffold, or runtime adapter work in this work unit.
