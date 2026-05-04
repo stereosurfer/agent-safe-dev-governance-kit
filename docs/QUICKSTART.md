@@ -14,13 +14,14 @@ software development. Its goal is to keep humans, ChatGPT, Codex, and other
 agents working through durable GitHub and repository state rather than private
 chat memory.
 
-ASGK v1.x uses a generic repo-agent profile. It does not assume a specific
-runtime. Codex, ChatGPT Web, OpenGoat, Claude Code, Cursor, another AI agent, or
-a human may perform work, but every repo change must pass through the same ASGK
-governance flow.
+ASGK v1.x uses a generic repo-agent governance core. It does not assume a
+specific runtime. Codex, ChatGPT Web, OpenGoat, Claude Code, Cursor, another AI
+agent, or a human may perform work, but every repo change must pass through the
+same ASGK governance flow.
 
-Runtime-specific governance profiles are planned for v2.0. They are optimization
-adapters for specific execution surfaces, not prerequisites for using v1.x.
+Runtime-specific governance profiles are planned for ASGK v2.0. They are
+optimization adapters for specific execution surfaces, not prerequisites for
+using v1.x.
 
 The core workflow is:
 
@@ -107,11 +108,11 @@ For AI agents starting a work unit:
 3. docs/handoff/CURRENT_STATUS.md
 4. current GitHub issue or PR
 5. docs/DOCUMENT_MAP.md only when document ownership is unclear
-6. task-specific canonical docs named by the issue or context profile
+6. task-specific canonical docs named by the issue or context read set
 ```
 
 Do not read the whole repository by default. Use
-`docs/control/CONTEXT_BUDGET_POLICY.md` to select the context profile.
+`docs/control/CONTEXT_BUDGET_POLICY.md` to select the context read set.
 
 ## First Local Validation
 
@@ -188,7 +189,7 @@ see chat
 
 for task scope, acceptance, durable source of truth, or handoff.
 
-## Choosing Agent Level
+## Choosing Assignment Level
 
 Use `docs/control/AGENT_CAPABILITY_MATRIX.md`.
 
@@ -340,7 +341,7 @@ Stop and report instead of continuing when:
 
 ### Mistake: reading the whole repository
 
-Use the context profile. Read only what the task needs.
+Use the context read set. Read only what the task needs.
 
 ### Mistake: treating examples as policy
 

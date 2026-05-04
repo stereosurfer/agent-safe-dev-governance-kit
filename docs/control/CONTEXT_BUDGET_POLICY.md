@@ -18,15 +18,28 @@ The default source for deciding which documents to read is
 agent sessions, task packets, reviews, merge decisions, handoff recovery, and
 future CLI checks.
 
-## Terminology Guard
+## Terminology Rule
 
-In this policy, the term `context profile` means a context-budget read-set only.
-It does not mean a runtime profile, behavior profile, vendor adapter, subagent
-policy, goal workflow, or platform-specific optimization layer.
+Use `context read set` for this policy.
+
+```yaml
+preferred_term: context_read_set
+legacy_or_informal_terms:
+  - context profile
+meaning: context-budget read-set only
+not_meaning:
+  - runtime profile
+  - behavior profile
+  - vendor adapter
+  - platform-native subagent policy
+  - goal workflow
+  - platform-specific optimization layer
+```
 
 All repository work still uses the generic repo-agent governance core defined in
-`AGENTS.md`. Context profiles only decide what additional documents may be read
-for a bounded work unit.
+`AGENTS.md`. A context read set only decides which additional documents may be
+read for a bounded work unit. It must not change allowed paths, merge behavior,
+source-of-truth rules, or the Generic Operating Profile.
 
 Runtime-specific profiles and adapters remain v2.0 planned/optional work and
 must not be added to the v1.x default startup context.
@@ -74,9 +87,6 @@ Before changing files, the agent must classify the work unit into one primary
 context read set. If multiple read sets apply, choose the narrowest read set that
 covers the risk.
 
-This selection is not runtime profile routing and must not change allowed paths,
-merge behavior, source-of-truth rules, or the Generic Operating Profile.
-
 ```yaml
 context_read_set_selection:
   required_inputs:
@@ -86,14 +96,14 @@ context_read_set_selection:
     - expected_output
     - risk_level
   output:
-    - selected_context_profile
+    - selected_context_read_set
     - files_to_read
     - context_expansion_reason_when_applicable
 ```
 
-## Context Profiles
+## Context Read Sets
 
-These profiles are context-budget read sets only. They do not define runtime
+These read sets are context-budget tools only. They do not define runtime or
 behavior profiles.
 
 ### `startup`
@@ -118,7 +128,7 @@ startup:
 Use when a human, agent, model, browser session, IDE, or automation runner must
 resume work after interruption or tool/runtime switch.
 
-This profile is generic/runtime-agnostic. Runtime-specific adapters may later
+This read set is generic/runtime-agnostic. Runtime-specific adapters may later
 optimize how a tool consumes the packet in v2.0, but they must not change this
 minimum recovery set.
 
@@ -151,19 +161,6 @@ handoff_recovery:
     - must_read_missing
     - handoff_packet_conflicts_with_active_pr
     - human_gate_detected_without_approval
-```
-
-Required reporting when this profile is used:
-
-```yaml
-handoff_recovery_report:
-  handoff_packet_source:
-  active_issue:
-  active_pr:
-  branch:
-  validation_status:
-  next_safe_action:
-  context_expansion:
 ```
 
 ### `docs_only`
@@ -385,7 +382,7 @@ Expansion must be recorded in the agent report:
 
 ```yaml
 context_expansion_record:
-  original_profile:
+  original_read_set:
   added_files:
   reason:
   result:
@@ -397,7 +394,7 @@ context_expansion_record:
 hard_limits:
   max_unrelated_files: 0
   max_documents_without_reason: 0
-  max_initial_documents_without_profile: 4
+  max_initial_documents_without_read_set: 4
   max_full_repository_scans: 0
 ```
 
@@ -431,7 +428,7 @@ is non-trivial:
 ```md
 ## Context Budget
 
-Context read set: <profile>
+Context read set: <read-set-name>
 Initial files read:
 - <path>
 Expanded files read:
