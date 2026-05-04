@@ -1,6 +1,6 @@
 # Document Map
 
-Status: active repository navigation and source-ownership map.
+Status: active ASGK repository-local navigation and source-ownership map.
 
 This file defines which documents are canonical, which documents are summaries,
 which documents are examples, which files are executable governance surfaces,
@@ -8,6 +8,28 @@ and which files should be read only for specific task types.
 
 Its main purpose is to reduce token use, prevent document role drift, and stop
 agents from treating repeated summaries as competing authority.
+
+## Repo-local Scope
+
+```text
+DOCUMENT_MAP.md is repo-local.
+```
+
+This file governs the ASGK repository only. It is not the document map to copy
+unchanged into repositories that install or adopt ASGK.
+
+When ASGK is installed into a target repository, that target repository must own
+its own `docs/DOCUMENT_MAP.md` based on its actual files. Use
+`templates/DOCUMENT_MAP.template.md` as a starter template, then delete
+placeholder rows and replace them with target-repository documents.
+
+The three distinct artifacts are:
+
+```yaml
+asgk_repo_local_map: docs/DOCUMENT_MAP.md
+target_project_template: templates/DOCUMENT_MAP.template.md
+target_repo_local_map: docs/DOCUMENT_MAP.md in the target repository
+```
 
 ## Core Rule
 
@@ -86,8 +108,26 @@ roles:
 | `AGENTS.md` | canonical | agent startup order, source-of-truth rule, work-unit rule, stop conditions | yes | all agent sessions | `lane_00_controller` |
 | `docs/handoff/CURRENT_STATUS.md` | status | compact current repo snapshot and next safe work | yes | all new sessions, handoff recovery, handoff updates | `lane_07_docs_handoff` |
 | current GitHub issue or PR | canonical | active task objective, allowed paths, acceptance, validation, merge state | yes | every work unit | active task lane |
-| `docs/QUICKSTART.md` | summary | first-use workflow and onboarding | no | onboarding and first repository smoke test | `lane_07_docs_handoff` |
+| `docs/QUICKSTART.md` | summary | first-use workflow, onboarding, and target-repo document-map installation boundary | no | onboarding and first repository smoke test | `lane_07_docs_handoff` |
 | `docs/EVOLUTION_MODEL.md` | canonical | docs-driven evolution, self-governance, self-validation maturity model | no | roadmap/evolution discussion | `lane_07_docs_handoff` |
+
+## Installation And Target Project Templates
+
+| Document | Role | Canonical for | Read by default | Read when | Owned by lane |
+|---|---|---|---:|---|---|
+| `templates/DOCUMENT_MAP.template.md` | template | target-project document-map starter structure | no | installing ASGK into another repository, target-repo document-map creation | `lane_07_docs_handoff` |
+
+Template ownership rule:
+
+```yaml
+template_scope:
+  asgk_repo_local_map: docs/DOCUMENT_MAP.md
+  target_project_document_map_template: templates/DOCUMENT_MAP.template.md
+  target_project_finished_map: target_repo/docs/DOCUMENT_MAP.md
+rule:
+  - do not copy ASGK's repo-local map unchanged into a target project
+  - target repositories must customize their own document map
+```
 
 ## Handoff And Recovery Documents
 
@@ -137,7 +177,7 @@ usage. They are optimization layers, not the governance core.
 | `docs/control/LANE_STATUS.md` | status | lane queue, owner, blocker, next action | no | multi-lane coordination | `lane_00_controller` |
 | `docs/control/ISSUE_HYGIENE_GATE.md` | canonical | stale issue detection and issue-start gate | no | before selecting or closing issues | `lane_00_controller` |
 | `docs/control/FAILURE_THRESHOLDS.md` | canonical | stop thresholds and notification conditions | no | repeated failures, autonomous run blockers | `lane_00_controller` |
-| `docs/control/CONTEXT_BUDGET_POLICY.md` | canonical | task context profiles, handoff recovery read set, context expansion rules | no | context selection, handoff recovery, token-budget review | `lane_00_controller` |
+| `docs/control/CONTEXT_BUDGET_POLICY.md` | canonical | context read sets, handoff recovery read set, context expansion rules | no | context selection, handoff recovery, token-budget review | `lane_00_controller` |
 | `docs/control/AGENT_CAPABILITY_MATRIX.md` | canonical | task type to intelligence level/risk/human gate mapping | no | agent assignment, escalation, downscoping | `lane_00_controller` |
 | `docs/control/VALIDATION_STRATEGY.md` | canonical | validation layer responsibilities, blocking vs warning, negative test targets | no | validation/tooling work | `lane_06_ci_github` |
 | `docs/control/PR_REVIEW_CHECKLIST.md` | canonical | repeatable PR review sequence and outcomes | no | PR review and merge readiness | `lane_00_controller` |
@@ -385,3 +425,6 @@ tooling_or_validation_task:
    before v2.0.
 7. When a new CLI command becomes canonical for a check, record it in Scripts And
    CI and in the relevant task-type reading guide.
+8. Do not treat this ASGK repository-local map as the target-project map during
+   installation. Use `templates/DOCUMENT_MAP.template.md` and customize it in the
+   target repository.
