@@ -1,41 +1,53 @@
 # Target Install Validation Plan
 
-Status: active validation policy with first read-only checker implemented.
+Status: active validation policy with read-only check and plan layers.
 
-This document defines mechanical checks for validating ASGK installation inside a
-target repository.
+This document defines mechanical checks and planning surfaces for validating ASGK
+installation inside a target repository.
 
-The first implemented checker is read-only and intentionally narrow. It is not
-an installer.
+Implemented tooling is read-only. It is not an installer.
 
 ## Scope
 
-The validator answers one question:
+The tooling answers two questions:
 
 ```text
-Does this target repository look structurally safe to operate under ASGK governance?
+1. Does this target repository look structurally safe to operate under ASGK governance?
+2. What explicit installation plan should a future scaffold command follow?
 ```
 
 It must not install files, rewrite files, modify repository state, call external
 services, or infer project-specific policy beyond the installed governance files.
 
-## Implemented Command Shape
+## Implemented Command Shapes
+
+Read-only checker:
 
 ```bash
 python3 scripts/asgk.py target-install-check
-```
-
-Implemented arguments:
-
-```bash
 python3 scripts/asgk.py target-install-check --repo-root .
 python3 scripts/asgk.py target-install-check --json
+```
+
+Read-only planner:
+
+```bash
+python3 scripts/target_install_plan.py
+python3 scripts/target_install_plan.py --repo-root .
+python3 scripts/target_install_plan.py --json
+```
+
+Preferred future wrapper:
+
+```bash
+python3 scripts/asgk.py target-install-plan
 ```
 
 Not yet implemented:
 
 ```bash
 python3 scripts/asgk.py target-install-check --strict
+python3 scripts/asgk.py target-install-plan
 ```
 
 ## Validation Categories
@@ -229,24 +241,57 @@ validation_command_checks:
     - documented_validation_command
 ```
 
+## Target Install Plan Output
+
+The read-only planner emits a deterministic plan with these sections:
+
+```yaml
+target_install_plan:
+  schema: asgk.target_install_plan.v0
+  mode: read_only_plan
+  writes_files: false
+  copy_as_is:
+    - source
+    - target
+    - source_status
+    - target_status
+  template_then_customize:
+    - source
+    - target
+    - required_action
+    - source_status
+    - target_status
+  customize_required:
+    - path
+    - required_review
+    - target_status
+  do_not_copy:
+    - path
+    - reason
+    - target_status
+  post_install_checks:
+    - command_or_action
+```
+
 ## Output Format
 
-The validator emits actionable text by default and JSON when `--json` is used.
+The checker emits actionable text by default and JSON when `--json` is used.
+The planner emits a readable plan by default and JSON when `--json` is used.
 
 ```yaml
 output_requirements:
-  - result: pass | warning | fail
-  - category
-  - file
-  - reason
-  - recommended_fix
-  - blocking: true | false
+  - result or schema
+  - category_or_section
+  - file_or_path
+  - reason_or_required_action
+  - recommended_fix_when_applicable
+  - blocking_when_applicable
 ```
 
-## Non-goals For First Validator
+## Non-goals For Current Tooling
 
 ```yaml
-first_validator_non_goals:
+current_tooling_non_goals:
   - no file writes
   - no installer behavior
   - no external service calls
@@ -265,13 +310,18 @@ implementation_sequence:
     status: implemented_initial_subset
     command: scripts/asgk.py target-install-check
     behavior: read-only
-  2_add_negative_fixtures:
+  2_add_read_only_planner:
+    status: implemented_standalone_script
+    command: scripts/target_install_plan.py
+    behavior: read-only
+    future_wrapper: scripts/asgk.py target-install-plan
+  3_add_negative_fixtures:
     examples:
       - target_map_is_full_registry
       - target_agent_rules_uses_legacy_subagent_keys
       - target_contains_ASGK_readiness_docs
-  3_add_ci_optional_job:
+  4_add_ci_optional_job:
     behavior: opt-in target-install validation
-  4_add_installer_script:
-    prerequisite: validator stable
+  5_add_scaffold_script:
+    prerequisite: checker and planner stable
 ```
