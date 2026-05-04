@@ -36,6 +36,39 @@ issue
   -> issue close
 ```
 
+## Installing Into Another Repository
+
+`docs/DOCUMENT_MAP.md` is repo-local.
+
+The ASGK repository's `docs/DOCUMENT_MAP.md` governs this repository only. Do not
+copy it unchanged into a target project and treat it as that project's canonical
+document map.
+
+When ASGK is installed or adapted into another repository:
+
+```text
+1. Copy or generate the minimal ASGK governance scaffold.
+2. Create the target repository's own docs/DOCUMENT_MAP.md.
+3. Use templates/DOCUMENT_MAP.template.md as the starting point.
+4. Delete placeholder rows that do not exist in the target repository.
+5. Add the target repository's actual canonical documents, summaries, examples,
+   schemas, contracts, status documents, scripts, and task-specific read sets.
+6. Keep the target repository map local to that repository.
+```
+
+The three distinct artifacts are:
+
+```text
+ASGK docs/DOCUMENT_MAP.md
+  = repo-local map for this ASGK repository
+
+templates/DOCUMENT_MAP.template.md
+  = starter template for target repositories
+
+target repo docs/DOCUMENT_MAP.md
+  = repo-local map owned by the target project after installation
+```
+
 ## Prerequisites
 
 You need:
