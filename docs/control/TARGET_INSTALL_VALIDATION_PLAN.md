@@ -1,38 +1,41 @@
 # Target Install Validation Plan
 
-Status: planned validation policy.
+Status: active validation policy with first read-only checker implemented.
 
-This document defines future mechanical checks for validating ASGK installation
-inside a target repository.
+This document defines mechanical checks for validating ASGK installation inside a
+target repository.
 
-It is not a validator implementation. It is the specification a future validator
-should follow.
+The first implemented checker is read-only and intentionally narrow. It is not
+an installer.
 
 ## Scope
 
-The future validator should answer one question:
+The validator answers one question:
 
 ```text
 Does this target repository look structurally safe to operate under ASGK governance?
 ```
 
-It should not install files, rewrite files, modify repository state, call external
+It must not install files, rewrite files, modify repository state, call external
 services, or infer project-specific policy beyond the installed governance files.
 
-## Planned Command Shape
-
-Future command shape may be:
+## Implemented Command Shape
 
 ```bash
 python3 scripts/asgk.py target-install-check
 ```
 
-Optional future arguments:
+Implemented arguments:
 
 ```bash
 python3 scripts/asgk.py target-install-check --repo-root .
-python3 scripts/asgk.py target-install-check --strict
 python3 scripts/asgk.py target-install-check --json
+```
+
+Not yet implemented:
+
+```bash
+python3 scripts/asgk.py target-install-check --strict
 ```
 
 ## Validation Categories
@@ -41,23 +44,22 @@ python3 scripts/asgk.py target-install-check --json
 validation_categories:
   required_files: blocking
   template_derived_files: blocking_or_warning
-  customize_required_files: blocking_or_warning
-  forbidden_repo_local_surfaces: blocking
+  customize_required_files: planned
+  forbidden_repo_local_surfaces: blocking_or_warning
   legacy_key_guard: blocking_or_warning
   deferred_v2_guard: warning_or_blocking
   document_navigation_split: blocking
-  current_status_freshness: warning
+  current_status_freshness: planned
   validation_command_presence: warning
 ```
 
 ## Required-file Checks
 
-The validator should check that required target files exist or are explicitly
-marked not applicable in a target install record.
+The validator checks that required target files exist.
 
 ```yaml
 required_file_checks:
-  blocking_if_missing_without_exception:
+  blocking_if_missing:
     - AGENTS.md
     - README.md
     - docs/DOCUMENT_MAP.md
@@ -77,13 +79,12 @@ required_file_checks:
 
 ## Document Navigation Split Checks
 
-The validator should check the router + registry split.
+The validator checks the router + registry split.
 
 ```yaml
 document_navigation_split_checks:
   docs_DOCUMENT_MAP_md:
     must_exist: true
-    must_be_compact_router: true
     must_reference:
       - docs/DOCUMENT_REGISTRY.md
       - docs/control/CONTEXT_BUDGET_POLICY.md
@@ -100,8 +101,7 @@ document_navigation_split_checks:
 
 ## Template-derived Checks
 
-The validator should detect whether target files still look like unedited
-templates.
+The validator detects whether target files still look like unedited templates.
 
 ```yaml
 template_derived_checks:
@@ -126,8 +126,7 @@ template_derived_checks:
 
 ## Customize-required Checks
 
-The validator should warn or block when known customize-required files still look
-like ASGK or placeholder content.
+Planned but not implemented in the first checker.
 
 ```yaml
 customize_required_checks:
@@ -151,8 +150,9 @@ customize_required_checks:
 
 ## Forbidden Surface Checks
 
-The validator should block target installations that include ASGK repo-local
-surfaces as target authority.
+The validator blocks target installations that include known ASGK repo-local
+surfaces as target authority and warns on optional/deferred surfaces that may
+require explicit adaptation.
 
 ```yaml
 forbidden_surface_checks:
@@ -174,8 +174,7 @@ adaptation issue and a documented reason.
 
 ## Legacy-key Guard Checks
 
-The validator should detect ASGK internal compatibility keys in target agent
-rules.
+The validator detects ASGK internal compatibility keys in target agent rules.
 
 ```yaml
 legacy_key_checks:
@@ -190,10 +189,18 @@ legacy_key_checks:
       - worker_assignment_required_fields
 ```
 
+Accepted migration-note markers for intentional compatibility:
+
+```yaml
+accepted_migration_note_markers:
+  - target_legacy_key_migration
+  - legacy_key_migration
+```
+
 ## Deferred-v2 Checks
 
-The validator should warn when runtime-specific surfaces are present and block
-when they are treated as v1.x defaults.
+The validator warns when runtime-specific surfaces are present and blocks when
+default startup surfaces reference deferred v2 paths.
 
 ```yaml
 deferred_v2_checks:
@@ -211,8 +218,8 @@ deferred_v2_checks:
 
 ## Validation Command Checks
 
-The validator should confirm the target repository has a known validation command
-or explicitly records that validation is not yet installed.
+The validator warns if the target repository has no obvious validation command or
+workflow surface.
 
 ```yaml
 validation_command_checks:
@@ -224,7 +231,7 @@ validation_command_checks:
 
 ## Output Format
 
-Future validator output should be actionable.
+The validator emits actionable text by default and JSON when `--json` is used.
 
 ```yaml
 output_requirements:
@@ -255,6 +262,7 @@ Recommended future sequence:
 ```yaml
 implementation_sequence:
   1_add_static_checker:
+    status: implemented_initial_subset
     command: scripts/asgk.py target-install-check
     behavior: read-only
   2_add_negative_fixtures:
