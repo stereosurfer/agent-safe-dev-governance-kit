@@ -27,9 +27,10 @@ v1.0 readiness does not require runtime-specific adapters, full YAML parsing, Sa
 | CLI entrypoint | ready as minimal wrapper | required |
 | Parser robustness | sufficient for v1 core | required |
 | Runtime-specific adapters | deferred | v2.0 |
-| Product packaging | planning only | release preparation |
+| Product packaging | source-only release path selected | release preparation |
 | Real-world field test | completed | required before release preparation |
 | Final readiness review | ready to propose release execution | required before release execution |
+| License | Apache-2.0 selected | required before public release |
 
 ## V1.0 Readiness Dimensions
 
@@ -339,38 +340,57 @@ final_v1_readiness_review:
     - package publication
     - external distribution
   not_authorized_by_this_review:
-    - choosing a license
     - creating a tag
     - creating a GitHub release
     - publishing a package
     - starting release execution
 ```
 
+### 11. License And Distribution Path
+
+Current assessment:
+
+```yaml
+license_and_distribution_path:
+  status: selected
+  blocker: false
+  issue: "#124"
+  selected_license: Apache-2.0
+  license_file: LICENSE
+  license_file_status: created_with_spdx_identifier_and_official_license_url
+  selected_distribution_path: source_only_github_release
+  remaining_human_gates:
+    - release tag creation
+    - GitHub release creation
+    - package publication
+    - external distribution beyond source-only GitHub release
+  note: "Full Apache-2.0 standard text may be added later if GitHub license auto-detection or downstream packaging requires it."
+```
+
 ## Release Preparation Sequence Gate
 
-The generic governance core and the required v1.1 sequence gates are satisfied enough to propose release execution in a later separate issue. Release execution is not started by this audit.
+The generic governance core and the required v1.1 sequence gates are satisfied enough to execute a source-only v1.0 release only through a later separate issue. Release execution is not started by this audit.
 
 ```yaml
 release_preparation_gate:
-  status: ready_to_propose_release_execution_issue
-  required_before_release_preparation:
+  status: ready_to_open_source_only_release_execution_issue
+  required_before_release_execution:
     - review docs/control/V1_1_STABILIZATION_PLAN.md
-    - complete or explicitly defer parser hardening without dependencies
-    - complete or explicitly defer asgk status-check
-    - complete or explicitly defer positive handoff-template fixture
-    - complete or explicitly defer uncontrolled-document audit
     - complete Vertical Governance Completion at thin-router layer
     - complete at least one real-world field test
     - record field-test lessons
     - update this audit after the field test
     - complete final v1.0 readiness review
+    - select license
+    - select distribution path
   satisfied_by:
     vertical_governance_completion: "#102 / PR #103"
     field_test_implementation: "#112 / PR #113"
     field_test_readiness_audit: "#114 / PR #115"
     release_preparation_plan: "#116 / PR #117"
     current_status_closeout: "#118 / PR #119"
-    final_readiness_review: "#120"
+    final_readiness_review: "#120 / PR #121"
+    license_and_distribution_path: "#124"
 ```
 
 ## V1.0 Blockers
@@ -381,7 +401,7 @@ Current technical blockers in the generic governance core:
 v1_0_core_blockers: []
 ```
 
-Sequence blockers before proposing release execution:
+Sequence blockers before opening source-only release execution issue:
 
 ```yaml
 release_preparation_sequence_blockers: []
@@ -391,9 +411,10 @@ completed_sequence_gates:
   - post_field_test_readiness_audit
   - release_preparation_planning
   - final_v1_readiness_review
+  - license_and_distribution_path
 ```
 
-This distinction matters: the core is not being released by this audit. The audit only records that the next appropriate gate is a separate human-gated release-execution or release-decision issue.
+This distinction matters: the core is not being released by this audit. The audit only records that the next appropriate gate is a separate human-gated source-only release execution issue.
 
 ## V1.1 Stabilization Work
 
@@ -452,9 +473,9 @@ v2_0_deferred:
 ```yaml
 readiness_decision:
   version_target: v1.0
-  current_recommendation: propose_release_execution_issue_after_human_review
-  reason: No v1.0 core blocker is currently recorded, stabilization and field-test sequence gates are complete, and release execution can be proposed only through a later separate human-gated issue.
-  required_next_step: create a separate human-gated release-execution or release-decision issue covering license, tag, package/distribution, final checks, and rollback/revoke plan.
+  current_recommendation: open_source_only_release_execution_issue_after_human_review
+  reason: Apache-2.0 and source-only GitHub release path are selected; no v1.0 core blocker is currently recorded; release execution must still happen only through a later separate human-gated issue.
+  required_next_step: create a separate human-gated source-only release execution issue covering target commit, final checks, tag/GitHub release decision, release notes, and rollback/revoke plan.
 ```
 
 ## Audit Use
