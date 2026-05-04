@@ -85,6 +85,10 @@ Escalation means:
 4. Run stricter validation when available.
 5. Stop if authorization is missing or the boundary is unclear.
 
+## Stop conditions
+
+Stop and report instead of continuing when escalation authorization is missing, allowed paths are missing or unclear, protected paths are required, validation cannot be run, required context is unavailable, or instructions conflict on scope, source of truth, permissions, runtime artifacts, human gates, or merge behavior.
+
 ## Conflict rule
 
 If instructions conflict on scope, permissions, source of truth, validation, protected paths, runtime artifacts, human gates, or merge behavior, stop and report the conflict.
