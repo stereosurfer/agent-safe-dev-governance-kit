@@ -1,20 +1,27 @@
 # AGENTS.md — Agent Operating Guide
 
-This repository uses GitHub issues, pull request comments, repository files, and handoff documents as the source of truth for agent tasks.
+This repository uses GitHub issues, pull requests, repository files, and handoff documents as the durable source of truth for agent tasks.
 
-Agents must not depend on prior chat history. A new session must be able to continue by reading this file, `README.md`, `docs/handoff/CURRENT_STATUS.md`, open pull requests, and open issues.
+Agents must not depend on prior chat history. A new session must be able to continue from the repository state, the current GitHub issue or PR, and the compact handoff surface.
 
-## Startup read order
+## Product boundary
+
+ASGK v1.x uses a generic repo-agent governance core.
+
+Runtime-specific adapters, runtime-specific profiles, custom-agent tuning, subagent orchestration, goal workflows, vendor-specific instructions, and platform-specific optimizations are not part of the default v1.x operating profile. They are future or optional optimization layers and must not bypass the generic repository governance flow.
+
+## Default startup set
+
+Read only the smallest sufficient startup set unless the current issue, PR, handoff packet, validation failure, or `docs/DOCUMENT_MAP.md` points to more context:
 
 1. `AGENTS.md`
 2. `README.md`
-3. `docs/bootstrap/00_project_brief.md`
-4. `docs/bootstrap/01_physical_boundaries.md`
-5. `docs/bootstrap/02_storage_roots.md`
-6. `agent/agent_rules.yaml`
-7. `docs/control/CONTROL_LAYER_V0.md`
-8. `docs/handoff/CURRENT_STATUS.md`
-9. Open PRs first; then open issues.
+3. `docs/handoff/CURRENT_STATUS.md`
+4. Current GitHub issue or PR
+
+Do not read all bootstrap, control, architecture, schema, contract, example, profile, or adapter files by default.
+
+Use `docs/DOCUMENT_MAP.md` when a work unit needs context expansion, canonical-owner lookup, or document-role clarification.
 
 ## Source of truth rule
 
@@ -23,6 +30,70 @@ Task objectives, plans, checklists, acceptance sheets, allowed paths, expected o
 ```text
 The phrase "see chat" is not acceptable for task scope, acceptance, handoff, or merge authority.
 ```
+
+## Generic Operating Profile
+
+Use this generic profile by default for all repository work.
+
+1. Read the default startup set.
+2. Identify one current work unit.
+3. Confirm durable source of truth.
+4. Confirm allowed paths.
+5. Confirm expected output, non-goals, validation, and stop conditions.
+6. Create or use a task branch.
+7. Modify only files allowed by the current issue, PR, or task packet.
+8. Run the required validation.
+9. Open or update a pull request.
+10. Wait for CI when CI applies.
+11. Update the Merge Decision Record before merge eligibility.
+12. Merge only when the issue, policy, validation, CI, and merge boundary permit it.
+13. Comment on and close the issue after merge when closeout is authorized.
+
+## Generic Purity Rule
+
+The Generic Operating Profile contains only repository-wide safety workflow.
+
+Do not add runtime-specific, platform-specific, vendor-specific, domain-specific, subagent-specific, goal-workflow-specific, or optimization-specific behavior to the generic profile.
+
+Specialized material may exist only as non-default reference, future optional policy, or explicitly scoped work. It must not be read by default and must not change the generic governance flow.
+
+## Escalation triggers
+
+Escalate before writing, before PR closeout, or before merge if a work unit touches or requires:
+
+- `AGENTS.md`, `CLAUDE.md`, or other agent/tool instruction files;
+- `.github/**`;
+- `.codex/**`;
+- `.claude/**`;
+- `docs/control/**`;
+- `schemas/**` or `contracts/**`;
+- dependency files or new dependencies;
+- credentials, secrets, MCP, external services, cloud egress, or API/model call lanes;
+- merge policy, permissions, storage roots, runtime artifact boundaries, or protected paths;
+- destructive operations;
+- private source documents;
+- unclear or missing allowed paths;
+- multiple unrelated work areas;
+- unresolved conflict between docs, issue, PR, and code;
+- insufficient context.
+
+Escalation means:
+
+1. Require explicit GitHub issue or PR authorization.
+2. Record the trigger in the PR.
+3. Do not auto-merge.
+4. Run stricter validation when available.
+5. Stop if authorization is missing or the boundary is unclear.
+
+## Stop conditions
+
+Stop and report instead of continuing when escalation authorization is missing, allowed paths are missing or unclear, protected paths are required, validation cannot be run, required context is unavailable, or instructions conflict on scope, source of truth, permissions, runtime artifacts, human gates, or merge behavior.
+
+## Conflict rule
+
+If instructions conflict on scope, permissions, source of truth, validation, protected paths, runtime artifacts, human gates, or merge behavior, stop and report the conflict.
+
+Do not silently reconcile conflicts between chat instructions, tool settings, issue scope, PR text, `AGENTS.md`, `docs/DOCUMENT_MAP.md`, control documents, scripts, or CI results.
 
 ## Issue Hygiene Gate
 
@@ -47,9 +118,11 @@ A work unit is one of:
 
 Do not start another issue after completing a PR unless a durable GitHub issue/comment explicitly instructs it.
 
-## Architect routing rule
+## Agent assignment and routing records
 
-Before implementation, PR hardening, smoke-test execution, or capability planning, produce or preserve an Architect Routing Decision:
+Agent assignment and routing records are governance artifacts, not runtime profiles.
+
+When an issue, PR, or task packet requires an Architect Routing Decision, preserve it in durable project state:
 
 ```yaml
 architect_routing_decision:
@@ -65,7 +138,7 @@ architect_routing_decision:
   stop_condition:
 ```
 
-Use the smallest capable agent mode and intelligence level. Do not use routing as a reason to expand scope.
+Use the smallest capable mode and intelligence level. Do not use routing as a reason to expand scope, select a runtime-specific profile, or bypass the Generic Operating Profile.
 
 ## Required task fields
 
@@ -85,37 +158,18 @@ Every agent task must have:
 - stop_conditions
 - rollback_expectations
 
-## Stop conditions
-
-Stop and report when work requires:
-
-- protected path changes;
-- Artifact Root writes from repo tasks;
-- Local State Root writes from repo tasks;
-- new dependency;
-- schema breaking change;
-- database migration;
-- new cloud egress;
-- new API/model call lane;
-- new MCP tool or MCP write capability;
-- broader filesystem permission;
-- destructive operation;
-- private source documents;
-- unresolved conflict between docs, issue, PR, and code;
-- insufficient context.
-
 ## Low-risk merge boundary
 
 Low-risk autonomous merge is allowed only when `docs/control/LOW_RISK_AUTONOMOUS_MERGE_POLICY.md` and `docs/bootstrap/11_auto_merge_policy.md` both pass. High-risk operations remain human-gated under `docs/control/HUMAN_GATED_OPERATIONS.md`.
+
+Escalated work is not auto-merge eligible unless a canonical policy and the current GitHub issue explicitly allow it.
 
 ## Required checks
 
 For governance/scaffold changes:
 
 ```bash
-python3 scripts/check_project.py
-python3 scripts/validate_bootstrap.py
-git diff --check
+python3 scripts/asgk.py doctor
 ```
 
 For code changes, run the project-specific tests named in the issue or acceptance criteria.
