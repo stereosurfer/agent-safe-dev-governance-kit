@@ -4,7 +4,7 @@ This is the compact current-status surface for the repository. It is overwritten
 not appended. Historical detail belongs in GitHub issues, PRs, comments, and
 merge commits.
 
-Last updated: `2026-05-04T14:04:54Z`
+Last updated: `2026-05-04T14:16:25Z`
 
 ## Durable source of truth
 
@@ -35,10 +35,10 @@ preparation.
 ## Active work
 
 ```yaml
-issue: none
+issue: "#112 [FIELD TEST] Add opt-in target-install negative command"
 pr: none
-branch: none
-state: no_active_work
+branch: field-test/target-install-negative-112
+state: in_progress
 ```
 
 ## Current validation entrypoint
@@ -87,3 +87,7 @@ Create or run the real-world field test work unit. It must have a durable GitHub
 issue, allowed paths, PR Merge Decision Record, validation evidence, handoff
 usage, issue closeout, lessons learned, and a post-test update to
 `docs/control/V1_READINESS_AUDIT.md`. Do not start release preparation first.
+
+Current field-test implementation work is issue #112. Complete the opt-in
+`python3 scripts/asgk.py negative target-install` command, validate it, and open
+a PR with a decision packet and Merge Decision Record.
