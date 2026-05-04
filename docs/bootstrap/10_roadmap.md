@@ -31,45 +31,43 @@ milestone:
 
 ```yaml
 active_milestone:
-  name: Release execution decision
+  name: Source-only v1.0 release execution
   controller_issue: "pending"
   milestone_status: pending_issue
-  goal: "Open a separate human-gated issue to decide whether and how to execute ASGK v1.0 release."
-  reason: "Final v1.0 readiness review is complete enough to propose release execution, but license, tag, publication, packaging, and external distribution remain human-gated."
+  goal: "Open a separate human-gated issue to execute ASGK v1.0 as a source-only GitHub release."
+  reason: "Apache-2.0 and source-only GitHub release path are selected; release tag and GitHub release still require explicit human-gated execution."
   deliverables:
-    - license decision or explicit no-public-release decision
     - final target commit confirmation
     - release execution checklist
     - rollback or revoke plan
     - decision whether to create release tag and GitHub release
-    - decision whether packaging/distribution is source-only or broader
+    - release notes for source-only GitHub release
   non_goals:
-    - release execution without explicit human approval
-    - package publication without license decision
+    - package publication
     - runtime-specific adapters
     - installer scaffold or target repository writes
     - new dependencies unless explicitly human-gated
   acceptance:
-    - release-execution or release-decision issue exists
-    - license/tag/package/publication gates are explicit
+    - release-execution issue exists
+    - Apache-2.0 license decision is recorded
+    - source-only distribution path is recorded
     - `python3 scripts/asgk.py doctor` passes before execution is considered
   risks:
-    - release decision may accidentally execute release actions
-    - license/package decisions may require human approval
+    - release decision may accidentally execute release actions before final approval
+    - GitHub license auto-detection may require full Apache-2.0 license text in a later issue
     - v2.0 runtime adapter expectations may be confused with v1.0 readiness
   rollback_plan:
-    - do not tag or publish until explicit release issue approval
+    - do not tag or create GitHub release until explicit release issue approval
     - convert any unclear release gate into a separate issue
     - keep source repository state as the fallback release surface
   human_gates:
-    - license selection
     - release tagging
     - GitHub release creation
     - package publication
-    - external distribution
+    - external distribution beyond source-only GitHub release
   phase_exit_criteria:
-    - release_execution_approved_or_deferred
-    - license_decision_recorded_or_public_release_blocked
+    - source_only_release_execution_approved_or_deferred
+    - target_commit_confirmed
     - release_execution_issue_completed_or_split
 ```
 
@@ -102,4 +100,6 @@ completed_recent:
     result: "Issue #116 / PR #117 added a planning-only v1 release-preparation plan. Issue #118 / PR #119 refreshed current status after the planning closeout."
   final_v1_readiness_review:
     result: "Issue #120 records that no v1.0 core blocker is currently known and that release execution may be proposed only through a later separate human-gated issue."
+  license_and_distribution_path:
+    result: "Issue #124 records Apache-2.0 as the approved v1.0 license and source-only GitHub release as the selected distribution path."
 ```
