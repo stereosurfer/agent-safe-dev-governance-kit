@@ -4,7 +4,7 @@ This is the compact current-status surface for the repository. It is overwritten
 not appended. Historical detail belongs in GitHub issues, PRs, comments, and
 merge commits.
 
-Last updated: `2026-05-04T12:54:58Z`
+Last updated: `2026-05-04T13:14:28Z`
 
 ## Durable source of truth
 
@@ -20,15 +20,17 @@ repo-governance core has been strengthened through parser/status/handoff checks,
 document navigation split, target-install checklist, read-only target-install
 check, read-only target-install plan, initial vertical governance, Current Status
 freshness gate, standalone fail-closed policy-gate checker, and opt-in negative
-policy-gate fixtures. The active bounded work refreshes this compact handoff
-surface after PR #97 merged so completed #96 work is no longer listed as active.
+policy-gate fixtures. The active bounded work clarifies that PR #89 completed
+only the first thin layer of Vertical Governance Completion; the milestone
+remains active until a real decision-packet exercise and remaining exit criteria
+are satisfied.
 
 ## Active work
 
 ```yaml
-issue: "#98 [DOCS] Refresh current status after policy-gate command merge"
+issue: "#100 [DOCS] Clarify vertical governance milestone phase state"
 pr: none
-branch: docs/current-status-closeout-98
+branch: docs/vertical-governance-phase-100
 state: in_progress
 ```
 
@@ -61,10 +63,10 @@ Policy-gate negative fixtures remain opt-in through
 ## Last completed
 
 ```yaml
-issue: "#96 [TOOLING] Add opt-in policy-gate negative command"
-pr: "#97 tooling: add opt-in policy-gate negative command"
-merge_commit: "56961fe65086483f29b726e34b6ae34dfdd37e79"
-note: "Opt-in policy-gate negative command is merged. Details are in GitHub; do not duplicate historical logs here."
+issue: "#98 [DOCS] Refresh current status after policy-gate command merge"
+pr: "#99 docs: refresh current status after policy-gate command merge"
+merge_commit: "6295b5fa36ad9b2550c7eaafbb35b60cd9063fe5"
+note: "Current status closeout after PR #97 is merged. Details are in GitHub; do not duplicate historical logs here."
 ```
 
 ## Runtime artifact status
@@ -74,6 +76,6 @@ cache, or external preparation outputs are authorized by the current active work
 
 ## Next safe action
 
-Complete issue #98 by opening a status-only PR, then wait for CI and human
-review. Do not modify scripts, validation behavior, schemas, workflows,
-templates, governance policy, or runtime artifacts in this work unit.
+Complete issue #100 by opening a docs-only PR that makes milestone phase state
+discoverable from repository files alone. If low-risk merge gates pass, merge
+and close #100; otherwise stop for human review.

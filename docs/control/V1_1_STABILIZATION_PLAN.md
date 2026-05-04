@@ -46,6 +46,7 @@ completed:
   target_install_checklist_and_validation_plan: true
   read_only_target_install_check: true
   read_only_target_install_plan: true
+  vertical_governance_initial_layer: true
 ```
 
 ## Active Stabilization Work
@@ -54,9 +55,12 @@ completed:
 active_work:
   milestone: Vertical Governance Completion
   controller_issue: "#88"
-  objective: "Add a thin decision-point registry and reusable decision packet template so major decision points can be resumed and reviewed consistently."
+  phase_state: initial_layer_completed
+  completed_by: "#88 / PR #89"
+  objective: "Complete vertical governance by proving the decision-point registry and reusable decision packet can guide a real decision without policy sprawl."
+  next_work_unit_candidate: "Exercise one decision packet on a real decision point."
   non_goals:
-    - decision-check CLI in first work unit
+    - decision-check CLI before the decision-packet exercise proves the need
     - decision schema
     - one policy document per decision type
     - installer scaffold behavior
@@ -137,7 +141,7 @@ deferred:
 
 ### 6. Vertical Governance Completion
 
-Status: active milestone.
+Status: active milestone; initial layer completed by #88 / PR #89.
 
 Objective:
 
@@ -149,11 +153,24 @@ Initial deliverables:
 
 ```yaml
 vertical_governance_initial_deliverables:
-  - docs/control/DECISION_POINT_REGISTRY.md
-  - templates/decision_packet.template.yaml
-  - docs/DOCUMENT_REGISTRY.md registration
-  - docs/control/CONTEXT_BUDGET_POLICY.md decision_point read set
-  - docs/handoff/CURRENT_STATUS.md active milestone update
+  status: completed
+  completed_by: "#88 / PR #89"
+  outputs:
+    - docs/control/DECISION_POINT_REGISTRY.md
+    - templates/decision_packet.template.yaml
+    - docs/DOCUMENT_REGISTRY.md registration
+    - docs/control/CONTEXT_BUDGET_POLICY.md decision_point read set
+    - docs/handoff/CURRENT_STATUS.md active milestone update
+```
+
+Remaining exit criteria:
+
+```yaml
+vertical_governance_remaining_exit_criteria:
+  - exercise a decision packet in one real decision point
+  - confirm the registry routes to existing canonical documents without creating policy sprawl
+  - explicitly defer or scope any future decision-check CLI after the exercise
+  - update V1_READINESS_AUDIT.md and the field-test path after the exercise
 ```
 
 Acceptance:
@@ -162,7 +179,8 @@ Acceptance:
 acceptance:
   - decision registry remains a router/index rather than a parallel policy system
   - decision packet template captures decision type, lifecycle, durable source, canonical docs, evidence, authority, allowed/forbidden actions, stop conditions, rollback, human gate, validation, and next safe action
-  - no decision-check CLI, schema, dependency, or file-writing automation is introduced in the first work unit
+  - #88 / PR #89 is treated as initial-layer completion, not full milestone completion
+  - no decision-check CLI, schema, dependency, or file-writing automation is introduced before a real decision-packet exercise proves the need
   - `python3 scripts/asgk.py doctor` passes
 ```
 
@@ -232,10 +250,11 @@ v1_0_blocker: not_a_bug_but_required_sequence_gate
 4. Uncontrolled-document audit [completed]
 5. Document navigation split [completed]
 6. Target install checklist/check/plan [completed through read-only plan]
-7. Vertical Governance Completion initial layer [active]
-8. Real-world field test
-9. Update V1_READINESS_AUDIT.md
-10. Start release checklist / licensing gate
+7. Vertical Governance Completion initial layer [completed by #88 / PR #89]
+8. Decision-packet exercise for one real decision point
+9. Real-world field test
+10. Update V1_READINESS_AUDIT.md
+11. Start release checklist / licensing gate
 ```
 
 ## Release Preparation Gate
@@ -251,6 +270,8 @@ release_preparation_gate:
   - document_navigation_split_completed
   - target_install_read_only_check_and_plan_completed
   - vertical_governance_initial_layer_completed
+  - decision_packet_exercise_completed
+  - vertical_governance_policy_sprawl_reviewed
   - real_world_field_test_completed
   - field_test_lessons_recorded
   - V1_READINESS_AUDIT.md updated after field test
