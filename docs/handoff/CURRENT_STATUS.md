@@ -4,7 +4,7 @@ This is the compact current-status surface for the repository. It is overwritten
 not appended. Historical detail belongs in GitHub issues, PRs, comments, and
 merge commits.
 
-Last updated: `2026-05-04T14:45:00Z`
+Last updated: `2026-05-04T16:20:00Z`
 
 ## Durable source of truth
 
@@ -15,24 +15,22 @@ Last updated: `2026-05-04T14:45:00Z`
 
 ## Current snapshot
 
-ASGK v1.x stabilization has completed the required thin vertical-governance layer
-and the first real-world field test. The post-field-test readiness audit records
-that release preparation can now be planned as a separate gated work unit, but
-release execution has not started.
+ASGK v1.x stabilization has completed the required thin vertical-governance layer,
+the first real-world field test, post-field-test readiness audit, and the
+planning-only v1.0 release-preparation plan.
 
-The active work is release-preparation planning only. It adds a planning document
-for final readiness review, license-selection path, tag/release process plan,
-package/distribution boundary, explicit v2.0 deferrals, and remaining human gates.
-It must not choose a license, tag, publish, package, create a GitHub release, or
-start release execution.
+Release execution has not started. License selection, release tagging, GitHub
+release creation, package publication, and external distribution remain
+human-gated and require a separate explicit release decision or release-execution
+issue.
 
 ## Active work
 
 ```yaml
-issue: "#116 [RELEASE] Plan v1.0 release preparation"
+issue: none
 pr: none
-branch: docs/v1-release-prep-plan-116
-state: in_progress
+branch: none
+state: no_active_work
 ```
 
 ## Current validation entrypoint
@@ -64,10 +62,10 @@ remain opt-in through `python3 scripts/asgk.py negative target-install`.
 ## Last completed
 
 ```yaml
-issue: "#114 [DOCS] Close out real-world field test readiness audit"
-pr: "#115 docs: close out real-world field test readiness audit"
-merge_commit: "c5bb0c82a51f70528dd9fda442abf4b73d96c7bb"
-note: "Post-field-test readiness audit is complete. Release preparation planning is now the active gate."
+issue: "#116 [RELEASE] Plan v1.0 release preparation"
+pr: "#117 docs: plan v1 release preparation"
+merge_commit: "4453e4e9d5ab1f6b7a5a0e4d67acbf6d625a1daf"
+note: "Planning-only v1.0 release-preparation plan is in place. Release execution remains blocked until a separate gated issue exists."
 ```
 
 ## Runtime artifact status
@@ -77,6 +75,7 @@ cache, or external preparation outputs are currently authorized.
 
 ## Next safe action
 
-Complete the release-preparation planning PR for issue #116. Keep the work
-planning-only: define release gates and human decisions, but do not tag, publish,
-package, choose a license, create a GitHub release, or start release execution.
+Open a separate gated issue for the next release decision. Likely next candidates
+are license selection, final readiness review, or release-execution planning. Do
+not tag, publish, package, choose a license, create a GitHub release, or start
+release execution without explicit human approval in that issue.
