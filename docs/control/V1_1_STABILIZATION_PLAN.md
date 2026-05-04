@@ -16,8 +16,8 @@ decision:
   release_preparation_status: deferred
   reason: known v1.1 hardening work, install-surface safety, vertical decision governance, and real-world field testing should happen first
   next_phase: v1.1 stabilization
-  active_milestone: Vertical Governance Completion
-  controller_issue: "#88"
+  active_milestone: Real-world field test
+  controller_issue: pending
 ```
 
 ## Stabilization Goals
@@ -47,23 +47,27 @@ completed:
   read_only_target_install_check: true
   read_only_target_install_plan: true
   vertical_governance_initial_layer: true
+  decision_packet_exercise: true
+  vertical_governance_policy_sprawl_reviewed: true
+  vertical_governance_completion: true
 ```
 
 ## Active Stabilization Work
 
 ```yaml
 active_work:
-  milestone: Vertical Governance Completion
-  controller_issue: "#88"
-  phase_state: initial_layer_completed
-  completed_by: "#88 / PR #89"
-  objective: "Complete vertical governance by proving the decision-point registry and reusable decision packet can guide a real decision without policy sprawl."
-  next_work_unit_candidate: "Exercise one decision packet on a real decision point."
+  milestone: Real-world field test
+  controller_issue: pending
+  phase_state: pending_issue
+  prerequisite_completed: Vertical Governance Completion
+  completed_by: "#102"
+  objective: "Use ASGK to manage a real non-trivial work unit outside pure documentation-only governance additions."
+  next_work_unit_candidate: "Create a field-test issue with durable source, allowed paths, PR/MDR, validation, handoff usage, closeout, and lessons learned."
   non_goals:
-    - decision-check CLI before the decision-packet exercise proves the need
-    - decision schema
-    - one policy document per decision type
-    - installer scaffold behavior
+    - release preparation
+    - publication or tagging
+    - runtime-specific adapter work
+    - installer scaffold behavior unless explicitly scoped
 ```
 
 ## Work Items
@@ -141,7 +145,7 @@ deferred:
 
 ### 6. Vertical Governance Completion
 
-Status: active milestone; initial layer completed by #88 / PR #89.
+Status: completed.
 
 Objective:
 
@@ -163,14 +167,38 @@ vertical_governance_initial_deliverables:
     - docs/handoff/CURRENT_STATUS.md active milestone update
 ```
 
-Remaining exit criteria:
+Completed exit criteria:
 
 ```yaml
-vertical_governance_remaining_exit_criteria:
-  - exercise a decision packet in one real decision point
-  - confirm the registry routes to existing canonical documents without creating policy sprawl
-  - explicitly defer or scope any future decision-check CLI after the exercise
-  - update V1_READINESS_AUDIT.md and the field-test path after the exercise
+vertical_governance_completed_exit_criteria:
+  decision_packet_exercise:
+    status: completed
+    durable_source:
+      issue: "#100"
+      pr: "#101"
+    decision_type: low_risk_auto_merge_decision
+    result: "A real docs-only milestone-phase PR used issue authority, allowed paths, GitHub Actions, PR Merge Decision Record, and low-risk merge gates."
+  policy_sprawl_review:
+    status: completed
+    result: "The layer remains a router/index. No per-decision policy files, decision-check CLI, schema, workflow, script, dependency, runtime adapter, or installer scaffold was added."
+  future_tooling_scope:
+    status: deferred
+    result: "Decision-check tooling should be opened only by a later issue after field-test evidence proves it is needed."
+  readiness_and_field_test_path:
+    status: completed
+    result: "The next active stabilization gate is the real-world field test; release preparation remains deferred."
+```
+
+Control-line coverage:
+
+```yaml
+vertical_control_lines:
+  decision_control: "completed as a thin decision-point registry and reusable packet template"
+  evidence_control: "covered by packet evidence fields and decision-point required-evidence rows; not promoted to a standalone evidence policy"
+  authority_control: "covered by registry authority order and packet authority fields"
+  lifecycle_control: "covered by lifecycle_position fields and decision-point lifecycle table"
+  capability_risk_control: "covered by minimum-level, human-gate, and stop-condition routing to existing canonical docs"
+  future_escalation_rule: "Promote any line to standalone policy or checker only after a later issue proves the need from field-test evidence."
 ```
 
 Acceptance:
@@ -179,8 +207,9 @@ Acceptance:
 acceptance:
   - decision registry remains a router/index rather than a parallel policy system
   - decision packet template captures decision type, lifecycle, durable source, canonical docs, evidence, authority, allowed/forbidden actions, stop conditions, rollback, human gate, validation, and next safe action
-  - #88 / PR #89 is treated as initial-layer completion, not full milestone completion
-  - no decision-check CLI, schema, dependency, or file-writing automation is introduced before a real decision-packet exercise proves the need
+  - #88 / PR #89 is treated as initial-layer completion
+  - #100 / PR #101 is treated as the real decision-packet exercise
+  - no decision-check CLI, schema, dependency, or file-writing automation is introduced before field-test evidence proves the need
   - `python3 scripts/asgk.py doctor` passes
 ```
 
@@ -193,7 +222,7 @@ v1_0_blocker: required_before_release_preparation
 
 ### 7. Real-world field test
 
-Status: pending after Vertical Governance Completion initial layer.
+Status: active next gate after Vertical Governance Completion.
 
 Objective:
 
@@ -251,10 +280,11 @@ v1_0_blocker: not_a_bug_but_required_sequence_gate
 5. Document navigation split [completed]
 6. Target install checklist/check/plan [completed through read-only plan]
 7. Vertical Governance Completion initial layer [completed by #88 / PR #89]
-8. Decision-packet exercise for one real decision point
-9. Real-world field test
-10. Update V1_READINESS_AUDIT.md
-11. Start release checklist / licensing gate
+8. Decision-packet exercise for one real decision point [completed by #100 / PR #101]
+9. Vertical Governance Completion closeout [completed by #102]
+10. Real-world field test [active next gate]
+11. Update V1_READINESS_AUDIT.md after field test
+12. Start release checklist / licensing gate
 ```
 
 ## Release Preparation Gate

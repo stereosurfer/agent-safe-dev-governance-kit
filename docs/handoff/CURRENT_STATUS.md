@@ -4,7 +4,7 @@ This is the compact current-status surface for the repository. It is overwritten
 not appended. Historical detail belongs in GitHub issues, PRs, comments, and
 merge commits.
 
-Last updated: `2026-05-04T13:14:28Z`
+Last updated: `2026-05-04T13:27:44Z`
 
 ## Durable source of truth
 
@@ -18,19 +18,22 @@ Last updated: `2026-05-04T13:14:28Z`
 ASGK v1.x remains in v1.1 stabilization before release preparation. The generic
 repo-governance core has been strengthened through parser/status/handoff checks,
 document navigation split, target-install checklist, read-only target-install
-check, read-only target-install plan, initial vertical governance, Current Status
-freshness gate, standalone fail-closed policy-gate checker, and opt-in negative
-policy-gate fixtures. The active bounded work clarifies that PR #89 completed
-only the first thin layer of Vertical Governance Completion; the milestone
-remains active until a real decision-packet exercise and remaining exit criteria
-are satisfied.
+check, read-only target-install plan, policy-gate negative fixtures, and
+Vertical Governance Completion at the thin-router layer.
+
+Vertical Governance Completion is being closed through issue #102. The milestone
+does not claim five new standalone policy systems. It records that Decision
+Control is completed as a thin registry/template layer, while Evidence,
+Authority, Lifecycle, and Capability/Risk controls are covered inside that layer
+and should become standalone policy or tooling only after field-test evidence
+proves the need.
 
 ## Active work
 
 ```yaml
-issue: "#100 [DOCS] Clarify vertical governance milestone phase state"
+issue: "#102 [DOCS] Complete Vertical Governance Completion milestone"
 pr: none
-branch: docs/vertical-governance-phase-100
+branch: docs/complete-vertical-governance-102
 state: in_progress
 ```
 
@@ -63,10 +66,10 @@ Policy-gate negative fixtures remain opt-in through
 ## Last completed
 
 ```yaml
-issue: "#98 [DOCS] Refresh current status after policy-gate command merge"
-pr: "#99 docs: refresh current status after policy-gate command merge"
-merge_commit: "6295b5fa36ad9b2550c7eaafbb35b60cd9063fe5"
-note: "Current status closeout after PR #97 is merged. Details are in GitHub; do not duplicate historical logs here."
+issue: "#100 [DOCS] Clarify vertical governance milestone phase state"
+pr: "#101 docs: clarify vertical governance milestone phase"
+merge_commit: "84c0cad9fa92ece44161e3e2521059bdb506a3d5"
+note: "PR #101 clarified that #88 / PR #89 completed only the initial vertical governance layer, and issue #102 is closing the remaining milestone criteria."
 ```
 
 ## Runtime artifact status
@@ -76,6 +79,8 @@ cache, or external preparation outputs are authorized by the current active work
 
 ## Next safe action
 
-Complete issue #100 by opening a docs-only PR that makes milestone phase state
-discoverable from repository files alone. If low-risk merge gates pass, merge
-and close #100; otherwise stop for human review.
+Complete issue #102 by opening a docs-only PR that marks Vertical Governance
+Completion complete, records the five vertical control lines as thin-layer
+coverage, and moves the next active stabilization gate to the real-world field
+test. If low-risk merge gates pass, merge and close #102; otherwise stop for
+human review.

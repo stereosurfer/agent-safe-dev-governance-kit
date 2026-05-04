@@ -23,6 +23,7 @@ v1.0 readiness does not require runtime-specific adapters, full YAML parsing, Sa
 | Negative defense tests | ready for core cases | required |
 | Cross-agent handoff | ready for generic v0 | required |
 | Current-status control | policy exists | required |
+| Vertical governance | thin layer completed | required before field test |
 | CLI entrypoint | ready as minimal wrapper | required |
 | Parser robustness | partial | stabilize before release preparation if practical |
 | Runtime-specific adapters | deferred | v2.0 |
@@ -43,6 +44,7 @@ Required v1.0 capabilities:
 - Document ownership map.
 - Context budget policy.
 - Current-status policy.
+- Thin vertical decision-point routing without policy sprawl.
 
 Current assessment:
 
@@ -57,6 +59,48 @@ governance_core:
     - docs/control/HUMAN_GATED_OPERATIONS.md
     - docs/control/MERGE_DECISION_RECORD.md
     - docs/control/CURRENT_STATUS_POLICY.md
+    - docs/control/DECISION_POINT_REGISTRY.md
+    - templates/decision_packet.template.yaml
+```
+
+### 1a. Vertical Governance
+
+Required v1.1 capabilities before the real-world field test:
+
+- Decision Control: identify major decision points and route them to canonical docs.
+- Evidence Control: capture evidence type, source, reproducibility, and sufficiency in the decision packet.
+- Authority Control: define authority order when issue, PR, policy, packet, status, examples, and chat disagree.
+- Lifecycle Control: record where the decision sits in the work-unit lifecycle.
+- Capability / Risk Control: route minimum capability level, human gates, stop conditions, and rollback to existing canonical docs.
+
+Current assessment:
+
+```yaml
+vertical_governance:
+  status: completed_as_thin_layer
+  blocker: false
+  evidence:
+    initial_layer: "#88 / PR #89"
+    decision_exercise: "#100 / PR #101"
+    closeout: "#102"
+    documents:
+      - docs/control/DECISION_POINT_REGISTRY.md
+      - templates/decision_packet.template.yaml
+      - docs/control/V1_1_STABILIZATION_PLAN.md
+      - docs/bootstrap/10_roadmap.md
+  policy_sprawl_review:
+    result: avoided
+    avoided_outputs:
+      - per-decision policy files
+      - decision-check CLI
+      - decision schema
+      - workflow changes
+      - script changes
+      - new dependencies
+      - runtime adapters
+      - installer scaffold
+  follow_up:
+    - promote evidence, authority, lifecycle, or capability/risk into standalone policy or tooling only if a later field test proves the need
 ```
 
 ### 2. PR Auto-validation
@@ -235,6 +279,7 @@ release_preparation_gate:
     - complete or explicitly defer asgk status-check
     - complete or explicitly defer positive handoff-template fixture
     - complete or explicitly defer uncontrolled-document audit
+    - complete Vertical Governance Completion at thin-router layer
     - complete at least one real-world field test
     - record field-test lessons
     - update this audit after the field test
@@ -254,6 +299,8 @@ Sequence blockers before release preparation:
 release_preparation_sequence_blockers:
   - v1_1_stabilization_not_completed
   - real_world_field_test_not_completed
+completed_sequence_gates:
+  - vertical_governance_completion
 ```
 
 This distinction matters: the core is not known-broken, but release preparation should wait until the stabilization sequence is complete.
@@ -278,8 +325,13 @@ v1_1_stabilization:
   uncontrolled_document_audit:
     reason: inspect other status-like docs for growth risk
 
+  vertical_governance_completion:
+    reason: complete decision/evidence/authority/lifecycle/capability-risk routing without policy sprawl
+    status: completed_as_thin_layer
+
   real_world_field_test:
     reason: prove ASGK outside pure docs/governance self-modification
+    status: active_next_gate
 ```
 
 ## V2.0 Deferred Work
@@ -307,8 +359,8 @@ v2_0_deferred:
 readiness_decision:
   version_target: v1.0
   current_recommendation: proceed_to_v1_1_stabilization_before_release_preparation
-  reason: user chose to harden known v1.1 follow-ups and run a real-world field test before handling release preparation, licensing, tagging, and packaging gates
-  required_next_step: execute docs/control/V1_1_STABILIZATION_PLAN.md
+  reason: Vertical Governance Completion is satisfied at the thin-router layer; release preparation still waits for a real-world field test, field-test lessons, and a post-test audit update before licensing, tagging, and packaging gates
+  required_next_step: execute the Real-world field test milestone
 ```
 
 ## Audit Use
