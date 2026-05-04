@@ -18,6 +18,7 @@ low_risk_merge_policy: docs/control/LOW_RISK_AUTONOMOUS_MERGE_POLICY.md
 human_gates: docs/control/HUMAN_GATED_OPERATIONS.md
 merge_decision_record: docs/control/MERGE_DECISION_RECORD.md
 document_ownership: docs/DOCUMENT_MAP.md
+current_status_policy: docs/control/CURRENT_STATUS_POLICY.md
 ```
 
 If this checklist conflicts with a canonical policy, prefer the canonical policy
@@ -115,7 +116,27 @@ Request changes when:
 - [ ] Context expansion is material but unrecorded.
 - [ ] The PR decision relies on a summary document that conflicts with a canonical doc.
 
-## Step 5 — Validation Check
+## Step 5 — Current Status Freshness Check
+
+Confirm:
+
+- [ ] PR includes a `Current Status Impact` section.
+- [ ] The section sets status to exactly one of: `updated`, `not_applicable`, or `deferred`.
+- [ ] Milestone-impacting or resume-surface-impacting PRs either update `docs/handoff/CURRENT_STATUS.md` in the same PR or explain a valid deferral.
+- [ ] `not_applicable` is reasonable for the changed files and does not hide a recovery-state change.
+- [ ] `deferred` includes a reason and a follow-up issue or next safe action when repo-level recovery would otherwise be unsafe.
+- [ ] If `CURRENT_STATUS.md` changed, it is accurate for the repository state after merge and does not point to the same PR as active.
+
+Use `docs/control/CURRENT_STATUS_POLICY.md`.
+
+Request changes when:
+
+- [ ] `Current Status Impact` is missing.
+- [ ] A roadmap, milestone, stabilization, install-surface, decision-governance, or handoff-relevant tooling PR marks current status as `not_applicable` without a clear reason.
+- [ ] `deferred` lacks a follow-up path and the current compact status would mislead the next agent.
+- [ ] `CURRENT_STATUS.md` is updated but would become self-stale immediately after merge.
+
+## Step 6 — Validation Check
 
 Confirm:
 
@@ -141,7 +162,7 @@ Block when:
 
 Use `docs/control/VALIDATION_STRATEGY.md` for validator responsibilities.
 
-## Step 6 — Storage And Runtime Boundary Check
+## Step 7 — Storage And Runtime Boundary Check
 
 Confirm:
 
@@ -166,7 +187,7 @@ docs/architecture/CACHE_AND_STATE_POLICY.md
 docs/architecture/EXTERNALIZED_RESPONSIBILITY_BOUNDARY.md
 ```
 
-## Step 7 — Human Gate Check
+## Step 8 — Human Gate Check
 
 Confirm whether the PR touches any human-gated operation:
 
@@ -202,7 +223,7 @@ human_gate:
 
 Use `docs/control/HUMAN_GATED_OPERATIONS.md`.
 
-## Step 8 — Merge Decision Record Check
+## Step 9 — Merge Decision Record Check
 
 Confirm PR includes:
 
@@ -234,7 +255,7 @@ Block when:
 
 Use `docs/control/MERGE_DECISION_RECORD.md`.
 
-## Step 9 — Review Outcome
+## Step 10 — Review Outcome
 
 Choose exactly one outcome.
 
@@ -290,6 +311,7 @@ Evidence:
 - Linked issue/source:
 - Changed files:
 - Validation:
+- Current Status Impact:
 - Runtime artifact status:
 - Human gates:
 - Merge Decision Record:
@@ -313,6 +335,8 @@ Do not approve or merge when:
 - A human-gated operation is hidden inside a docs or tooling change.
 - The PR body lacks a Merge Decision Record.
 - The PR is large because unrelated cleanup was bundled in.
+- The PR lacks Current Status Impact classification.
+- The PR changes milestone, roadmap, install surface, decision governance, or handoff-relevant tooling without updating or explicitly deferring `CURRENT_STATUS.md`.
 
 ## Relationship To Future Negative Tests
 
@@ -324,7 +348,8 @@ checklist, such as:
 - runtime artifact path;
 - `see chat` durable source;
 - pending or missing checks;
-- human gate without approval.
+- human gate without approval;
+- missing Current Status Impact section.
 
 Those cases should be opt-in expected-failure fixtures and must not break normal
 positive validation unless a validator is explicitly designed to read them as

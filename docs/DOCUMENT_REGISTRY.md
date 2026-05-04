@@ -113,7 +113,7 @@ rule:
 
 | Document | Role | Canonical for | Read by default | Read when | Owned by lane |
 |---|---|---|---:|---|---|
-| `docs/control/CURRENT_STATUS_POLICY.md` | canonical | current-status overwrite, compaction, stale-status, and size rules | no | current-status update, stale status repair, handoff policy work | `lane_07_docs_handoff` |
+| `docs/control/CURRENT_STATUS_POLICY.md` | canonical | current-status overwrite, compaction, stale-status, PR status freshness gate, and size rules | no | current-status update, stale status repair, handoff policy work, PR current-status impact review | `lane_07_docs_handoff` |
 | `docs/control/HANDOFF_PACKET.md` | canonical | generic work-unit handoff packet fields, validation status values, recovery stop conditions | no | interruption, model switch, tool switch, handoff recovery, `asgk.py handoff-check` | `lane_00_controller` |
 | `docs/handoff/CURRENT_STATUS.md` | status | repo-level compact current state and next safe work | yes | all sessions and handoff updates | `lane_07_docs_handoff` |
 | `docs/handoff/DECISIONS.md` | status | durable architecture/governance decisions | no | decision lookup or update | `lane_07_docs_handoff` |
@@ -160,7 +160,7 @@ usage. They are optimization layers, not the governance core.
 | `docs/control/CONTEXT_BUDGET_POLICY.md` | canonical | context read sets, handoff recovery read set, context expansion rules | no | context selection, handoff recovery, token-budget review | `lane_00_controller` |
 | `docs/control/AGENT_CAPABILITY_MATRIX.md` | canonical | task risk classification, minimum assignment intelligence level, worker-assignment eligibility, low-risk merge compatibility, human-gate requirement, escalation/downscope decisions, context read-set binding | no | task risk review, agent assignment, escalation, downscoping, merge eligibility review | `lane_00_controller` |
 | `docs/control/VALIDATION_STRATEGY.md` | canonical | validation layer responsibilities, blocking vs warning, negative test targets | no | validation/tooling work | `lane_06_ci_github` |
-| `docs/control/PR_REVIEW_CHECKLIST.md` | canonical | repeatable PR review sequence and outcomes | no | PR review and merge readiness | `lane_00_controller` |
+| `docs/control/PR_REVIEW_CHECKLIST.md` | canonical | repeatable PR review sequence, current-status freshness review, and outcomes | no | PR review, current-status impact review, merge readiness | `lane_00_controller` |
 | `docs/control/NEGATIVE_TEST_PLAN.md` | canonical | negative test matrix, expected outcomes, implementation phases | no | negative fixture or validator work | `lane_00_controller` |
 | `docs/control/UNCONTROLLED_DOCUMENT_AUDIT.md` | canonical | uncontrolled-document growth-risk classification and audit record | no | uncontrolled-document audit or status-like document growth review | `lane_07_docs_handoff` |
 | `docs/control/V1_READINESS_AUDIT.md` | canonical | v1.0 readiness criteria, blockers, follow-ups, and v2.0 deferrals | no | v1.0 release preparation, readiness review, milestone planning | `lane_07_docs_handoff` |
@@ -305,7 +305,7 @@ disagree, stop and open a schema/contract alignment issue.
 | `scripts/asgk.py` | script | ASGK CLI wrapper for doctor/validate/hygiene/negative/status/closeout/pr-body/task-packet/handoff/target-install checks | no | local validation, status-check, closeout-check, handoff-check, PR-body/task-packet checks, target-install-check | `lane_06_ci_github` |
 | `scripts/target_install_plan.py` | script | standalone read-only target-install plan generation | no | target-install planning, scaffold preparation, install-plan review | `lane_06_ci_github` |
 | `.github/workflows/bootstrap-validation.yml` | template/script | GitHub Actions bootstrap validation workflow | no | CI/workflow changes | `lane_06_ci_github` |
-| `.github/PULL_REQUEST_TEMPLATE.md` | template | required PR body sections and Merge Decision Record surface | no | PR creation/review, template changes, `asgk.py pr-body-check` | `lane_06_ci_github` |
+| `.github/PULL_REQUEST_TEMPLATE.md` | template | required PR body sections, Current Status Impact, and Merge Decision Record surface | no | PR creation/review, current-status impact classification, template changes, `asgk.py pr-body-check` | `lane_06_ci_github` |
 
 ## Examples And Fixtures
 

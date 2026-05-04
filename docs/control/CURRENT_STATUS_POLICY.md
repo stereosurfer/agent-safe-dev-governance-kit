@@ -126,6 +126,45 @@ status_refresh_decision:
 If status refresh is required but cannot be made accurate inside the same PR,
 open a separate bounded status-refresh issue immediately after closeout.
 
+## PR Status Freshness Gate
+
+Every PR must explicitly classify its `CURRENT_STATUS.md` impact in the PR body.
+This is a review gate, not a requirement that every PR edits the status file.
+
+```yaml
+current_status_update_gate:
+  required_for_all_prs: true
+  allowed_values:
+    - updated
+    - not_applicable
+    - deferred
+  update_required_when:
+    - active milestone changes
+    - active issue or active PR changes
+    - next safe action changes
+    - last completed work changes
+    - release readiness or stabilization status changes
+    - roadmap or milestone register changes
+    - install surface, target-install tooling, or decision governance changes
+    - a new handoff-relevant command is added
+    - a new session would make the wrong next move from CURRENT_STATUS.md alone
+  not_applicable_when:
+    - typo-only or formatting-only change
+    - fixture-only change with no recovery-state impact
+    - map/registry wording-only change with no active work or next-action impact
+  deferred_allowed_when:
+    - current PR cannot accurately write post-merge status without becoming self-stale
+    - status update requires a separate bounded closeout/status-refresh issue
+    - human gate or follow-up sequence must be resolved first
+  deferred_required_evidence:
+    - reason in PR Current Status Impact section
+    - follow-up issue or next safe action in Handoff Report when repo-level recovery would otherwise be unsafe
+```
+
+Reviewers should request changes when a milestone-impacting or resume-surface-impacting
+PR marks `not_applicable` without a clear reason, or when `deferred` lacks a
+follow-up path.
+
 ## In-flight PR Boundary
 
 In-flight PR detail belongs in the PR body, PR comments, or a work-unit handoff
