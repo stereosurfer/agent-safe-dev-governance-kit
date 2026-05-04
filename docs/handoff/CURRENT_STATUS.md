@@ -4,7 +4,7 @@ This is the compact current-status surface for the repository. It is overwritten
 not appended. Historical detail belongs in GitHub issues, PRs, comments, and
 merge commits.
 
-Last updated: `2026-05-04T12:15:00Z`
+Last updated: `2026-05-04T12:47:17Z`
 
 ## Durable source of truth
 
@@ -19,17 +19,17 @@ ASGK v1.x remains in v1.1 stabilization before release preparation. The generic
 repo-governance core has been strengthened through parser/status/handoff checks,
 document navigation split, target-install checklist, read-only target-install
 check, read-only target-install plan, initial vertical governance, Current Status
-freshness gate, and standalone fail-closed policy-gate checker. The active
-bounded work adds opt-in negative fixtures proving `scripts/policy_gate_check.py`
-blocks known-bad PR bodies without inferring low-risk status or wiring the check
-into default CI.
+freshness gate, standalone fail-closed policy-gate checker, and opt-in negative
+policy-gate fixtures. The active bounded work adds an ASGK CLI command for those
+policy-gate fixtures without changing checker semantics, default CI wiring,
+auto-merge behavior, schemas, dependencies, or GitHub API behavior.
 
 ## Active work
 
 ```yaml
-issue: "#94 [TEST] Add negative policy-gate fixtures"
+issue: "#96 [TOOLING] Add opt-in policy-gate negative command"
 pr: none
-branch: test/policy-gate-negative-fixtures-94
+branch: tooling/policy-gate-negative-command-96
 state: in_progress
 ```
 
@@ -41,6 +41,8 @@ python3 scripts/asgk.py doctor
 
 The workflow also runs the positive handoff fixture and core negative checks for
 changed paths, closeout status, PR bodies, task packets, and handoff packets.
+Policy-gate negative fixtures remain opt-in through
+`python3 scripts/asgk.py negative policy-gate`.
 
 ## Closed gates
 
@@ -60,10 +62,10 @@ changed paths, closeout status, PR bodies, task packets, and handoff packets.
 ## Last completed
 
 ```yaml
-issue: "#92 [TOOLING] Mechanize existing low-risk policy gates"
-pr: "#93 tooling: mechanize existing low-risk policy gates"
-merge_commit: "c37826a3065be8aba60bd2a1472ce1629572eba9"
-note: "Standalone fail-closed policy-gate checker is merged. Details are in GitHub; do not duplicate historical logs here."
+issue: "#94 [TEST] Add negative policy-gate fixtures"
+pr: "#95 test: add negative policy-gate fixtures"
+merge_commit: "d6f7c726245ae45616dda8666ad5096f13efd82b"
+note: "Policy-gate expected-failure fixtures are merged. Details are in GitHub; do not duplicate historical logs here."
 ```
 
 ## Runtime artifact status
@@ -73,7 +75,7 @@ cache, or external preparation outputs are authorized by the current active work
 
 ## Next safe action
 
-Review and complete the policy-gate negative fixtures PR for issue #94. The
-bounded work should remain fixture/docs/status only. Do not modify
-`scripts/policy_gate_check.py`, `scripts/asgk.py`, workflows, schemas,
-dependencies, auto-merge behavior, or default CI wiring in this work unit.
+Complete issue #96 by opening a PR for the opt-in policy-gate negative command,
+then wait for CI and human review. Do not change `scripts/policy_gate_check.py`
+semantics, workflows, schemas, dependencies, auto-merge behavior, default CI
+wiring, or GitHub API behavior in this work unit.
