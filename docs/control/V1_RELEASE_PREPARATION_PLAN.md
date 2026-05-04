@@ -6,8 +6,9 @@ This document plans ASGK v1.0 release preparation after v1.1 stabilization,
 Vertical Governance Completion, and the first real-world field test have
 completed.
 
-It is a planning document only. It does not choose a license, tag a release,
-publish a package, create a GitHub release, or start release execution.
+It is a planning document only. It records the approved v1.0 license and
+source-only release path, but it does not tag a release, publish a package,
+create a GitHub release, or start release execution.
 
 ## Scope
 
@@ -21,7 +22,6 @@ release_preparation_scope:
     - explicit v2.0 deferrals
     - remaining human gates
   not_allowed_in_this_plan:
-    - license selection
     - release tag creation
     - GitHub release creation
     - package publication
@@ -50,6 +50,9 @@ preconditions:
   current_status_closeout:
     status: completed
     source: "#118 / PR #119"
+  final_readiness_review:
+    status: completed
+    source: "#120 / PR #121"
 ```
 
 ## Release Preparation Gates
@@ -64,8 +67,8 @@ release_preparation_gates:
   license_selection:
     required: true
     human_gate: true
-    status: not_selected
-    output: "license choice or explicit no-license-release decision"
+    status: selected_by_124
+    output: Apache-2.0
   tag_release_process:
     required: true
     human_gate: true
@@ -74,18 +77,44 @@ release_preparation_gates:
   package_distribution_boundary:
     required: true
     human_gate: true
-    status: not_selected
-    output: "what is distributed, what remains source-only, and what is excluded"
+    status: selected_by_124
+    output: source_only_github_release
   v2_0_deferrals:
     required: true
     human_gate: maybe
     status: explicit
-    output: "explicit list of runtime-specific adapters and productization items deferred to v2.0"
+    output: "runtime-specific adapters and productization items deferred to v2.0"
   release_execution_issue:
     required: true
     human_gate: true
     status: not_created
     output: "separate issue if release execution is approved"
+```
+
+## License Decision
+
+```yaml
+license_decision:
+  issue: "#124"
+  approved_by: human_operator
+  selected_license: Apache-2.0
+  license_file: LICENSE
+  license_file_status: created_with_spdx_identifier_and_official_license_url
+  official_license_url: https://www.apache.org/licenses/LICENSE-2.0
+  note: "The top-level LICENSE file uses the SPDX identifier and official Apache License 2.0 URL. If full-text license auto-detection is required, add the complete standard Apache-2.0 text in a later bounded issue."
+```
+
+## Distribution Path Decision
+
+```yaml
+distribution_path_decision:
+  issue: "#124"
+  approved_by: human_operator
+  selected_path: source_only_github_release
+  package_publication: not_selected
+  github_app_or_saas: deferred_v2_or_later
+  installer_scaffold: deferred
+  note: "v1.0 release path should remain source-only unless a later human-gated issue approves broader distribution."
 ```
 
 ## Final Readiness Review Result
@@ -97,55 +126,12 @@ final_readiness_review_result:
   blockers:
     v1_0_core_blockers: []
     sequence_blockers: []
-  recommendation: "Create a separate human-gated release-execution or release-decision issue."
+  recommendation: "Create a separate human-gated release-execution issue."
   not_authorized:
-    - license selection
     - release tag creation
     - GitHub release creation
     - package publication
     - external distribution
-```
-
-## Final Readiness Review Checklist
-
-Before release execution can be considered, review:
-
-```yaml
-final_readiness_review:
-  required_documents:
-    - docs/control/V1_READINESS_AUDIT.md
-    - docs/control/V1_1_STABILIZATION_PLAN.md
-    - docs/bootstrap/10_roadmap.md
-    - docs/control/HUMAN_GATED_OPERATIONS.md
-    - docs/control/LOW_RISK_AUTONOMOUS_MERGE_POLICY.md
-    - docs/DOCUMENT_REGISTRY.md
-  required_checks:
-    - python3 scripts/asgk.py doctor
-  review_questions:
-    - Are there any unresolved v1.0 core blockers?
-    - Are all sequence gates either completed or explicitly deferred?
-    - Are v2.0 runtime-specific adapters clearly excluded from v1.0?
-    - Is the release surface source-only, package-based, or both?
-    - Is license selection approved by a human?
-    - Is release execution separated into a later issue?
-```
-
-## License Selection Decision Path
-
-License selection is human-gated and must not be inferred by an agent.
-
-```yaml
-license_selection:
-  status: not_selected
-  human_gate_required: true
-  allowed_outputs:
-    - selected_license_with_approval
-    - no_public_release_until_license_selected
-    - internal_only_distribution_until_license_selected
-  stop_conditions:
-    - license not approved
-    - license compatibility unclear
-    - package/publication requested without license approval
 ```
 
 ## Tag And Release Process Plan
@@ -157,7 +143,7 @@ tag_release_process:
   planned_steps:
     - create release-execution issue
     - confirm final readiness review
-    - confirm license decision
+    - confirm Apache-2.0 license decision
     - run python3 scripts/asgk.py doctor
     - check git status and target commit
     - create tag only in release-execution issue
@@ -173,15 +159,16 @@ tag_release_process:
 
 ```yaml
 package_distribution_boundary:
-  status: not_selected
-  options_to_decide_later:
-    - source-only GitHub release
-    - template repository usage
-    - downloadable archive
+  selected_for_v1: source_only_github_release
+  not_selected_for_v1:
     - package manager publication
-    - GitHub App or SaaS packaging
-  v1_recommended_default_for_planning:
-    - source-only repository release unless human chooses otherwise
+    - GitHub App
+    - SaaS
+    - installer script
+  allowed_later_only_with_human_gate:
+    - downloadable archive beyond GitHub default source archives
+    - package manager publication
+    - external distribution beyond GitHub source release
   stop_conditions:
     - package manager publication requested
     - external distribution requested
@@ -212,12 +199,11 @@ v2_0_deferrals:
 
 ```yaml
 remaining_human_gates:
-  - license selection
   - release tag creation
   - GitHub release creation
   - package publication
   - external distribution
-  - any dependency/schema/workflow change during release prep
+  - any dependency/schema/workflow change during release execution
   - any claim that v2.0 runtime-specific adapters are release blockers
 ```
 
@@ -227,6 +213,8 @@ Release execution must be a separate issue.
 
 ```yaml
 release_execution_boundary:
+  license_status: selected_apache_2_0
+  distribution_status: selected_source_only_github_release
   planning_issue_may:
     - define gates
     - define checklist
@@ -236,7 +224,6 @@ release_execution_boundary:
     - execute tag
     - publish package
     - create GitHub release
-    - select license without approval
   release_execution_requires:
     - separate GitHub issue
     - explicit human approval
@@ -248,11 +235,9 @@ release_execution_boundary:
 
 ```yaml
 acceptance:
-  - this plan exists and is registered
-  - readiness audit points to release-preparation planning
-  - roadmap points to release-preparation planning
-  - current status points to release-preparation planning
+  - Apache-2.0 license decision is recorded
+  - LICENSE exists
+  - source-only GitHub release path is recorded
   - release execution remains blocked until a separate issue exists
-  - final readiness review is complete
   - python3 scripts/asgk.py doctor passes
 ```
