@@ -164,7 +164,7 @@ usage. They are optimization layers, not the governance core.
 | `docs/control/V1_1_STABILIZATION_PLAN.md` | canonical | v1.1 stabilization sequence before release preparation | no | stabilization planning, field-test planning, release-prep deferral review | `lane_07_docs_handoff` |
 | `docs/control/DOCUMENT_MAP_POLICY.md` | canonical | document-map router/registry split, size limits, and maintenance rules | no | document-map structure changes, registry split work, target-template navigation changes | `lane_07_docs_handoff` |
 | `docs/control/TARGET_INSTALL_CHECKLIST.md` | canonical | target-project install readiness checklist and structural acceptance conditions | no | target install review, field-test preparation, target-install validation planning | `lane_07_docs_handoff` |
-| `docs/control/TARGET_INSTALL_VALIDATION_PLAN.md` | canonical | target-install checker behavior, future validator check categories, and output contract | no | target-install checker behavior review, validator implementation planning, validation roadmap | `lane_06_ci_github` |
+| `docs/control/TARGET_INSTALL_VALIDATION_PLAN.md` | canonical | target-install checker/planner behavior, future validator check categories, and output contract | no | target-install checker/planner behavior review, validator implementation planning, validation roadmap | `lane_06_ci_github` |
 
 Capability matrix boundary rule:
 
@@ -298,6 +298,7 @@ disagree, stop and open a schema/contract alignment issue.
 | `scripts/validate_bootstrap.py` | script | bootstrap governance validation behavior | no | CI/tooling/debug validation | `lane_06_ci_github` |
 | `scripts/governance_hygiene.py` | script | changed-path and protected-path hygiene | no | path hygiene, negative changed-path checks, future CLI work | `lane_06_ci_github` |
 | `scripts/asgk.py` | script | ASGK CLI wrapper for doctor/validate/hygiene/negative/status/closeout/pr-body/task-packet/handoff/target-install checks | no | local validation, status-check, closeout-check, handoff-check, PR-body/task-packet checks, target-install-check | `lane_06_ci_github` |
+| `scripts/target_install_plan.py` | script | standalone read-only target-install plan generation | no | target-install planning, scaffold preparation, install-plan review | `lane_06_ci_github` |
 | `.github/workflows/bootstrap-validation.yml` | template/script | GitHub Actions bootstrap validation workflow | no | CI/workflow changes | `lane_06_ci_github` |
 | `.github/PULL_REQUEST_TEMPLATE.md` | template | required PR body sections and Merge Decision Record surface | no | PR creation/review, template changes, `asgk.py pr-body-check` | `lane_06_ci_github` |
 
