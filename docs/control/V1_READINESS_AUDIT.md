@@ -18,17 +18,18 @@ v1.0 readiness does not require runtime-specific adapters, full YAML parsing, Sa
 
 | Area | Current status | Release impact |
 |---|---:|---|
-| Governance core | mostly ready | required |
+| Governance core | ready for v1 core | required |
 | PR auto-validation | ready for generic core | required |
 | Negative defense tests | ready for core cases | required |
 | Cross-agent handoff | ready for generic v0 | required |
-| Current-status control | policy exists | required |
+| Current-status control | ready for v1 core | required |
 | Vertical governance | thin layer completed | required |
 | CLI entrypoint | ready as minimal wrapper | required |
-| Parser robustness | partial | stabilize before release preparation if practical |
+| Parser robustness | sufficient for v1 core | required |
 | Runtime-specific adapters | deferred | v2.0 |
-| Product packaging | early | release preparation |
+| Product packaging | planning only | release preparation |
 | Real-world field test | completed | required before release preparation |
+| Final readiness review | ready to propose release execution | required before release execution |
 
 ## V1.0 Readiness Dimensions
 
@@ -195,6 +196,7 @@ current_status_control:
     - docs/control/CURRENT_STATUS_POLICY.md
     - docs/handoff/CURRENT_STATUS.md
     - PR #105 current-status closeout after vertical governance completion
+    - PR #119 current-status closeout after release-preparation planning
 ```
 
 ### 6. CLI Entrypoint
@@ -320,13 +322,37 @@ real_world_field_test:
   release_readiness_impact: field_test_sequence_gate_satisfied
 ```
 
+### 10. Final V1.0 Readiness Review
+
+Current assessment:
+
+```yaml
+final_v1_readiness_review:
+  status: ready_to_propose_release_execution
+  blocker: false
+  reviewed_by_issue: "#120"
+  result: "No v1.0 core blocker is currently recorded. Release execution may be proposed only in a later separate human-gated issue."
+  remaining_human_gates:
+    - license selection
+    - release tag creation
+    - GitHub release creation
+    - package publication
+    - external distribution
+  not_authorized_by_this_review:
+    - choosing a license
+    - creating a tag
+    - creating a GitHub release
+    - publishing a package
+    - starting release execution
+```
+
 ## Release Preparation Sequence Gate
 
-The generic governance core and the required v1.1 sequence gates are now satisfied enough to open release-preparation planning. Release preparation is not started by this audit; it must be a separate gated work unit.
+The generic governance core and the required v1.1 sequence gates are satisfied enough to propose release execution in a later separate issue. Release execution is not started by this audit.
 
 ```yaml
 release_preparation_gate:
-  status: ready_to_open_release_preparation_issue
+  status: ready_to_propose_release_execution_issue
   required_before_release_preparation:
     - review docs/control/V1_1_STABILIZATION_PLAN.md
     - complete or explicitly defer parser hardening without dependencies
@@ -337,10 +363,14 @@ release_preparation_gate:
     - complete at least one real-world field test
     - record field-test lessons
     - update this audit after the field test
+    - complete final v1.0 readiness review
   satisfied_by:
     vertical_governance_completion: "#102 / PR #103"
     field_test_implementation: "#112 / PR #113"
-    field_test_readiness_audit: "#114"
+    field_test_readiness_audit: "#114 / PR #115"
+    release_preparation_plan: "#116 / PR #117"
+    current_status_closeout: "#118 / PR #119"
+    final_readiness_review: "#120"
 ```
 
 ## V1.0 Blockers
@@ -351,7 +381,7 @@ Current technical blockers in the generic governance core:
 v1_0_core_blockers: []
 ```
 
-Sequence blockers before opening release-preparation planning:
+Sequence blockers before proposing release execution:
 
 ```yaml
 release_preparation_sequence_blockers: []
@@ -359,9 +389,11 @@ completed_sequence_gates:
   - vertical_governance_completion
   - real_world_field_test
   - post_field_test_readiness_audit
+  - release_preparation_planning
+  - final_v1_readiness_review
 ```
 
-This distinction matters: the core is not being released by this audit. The audit only records that the next appropriate gate is release-preparation planning, including licensing, tagging, packaging, and any final readiness review.
+This distinction matters: the core is not being released by this audit. The audit only records that the next appropriate gate is a separate human-gated release-execution or release-decision issue.
 
 ## V1.1 Stabilization Work
 
@@ -420,9 +452,9 @@ v2_0_deferred:
 ```yaml
 readiness_decision:
   version_target: v1.0
-  current_recommendation: open_release_preparation_planning_issue
-  reason: Vertical Governance Completion and the first real-world field test are complete; release preparation can be planned as a separate gated work unit but is not started by this audit.
-  required_next_step: create a release-preparation planning issue covering license, tag, package, final readiness review, and any remaining explicit deferrals.
+  current_recommendation: propose_release_execution_issue_after_human_review
+  reason: No v1.0 core blocker is currently recorded, stabilization and field-test sequence gates are complete, and release execution can be proposed only through a later separate human-gated issue.
+  required_next_step: create a separate human-gated release-execution or release-decision issue covering license, tag, package/distribution, final checks, and rollback/revoke plan.
 ```
 
 ## Audit Use

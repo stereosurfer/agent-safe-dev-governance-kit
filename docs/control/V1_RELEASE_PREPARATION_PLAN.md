@@ -44,6 +44,12 @@ preconditions:
   post_field_test_readiness_audit:
     status: completed
     source: "#114 / PR #115"
+  release_preparation_planning:
+    status: completed
+    source: "#116 / PR #117"
+  current_status_closeout:
+    status: completed
+    source: "#118 / PR #119"
 ```
 
 ## Release Preparation Gates
@@ -53,27 +59,51 @@ release_preparation_gates:
   final_readiness_review:
     required: true
     human_gate: true
-    output: "final list of blockers, explicit deferrals, and release/no-release recommendation"
+    status: completed_by_120
+    output: "ready_to_propose_release_execution_issue"
   license_selection:
     required: true
     human_gate: true
+    status: not_selected
     output: "license choice or explicit no-license-release decision"
   tag_release_process:
     required: true
     human_gate: true
+    status: not_started
     output: "documented process for release tag and GitHub release, but no tag created here"
   package_distribution_boundary:
     required: true
     human_gate: true
+    status: not_selected
     output: "what is distributed, what remains source-only, and what is excluded"
   v2_0_deferrals:
     required: true
     human_gate: maybe
+    status: explicit
     output: "explicit list of runtime-specific adapters and productization items deferred to v2.0"
   release_execution_issue:
     required: true
     human_gate: true
+    status: not_created
     output: "separate issue if release execution is approved"
+```
+
+## Final Readiness Review Result
+
+```yaml
+final_readiness_review_result:
+  issue: "#120"
+  status: ready_to_propose_release_execution
+  blockers:
+    v1_0_core_blockers: []
+    sequence_blockers: []
+  recommendation: "Create a separate human-gated release-execution or release-decision issue."
+  not_authorized:
+    - license selection
+    - release tag creation
+    - GitHub release creation
+    - package publication
+    - external distribution
 ```
 
 ## Final Readiness Review Checklist
@@ -223,5 +253,6 @@ acceptance:
   - roadmap points to release-preparation planning
   - current status points to release-preparation planning
   - release execution remains blocked until a separate issue exists
+  - final readiness review is complete
   - python3 scripts/asgk.py doctor passes
 ```
