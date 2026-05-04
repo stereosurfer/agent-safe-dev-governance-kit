@@ -1,0 +1,136 @@
+version: 0.1.0
+
+status: target-project-template
+
+terminology_note:
+  preferred_terms:
+    assignment_intelligence_level: "Generic ASGK intelligence level for bounded work assignment."
+    worker_assignment: "Generic ASGK delegated work packet inside repo governance."
+  rule:
+    - "This template is not a Codex, Claude Code, Cursor, or other runtime-native subagent policy."
+    - "Runtime-specific subagent or adapter behavior belongs to future optional v2.0 work."
+    - "Customize roles, allowed paths, and stop conditions for the target repository before use."
+
+default_policy:
+  mode: bounded
+  require_task_packet: true
+  require_acceptance_criteria: true
+  require_allowed_paths: true
+  require_agent_report: true
+  require_assignment_intelligence_level: true
+  require_durable_source_of_truth: true
+  require_plan_checklist_acceptance_sheet: true
+
+assignment_intelligence_levels:
+  fast_basic:
+    use_for:
+      - simple_repo_search
+      - file_inventory
+      - formatting_checks
+      - typo_fixes
+      - small_docs_extraction
+    forbidden:
+      - code_changes
+      - policy_interpretation
+      - security_review
+      - schema_work
+  standard:
+    use_for:
+      - narrow_implementation
+      - focused_tests
+      - small_docs_updates
+    forbidden:
+      - cross_module_design
+      - new_dependencies
+      - security_boundaries
+  advanced:
+    use_for:
+      - multi_file_implementation
+      - tricky_debugging
+      - nontrivial_test_design
+      - workflow_or_tooling_changes
+    forbidden:
+      - final_policy_authority
+      - final_security_gate
+      - high_risk_merge_authority
+  frontier:
+    use_for:
+      - architecture_review
+      - security_sensitive_analysis
+      - merge_risk_review
+      - ambiguous_tradeoffs
+      - high_risk_change_planning
+    forbidden:
+      - routine_mechanical_work_when_lower_levels_suffice
+
+worker_assignment_required_fields:
+  - lane
+  - intelligence_level
+  - intelligence_level_reason
+  - durable_source_of_truth
+  - allowed_paths
+  - expected_output
+  - plan
+  - checklist
+  - acceptance_sheet
+  - stop_conditions
+  - rollback_expectations
+
+roles:
+  controller:
+    may_modify:
+      - docs/control/
+      - docs/handoff/
+      - agent/task_packets/
+    forbidden:
+      - artifact_root
+      - local_state_root
+      - private_source_files
+  implementer:
+    may_modify:
+      - src/
+      - tests/
+      - docs/
+      - scripts/
+    forbidden:
+      - contracts/
+      - schemas/
+      - agent/
+      - .github/workflows/
+      - artifact_root
+      - local_state_root
+  schema_owner:
+    may_modify:
+      - schemas/
+      - contracts/
+      - tests/
+      - docs/
+    forbidden:
+      - artifact_root
+      - local_state_root
+      - private_source_files
+  validator:
+    may_modify:
+      - docs/handoff/
+      - tests/fixtures/
+    forbidden:
+      - src/
+      - contracts/
+      - schemas/
+      - artifact_root
+      - local_state_root
+
+stop_conditions:
+  - protected_path_change_required
+  - artifact_root_write_required
+  - local_state_root_write_required
+  - new_dependency_required
+  - schema_breaking_change_required
+  - database_migration_required
+  - cloud_egress_added
+  - api_model_call_added
+  - mcp_write_tool_added
+  - filesystem_permission_expanded
+  - insufficient_context
+  - conflicting_instructions
+  - unrelated_test_failure
