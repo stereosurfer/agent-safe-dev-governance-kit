@@ -17,6 +17,11 @@ Validation turns governance from advice into a repeatable gate.
 This strategy does not modify validator behavior by itself. It defines what each
 current and future validator is expected to own.
 
+Low-risk status is never agent-declared. A PR is only low-risk eligible when
+existing low-risk and auto-merge policy gates pass. Validators may confirm only
+mechanically checkable gates. Missing, unknown, pending, ambiguous, or
+unverifiable gates keep the PR human-gated.
+
 ## Validation Layers
 
 ```yaml
@@ -36,6 +41,11 @@ validation_layers:
     current_status: implemented_basic
     purpose: changed-path and protected-path checks
 
+  policy_gate_check:
+    script: scripts/policy_gate_check.py
+    current_status: implemented_initial
+    purpose: read-only fail-closed PR-body policy gate check without low-risk inference
+
   github_actions:
     workflow: .github/workflows/bootstrap-validation.yml
     current_status: implemented
@@ -46,7 +56,7 @@ validation_layers:
     purpose: prove that known-bad inputs are blocked
 
   cli_wrapper:
-    current_status: future
+    current_status: partial
     purpose: expose validation through stable local commands
 ```
 
@@ -161,6 +171,51 @@ autonomous merge.
 python3 scripts/governance_hygiene.py --paths-file changed-paths.txt
 ```
 
+## `scripts/policy_gate_check.py`
+
+### Owns
+
+```yaml
+owns:
+  - PR-body Merge Decision Record presence
+  - required Merge Decision Record fields are present and non-empty
+  - checks_passed is exactly true when merge eligibility is claimed
+  - allowed_paths_checked is exactly true when merge eligibility is claimed
+  - expected_output_checked is exactly true when merge eligibility is claimed
+  - human_gates_checked is exactly true when merge eligibility is claimed
+  - result is merge_allowed or merge_blocked
+  - Current Status Impact section exists and uses updated not_applicable or deferred
+  - chat-only authority phrase detection
+```
+
+### Does Not Own
+
+```yaml
+does_not_own:
+  - inferring low-risk status
+  - deciding whether a PR may be auto-merged
+  - GitHub API or live CI status retrieval
+  - changed-path retrieval
+  - human approval decisions
+  - semantic review of whether prose risk claims are correct
+```
+
+### Blocking Behavior
+
+The checker is fail-closed for merge eligibility. Missing, unknown, pending,
+ambiguous, or unverifiable PR-body gates block merge eligibility and require
+human review.
+
+It does not certify low risk. It only reports whether declared PR-body policy
+gates are mechanically coherent.
+
+### Expected Use
+
+```bash
+python3 scripts/policy_gate_check.py --pr-body pr_body.md
+python3 scripts/policy_gate_check.py --pr-body pr_body.md --json
+```
+
 ## GitHub Actions
 
 ### Owns
@@ -205,6 +260,10 @@ Use this classification until scripts become more granular.
 | Invalid JSON in schema/example | blocking | machine-readable contract broken |
 | Missing PR template required heading | blocking | merge/review surface degraded |
 | Missing issue template required field | blocking | task packet capture degraded |
+| Missing Merge Decision Record in PR body | blocking | merge gate cannot be reviewed |
+| Missing Current Status Impact in PR body | blocking | resume-state impact is unclassified |
+| `checks_passed` not true in Merge Decision Record | blocking | validation gate not mechanically confirmed |
+| `human_gates_checked` not true in Merge Decision Record | blocking | human-gate state is unresolved |
 | Artifact Root equals Local State Root | blocking | storage boundary broken |
 | Cache policy not `local_only` where required | blocking | storage/cache boundary broken |
 | `app_managed_drive_api` enabled in v0 profile | blocking | external API gate opened |
@@ -229,7 +288,22 @@ negative_validation_targets:
   missing_merge_decision:
     bad_input: "PR body without Merge Decision section"
     expected: blocked
-    owner: validate_bootstrap_or_future_pr_validator
+    owner: validate_bootstrap_or_pr_validator
+
+  missing_current_status_impact:
+    bad_input: "PR body without Current Status Impact section"
+    expected: blocked
+    owner: policy_gate_check
+
+  pending_or_unknown_merge_gate:
+    bad_input: "checks_passed: pending or unknown"
+    expected: blocked
+    owner: policy_gate_check
+
+  human_gate_unresolved:
+    bad_input: "human_gates_checked: pending or false"
+    expected: blocked
+    owner: policy_gate_check
 
   missing_pr_required_heading:
     bad_input: "PR template missing required heading"
@@ -309,13 +383,20 @@ future_cli_mapping:
     runs:
       - python3 scripts/governance_hygiene.py --paths-file changed-paths.txt
 
+  asgk policy-gate --pr-body pr_body.md:
+    future_behavior:
+      - run scripts/policy_gate_check.py --pr-body pr_body.md
+      - report whether declared PR-body gates are mechanically coherent
+      - never infer low-risk status from prose
+
   asgk check-pr <number>:
     future_behavior:
       - fetch changed file list
       - run governance hygiene
       - verify PR template headings
       - verify Merge Decision Record
-      - report low-risk/human-gated status
+      - verify Current Status Impact
+      - report checkable gates and unresolved human-review gates
 ```
 
 CLI work must not add new dependencies in its first version unless a separate
@@ -370,10 +451,11 @@ run validator -> read compact failure output -> inspect only files named by fail
 ```yaml
 known_gaps:
   - governance_hygiene.py does not yet fetch git diff by itself
+  - policy_gate_check.py is not yet wrapped by scripts/asgk.py
+  - policy_gate_check.py is not yet wired into default CI
   - no negative fixtures are currently wired into CI
-  - no PR-body validator exists yet
+  - no full GitHub PR status validator exists yet
   - no task-packet schema validator is wired as a full JSON/YAML validator
-  - no CLI wrapper exists yet
 ```
 
 These gaps are not blockers for docs-only governance work. They should become
