@@ -1,0 +1,69 @@
+decision_packet:
+  version: 0.1.0
+
+  decision_type: "AI_TODO: merge_decision | low_risk_auto_merge_decision | human_gated_operation_decision | dependency_addition_decision | schema_breaking_change_decision | target_install_scaffold_decision | runtime_adapter_profile_decision | external_api_or_mcp_enablement_decision | release_or_publication_decision | storage_boundary_change_decision"
+  lifecycle_position: "AI_TODO: pre_issue | issue_scoping | implementation | pre_merge | post_merge | release | target_install | roadmap | v2_0"
+
+  durable_source_of_truth:
+    issue: "AI_TODO: GitHub issue number or durable source"
+    pr: "AI_TODO: GitHub PR number or none"
+    branch: "AI_TODO: branch name or none"
+
+  canonical_documents:
+    - "AI_TODO: canonical document path from docs/control/DECISION_POINT_REGISTRY.md"
+
+  required_inputs:
+    - name: "AI_TODO: input name"
+      source: "AI_TODO: issue | PR body | CI | command output | review | repo file"
+      status: "missing"
+
+  evidence:
+    - type: "AI_TODO: ci_result | command_output | review_comment | file_diff | external_record | human_approval"
+      source: "AI_TODO: durable source URL, file path, command, or comment reference"
+      timestamp: "AI_TODO: ISO-8601 timestamp if known"
+      reproducible: false
+      sufficient_for_decision: false
+      notes: "AI_TODO: evidence summary"
+
+  authority:
+    source_order:
+      - active_github_issue
+      - canonical_repo_policy
+      - active_pr_body
+      - decision_packet
+      - docs_handoff_CURRENT_STATUS_md
+    conflict_detected: false
+    conflict_resolution: "AI_TODO: none or describe resolution / stop"
+
+  allowed_actions:
+    - "AI_TODO: action allowed by this decision"
+
+  forbidden_actions:
+    - "AI_TODO: action forbidden by this decision"
+
+  stop_conditions:
+    - "AI_TODO: condition that requires stopping"
+
+  rollback_plan:
+    status: "missing"
+    steps:
+      - "AI_TODO: rollback or safe-abort step"
+
+  next_safe_action: "AI_TODO: one concrete next safe action"
+
+  human_gate:
+    required: false
+    status: "not_required"
+    approval_source: "AI_TODO: issue comment / PR review / explicit approval, or none"
+    approved_by: "AI_TODO: approver or none"
+    approved_at: "AI_TODO: ISO-8601 timestamp or none"
+
+  validation:
+    required_commands:
+      - "AI_TODO: command or check required before decision can proceed"
+    status: "not_run"
+    evidence: "AI_TODO: validation result or none"
+
+  result:
+    status: "blocked"
+    reason: "AI_TODO: merge_allowed | merge_blocked | decision_allowed | decision_blocked with reason"
