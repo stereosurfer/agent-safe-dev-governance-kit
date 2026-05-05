@@ -4,7 +4,7 @@ This is the compact current-status surface for the repository. It is overwritten
 not appended. Historical detail belongs in GitHub issues, PRs, comments, and
 merge commits.
 
-Last updated: `2026-05-05T12:06:42Z`
+Last updated: `2026-05-05T12:20:35Z`
 
 ## Durable source of truth
 
@@ -21,11 +21,12 @@ preparation, final v1.0 readiness review, license/distribution decision, full
 Apache-2.0 license text replacement, source-only v1.0 release execution,
 post-merge-safe current-status policy, v1.x product-entry documentation,
 source-only adoption/license-handling clarification, target-install
-license-handling tooling alignment, source-only v1.1.0 release execution, and
-PR-body policy-gate default CI wiring, and pull-request changed-path hygiene CI
-wiring are complete. A GitHub PR status validator command is available for live
-or fixture-based PR status checks. Task-packet schema-shaped validation is wired
-into `python3 scripts/asgk.py task-packet-check`.
+license-handling tooling alignment, source-only v1.1.0 release execution,
+PR-body policy-gate default CI wiring, pull-request changed-path hygiene CI
+wiring, GitHub PR status validation, and task-packet schema-shaped validation
+are complete. The risk-gate mechanization sequence is complete at the repository
+tooling level, with the remaining default-CI self-certification limit recorded in
+`docs/control/VALIDATION_STRATEGY.md`.
 
 Apache-2.0 is the selected v1.0 license. The selected distribution path is a
 source-only GitHub release. Tag `v1.0.0` and GitHub release `ASGK v1.0.0` were
@@ -86,13 +87,11 @@ fixtures with `python3 scripts/asgk.py task-packet-check --file <path>`.
 ## Last completed
 
 ```yaml
-issue: "#145 [RELEASE] Execute source-only v1.1.0 release"
-tag: v1.1.0
-release: "ASGK v1.1.0"
-target_commit: "2bcf59dee754d8223b715ff904eca709aa5d53a5"
-release_url: "https://github.com/stereosurfer/agent-safe-dev-governance-kit/releases/tag/v1.1.0"
-validation: "python3 scripts/asgk.py doctor passed"
-note: "Source-only GitHub release completed. No package, installer, runtime adapter, dependency, schema, workflow, repository visibility, or external distribution change was performed."
+issue: "#157 [VALIDATION] Add task-packet schema validator"
+pr: "#158 [VALIDATION] Add task-packet schema validator"
+merge_commit: "31b1486624ffb3a7aed7d8ff24b8874f5a6378c3"
+validation: "python3 scripts/asgk.py doctor passed on PR #158 and current main"
+note: "Risk-gate mechanization closeout completed. Issue #154 was also closed as already satisfied by merged PR #156."
 ```
 
 ## Runtime artifact status
