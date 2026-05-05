@@ -62,6 +62,7 @@ roles:
   template: Reusable starting point for work units or GitHub surfaces.
   status: Current handoff or state surface.
   script: Executable validation or hygiene behavior.
+  skill: Source-distributed reusable agent procedure.
   future_optional: Planned future capability, not part of current v1.x core.
 ```
 
@@ -76,6 +77,7 @@ roles:
 | current GitHub issue or PR | canonical | active task objective, allowed paths, acceptance, validation, merge state | yes | every work unit | active task lane |
 | `docs/QUICKSTART.md` | summary | first-use workflow, onboarding, and target-repo source-adoption orientation | no | onboarding and first repository smoke test | `lane_07_docs_handoff` |
 | `docs/INSTALL_SURFACE.md` | canonical | target-project source-only adoption surface, license handling, copy/template/customize/do-not-copy boundaries | no | adopting ASGK into another repository, field-test preparation, target-repo scaffold planning, license-handling review | `lane_07_docs_handoff` |
+| `docs/SKILL_PACK.md` | summary | ASGK skill-pack usage modes, included skills, field-test sequence, and no-new-gates constraint | no | installing or referencing ASGK skills, skill-pack field test, target adoption planning | `lane_07_docs_handoff` |
 | `docs/DOCUMENT_REGISTRY.md` | canonical | complete repo-local document registry | no | canonical ownership lookup, registry repair, document-map split work | `lane_07_docs_handoff` |
 | `docs/control/DOCUMENT_MAP_POLICY.md` | canonical | document-map router/registry split, size limits, and maintenance rules | no | document-map structure changes, registry split work, target-template navigation changes | `lane_07_docs_handoff` |
 | `docs/EVOLUTION_MODEL.md` | canonical | docs-driven evolution, self-governance, self-validation maturity model | no | roadmap/evolution discussion | `lane_07_docs_handoff` |
@@ -88,6 +90,20 @@ roles:
 | `templates/DOCUMENT_REGISTRY.template.md` | template | target-project document-registry starter structure | no | adopting ASGK into another repository, target-repo document-registry creation | `lane_07_docs_handoff` |
 | `templates/agent_rules.template.yaml` | template | target-project clean assignment/worker rules starter structure | no | adopting ASGK into another repository, target-repo agent-rules creation | `lane_07_docs_handoff` |
 | `templates/decision_packet.template.yaml` | template | reusable vertical-governance decision packet starting point | no | creating a decision packet for a major decision point | `lane_07_docs_handoff` |
+
+## Source-Distributed Skills
+
+| Document | Role | Canonical for | Read by default | Read when | Owned by lane |
+|---|---|---|---:|---|---|
+| `skills/asgk-startup/SKILL.md` | skill | startup and live GitHub state reconciliation procedure | no | starting or resuming an ASGK-governed session | `lane_07_docs_handoff` |
+| `skills/asgk-issue-scoping/SKILL.md` | skill | converting user requests into ASGK-compliant GitHub issues | no | creating or refining a durable work-unit issue | `lane_07_docs_handoff` |
+| `skills/asgk-pr-evidence-merge-decision/SKILL.md` | skill | PR body evidence and Merge Decision Record procedure | no | opening or updating an ASGK PR body | `lane_07_docs_handoff` |
+| `skills/asgk-gatekeeper/SKILL.md` | skill | PR readiness check procedure using existing validators | no | checking PR readiness or CI follow-up | `lane_06_ci_github` |
+| `skills/asgk-post-merge-closeout/SKILL.md` | skill | post-merge issue/status closeout procedure | no | after a PR merges or stale issue closeout is suspected | `lane_07_docs_handoff` |
+| `skills/asgk-current-status-handoff/SKILL.md` | skill | current-status impact and handoff refresh procedure | no | updating or auditing `docs/handoff/CURRENT_STATUS.md` | `lane_07_docs_handoff` |
+| `skills/asgk-evidence-audit/SKILL.md` | skill | validation and completion evidence classification procedure | no | auditing PR evidence, reports, or release notes | `lane_07_docs_handoff` |
+| `skills/asgk-target-install-audit/SKILL.md` | skill | target-repository ASGK adoption audit procedure | no | evaluating or transferring ASGK into another repository | `lane_07_docs_handoff` |
+| `skills/asgk-governance-health-check/SKILL.md` | skill | periodic governance drift health-check procedure | no | weekly review, milestone review, or public/customer handoff | `lane_07_docs_handoff` |
 
 Template ownership rule:
 
