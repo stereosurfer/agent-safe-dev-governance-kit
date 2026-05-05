@@ -1,13 +1,18 @@
 # Install Surface
 
-Status: active installation boundary policy.
+Status: active source-adoption boundary policy.
 
 This document defines which ASGK files may be copied, templated, customized, or
-excluded when ASGK is installed into a target repository.
+excluded when ASGK is adopted into a target repository.
 
 Its purpose is to prevent ASGK repo-local state, internal compatibility keys,
 oversized internal registries, v2.0 placeholders, and self-governance history
 from leaking into target projects.
+
+ASGK v1.x is distributed as a source-only GitHub release. Adopting it into a
+target repository means copying and adapting repository governance files. It
+does not mean installing a package, running an installer scaffold, adding an
+agent runtime, or enabling runtime-specific adapters.
 
 ## Related Control Documents
 
@@ -18,7 +23,7 @@ related_controls:
 ```
 
 Use `docs/control/TARGET_INSTALL_CHECKLIST.md` to decide whether a target
-repository installation is structurally ready. Use
+repository adoption is structurally ready. Use
 `docs/control/TARGET_INSTALL_VALIDATION_PLAN.md` as the future mechanical
 validator specification.
 
@@ -29,9 +34,56 @@ Install the generic governance core, not the ASGK repository's internal state.
 ```
 
 Target repositories must own their own repo-local governance state after
-installation. They must not treat ASGK's internal `docs/DOCUMENT_MAP.md`,
+source adoption. They must not treat ASGK's internal `docs/DOCUMENT_MAP.md`,
 `docs/handoff/*`, stabilization plans, readiness audits, or compatibility-only
 agent rule keys as target-project truth.
+
+## V1.x Source-Only Adoption Model
+
+```yaml
+v1_source_only_adoption:
+  distribution_path: "GitHub source release"
+  package_publication: false
+  installer_scaffold: false
+  runtime_adapter_required: false
+  target_repo_action: "copy, template, and customize governance files"
+```
+
+The source release is the delivery artifact. The install surface is the adoption
+boundary for target repositories. It tells adopters what can be copied directly,
+what must be created from templates, what must be customized, and what must not
+be copied as target-project authority.
+
+Do not infer package, installer, runtime, cloud, MCP, or agent-adapter behavior
+from the source-only release.
+
+## License Handling
+
+ASGK v1.0.0 is released under Apache-2.0. Target repositories that copy or adapt
+ASGK-derived files must preserve the applicable Apache-2.0 license notice for
+that material.
+
+```yaml
+license_handling:
+  asgk_source_license: LICENSE
+  license: Apache-2.0
+  target_repo_must:
+    - preserve ASGK Apache-2.0 notice for copied or adapted ASGK material
+    - preserve applicable copyright notices
+    - document modifications where Apache-2.0 requires it
+    - decide whether the target repository's overall license changes
+    - avoid silently replacing an existing target repository LICENSE
+  target_repo_may:
+    - copy LICENSE as the Apache-2.0 notice for ASGK-derived scaffold material
+    - record ASGK Apache-2.0 attribution in the target repository's existing license or notice surface
+```
+
+Copying ASGK's `LICENSE` into a target repository does not automatically
+relicense the whole target repository. The target repository owner must decide
+and record its own repository-level license policy.
+
+This document records file-handling expectations for ASGK adoption. It is not
+legal advice.
 
 ## Progressive Disclosure Rule
 
@@ -56,16 +108,17 @@ install_surface_classes:
   template_then_customize: "Starter files that must be copied from templates and edited for the target repo."
   customize_required: "Files that may be copied but must be reviewed and edited before use."
   do_not_copy_as_is: "ASGK repo-local or internal files that must not become target-project authority."
-  deferred_v2: "Runtime-specific optimization surfaces not part of v1.x installation."
+  deferred_v2: "Runtime-specific optimization surfaces not part of v1.x source adoption."
 ```
 
 ## Copy As Is
 
-These files may be copied directly when installing the current generic v1.x core,
+These files may be copied directly when adopting the current generic v1.x core,
 subject to later target-project customization if needed.
 
 ```yaml
 copy_as_is:
+  - LICENSE
   - AGENTS.md
   - docs/control/CONTEXT_BUDGET_POLICY.md
   - docs/control/AGENT_CAPABILITY_MATRIX.md
@@ -83,6 +136,9 @@ Notes:
 
 - `AGENTS.md` may be copied as the generic operating guide, but the target repo
   should still review project-specific stop conditions and protected paths.
+- `LICENSE` may be copied as the Apache-2.0 license file for ASGK-derived
+  material, but a target repo with an existing license must make an explicit
+  licensing decision instead of silently replacing its current license.
 - `scripts/asgk.py` may be copied only if its checked file expectations match
   the target scaffold or are explicitly adapted later.
 
@@ -202,7 +258,7 @@ deferred_v2:
 They may be added later only through a scoped v2.0 adapter/profile issue with
 vendor documentation, observed tests, and explicit acceptance criteria.
 
-## Target Installation Checklist
+## Target Adoption Checklist
 
 Before the target repository treats ASGK as active governance, use the complete
 checklist in `docs/control/TARGET_INSTALL_CHECKLIST.md`.
@@ -210,7 +266,7 @@ checklist in `docs/control/TARGET_INSTALL_CHECKLIST.md`.
 Minimum summary:
 
 ```yaml
-target_installation_checklist_summary:
+target_adoption_checklist_summary:
   - AGENTS.md exists and points to target repo state, not chat memory.
   - docs/DOCUMENT_MAP.md was generated from templates/DOCUMENT_MAP.template.md and kept as a compact router.
   - docs/DOCUMENT_REGISTRY.md was generated from templates/DOCUMENT_REGISTRY.template.md and customized.
@@ -230,5 +286,5 @@ installer behavior from this document alone.
 
 ## Maintenance Rule
 
-If installation behavior changes, update this document, `docs/QUICKSTART.md`,
+If source-adoption behavior changes, update this document, `docs/QUICKSTART.md`,
 `docs/DOCUMENT_REGISTRY.md`, and the affected target templates in the same PR.
