@@ -4,7 +4,7 @@ This is the compact current-status surface for the repository. It is overwritten
 not appended. Historical detail belongs in GitHub issues, PRs, comments, and
 merge commits.
 
-Last updated: `2026-05-05T13:44:22Z`
+Last updated: `2026-05-05T14:04:52Z`
 
 ## Durable source of truth
 
@@ -26,10 +26,9 @@ PR-body policy-gate default CI wiring, pull-request changed-path hygiene CI
 wiring, GitHub PR status validation, PR closing issue reference validation, and
 task-packet schema-shaped validation are complete. ASGK Skill Pack v0 source is
 available under `skills/`, with usage and maintenance touchpoint guidance in
-`docs/SKILL_PACK.md`. The v1.2 product-entry alignment is ready for a separate
-human-gated release execution issue after merge. The risk-gate mechanization
-sequence is complete at the repository tooling level, with the remaining
-default-CI self-certification limit recorded in
+`docs/SKILL_PACK.md`. Source-only v1.2.0 release execution is complete. The
+risk-gate mechanization sequence is complete at the repository tooling level,
+with the remaining default-CI self-certification limit recorded in
 `docs/control/VALIDATION_STRATEGY.md`.
 
 Apache-2.0 is the selected v1.0 license. The selected distribution path is a
@@ -40,6 +39,12 @@ issue #130 after explicit human approval and final validation.
 Tag `v1.1.0` and GitHub release `ASGK v1.1.0` were created from target commit
 `2bcf59dee754d8223b715ff904eca709aa5d53a5` under issue #145 after explicit
 human approval and final validation. v1.1.0 remains a source-only GitHub
+release; no package, installer, runtime adapter, dependency, schema, workflow,
+or repository visibility change was performed.
+
+Tag `v1.2.0` and GitHub release `ASGK v1.2.0` were created from target commit
+`8e243845ec9963ccacd9b79eb789031e4b68bb1a` under issue #169 after explicit
+human approval and final validation. v1.2.0 remains a source-only GitHub
 release; no package, installer, runtime adapter, dependency, schema, workflow,
 or repository visibility change was performed.
 
@@ -92,11 +97,13 @@ fixtures with `python3 scripts/asgk.py task-packet-check --file <path>`.
 ## Last completed
 
 ```yaml
-issue: "#165 [SKILLS] Add Skill Pack maintenance touchpoint map"
-pr: "#166 [SKILLS] Add Skill Pack maintenance touchpoint map"
-merge_commit: "eb948faab9f97fcc89265f946a7dc55ef739fec4"
-validation: "python3 scripts/asgk.py doctor passed on current main"
-note: "Skill Pack v0 and maintenance touchpoint guidance are complete. v1.2 product-entry alignment is the final docs step before proposing a separate human-gated v1.2.0 release execution issue."
+issue: "#169 [RELEASE] Execute source-only v1.2 release"
+release: "ASGK v1.2.0"
+tag: v1.2.0
+target_commit: "8e243845ec9963ccacd9b79eb789031e4b68bb1a"
+release_url: "https://github.com/stereosurfer/agent-safe-dev-governance-kit/releases/tag/v1.2.0"
+validation: "python3 scripts/asgk.py doctor passed before release execution"
+note: "Source-only v1.2.0 release completed and issue #169 closed. No package, installer, runtime adapter, dependency, schema, workflow, repository visibility, or v2 work was performed."
 ```
 
 ## Runtime artifact status
@@ -106,8 +113,7 @@ cache, or external preparation outputs are currently authorized.
 
 ## Next safe action
 
-After this product-entry alignment merges, the next safe action is to open a
-new human-gated GitHub issue for source-only v1.2.0 release execution. Do not
-tag, create a GitHub release, change repository visibility, publish a package,
-add an installer scaffold, add a runtime adapter, or start v2.0 follow-up work
-without a new durable GitHub issue and explicit human approval where required.
+Open a new durable GitHub issue before starting further work. Do not tag, create
+a GitHub release, change repository visibility, publish a package, add an
+installer scaffold, add a runtime adapter, or start v2.0 follow-up work without
+a new durable GitHub issue and explicit human approval where required.
