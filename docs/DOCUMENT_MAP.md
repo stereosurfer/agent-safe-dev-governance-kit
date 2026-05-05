@@ -61,6 +61,10 @@ progressive_disclosure_surfaces:
     path: docs/INSTALL_SURFACE.md
     purpose: target-project copy/template/customize/do-not-copy boundary
     read_by_default: false
+  skill_pack:
+    path: docs/SKILL_PACK.md
+    purpose: optional ASGK skill-pack source and usage modes
+    read_by_default: false
 ```
 
 ## Default Startup Set
@@ -105,6 +109,7 @@ default_entry_summary:
   full_registry: docs/DOCUMENT_REGISTRY.md
   context_read_sets: docs/control/CONTEXT_BUDGET_POLICY.md
   install_boundary: docs/INSTALL_SURFACE.md
+  skill_pack: docs/SKILL_PACK.md
   map_policy: docs/control/DOCUMENT_MAP_POLICY.md
 ```
 
@@ -141,6 +146,7 @@ rules.
    file.
 3. Add install/copy/template boundaries to `docs/INSTALL_SURFACE.md`, not this
    file.
-4. Keep this file small enough to act as a router.
-5. If this router exceeds the limits in `docs/control/DOCUMENT_MAP_POLICY.md`,
+4. Add skill-pack usage guidance to `docs/SKILL_PACK.md`, not this file.
+5. Keep this file small enough to act as a router.
+6. If this router exceeds the limits in `docs/control/DOCUMENT_MAP_POLICY.md`,
    stop and open a document-map maintenance issue.

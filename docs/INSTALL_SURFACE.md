@@ -130,6 +130,7 @@ copy_as_is:
   - .github/PULL_REQUEST_TEMPLATE.md
   - .github/ISSUE_TEMPLATE/agent_task.yml
   - scripts/asgk.py
+  - skills/*
 ```
 
 Notes:
@@ -141,6 +142,10 @@ Notes:
   licensing decision instead of silently replacing its current license.
 - `scripts/asgk.py` may be copied only if its checked file expectations match
   the target scaffold or are explicitly adapted later.
+- `skills/*` may be copied into an agent client skill directory or kept as
+  repository-reference procedures. Skills sequence existing repo/GitHub gates;
+  they do not replace target repository authority or add a separate compliance
+  layer.
 
 ## Template Then Customize
 
