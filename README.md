@@ -1,12 +1,171 @@
 # Agent-Safe Development Governance Kit
 
-Repo-native AI development governance scaffold for projects that allow humans, AI agents, Codex, assignment workers, or automation to modify a repository.
+A GitHub-native governance kit for safe AI-assisted repository changes.
+
+ASGK helps a repository accept changes from humans, Codex, Claude Code, Cursor,
+ChatGPT, other AI agents, scripts, or automation without letting chat become the
+control plane. Work is authorized, bounded, validated, reviewed, and handed off
+through GitHub issues, pull requests, repository files, and local checks.
+
+## What It Is
+
+ASGK is a repo governance layer. It is not an agent runtime, package manager,
+installer, orchestration platform, or project architecture framework.
+
+It gives a repository a durable operating loop:
+
+```text
+issue
+  -> allowed paths
+  -> branch
+  -> bounded change
+  -> validation
+  -> pull request
+  -> Merge Decision Record
+  -> human gate or low-risk merge
+  -> handoff / current status
+```
+
+The core principle is:
+
+```text
+Chat is not the control plane.
+GitHub issues, pull requests, repository files, and handoff documents are.
+```
+
+## Problem It Solves
+
+AI coding agents can move quickly, but repo state often gets trapped in private
+chat threads, stale handoff notes, implicit assumptions, or unreviewed tool
+actions. That creates avoidable risks:
+
+- work starts from the wrong issue or stale branch;
+- changes drift outside the allowed scope;
+- validation results are summarized without evidence;
+- risky operations are treated like routine edits;
+- the next human or agent cannot safely resume.
+
+ASGK turns those risks into explicit repository contracts: required issue
+fields, PR evidence, allowed-path boundaries, stop conditions, validation
+commands, merge records, human-gated operations, and compact current-status
+handoff.
+
+## Who It Is For
+
+ASGK v1.x is useful for repositories that:
+
+- allow AI agents or automation to create code or documentation changes;
+- need one source of truth for humans and agents;
+- want issue-first work units with clear non-goals and rollback expectations;
+- need local validation and negative fixtures before merge;
+- want high-risk operations to require explicit human approval;
+- care about recovery after context loss, compacted sessions, or agent handoff.
+
+It is a poor fit when a project wants fully ad hoc agent work, does not use
+GitHub issues and PRs, or wants a runtime-specific agent profile to define the
+governance model. ASGK v1.x deliberately keeps the default layer generic.
+
+## What ASGK v1.x Includes
+
+- `AGENTS.md` operating rules for agents entering the repository.
+- GitHub issue and PR templates for scoped work units.
+- Allowed-path and protected-path expectations.
+- Merge Decision Record fields for evidence-backed merge decisions.
+- Human-gated operation policy for risky work.
+- Low-risk autonomous merge policy for narrow eligible changes.
+- `docs/handoff/CURRENT_STATUS.md` as a compact recovery surface.
+- Current-status policy that makes status updates post-merge-safe by default.
+- Local validation through `python3 scripts/asgk.py doctor`.
+- Negative checks for governance hygiene, PR bodies, handoff packets, target
+  install readiness, and stale current-status patterns.
+- Document map and context-budget guidance so agents read the smallest
+  sufficient context instead of the whole repository.
+- Target-install read-only checks for evaluating whether another repository has
+  the expected governance surface.
+
+## Quick Start
+
+For this repository:
+
+```bash
+python3 scripts/asgk.py doctor
+```
+
+For adopting ASGK in another repository, start with `docs/INSTALL_SURFACE.md`.
+Treat that path as copying and adapting a governance scaffold, not installing a
+runtime package.
+
+For a first governed change in a repository that already has ASGK adopted:
+
+```text
+1. Read AGENTS.md.
+2. Read docs/handoff/CURRENT_STATUS.md.
+3. Open or select one GitHub issue with objective, allowed paths, validation,
+   expected output, non-goals, stop conditions, and rollback expectations.
+4. Create a branch from current main.
+5. Change only the allowed paths.
+6. Run python3 scripts/asgk.py doctor.
+7. Open a PR using .github/PULL_REQUEST_TEMPLATE.md.
+8. Fill the Current Status Impact and Merge Decision Record sections.
+9. Wait for GitHub Actions when they apply.
+10. Merge only when policy, validation, CI, and human gates allow it.
+```
+
+Do not copy this repository's internal
+`docs/DOCUMENT_MAP.md` unchanged into a target repository; create the target
+repo's own map from `templates/DOCUMENT_MAP.template.md`.
+
+## Safety Model
+
+ASGK separates ordinary bounded work from operations that must stop for explicit
+human review.
+
+Human-gated examples include release execution, repository visibility changes,
+credentials or secrets, protected paths, dependency changes, schema or contract
+changes, runtime artifact boundaries, private source material, cloud/API/model
+lanes, and unclear scope.
+
+Low-risk merge is intentionally narrow. A PR must have the right issue, allowed
+paths, passing validation, complete evidence, clean runtime boundaries, and no
+human-gated trigger before it can be treated as low risk.
+
+## Current Release State
+
+ASGK v1.0.0 has been released as a source-only GitHub release under the
+Apache-2.0 license.
+
+The v1.x line is the generic repo-governance product line. Later runtime-specific
+profiles or adapters are planned as optional optimization layers, not as the
+default governance model.
+
+## What v1.x Does Not Include
+
+ASGK v1.x does not:
+
+- replace Codex, Claude Code, Cursor, ChatGPT, OpenGoat, or other agent
+  runtimes;
+- provide runtime-specific profiles in the default operating profile;
+- auto-approve high-risk work;
+- publish packages or installers by default;
+- manage project-specific architecture, product strategy, or domain schemas;
+- remove the need for tests, code review, and human judgment.
+
+## Where To Read Next
+
+- `docs/QUICKSTART.md` for the first governed change.
+- `AGENTS.md` for agent operating rules.
+- `docs/DOCUMENT_MAP.md` for canonical document ownership in this repository.
+- `docs/INSTALL_SURFACE.md` for target-repository adoption boundaries.
+- `docs/control/CURRENT_STATUS_POLICY.md` for current-status and handoff rules.
+- `docs/control/HUMAN_GATED_OPERATIONS.md` for operations that require human
+  approval.
+- `docs/control/LOW_RISK_AUTONOMOUS_MERGE_POLICY.md` for low-risk merge
+  eligibility.
 
 ## Lineage
 
-This project grew out of **Bootstrap Kit v2.1**.
-
-Bootstrap Kit v2.1 is the embryo/source lineage extracted from two parent project experiences. It is not an obsolete name to erase and not the same version line as ASGK runtime adapters.
+ASGK grew out of Bootstrap Kit v2.1, the source lineage and template embryo
+extracted from earlier project experiences.
 
 ```text
 Bootstrap Kit v2.1
@@ -19,85 +178,5 @@ ASGK v2.0
   = planned runtime-adapter/profile optimization line
 ```
 
-This repository now treats ASGK v1.x as the active generic governance core while preserving the Bootstrap Kit v2.1 lineage as its origin.
-
-## Purpose
-
-This version is designed against a specific failure mode: **AI over-simplification**. It does not only state principles. It turns the principles into required fields, stop conditions, promotion gates, validation scripts, examples, and merge records.
-
-## Core principle
-
-```text
-Chat is not the control plane.
-GitHub issues, pull requests, repository files, and handoff documents are the durable source of truth.
-```
-
-## Product boundary
-
-ASGK v1.x is runtime-agnostic. It assumes a **generic repo-agent governance core**: any human or AI runtime may work on the repository, but every repo change must pass through the same issue, PR, validation, merge-decision, and handoff governance layer.
-
-Runtime-specific profiles for Codex, ChatGPT Web/GitHub connector, OpenGoat, Claude Code, Cursor, or similar tools are planned for **ASGK v2.0**. They are optimization adapters, not the v1.x foundation.
-
-```text
-Agent runtimes will commoditize. Repo governance is the durable layer.
-```
-
-ASGK does not replace agent runtimes. It governs what they are allowed to change, how changes are validated, and when changes may merge.
-
-## What Bootstrap Kit v2.1 contributed
-
-- Full Control Layer template with state model, operating loop, anti-drift rules, task/report formats, human gates, and definition of done.
-- Low-risk autonomous merge policy separate from human-gated operations.
-- Issue Hygiene Gate.
-- Agent Report Format and Task Packet Format.
-- Failure Thresholds and notification conditions.
-- Externalized Responsibility Boundary for upstream/downstream ownership splits.
-- Workspace Lock, Cache, State, and Storage Profile rules.
-- Source/Input Class Matrix and Downstream Promotion Matrix.
-- Readiness Audit Policy for API/model/provider lanes.
-- Stronger schemas and examples for task packets, agent assignments, promotion gates, execution lanes, merge decisions, and agent reports.
-- Stronger `validate_bootstrap.py` that checks required files, required terms, JSON validity, YAML-like required fields, PR headings, issue template fields, lane packet fields, examples, storage boundaries, and control-doc sections.
-
-## Install
-
-Copy the kit into a repo root. Customize the placeholders in:
-
-```text
-docs/bootstrap/00_project_brief.md
-docs/bootstrap/01_physical_boundaries.md
-docs/bootstrap/02_storage_roots.md
-docs/bootstrap/03_tech_stack.md
-agent/agent_rules.yaml
-docs/handoff/CURRENT_STATUS.md
-```
-
-When installing into another repository, do not copy this repository's internal `docs/DOCUMENT_MAP.md` unchanged. Use `templates/DOCUMENT_MAP.template.md` to create the target repository's own repo-local document map.
-
-Run:
-
-```bash
-python3 scripts/check_project.py
-python3 scripts/validate_bootstrap.py
-```
-
-## Operating loop
-
-```text
-Project Brief
-  -> Physical / Storage Boundary
-  -> Control Layer
-  -> Agent Assignment
-  -> Work Unit State
-  -> Task Packet
-  -> Lane Assignment
-  -> Implementation
-  -> Validation
-  -> Promotion Gate
-  -> Readiness Audit
-  -> Merge Decision Record
-  -> Handoff Update
-```
-
-## Non-goal
-
-This kit is not project architecture, not an agent runtime, not a multi-agent chat UI, and not a replacement for Codex, OpenGoat, Claude Code, Cursor, or any other execution layer. It is a governance layer. Each project still needs its own domain schemas, tests, product strategy, and data-quality rules.
+The lineage matters, but it is not the product boundary. ASGK v1.x is the
+generic repository governance core.
