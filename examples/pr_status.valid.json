@@ -22,5 +22,11 @@
       "path": "scripts/asgk.py"
     }
   ],
+  "closingIssuesReferences": [
+    {
+      "number": 155,
+      "url": "https://github.com/example/repo/issues/155"
+    }
+  ],
   "body": "## Summary\n\nValid PR status fixture.\n\n## Task Reference\n\nIssue #155.\n\n## Changed Files\n\n- scripts/asgk.py\n\n## Validation\n\nFresh fixture validation.\n\n## Evidence Of Completion\n\nFixture only.\n\n## Scope Boundaries\n\nAllowed paths checked.\n\n## Current Status Impact\n\n```yaml\ncurrent_status_impact:\n  status: not_applicable\n  reason: fixture does not change repo recovery state\n  current_status_updated_in_this_pr: false\n  post_merge_safe: not_applicable\n  follow_up_issue: none\n```\n\n## Runtime Output Status\n\nNone.\n\n## Merge Decision\n\n```yaml\nmerge_decision:\n  issue: \"#155\"\n  lane: validation_tooling\n  intelligence_level: advanced\n  durable_source_of_truth: \"fixture\"\n  checks_passed: true\n  allowed_paths_checked: true\n  expected_output_checked: true\n  contracts_checked: not_applicable\n  schemas_checked: not_applicable\n  storage_boundary: clean\n  runtime_artifact_boundary: clean\n  safety_review: complete\n  human_gates_checked: true\n  result: merge_allowed\n  reason: fixture contains complete mechanically checkable fields\n```\n\n## Known Gaps\n\nFixture only.\n\n## Handoff Report\n\nNo follow-up.\n"
 }

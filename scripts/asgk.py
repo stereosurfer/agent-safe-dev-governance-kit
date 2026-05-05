@@ -155,6 +155,7 @@ POLICY_GATE_NEGATIVE_FIXTURES = [
 ]
 PR_STATUS_NEGATIVE_FIXTURES = [
     "examples/negative/pr_status.draft-failing.json",
+    "examples/negative/pr_status.missing-closing-reference.json",
 ]
 TARGET_INSTALL_NEGATIVE_FIXTURES = [
     "examples/negative/target_install/missing_required_files",
@@ -585,6 +586,58 @@ def pr_file_paths(files: object) -> list[str]:
     return paths
 
 
+def issue_number_from_value(value: str | None) -> int | None:
+    if not value:
+        return None
+    match = re.search(r"#\s*(\d+)\b", value)
+    if not match:
+        return None
+    return int(match.group(1))
+
+
+def merge_decision_issue_number(body: str) -> int | None:
+    merge_decision = markdown_section(body, "Merge Decision")
+    return issue_number_from_value(field_value(merge_decision, "issue"))
+
+
+def closing_issue_numbers(references: object) -> set[int]:
+    if not isinstance(references, list):
+        return set()
+    numbers: set[int] = set()
+    for item in references:
+        if not isinstance(item, dict):
+            continue
+        number = item.get("number")
+        if isinstance(number, int):
+            numbers.add(number)
+        elif isinstance(number, str) and number.isdigit():
+            numbers.add(int(number))
+    return numbers
+
+
+def check_closing_issue_reference(payload: dict[str, object], body: str, findings: list[dict[str, str]]) -> None:
+    issue_number = merge_decision_issue_number(body)
+    if issue_number is None:
+        return
+
+    if "closingIssuesReferences" not in payload:
+        add_pr_status_finding(
+            findings,
+            "closingIssuesReferences",
+            "PR closing issue references are missing from the metadata payload.",
+            "Fetch PR metadata with gh pr view --json closingIssuesReferences or provide fixture metadata.",
+        )
+        return
+
+    if issue_number not in closing_issue_numbers(payload.get("closingIssuesReferences")):
+        add_pr_status_finding(
+            findings,
+            "closingIssuesReferences",
+            f"Merge Decision issue #{issue_number} is not a GitHub closing issue reference.",
+            f"Use a GitHub closing keyword such as `Closes #{issue_number}` instead of a non-closing reference.",
+        )
+
+
 def check_pr_status_payload(payload: dict[str, object]) -> tuple[str, list[dict[str, str]]]:
     findings: list[dict[str, str]] = []
 
@@ -627,9 +680,10 @@ def check_pr_status_payload(payload: dict[str, object]) -> tuple[str, list[dict[
     body = payload.get("body")
     if body is None:
         body = ""
+    body_text = str(body)
     with tempfile.TemporaryDirectory() as tmpdir:
         body_path = Path(tmpdir) / "pull_request_body.md"
-        body_path.write_text(str(body), encoding="utf-8")
+        body_path.write_text(body_text, encoding="utf-8")
         policy_gate = run_policy_gate_capture(body_path)
         if policy_gate.returncode != 0:
             add_pr_status_finding(
@@ -638,6 +692,8 @@ def check_pr_status_payload(payload: dict[str, object]) -> tuple[str, list[dict[
                 "PR body policy gate failed.",
                 "Fix Current Status Impact, Merge Decision, source-of-truth, or PR structure fields.",
             )
+
+    check_closing_issue_reference(payload, body_text, findings)
 
     if "files" not in payload:
         add_pr_status_finding(
@@ -1034,7 +1090,7 @@ def cmd_check_pr(args: argparse.Namespace) -> int:
         command = [
             "gh", "pr", "view", str(args.pr),
             "--json",
-            "number,title,state,isDraft,mergeStateStatus,reviewDecision,statusCheckRollup,body,files,url",
+            "number,title,state,isDraft,mergeStateStatus,reviewDecision,statusCheckRollup,body,files,url,closingIssuesReferences",
         ]
         result = subprocess.run(
             command,
