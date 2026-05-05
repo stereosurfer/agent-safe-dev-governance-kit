@@ -38,8 +38,8 @@ validation_layers:
 
   path_hygiene:
     script: scripts/governance_hygiene.py
-    current_status: implemented_basic
-    purpose: changed-path and protected-path checks
+    current_status: implemented_with_pull_request_git_diff_ci
+    purpose: changed-path and protected-path checks from files or git diff ranges
 
   policy_gate_check:
     script: scripts/policy_gate_check.py
@@ -139,6 +139,7 @@ python3 scripts/validate_bootstrap.py
 ```yaml
 owns:
   - changed-path inspection from a paths file
+  - changed-path inspection from a local git diff base/head range
   - protected-path detection
   - runtime artifact path detection
   - private/binary source-like file detection outside fixture/example paths
@@ -148,7 +149,6 @@ owns:
 
 ```yaml
 does_not_own:
-  - creating the changed-path list
   - GitHub PR diff retrieval
   - PR body validation
   - semantic policy review
@@ -157,8 +157,9 @@ does_not_own:
 
 ### Current Limitation
 
-The script currently expects an explicit `--paths-file`. It does not yet call
-`git diff --name-only` or the GitHub API by itself.
+The script can derive paths from local `git diff --name-only`, but it does not
+call the GitHub API. CI must provide a checked-out repository with enough
+history for the requested diff range.
 
 ### Blocking Behavior
 
@@ -169,6 +170,8 @@ autonomous merge.
 
 ```bash
 python3 scripts/governance_hygiene.py --paths-file changed-paths.txt
+python3 scripts/governance_hygiene.py --git-base origin/main --git-head HEAD
+python3 scripts/asgk.py hygiene --git-base origin/main --git-head HEAD
 ```
 
 ## `scripts/policy_gate_check.py`
@@ -227,6 +230,7 @@ owns:
   - repeatable CI execution of scaffold validation
   - repeatable CI execution of bootstrap validation
   - whitespace/diff check
+  - pull_request changed-path hygiene from git diff
   - pull_request PR-body policy gate execution from the GitHub event payload
   - policy-gate negative fixture execution
 ```
@@ -423,6 +427,12 @@ future_cli_mapping:
     runs:
       - python3 scripts/governance_hygiene.py --paths-file changed-paths.txt
 
+  asgk hygiene --git-base <base> --git-head <head>:
+    current_behavior:
+      - run scripts/governance_hygiene.py with local git diff path collection
+      - block protected paths, runtime artifacts, and private/binary source-like files
+      - never call the GitHub API
+
   asgk policy-gate --pr-body pr_body.md:
     current_behavior:
       - run scripts/policy_gate_check.py --pr-body pr_body.md
@@ -508,7 +518,6 @@ run validator -> read compact failure output -> inspect only files named by fail
 
 ```yaml
 known_gaps:
-  - governance_hygiene.py does not yet fetch git diff by itself
   - no full GitHub PR status validator exists yet
   - no task-packet schema validator is wired as a full JSON/YAML validator
 ```

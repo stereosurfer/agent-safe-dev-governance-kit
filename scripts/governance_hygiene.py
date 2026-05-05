@@ -13,6 +13,7 @@ those fixtures as positive examples.
 from __future__ import annotations
 
 import argparse
+import subprocess
 from pathlib import Path
 
 
@@ -72,6 +73,30 @@ def load_paths(paths_file: Path) -> list[str]:
     return paths
 
 
+def load_git_paths(git_base: str, git_head: str) -> list[str]:
+    """Collect changed paths from a git diff range.
+
+    The checker stays dependency-light and API-free. It asks local git for the
+    name-only diff and then applies the same textual normalization used for
+    fixture files.
+    """
+
+    result = subprocess.run(
+        ["git", "diff", "--name-only", git_base, git_head],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode != 0:
+        message = result.stderr.strip() or result.stdout.strip() or "git diff failed"
+        raise RuntimeError(message)
+    return [
+        normalize_path(raw_line)
+        for raw_line in result.stdout.splitlines()
+        if normalize_path(raw_line)
+    ]
+
+
 def is_blocked(path: str) -> str | None:
     p = normalize_path(path)
 
@@ -105,7 +130,9 @@ def main() -> int:
     parser = argparse.ArgumentParser(
         description="Check changed paths for protected paths and runtime artifacts."
     )
-    parser.add_argument("--paths-file", required=True, help="Newline-delimited path list.")
+    parser.add_argument("--paths-file", help="Newline-delimited path list.")
+    parser.add_argument("--git-base", help="Base revision for git diff --name-only.")
+    parser.add_argument("--git-head", help="Head revision for git diff --name-only.")
     parser.add_argument(
         "--expect-blocked",
         action="store_true",
@@ -113,7 +140,25 @@ def main() -> int:
     )
     args = parser.parse_args()
 
-    paths = load_paths(Path(args.paths_file))
+    using_paths_file = bool(args.paths_file)
+    using_git_range = bool(args.git_base or args.git_head)
+    if using_paths_file == using_git_range:
+        print("FAIL: provide exactly one of --paths-file or --git-base/--git-head.")
+        return 1
+    if using_git_range and not (args.git_base and args.git_head):
+        print("FAIL: --git-base and --git-head must be provided together.")
+        return 1
+
+    try:
+        paths = (
+            load_paths(Path(args.paths_file))
+            if using_paths_file
+            else load_git_paths(args.git_base, args.git_head)
+        )
+    except RuntimeError as exc:
+        print(f"FAIL: {exc}")
+        return 1
+
     failures = collect_failures(paths)
 
     for path, reason in failures:
