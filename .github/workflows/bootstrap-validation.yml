@@ -13,6 +13,11 @@ jobs:
           python-version: '3.12'
       - name: ASGK doctor
         run: python3 scripts/asgk.py doctor
+      - name: PR policy gate
+        if: github.event_name == 'pull_request'
+        run: python3 scripts/asgk.py policy-gate --github-event "$GITHUB_EVENT_PATH"
+      - name: Negative policy gate fixtures
+        run: python3 scripts/asgk.py negative policy-gate
       - name: Positive handoff fixture
         run: python3 scripts/asgk.py handoff-check --file examples/handoff_packet.valid.yaml --fail-on-todo
       - name: Negative check PR body missing merge decision
