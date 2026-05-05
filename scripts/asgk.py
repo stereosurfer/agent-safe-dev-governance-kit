@@ -51,6 +51,10 @@ CLOSEOUT_PRE_MERGE_NEXT_ACTION_PATTERNS = [
     r"merge\s+pr\s+#?\d+",
     r"close\s+issue\s+#?\d+",
 ]
+CURRENT_STATUS_IMPACT_ALLOWED_VALUES = {"updated", "not_applicable", "deferred"}
+CANONICAL_CURRENT_STATUS_PATH = "docs/handoff/CURRENT_STATUS.md"
+TRUE_VALUES = {"true", "yes"}
+EMPTY_FOLLOWUP_VALUES = {"", "none", "null", "tbd", "todo"}
 NEGATIVE_CHANGED_PATH_FIXTURES = [
     "examples/negative/changed_paths.runtime-artifact.txt",
     "examples/negative/changed_paths.protected.txt",
@@ -75,10 +79,32 @@ EXPECTED_FAILURE_CHECKS = [
         "--completed-pr", "#53",
         "--completed-branch", "codex/positive-handoff-template-fixture",
     ],
+    [
+        "python3", "scripts/asgk.py", "current-status-impact-check",
+        "--pr-body", "examples/negative/current_status_impact/pr_body.updated-self-stale.md",
+        "--changed-paths-file", "examples/negative/current_status_impact/changed_paths.current-status.txt",
+        "--file", "examples/negative/current_status_impact/current_status.self-stale.md",
+        "--this-pr", "#134",
+        "--closing-issue", "#132",
+        "--this-branch", "codex/public-readiness-audit-132",
+    ],
+    [
+        "python3", "scripts/asgk.py", "current-status-impact-check",
+        "--pr-body", "examples/negative/current_status_impact/pr_body.not-applicable-status-changed.md",
+        "--changed-paths-file", "examples/negative/current_status_impact/changed_paths.current-status.txt",
+        "--file", "examples/negative/current_status_impact/current_status.self-stale.md",
+    ],
+    [
+        "python3", "scripts/asgk.py", "current-status-impact-check",
+        "--pr-body", "examples/negative/current_status_impact/pr_body.deferred-status-changed.md",
+        "--changed-paths-file", "examples/negative/current_status_impact/changed_paths.current-status.txt",
+        "--file", "examples/negative/current_status_impact/current_status.self-stale.md",
+    ],
 ]
 POLICY_GATE_NEGATIVE_FIXTURES = [
     "examples/negative/policy_gate/pr_body.missing-merge-decision.md",
     "examples/negative/policy_gate/pr_body.missing-current-status-impact.md",
+    "examples/negative/policy_gate/pr_body.updated-missing-post-merge-safe.md",
     "examples/negative/policy_gate/pr_body.checks-pending.md",
     "examples/negative/policy_gate/pr_body.human-gates-pending.md",
     "examples/negative/policy_gate/pr_body.see-chat-authority.md",
@@ -222,6 +248,25 @@ def field_value(text: str, field: str) -> str | None:
     if not match:
         return None
     return match.group(1).strip().strip('"').strip("'")
+
+
+def normalized_field_value(text: str, field: str) -> str:
+    value = field_value(text, field)
+    if value is None:
+        return ""
+    return value.strip().strip('"').strip("'").lower()
+
+
+def read_changed_paths(path: str | Path) -> set[str]:
+    return {
+        line.strip()
+        for line in read_text(path).splitlines()
+        if line.strip() and not line.strip().startswith("#")
+    }
+
+
+def same_repo_path(left: str, right: str) -> bool:
+    return left.strip().lstrip("./") == right.strip().lstrip("./")
 
 
 def field_block_lines(text: str, field: str) -> list[str] | None:
@@ -632,6 +677,87 @@ def cmd_closeout_check(args: argparse.Namespace) -> int:
     return print_failures(failures)
 
 
+def cmd_current_status_impact_check(args: argparse.Namespace) -> int:
+    pr_body = read_text(args.pr_body)
+    changed_paths = read_changed_paths(args.changed_paths_file)
+    current_status_path = args.file.lstrip("./")
+    current_status_changed = any(
+        same_repo_path(path, current_status_path)
+        or same_repo_path(path, CANONICAL_CURRENT_STATUS_PATH)
+        for path in changed_paths
+    )
+    current_status_section = markdown_section(pr_body, "Current Status Impact")
+    handoff_section = markdown_section(pr_body, "Handoff Report")
+    failures: list[str] = []
+
+    if not current_status_section:
+        return print_failures(["missing PR Current Status Impact section"])
+
+    status = normalized_field_value(current_status_section, "status")
+    if status not in CURRENT_STATUS_IMPACT_ALLOWED_VALUES:
+        failures.append("Current Status Impact status must be updated, not_applicable, or deferred")
+
+    reason = normalized_field_value(current_status_section, "reason")
+    if reason in {"", "pending", "unknown", "none", "tbd", "todo"}:
+        failures.append("Current Status Impact reason is missing or non-specific")
+
+    updated = normalized_field_value(current_status_section, "current_status_updated_in_this_pr")
+    if status == "updated" and updated not in TRUE_VALUES:
+        failures.append("status is updated but current_status_updated_in_this_pr is not true")
+
+    if current_status_changed and status != "updated":
+        failures.append(f"{CANONICAL_CURRENT_STATUS_PATH} changed but Current Status Impact status is not updated")
+
+    if status == "updated" and not current_status_changed:
+        failures.append(f"Current Status Impact status is updated but {CANONICAL_CURRENT_STATUS_PATH} did not change")
+
+    post_merge_safe = normalized_field_value(current_status_section, "post_merge_safe")
+    if status == "updated" and post_merge_safe not in TRUE_VALUES:
+        failures.append("status is updated but post_merge_safe is not true")
+
+    follow_up = normalized_field_value(current_status_section, "follow_up_issue")
+    if status == "deferred":
+        has_handoff_next_action = bool(re.search(r"next safe action", handoff_section, flags=re.IGNORECASE))
+        if follow_up in EMPTY_FOLLOWUP_VALUES and not has_handoff_next_action:
+            failures.append("status is deferred without follow_up_issue or Handoff Report next safe action")
+        if current_status_changed:
+            failures.append(f"status is deferred but {CANONICAL_CURRENT_STATUS_PATH} changed")
+
+    if current_status_changed:
+        status_result = subprocess.run(
+            ["python3", "scripts/asgk.py", "status-check", "--file", args.file],
+            cwd=ROOT,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+        )
+        if status_result.returncode != 0:
+            failures.append("status-check failed for current status file")
+
+        status_text = read_text(args.file)
+        active_work = markdown_section(status_text, "Active work")
+        next_safe_action = markdown_section(status_text, "Next safe action")
+
+        if args.this_pr and args.this_pr in active_work:
+            failures.append(f"current status active work points to this PR: {args.this_pr}")
+
+        for issue in args.closing_issue:
+            if issue and issue in active_work:
+                failures.append(f"current status active work points to closing issue: {issue}")
+
+        if args.this_branch and args.this_branch in active_work:
+            failures.append(f"current status active work points to this branch: {args.this_branch}")
+
+        if not next_safe_action:
+            failures.append("current status next safe action is empty")
+        else:
+            for pattern in CLOSEOUT_PRE_MERGE_NEXT_ACTION_PATTERNS:
+                if re.search(pattern, next_safe_action, flags=re.IGNORECASE):
+                    failures.append(f"next safe action appears to describe pre-merge closeout work: {pattern}")
+
+    return print_failures(failures)
+
+
 def cmd_pr_body_check(args: argparse.Namespace) -> int:
     text = read_text(args.file)
     failures: list[str] = []
@@ -775,6 +901,15 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--completed-pr", action="append", default=[])
     p.add_argument("--completed-branch", action="append", default=[])
     p.set_defaults(func=cmd_closeout_check)
+
+    p = sub.add_parser("current-status-impact-check", help="Check PR current-status impact is post-merge-safe.")
+    p.add_argument("--pr-body", required=True)
+    p.add_argument("--changed-paths-file", required=True)
+    p.add_argument("--file", default="docs/handoff/CURRENT_STATUS.md")
+    p.add_argument("--this-pr", default="")
+    p.add_argument("--closing-issue", action="append", default=[])
+    p.add_argument("--this-branch", default="")
+    p.set_defaults(func=cmd_current_status_impact_check)
 
     p = sub.add_parser("pr-body-check", help="Check PR body and Merge Decision Record.")
     p.add_argument("--file", required=True)

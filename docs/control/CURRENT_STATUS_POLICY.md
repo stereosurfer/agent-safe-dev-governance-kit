@@ -106,6 +106,35 @@ Every completed work unit must make a status-refresh decision before closeout.
 Do not blindly update `CURRENT_STATUS.md` for every PR, but do not leave it stale
 when repo-level recovery state has changed.
 
+`CURRENT_STATUS.md` is post-merge-safe by default. It describes the repository
+state a new session should see after the current PR merges, not the temporary
+in-flight state of the PR that edits it.
+
+```yaml
+current_status_modes:
+  post_merge_safe:
+    default: true
+    meaning: "CURRENT_STATUS.md remains accurate after this PR merges."
+    closeout_pr_required: false
+  in_flight_tracking:
+    location:
+      - GitHub issue body or comment
+      - PR body or Handoff Report
+      - work-unit handoff packet
+    meaning: "Unmerged work state for the current actor."
+    current_status_role: "reference only when needed for repo-level recovery"
+  separate_status_refresh:
+    default: false
+    allowed_only_when:
+      - current main already contains stale CURRENT_STATUS.md
+      - a human-gated sequence intentionally defers status until after approval
+      - post-merge state cannot be known safely before merge
+    closeout_pr_required: true
+```
+
+Do not use `CURRENT_STATUS.md` as the live tracker for the PR that changes it.
+Open PRs, issue comments, and handoff packets are the durable in-flight record.
+
 ```yaml
 status_refresh_decision:
   update_required_when:
@@ -159,6 +188,9 @@ current_status_update_gate:
   deferred_required_evidence:
     - reason in PR Current Status Impact section
     - follow-up issue or next safe action in Handoff Report when repo-level recovery would otherwise be unsafe
+  post_merge_safe_required_when:
+    - status is updated
+    - docs/handoff/CURRENT_STATUS.md changes in the PR
 ```
 
 Reviewers should request changes when a milestone-impacting or resume-surface-impacting
@@ -185,6 +217,21 @@ self_staling_status_update:
     - make CURRENT_STATUS.md accurate for the repository state after merge
     - use GitHub comments for closeout evidence
 ```
+
+PR bodies should record this explicitly:
+
+```yaml
+current_status_impact:
+  status: updated | not_applicable | deferred
+  reason: "<why this status decision is correct>"
+  current_status_updated_in_this_pr: true | false
+  post_merge_safe: true | false | not_applicable
+  follow_up_issue: none | "#<number>"
+```
+
+`post_merge_safe: true` means `CURRENT_STATUS.md` will still be accurate after
+the PR merges. If that cannot be stated truthfully, leave the file unchanged and
+record in-flight details in the PR body, issue comment, or handoff packet.
 
 ## Overwrite-not-append Rule
 
@@ -357,3 +404,18 @@ closeout_check_targets:
 
 `asgk status-check` remains the broader compactness and stale-marker check for
 routine session startup and baseline validation.
+
+For PR-specific current-status decisions, use:
+
+```bash
+python3 scripts/asgk.py current-status-impact-check \
+  --pr-body pr.md \
+  --changed-paths-file changed-paths.txt \
+  --this-pr '#<pr>' \
+  --closing-issue '#<issue>' \
+  --this-branch '<branch>'
+```
+
+The command is local-only and does not query GitHub. It checks that the PR body,
+changed paths, and `CURRENT_STATUS.md` agree, and that updated status is
+post-merge-safe instead of pointing at the PR or branch that is about to merge.

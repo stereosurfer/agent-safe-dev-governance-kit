@@ -198,6 +198,17 @@ def check_current_status_impact(text: str, findings: list[dict[str, Any]]) -> No
             "Set current_status_updated_in_this_pr: true only if docs/handoff/CURRENT_STATUS.md changed in this PR.",
         )
 
+    post_merge_safe = normalized_bool_text(field_value(current_status_section, "post_merge_safe"))
+    if status == "updated" and post_merge_safe not in TRUE_VALUES:
+        add_finding(
+            findings,
+            "FAIL",
+            "current_status_impact",
+            "post_merge_safe",
+            "Current Status Impact says updated, but does not confirm the status is post-merge-safe.",
+            "Set `post_merge_safe: true` only when CURRENT_STATUS.md remains accurate after this PR merges.",
+        )
+
     follow_up = field_value(current_status_section, "follow_up_issue")
     if status == "deferred" and (follow_up is None or normalized_bool_text(follow_up) in {"", "none", "null", "tbd", "todo"}):
         add_finding(
