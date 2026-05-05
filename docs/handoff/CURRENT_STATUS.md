@@ -4,7 +4,7 @@ This is the compact current-status surface for the repository. It is overwritten
 not appended. Historical detail belongs in GitHub issues, PRs, comments, and
 merge commits.
 
-Last updated: `2026-05-05T13:33:14Z`
+Last updated: `2026-05-05T13:44:22Z`
 
 ## Durable source of truth
 
@@ -26,9 +26,11 @@ PR-body policy-gate default CI wiring, pull-request changed-path hygiene CI
 wiring, GitHub PR status validation, PR closing issue reference validation, and
 task-packet schema-shaped validation are complete. ASGK Skill Pack v0 source is
 available under `skills/`, with usage and maintenance touchpoint guidance in
-`docs/SKILL_PACK.md`. The risk-gate mechanization sequence is complete at the
-repository tooling level, with the remaining default-CI self-certification limit
-recorded in `docs/control/VALIDATION_STRATEGY.md`.
+`docs/SKILL_PACK.md`. The v1.2 product-entry alignment is ready for a separate
+human-gated release execution issue after merge. The risk-gate mechanization
+sequence is complete at the repository tooling level, with the remaining
+default-CI self-certification limit recorded in
+`docs/control/VALIDATION_STRATEGY.md`.
 
 Apache-2.0 is the selected v1.0 license. The selected distribution path is a
 source-only GitHub release. Tag `v1.0.0` and GitHub release `ASGK v1.0.0` were
@@ -90,11 +92,11 @@ fixtures with `python3 scripts/asgk.py task-packet-check --file <path>`.
 ## Last completed
 
 ```yaml
-issue: "#157 [VALIDATION] Add task-packet schema validator"
-pr: "#158 [VALIDATION] Add task-packet schema validator"
-merge_commit: "31b1486624ffb3a7aed7d8ff24b8874f5a6378c3"
-validation: "python3 scripts/asgk.py doctor passed on PR #158 and current main"
-note: "Risk-gate mechanization closeout completed. Issue #154 was also closed as already satisfied by merged PR #156."
+issue: "#165 [SKILLS] Add Skill Pack maintenance touchpoint map"
+pr: "#166 [SKILLS] Add Skill Pack maintenance touchpoint map"
+merge_commit: "eb948faab9f97fcc89265f946a7dc55ef739fec4"
+validation: "python3 scripts/asgk.py doctor passed on current main"
+note: "Skill Pack v0 and maintenance touchpoint guidance are complete. v1.2 product-entry alignment is the final docs step before proposing a separate human-gated v1.2.0 release execution issue."
 ```
 
 ## Runtime artifact status
@@ -104,7 +106,8 @@ cache, or external preparation outputs are currently authorized.
 
 ## Next safe action
 
-Open a new durable GitHub issue before starting further work. Do not start
-public visibility change, package publication, installer scaffold, runtime
-adapter, external distribution, v1.1.x/v1.2 release work, or v2.0 follow-up work
+After this product-entry alignment merges, the next safe action is to open a
+new human-gated GitHub issue for source-only v1.2.0 release execution. Do not
+tag, create a GitHub release, change repository visibility, publish a package,
+add an installer scaffold, add a runtime adapter, or start v2.0 follow-up work
 without a new durable GitHub issue and explicit human approval where required.

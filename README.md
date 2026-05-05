@@ -50,6 +50,23 @@ fields, PR evidence, allowed-path boundaries, stop conditions, validation
 commands, merge records, human-gated operations, and compact current-status
 handoff.
 
+## Product Shape
+
+ASGK v1.x is distributed as a source-only governance kit:
+
+```text
+repo core
+  -> canonical docs, templates, GitHub issue / PR workflow
+validators
+  -> scripts/asgk.py, policy gate, PR status checks, negative fixtures
+skills
+  -> reusable procedures that sequence existing repo/GitHub gates
+```
+
+Skills are not a new authority layer. They help agents use the repo governance
+surface with less repeated rule reading, while final authority remains in GitHub
+issues, pull requests, repository files, ASGK validators, and human gates.
+
 ## Who It Is For
 
 ASGK v1.x is useful for repositories that:
@@ -78,6 +95,12 @@ governance model. ASGK v1.x deliberately keeps the default layer generic.
 - Local validation through `python3 scripts/asgk.py doctor`.
 - Negative checks for governance hygiene, PR bodies, handoff packets, target
   install readiness, and stale current-status patterns.
+- PR-level status validation for draft state, mergeability, review decision,
+  status checks, PR-body policy, changed-path hygiene, and GitHub closing issue
+  references.
+- Source-distributed ASGK Skill Pack v0 under `skills/` for startup, issue
+  scoping, PR evidence, gatekeeping, post-merge closeout, current-status
+  handoff, evidence audit, target-install audit, and governance health checks.
 - Document map and context-budget guidance so agents read the smallest
   sufficient context instead of the whole repository.
 - Target-install read-only checks for evaluating whether another repository has
@@ -94,6 +117,11 @@ python3 scripts/asgk.py doctor
 For adopting ASGK in another repository, start with `docs/INSTALL_SURFACE.md`.
 Treat that path as copying and adapting a governance scaffold, not installing a
 runtime package.
+
+If your agent client supports skills, copy the needed directories under
+`skills/` into the client skill location. If it does not, keep them as
+repository-reference procedures and read only the specific `SKILL.md` needed for
+the current work unit. See `docs/SKILL_PACK.md`.
 
 For a first governed change in a repository that already has ASGK adopted:
 
@@ -131,8 +159,13 @@ human-gated trigger before it can be treated as low risk.
 
 ## Current Release State
 
-ASGK v1.0.0 has been released as a source-only GitHub release under the
+ASGK v1.1.0 is the latest completed source-only GitHub release under the
 Apache-2.0 license.
+
+Current `main` contains additional v1.2.0 candidate work: risk-gate
+mechanization, PR closing reference validation, and ASGK Skill Pack v0. A
+v1.2.0 tag or GitHub release requires a separate human-gated release execution
+issue.
 
 The v1.x line is the generic repo-governance product line. Later runtime-specific
 profiles or adapters are planned as optional optimization layers, not as the
@@ -156,6 +189,8 @@ ASGK v1.x does not:
 - `AGENTS.md` for agent operating rules.
 - `docs/DOCUMENT_MAP.md` for canonical document ownership in this repository.
 - `docs/INSTALL_SURFACE.md` for target-repository adoption boundaries.
+- `docs/SKILL_PACK.md` for source-distributed skill usage and maintenance
+  touchpoints.
 - `docs/control/CURRENT_STATUS_POLICY.md` for current-status and handoff rules.
 - `docs/control/HUMAN_GATED_OPERATIONS.md` for operations that require human
   approval.
