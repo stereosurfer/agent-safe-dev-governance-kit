@@ -235,10 +235,16 @@ release_execution_boundary:
     - "If release execution is metadata-only, create an immediate bounded status-refresh issue/PR."
     - "If release execution authorizes file changes, update docs/handoff/CURRENT_STATUS.md only when the result is post-merge-safe."
     - "Record the status-refresh issue, PR, or completed status update in the release execution closeout comment."
+  product_entry_closeout_requires:
+    - "README.md must identify the released version as the latest completed source-only GitHub release."
+    - "docs/bootstrap/10_roadmap.md must not describe the released version as an active candidate or pending release execution."
+    - "Run `python3 scripts/asgk.py release-state-check --tag <tag> --release-title \"<title>\"` after release-state docs are updated."
+    - "If product-entry docs are intentionally deferred, record the bounded follow-up issue before claiming release closeout is complete."
   release_execution_not_fully_closed_until:
     - "tag and GitHub release are complete"
     - "final validation evidence is recorded"
     - "CURRENT_STATUS.md is post-release accurate or a bounded status-refresh issue exists"
+    - "product-entry release-state docs are accurate or a bounded product-entry follow-up issue exists"
 ```
 
 ## Release Execution Result
@@ -266,6 +272,7 @@ release_execution_result:
   status_closeout:
     v1_0_followup: "Issue #130 was followed by a separate current-status closeout path."
     rule_after_v1_1: "Future release execution must record a same-PR status update or immediate status-refresh issue/PR before claiming full closeout."
+    rule_after_v1_2: "Future release execution must also verify product-entry release-state docs with release-state-check or record a bounded follow-up before claiming full closeout."
 ```
 
 ## Acceptance Criteria For This Planning Stage

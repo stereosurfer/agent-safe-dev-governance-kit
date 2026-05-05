@@ -144,6 +144,12 @@ EXPECTED_FAILURE_CHECKS = [
         "--changed-paths-file", "examples/negative/current_status_impact/changed_paths.current-status.txt",
         "--file", "examples/negative/current_status_impact/current_status.self-stale.md",
     ],
+    [
+        "python3", "scripts/asgk.py", "release-state-check",
+        "--tag", "v1.2.0",
+        "--release-title", "ASGK v1.2.0",
+        "--readme", "examples/negative/release_state/README.stale-v1-2-candidate.md",
+    ],
 ]
 POLICY_GATE_NEGATIVE_FIXTURES = [
     "examples/negative/policy_gate/pr_body.missing-merge-decision.md",
@@ -160,6 +166,9 @@ PR_STATUS_NEGATIVE_FIXTURES = [
 TARGET_INSTALL_NEGATIVE_FIXTURES = [
     "examples/negative/target_install/missing_required_files",
     "examples/negative/target_install/repo_local_readiness_surface",
+]
+RELEASE_STATE_NEGATIVE_FIXTURES = [
+    "examples/negative/release_state/README.stale-v1-2-candidate.md",
 ]
 TARGET_INSTALL_LICENSE_NOTICE_PATHS = [
     "LICENSE",
@@ -980,6 +989,90 @@ def print_target_install_findings(findings: list[dict[str, str | bool]], *, as_j
     return 1 if blocking_count else 0
 
 
+def release_version_tuple(tag: str) -> tuple[int, int, int] | None:
+    match = re.fullmatch(r"v(\d+)\.(\d+)\.(\d+)", tag.strip())
+    if not match:
+        return None
+    return tuple(int(part) for part in match.groups())
+
+
+def find_latest_completed_readme_versions(text: str) -> list[str]:
+    return re.findall(
+        r"ASGK\s+(v\d+\.\d+\.\d+)\s+is\s+the\s+latest\s+completed\s+source-only\s+GitHub\s+release",
+        text,
+        flags=re.IGNORECASE,
+    )
+
+
+def release_state_stale_patterns(tag: str) -> list[tuple[str, str]]:
+    escaped = re.escape(tag)
+    return [
+        (rf"{escaped}[^\n.]*candidate", f"{tag} is still described as candidate"),
+        (rf"candidate[^\n.]*{escaped}", f"{tag} is still described as candidate"),
+        (rf"{escaped}[^\n.]*pending", f"{tag} is still described as pending"),
+        (rf"pending[^\n.]*{escaped}", f"{tag} is still described as pending"),
+        (
+            rf"{escaped}[^\n.]*requires[^\n.]*release execution",
+            f"{tag} still appears to require release execution",
+        ),
+        (
+            rf"{escaped}[^\n.]*tag or GitHub release requires",
+            f"{tag} still appears to require tag or GitHub release creation",
+        ),
+        (
+            rf"{escaped}[^\n.]*release execution[^\n.]*not_started",
+            f"{tag} release execution is still marked not_started",
+        ),
+    ]
+
+
+def check_release_state_docs(
+    *,
+    tag: str,
+    release_title: str,
+    readme_path: Path,
+    roadmap_path: Path,
+    current_status_path: Path,
+) -> list[str]:
+    failures: list[str] = []
+    if release_version_tuple(tag) is None:
+        failures.append(f"release tag must be semver-like vX.Y.Z: {tag}")
+
+    docs = [
+        ("README", readme_path),
+        ("roadmap", roadmap_path),
+        ("current status", current_status_path),
+    ]
+    texts: dict[str, str] = {}
+    for label, path in docs:
+        if not path.exists():
+            failures.append(f"missing {label} release-state file: {path}")
+            continue
+        texts[label] = path.read_text(encoding="utf-8")
+
+    readme = texts.get("README", "")
+    if readme:
+        latest_versions = find_latest_completed_readme_versions(readme)
+        if not latest_versions:
+            failures.append("README does not identify the latest completed source-only GitHub release")
+        for version in latest_versions:
+            if version != tag:
+                failures.append(f"README latest completed release is {version}, expected {tag}")
+        if tag not in readme:
+            failures.append(f"README does not mention released tag {tag}")
+
+    combined_text = "\n\n".join(texts.values())
+    if release_title and release_title not in combined_text:
+        failures.append(f"release title not found in release-state docs: {release_title}")
+
+    for label, text in texts.items():
+        for pattern, reason in release_state_stale_patterns(tag):
+            if re.search(pattern, text, flags=re.IGNORECASE):
+                failures.append(f"{label}: {reason}")
+
+    return failures
+
+
 def cmd_doctor(_args: argparse.Namespace) -> int:
     commands = [
         ["python3", "scripts/check_project.py"],
@@ -1038,13 +1131,24 @@ def cmd_negative(args: argparse.Namespace) -> int:
             ["python3", "scripts/asgk.py", "target-install-check", "--repo-root", fixture]
             for fixture in TARGET_INSTALL_NEGATIVE_FIXTURES
         ])
+    if args.case == "release-state":
+        return run_expected_failures([
+            [
+                "python3", "scripts/asgk.py", "release-state-check",
+                "--tag", "v1.2.0",
+                "--release-title", "ASGK v1.2.0",
+                "--readme", fixture,
+            ]
+            for fixture in RELEASE_STATE_NEGATIVE_FIXTURES
+        ])
     if args.case == "all":
         changed = cmd_negative(argparse.Namespace(case="changed-paths"))
         textual = cmd_negative(argparse.Namespace(case="textual"))
         policy_gate = cmd_negative(argparse.Namespace(case="policy-gate"))
         pr_status = cmd_negative(argparse.Namespace(case="pr-status"))
         target_install = cmd_negative(argparse.Namespace(case="target-install"))
-        return 1 if changed or textual or policy_gate or pr_status or target_install else 0
+        release_state = cmd_negative(argparse.Namespace(case="release-state"))
+        return 1 if changed or textual or policy_gate or pr_status or target_install or release_state else 0
     print(f"FAIL: unsupported negative case group: {args.case}")
     return 1
 
@@ -1370,6 +1474,17 @@ def cmd_target_install_check(args: argparse.Namespace) -> int:
     return print_target_install_findings(findings, as_json=args.json)
 
 
+def cmd_release_state_check(args: argparse.Namespace) -> int:
+    failures = check_release_state_docs(
+        tag=args.tag,
+        release_title=args.release_title,
+        readme_path=rel(args.readme),
+        roadmap_path=rel(args.roadmap),
+        current_status_path=rel(args.current_status),
+    )
+    return print_failures(failures)
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="ASGK minimal validation CLI.")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -1388,7 +1503,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.set_defaults(func=cmd_hygiene)
 
     p = sub.add_parser("negative", help="Run opt-in negative checks.")
-    p.add_argument("case", nargs="?", default="changed-paths", choices=["changed-paths", "textual", "policy-gate", "pr-status", "target-install", "all"])
+    p.add_argument("case", nargs="?", default="changed-paths", choices=["changed-paths", "textual", "policy-gate", "pr-status", "target-install", "release-state", "all"])
     p.set_defaults(func=cmd_negative)
 
     p = sub.add_parser("policy-gate", help="Run PR-body policy gate checks.")
@@ -1448,6 +1563,14 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--repo-root", default=str(ROOT), help="Repository root to inspect. Defaults to this repository.")
     p.add_argument("--json", action="store_true", help="Emit machine-readable JSON output.")
     p.set_defaults(func=cmd_target_install_check)
+
+    p = sub.add_parser("release-state-check", help="Check post-release docs are not stale candidate/pending surfaces.")
+    p.add_argument("--tag", required=True, help="Released tag, for example v1.2.0.")
+    p.add_argument("--release-title", required=True, help="Released GitHub release title.")
+    p.add_argument("--readme", default="README.md")
+    p.add_argument("--roadmap", default="docs/bootstrap/10_roadmap.md")
+    p.add_argument("--current-status", default="docs/handoff/CURRENT_STATUS.md")
+    p.set_defaults(func=cmd_release_state_check)
 
     return parser
 
