@@ -56,7 +56,7 @@ validation_layers:
     purpose: prove that known-bad inputs are blocked
 
   cli_wrapper:
-    current_status: implemented_policy_gate_wrapper
+    current_status: implemented_policy_gate_and_pr_status_wrappers
     purpose: expose validation through stable local commands
 ```
 
@@ -244,7 +244,7 @@ does_not_own:
   - human approval
   - low-risk merge decision by itself
   - external system checks
-  - full live GitHub PR status validation
+  - final self-certification of the currently running workflow job
 ```
 
 ### Blocking Behavior
@@ -458,13 +458,18 @@ future_cli_mapping:
     default_ci: true
 
   asgk check-pr <number>:
-    future_behavior:
-      - fetch changed file list
-      - run governance hygiene
-      - verify PR template headings
-      - verify Merge Decision Record
-      - verify Current Status Impact
+    current_behavior:
+      - fetch PR metadata through gh pr view
+      - check draft state, merge state, review decision, and status check rollup
+      - run PR-body policy gate on the fetched body
+      - run governance hygiene on fetched changed file paths
       - report checkable gates and unresolved human-review gates
+      - never infer low-risk status
+
+  asgk check-pr --json-file pr_status.json:
+    current_behavior:
+      - run the same PR-status validator from a captured or fixture JSON payload
+      - support deterministic positive and negative tests without network access
 ```
 
 CLI work must not add new dependencies in its first version unless a separate
@@ -518,7 +523,7 @@ run validator -> read compact failure output -> inspect only files named by fail
 
 ```yaml
 known_gaps:
-  - no full GitHub PR status validator exists yet
+  - PR status validator is not wired into default CI because a running workflow cannot certify its own final status
   - no task-packet schema validator is wired as a full JSON/YAML validator
 ```
 
