@@ -95,6 +95,122 @@ weekly_or_milestone_review:
 - If a skill conflicts with `AGENTS.md`, a GitHub issue or PR, or a control
   document, the skill loses.
 
+## Maintenance Touchpoints
+
+Architecture is canonical. Skills are downstream procedures. Validators check
+artifacts.
+
+Do not add a separate skill-compliance checker. Keep skills synchronized by
+making architecture, policy, template, or validator PRs declare whether they
+affect the skill pack.
+
+```yaml
+maintenance_rule:
+  architecture_is_canonical: true
+  skills_are_downstream: true
+  validators_check_artifacts: true
+  no_skill_compliance_checker: true
+```
+
+### Touchpoint Map
+
+```yaml
+architecture_touchpoints:
+  AGENTS.md:
+    affected_skills:
+      - asgk-startup
+      - asgk-issue-scoping
+      - asgk-gatekeeper
+
+  docs/control/CURRENT_STATUS_POLICY.md:
+    affected_skills:
+      - asgk-current-status-handoff
+      - asgk-post-merge-closeout
+
+  docs/control/HUMAN_GATED_OPERATIONS.md:
+    affected_skills:
+      - asgk-issue-scoping
+      - asgk-gatekeeper
+      - asgk-pr-evidence-merge-decision
+
+  docs/control/LOW_RISK_AUTONOMOUS_MERGE_POLICY.md:
+    affected_skills:
+      - asgk-gatekeeper
+      - asgk-pr-evidence-merge-decision
+
+  docs/control/MERGE_DECISION_RECORD.md:
+    affected_skills:
+      - asgk-pr-evidence-merge-decision
+      - asgk-gatekeeper
+
+  docs/control/TASK_PACKET_FORMAT.md:
+    affected_skills:
+      - asgk-issue-scoping
+
+  docs/control/TARGET_INSTALL_CHECKLIST.md:
+    affected_skills:
+      - asgk-target-install-audit
+
+  docs/INSTALL_SURFACE.md:
+    affected_skills:
+      - asgk-target-install-audit
+
+  scripts/asgk.py:
+    affected_skills:
+      - asgk-gatekeeper
+      - asgk-post-merge-closeout
+      - asgk-current-status-handoff
+      - asgk-evidence-audit
+      - asgk-target-install-audit
+      - asgk-governance-health-check
+
+  .github/PULL_REQUEST_TEMPLATE.md:
+    affected_skills:
+      - asgk-pr-evidence-merge-decision
+      - asgk-gatekeeper
+
+  .github/ISSUE_TEMPLATE/agent_task.yml:
+    affected_skills:
+      - asgk-issue-scoping
+
+  docs/handoff/CURRENT_STATUS.md:
+    affected_skills:
+      - asgk-startup
+      - asgk-current-status-handoff
+      - asgk-post-merge-closeout
+      - asgk-governance-health-check
+```
+
+### Impact Guidance
+
+```yaml
+skill_pack_impact:
+  not_required_when:
+    - wording-only changes do not alter procedure, command names, required fields, or stop conditions
+    - fixture-only changes preserve existing validator behavior
+    - product docs change without affecting ASGK workflow
+
+  review_required_when:
+    - AGENTS.md changes
+    - docs/control/** policy changes
+    - scripts/asgk.py validator behavior changes
+    - .github issue or PR templates change
+    - docs/INSTALL_SURFACE.md changes
+    - current-status policy meaning changes
+
+  update_required_when:
+    - a command used by a skill is renamed or removed
+    - required artifact fields change
+    - procedure order changes
+    - stop conditions change
+    - a canonical document path moves
+    - a skill repeats old rule text instead of pointing to the canonical source
+```
+
+When skill impact is reviewed, record it in the PR evidence or Merge Decision
+context. Use existing PR surfaces; do not create a new required PR template
+section unless a later dedicated issue explicitly chooses that path.
+
 ## Field-Test Sequence
 
 Use this sequence for the first real example:

@@ -4,7 +4,7 @@ This is the compact current-status surface for the repository. It is overwritten
 not appended. Historical detail belongs in GitHub issues, PRs, comments, and
 merge commits.
 
-Last updated: `2026-05-05T13:22:30Z`
+Last updated: `2026-05-05T13:33:14Z`
 
 ## Durable source of truth
 
@@ -25,10 +25,10 @@ license-handling tooling alignment, source-only v1.1.0 release execution,
 PR-body policy-gate default CI wiring, pull-request changed-path hygiene CI
 wiring, GitHub PR status validation, PR closing issue reference validation, and
 task-packet schema-shaped validation are complete. ASGK Skill Pack v0 source is
-available under `skills/`, with usage guidance in `docs/SKILL_PACK.md`. The
-risk-gate mechanization sequence is complete at the repository tooling level,
-with the remaining default-CI self-certification limit recorded in
-`docs/control/VALIDATION_STRATEGY.md`.
+available under `skills/`, with usage and maintenance touchpoint guidance in
+`docs/SKILL_PACK.md`. The risk-gate mechanization sequence is complete at the
+repository tooling level, with the remaining default-CI self-certification limit
+recorded in `docs/control/VALIDATION_STRATEGY.md`.
 
 Apache-2.0 is the selected v1.0 license. The selected distribution path is a
 source-only GitHub release. Tag `v1.0.0` and GitHub release `ASGK v1.0.0` were
