@@ -31,33 +31,44 @@ milestone:
 
 ```yaml
 active_milestone:
-  name: Post-v1.0 release follow-up
-  controller_issue: "none"
-  milestone_status: no_active_release_milestone
-  goal: "Keep source-only v1.0 release state durable while deferring broader distribution and runtime-specific work to future human-gated issues."
-  reason: "ASGK v1.0.0 source-only GitHub release is complete; no package, installer, adapter, or external distribution lane is active."
-  deliverables: []
+  name: Post-v1.x stewardship and public-readiness decision
+  controller_issue: "#132"
+  milestone_status: public_readiness_decision_pending
+  goal: "Keep the v1.0.0 source-only release state durable, clarify v1.x adoption surfaces, and preserve human gates for public visibility, broader distribution, package/installer work, and runtime-specific adapters."
+  reason: "ASGK v1.0.0 source-only GitHub release is complete. Follow-up docs have clarified post-merge-safe status policy, product entry, and source-only adoption; the remaining open gate is whether to make the existing repository public."
+  deliverables:
+    - "public-readiness decision remains tracked through issue #132"
+    - "v1.x product-entry and source-adoption docs remain aligned with source-only release state"
+    - "future release/version decisions start from new durable GitHub issues"
   non_goals:
+    - repository visibility change without explicit human approval
     - package publication
     - runtime-specific adapters
     - installer scaffold or target repository writes
+    - v1.1 or later release execution without a new release issue
     - new dependencies unless explicitly human-gated
   acceptance:
     - completed v1.0.0 release state remains recorded in GitHub release, tag, issue #130, and closeout docs
+    - post-v1 product-entry follow-ups remain recorded in merged PRs
+    - public visibility decision remains human-gated through #132 or a successor issue
     - future v1.x or v2.0 work starts only from a new durable GitHub issue
   risks:
     - follow-up work may accidentally expand v1.0 source-only scope
     - v2.0 runtime adapter expectations may be confused with v1.0 readiness
+    - source-only adoption wording may be mistaken for package or installer availability
+    - public visibility may expose full repository history, issues, PRs, releases, and action logs
   rollback_plan:
     - use #130 rollback or revoke plan for any release metadata or tag correction
     - convert any unclear release gate into a separate issue
     - keep source repository state as the fallback release surface
   human_gates:
+    - repository visibility change
     - package publication
     - external distribution beyond source-only GitHub release
     - runtime-specific adapter or installer work
   phase_exit_criteria:
-    - no_active_post_release_follow_up_required
+    - public_visibility_decision_recorded_or_deferred
+    - no_active_post_v1_product_entry_follow_up_required
 ```
 
 ## Completed Recent Milestones / Gates
@@ -94,4 +105,32 @@ completed_recent:
   source_only_v1_0_release_execution:
     result: "Issue #130 created tag v1.0.0 and GitHub release ASGK v1.0.0 at target commit 7d2e364c4c53d1296c7ce1c2d241291837d54c61 after final doctor validation and explicit human approval."
     release_url: https://github.com/stereosurfer/agent-safe-dev-governance-kit/releases/tag/v1.0.0
+  post_merge_safe_current_status:
+    result: "Issue #135 / PR #136 made CURRENT_STATUS.md post-merge-safe by default, added the post_merge_safe PR field, and added a local current-status-impact check for self-staling status updates."
+  product_entry_docs:
+    result: "Issue #137 / PR #138 rewrote README.md and docs/QUICKSTART.md as v1.x product/adoption entry documents, moving lineage later and removing stale early-roadmap next steps."
+  source_only_adoption_surface:
+    result: "Issue #139 / PR #140 clarified docs/INSTALL_SURFACE.md and docs/DOCUMENT_REGISTRY.md for v1.x source-only adoption, Apache-2.0 / LICENSE handling, and non-installer/non-runtime boundaries."
+```
+
+## Likely Next Directions
+
+```yaml
+likely_next_directions:
+  public_visibility_decision:
+    durable_source: "#132 or successor human-gated issue"
+    status: human_gated
+    note: "Changing the existing repository to public exposes the full git history, issues, PRs, releases, and GitHub Actions logs."
+  v1_1_candidate:
+    durable_source: "new release-planning issue only if a human requests it"
+    status: not_started
+    possible_scope:
+      - post-merge-safe current-status policy and checker
+      - README / Quickstart product-entry refresh
+      - source-only adoption and license-handling clarification
+    non_goal: "Do not move tags or rewrite v1.0.0."
+  v2_runtime_adapters:
+    durable_source: "future v2.0 adapter/profile issues"
+    status: deferred
+    note: "Runtime-specific profiles remain optional optimization layers, not v1.x default governance."
 ```
