@@ -1,14 +1,14 @@
 # V1 Release Preparation Plan
 
-Status: active planning document.
+Status: completed planning and release-execution record.
 
 This document plans ASGK v1.0 release preparation after v1.1 stabilization,
 Vertical Governance Completion, and the first real-world field test have
 completed.
 
-It is a planning document only. It records the approved v1.0 license and
-source-only release path, but it does not tag a release, publish a package,
-create a GitHub release, or start release execution.
+It began as a planning document only. It records the approved v1.0 license,
+source-only release path, and the later human-gated source-only GitHub release
+execution completed under issue #130.
 
 ## Scope
 
@@ -72,8 +72,8 @@ release_preparation_gates:
   tag_release_process:
     required: true
     human_gate: true
-    status: not_started
-    output: "documented process for release tag and GitHub release, but no tag created here"
+    status: completed_by_130
+    output: "v1.0.0 tag and source-only GitHub release created after explicit human approval"
   package_distribution_boundary:
     required: true
     human_gate: true
@@ -87,8 +87,8 @@ release_preparation_gates:
   release_execution_issue:
     required: true
     human_gate: true
-    status: not_created
-    output: "separate issue if release execution is approved"
+    status: completed_by_130
+    output: "issue #130 approved and executed source-only GitHub release v1.0.0"
 ```
 
 ## License Decision
@@ -99,9 +99,9 @@ license_decision:
   approved_by: human_operator
   selected_license: Apache-2.0
   license_file: LICENSE
-  license_file_status: created_with_spdx_identifier_and_official_license_url
+  license_file_status: full_apache_2_0_text
   official_license_url: https://www.apache.org/licenses/LICENSE-2.0
-  note: "The top-level LICENSE file uses the SPDX identifier and official Apache License 2.0 URL. If full-text license auto-detection is required, add the complete standard Apache-2.0 text in a later bounded issue."
+  note: "The top-level LICENSE file contains the complete Apache License 2.0 text."
 ```
 
 ## Distribution Path Decision
@@ -231,6 +231,30 @@ release_execution_boundary:
     - rollback or revoke plan
 ```
 
+## Release Execution Result
+
+```yaml
+release_execution_result:
+  issue: "#130"
+  status: completed
+  target_commit: "7d2e364c4c53d1296c7ce1c2d241291837d54c61"
+  tag_name: v1.0.0
+  release_title: "ASGK v1.0.0"
+  release_url: https://github.com/stereosurfer/agent-safe-dev-governance-kit/releases/tag/v1.0.0
+  release_type: source_only_github_release
+  validation:
+    command: python3 scripts/asgk.py doctor
+    result: passed
+  completed_at: "2026-05-05T05:12:52Z"
+  not_performed:
+    - package publication
+    - runtime-specific adapter work
+    - installer scaffold
+    - dependency changes
+    - schema or workflow changes
+    - external distribution beyond GitHub source release
+```
+
 ## Acceptance Criteria For This Planning Stage
 
 ```yaml
@@ -238,6 +262,6 @@ acceptance:
   - Apache-2.0 license decision is recorded
   - LICENSE exists
   - source-only GitHub release path is recorded
-  - release execution remains blocked until a separate issue exists
+  - release execution completed only after separate issue approval
   - python3 scripts/asgk.py doctor passes
 ```

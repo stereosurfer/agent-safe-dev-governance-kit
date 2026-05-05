@@ -31,44 +31,33 @@ milestone:
 
 ```yaml
 active_milestone:
-  name: Source-only v1.0 release execution
-  controller_issue: "pending"
-  milestone_status: pending_issue
-  goal: "Open a separate human-gated issue to execute ASGK v1.0 as a source-only GitHub release."
-  reason: "Apache-2.0 and source-only GitHub release path are selected; release tag and GitHub release still require explicit human-gated execution."
-  deliverables:
-    - final target commit confirmation
-    - release execution checklist
-    - rollback or revoke plan
-    - decision whether to create release tag and GitHub release
-    - release notes for source-only GitHub release
+  name: Post-v1.0 release follow-up
+  controller_issue: "none"
+  milestone_status: no_active_release_milestone
+  goal: "Keep source-only v1.0 release state durable while deferring broader distribution and runtime-specific work to future human-gated issues."
+  reason: "ASGK v1.0.0 source-only GitHub release is complete; no package, installer, adapter, or external distribution lane is active."
+  deliverables: []
   non_goals:
     - package publication
     - runtime-specific adapters
     - installer scaffold or target repository writes
     - new dependencies unless explicitly human-gated
   acceptance:
-    - release-execution issue exists
-    - Apache-2.0 license decision is recorded
-    - source-only distribution path is recorded
-    - `python3 scripts/asgk.py doctor` passes before execution is considered
+    - completed v1.0.0 release state remains recorded in GitHub release, tag, issue #130, and closeout docs
+    - future v1.x or v2.0 work starts only from a new durable GitHub issue
   risks:
-    - release decision may accidentally execute release actions before final approval
-    - GitHub license auto-detection may require full Apache-2.0 license text in a later issue
+    - follow-up work may accidentally expand v1.0 source-only scope
     - v2.0 runtime adapter expectations may be confused with v1.0 readiness
   rollback_plan:
-    - do not tag or create GitHub release until explicit release issue approval
+    - use #130 rollback or revoke plan for any release metadata or tag correction
     - convert any unclear release gate into a separate issue
     - keep source repository state as the fallback release surface
   human_gates:
-    - release tagging
-    - GitHub release creation
     - package publication
     - external distribution beyond source-only GitHub release
+    - runtime-specific adapter or installer work
   phase_exit_criteria:
-    - source_only_release_execution_approved_or_deferred
-    - target_commit_confirmed
-    - release_execution_issue_completed_or_split
+    - no_active_post_release_follow_up_required
 ```
 
 ## Completed Recent Milestones / Gates
@@ -102,4 +91,7 @@ completed_recent:
     result: "Issue #120 records that no v1.0 core blocker is currently known and that release execution may be proposed only through a later separate human-gated issue."
   license_and_distribution_path:
     result: "Issue #124 records Apache-2.0 as the approved v1.0 license and source-only GitHub release as the selected distribution path."
+  source_only_v1_0_release_execution:
+    result: "Issue #130 created tag v1.0.0 and GitHub release ASGK v1.0.0 at target commit 7d2e364c4c53d1296c7ce1c2d241291837d54c61 after final doctor validation and explicit human approval."
+    release_url: https://github.com/stereosurfer/agent-safe-dev-governance-kit/releases/tag/v1.0.0
 ```
