@@ -20,12 +20,18 @@ agent runtime, or enabling runtime-specific adapters.
 related_controls:
   target_install_checklist: docs/control/TARGET_INSTALL_CHECKLIST.md
   target_install_validation_plan: docs/control/TARGET_INSTALL_VALIDATION_PLAN.md
+  skill_pack: docs/SKILL_PACK.md
 ```
 
 Use `docs/control/TARGET_INSTALL_CHECKLIST.md` to decide whether a target
 repository adoption is structurally ready. Use
 `docs/control/TARGET_INSTALL_VALIDATION_PLAN.md` as the future mechanical
 validator specification.
+
+For repositories that already adopted ASGK, use
+`skills/asgk-upgrade-audit/SKILL.md` before copying newer ASGK files. Upgrade
+audit is audit-and-plan by default: it distinguishes reusable ASGK surfaces from
+target-owned state and drafts a bounded upgrade issue or PR plan.
 
 ## Core Rule
 
@@ -56,6 +62,36 @@ be copied as target-project authority.
 
 Do not infer package, installer, runtime, cloud, MCP, or agent-adapter behavior
 from the source-only release.
+
+## Existing Adoption Upgrades
+
+Existing ASGK-adopted repositories should not reinstall the kit or blindly copy
+new source files over target-owned state.
+
+```yaml
+existing_adoption_upgrade_rule:
+  use_skill: skills/asgk-upgrade-audit/SKILL.md
+  default_mode: audit_and_plan
+  safe_goal: "Produce a bounded upgrade issue or PR plan."
+  must_not_overwrite:
+    - docs/handoff/CURRENT_STATUS.md
+    - docs/DOCUMENT_MAP.md
+    - docs/DOCUMENT_REGISTRY.md
+    - docs/bootstrap/00_project_brief.md
+    - docs/bootstrap/01_physical_boundaries.md
+    - docs/bootstrap/02_storage_roots.md
+    - docs/bootstrap/03_tech_stack.md
+    - target repository LICENSE without explicit license decision
+  split_issue_required_when:
+    - validator behavior changes
+    - workflow or CI changes
+    - schema or contract changes
+    - release, public visibility, package publication, or runtime adapter behavior changes
+```
+
+Use upgrade audit to classify the target repository as recent ASGK, older ASGK
+without skills, customized ASGK, partial ASGK, or non-ASGK before proposing
+changes.
 
 ## License Handling
 
