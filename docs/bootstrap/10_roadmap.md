@@ -31,13 +31,14 @@ milestone:
 
 ```yaml
 active_milestone:
-  name: Post-v1.x stewardship and public-readiness decision
-  controller_issue: "#132"
-  milestone_status: public_readiness_decision_pending
-  goal: "Keep the v1.0.0 source-only release state durable, clarify v1.x adoption surfaces, and preserve human gates for public visibility, broader distribution, package/installer work, and runtime-specific adapters."
-  reason: "ASGK v1.0.0 source-only GitHub release is complete. Follow-up docs have clarified post-merge-safe status policy, product entry, and source-only adoption; the remaining open gate is whether to make the existing repository public."
+  name: v1.2 source-only release preparation
+  controller_issue: "new human-gated release execution issue required"
+  milestone_status: release_entry_alignment_in_progress
+  goal: "Prepare a source-only v1.2.0 release candidate that includes risk-gate mechanization, PR closing-reference validation, and ASGK Skill Pack v0 while preserving human gates for release execution and repository visibility."
+  reason: "ASGK v1.1.0 is released. Current main includes completed validation-tooling and skill-pack work that should be reflected in product-entry docs before a separate v1.2.0 release execution issue."
   deliverables:
-    - "public-readiness decision remains tracked through issue #132"
+    - "README and Quickstart describe ASGK Skill Pack v0"
+    - "roadmap and current status identify v1.2.0 release execution as the next human-gated step"
     - "v1.x product-entry and source-adoption docs remain aligned with source-only release state"
     - "future release/version decisions start from new durable GitHub issues"
   non_goals:
@@ -45,11 +46,11 @@ active_milestone:
     - package publication
     - runtime-specific adapters
     - installer scaffold or target repository writes
-    - v1.1 or later release execution without a new release issue
+    - v1.2 release execution without a new release issue
     - new dependencies unless explicitly human-gated
   acceptance:
-    - completed v1.0.0 release state remains recorded in GitHub release, tag, issue #130, and closeout docs
-    - post-v1 product-entry follow-ups remain recorded in merged PRs
+    - completed v1.1.0 release state remains recorded in GitHub release, tag, issue #145, and closeout docs
+    - v1.2 candidate scope remains recorded in merged PRs and release-entry docs
     - public visibility decision remains human-gated through #132 or a successor issue
     - future v1.x or v2.0 work starts only from a new durable GitHub issue
   risks:
@@ -111,6 +112,13 @@ completed_recent:
     result: "Issue #137 / PR #138 rewrote README.md and docs/QUICKSTART.md as v1.x product/adoption entry documents, moving lineage later and removing stale early-roadmap next steps."
   source_only_adoption_surface:
     result: "Issue #139 / PR #140 clarified docs/INSTALL_SURFACE.md and docs/DOCUMENT_REGISTRY.md for v1.x source-only adoption, Apache-2.0 / LICENSE handling, and non-installer/non-runtime boundaries."
+  source_only_v1_1_release_execution:
+    result: "Issue #145 created tag v1.1.0 and GitHub release ASGK v1.1.0 at target commit 2bcf59dee754d8223b715ff904eca709aa5d53a5 after final doctor validation and explicit human approval."
+    release_url: https://github.com/stereosurfer/agent-safe-dev-governance-kit/releases/tag/v1.1.0
+  risk_gate_mechanization:
+    result: "Issues #150, #152, #155, #157, and #161 added PR-body policy-gate CI wiring, changed-path hygiene CI wiring, PR status validation, task-packet schema-shaped validation, and GitHub closing issue reference validation."
+  skill_pack_v0:
+    result: "Issues #163 and #165 added source-distributed ASGK Skill Pack v0 plus maintenance touchpoint guidance without adding a new skill-compliance checker."
 ```
 
 ## Likely Next Directions
@@ -121,14 +129,15 @@ likely_next_directions:
     durable_source: "#132 or successor human-gated issue"
     status: human_gated
     note: "Changing the existing repository to public exposes the full git history, issues, PRs, releases, and GitHub Actions logs."
-  v1_1_candidate:
+  v1_2_candidate:
     durable_source: "new release-planning issue only if a human requests it"
     status: not_started
     possible_scope:
-      - post-merge-safe current-status policy and checker
-      - README / Quickstart product-entry refresh
-      - source-only adoption and license-handling clarification
-    non_goal: "Do not move tags or rewrite v1.0.0."
+      - risk-gate mechanization
+      - PR closing issue reference validation
+      - ASGK Skill Pack v0 source and maintenance touchpoints
+      - README / Quickstart product-entry refresh for Skill Pack usage
+    non_goal: "Do not move existing tags or rewrite v1.0.0/v1.1.0 release history."
   v2_runtime_adapters:
     durable_source: "future v2.0 adapter/profile issues"
     status: deferred

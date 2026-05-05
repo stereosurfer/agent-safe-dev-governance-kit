@@ -48,6 +48,8 @@ Optional but useful:
 ```text
 - gh CLI for GitHub operations;
 - an AI coding agent for implementation;
+- ASGK Skill Pack support in the agent client, or repository-reference access
+  to skills/*;
 - a human reviewer for human-gated or protected-surface work.
 ```
 
@@ -75,6 +77,24 @@ For an AI agent starting work in this repository:
 
 Do not read the whole repository by default. Use the smallest context set that
 can safely answer the current issue or PR.
+
+## Optional Skill Pack
+
+ASGK ships source-distributed skills under `skills/`. They are reusable
+procedures, not a new authority layer.
+
+Use them in one of two modes:
+
+```text
+client-installed mode
+  = copy selected skills/* directories into the agent client's skill location
+
+repository-reference mode
+  = keep skills/* in the repo and read only the specific SKILL.md needed now
+```
+
+For the full list, usage timing, and maintenance touchpoints, see
+`docs/SKILL_PACK.md`.
 
 ## Validate The Kit
 
