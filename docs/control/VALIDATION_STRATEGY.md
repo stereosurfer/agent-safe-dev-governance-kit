@@ -46,6 +46,11 @@ validation_layers:
     current_status: implemented_in_default_pull_request_ci
     purpose: read-only fail-closed PR-body policy gate check without low-risk inference
 
+  work_unit_check:
+    command: python3 scripts/asgk.py work-unit-check --issue <number> --git-base origin/main --git-head WORKTREE
+    current_status: implemented_live_and_fixture_modes
+    purpose: fail closed when the selected issue/PR is stale, wrong-type, missing allowed_paths, or local changed paths exceed allowed_paths
+
   task_packet_schema_check:
     command: python3 scripts/asgk.py task-packet-check --file <task_packet>
     current_status: implemented_dependency_free_json_and_canonical_yaml_shape
@@ -490,6 +495,30 @@ future_cli_mapping:
       - run the same PR-status validator from a captured or fixture JSON payload
       - support deterministic positive and negative tests without network access
       - fail closed when fixture metadata contains only non-closing issue references
+
+  asgk work-unit-check --issue <number> --git-base <base> --git-head <head>:
+    current_behavior:
+      - fetch the issue through GitHub REST using gh api
+      - fail if the issue is closed or is actually a pull request
+      - parse allowed_paths from the issue body task fields
+      - compare local git diff changed paths against allowed_paths
+      - support WORKTREE as a git head alias for uncommitted and untracked local files
+      - run changed-path hygiene on the same changed paths
+      - never infer low-risk status
+
+  asgk work-unit-check --pr <number> --paths-file changed-paths.txt:
+    current_behavior:
+      - fetch the pull request through GitHub REST using gh api
+      - fail if the PR is closed or already merged
+      - parse allowed_paths from the PR body when PR follow-up work is the active work unit
+      - compare the supplied changed-path list against allowed_paths
+      - never treat a merged PR as authority for new writes
+
+  asgk work-unit-check --json-file work_unit.json --paths-file changed-paths.txt:
+    current_behavior:
+      - run the same work-unit validator from fixture or captured JSON
+      - support deterministic positive and negative tests without network access
+      - fail closed for merged PR fixtures and outside-allowed-path fixtures
 
   asgk task-packet-check --file task_packet.yaml:
     current_behavior:

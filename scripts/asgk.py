@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 import argparse
+import fnmatch
 import json
 import re
 import subprocess
@@ -169,6 +170,16 @@ TARGET_INSTALL_NEGATIVE_FIXTURES = [
 ]
 RELEASE_STATE_NEGATIVE_FIXTURES = [
     "examples/negative/release_state/README.stale-v1-2-candidate.md",
+]
+WORK_UNIT_NEGATIVE_FIXTURES = [
+    (
+        "examples/negative/work_unit.merged-pr.json",
+        "examples/work_unit.changed-paths.valid.txt",
+    ),
+    (
+        "examples/work_unit.valid-issue.json",
+        "examples/negative/work_unit.changed-paths.outside-allowed.txt",
+    ),
 ]
 TARGET_INSTALL_LICENSE_NOTICE_PATHS = [
     "LICENSE",
@@ -361,8 +372,281 @@ def read_changed_paths(path: str | Path) -> set[str]:
     }
 
 
+def normalize_repo_path(path: str) -> str:
+    cleaned = path.strip().replace("\\", "/")
+    while cleaned.startswith("./"):
+        cleaned = cleaned[2:]
+    return cleaned
+
+
 def same_repo_path(left: str, right: str) -> bool:
-    return left.strip().lstrip("./") == right.strip().lstrip("./")
+    return normalize_repo_path(left) == normalize_repo_path(right)
+
+
+def load_git_changed_paths(git_base: str, git_head: str) -> list[str]:
+    if git_head.upper() in {"WORKTREE", "WT"}:
+        diff_result = subprocess.run(
+            ["git", "diff", "--name-only", git_base],
+            cwd=ROOT,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+        )
+        if diff_result.returncode != 0:
+            raise RuntimeError(diff_result.stdout.strip() or "git diff failed")
+        untracked_result = subprocess.run(
+            ["git", "ls-files", "--others", "--exclude-standard"],
+            cwd=ROOT,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+        )
+        if untracked_result.returncode != 0:
+            raise RuntimeError(untracked_result.stdout.strip() or "git ls-files failed")
+        paths = {
+            normalize_repo_path(line)
+            for output in (diff_result.stdout, untracked_result.stdout)
+            for line in output.splitlines()
+            if normalize_repo_path(line)
+        }
+        return sorted(paths)
+
+    result = subprocess.run(
+        ["git", "diff", "--name-only", git_base, git_head],
+        cwd=ROOT,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+    )
+    if result.returncode != 0:
+        raise RuntimeError(result.stdout.strip() or "git diff failed")
+    return [
+        normalize_repo_path(line)
+        for line in result.stdout.splitlines()
+        if normalize_repo_path(line)
+    ]
+
+
+def read_changed_path_list(path: str | Path) -> list[str]:
+    return [
+        normalize_repo_path(line)
+        for line in read_text(path).splitlines()
+        if normalize_repo_path(line) and not normalize_repo_path(line).startswith("#")
+    ]
+
+
+def git_remote_repo_slug() -> str:
+    result = subprocess.run(
+        ["git", "remote", "get-url", "origin"],
+        cwd=ROOT,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+    )
+    if result.returncode != 0:
+        raise RuntimeError(result.stdout.strip() or "git remote get-url origin failed")
+    remote = result.stdout.strip()
+    match = re.search(r"github\.com[:/](?P<owner>[^/]+)/(?P<repo>[^/.]+)(?:\.git)?$", remote)
+    if not match:
+        raise RuntimeError(f"cannot infer GitHub repo from origin remote: {remote}")
+    return f"{match.group('owner')}/{match.group('repo')}"
+
+
+def load_live_work_unit(kind: str, number: str) -> dict[str, object]:
+    repo = git_remote_repo_slug()
+    endpoint = (
+        f"repos/{repo}/issues/{number}"
+        if kind == "issue"
+        else f"repos/{repo}/pulls/{number}"
+    )
+    result = subprocess.run(
+        ["gh", "api", endpoint],
+        cwd=ROOT,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+    )
+    if result.returncode != 0:
+        raise RuntimeError(result.stdout.strip() or f"gh api {endpoint} failed")
+    payload = json.loads(result.stdout)
+    if not isinstance(payload, dict):
+        raise RuntimeError("GitHub work-unit payload must be a JSON object")
+    payload["_asgk_requested_kind"] = kind
+    return payload
+
+
+def load_work_unit_payload(args: argparse.Namespace) -> dict[str, object]:
+    sources = [bool(args.issue), bool(args.pr), bool(args.json_file)]
+    if sum(sources) != 1:
+        raise ValueError("provide exactly one of --issue, --pr, or --json-file")
+    if args.json_file:
+        payload = json.loads(read_text(args.json_file))
+        if not isinstance(payload, dict):
+            raise ValueError("work-unit JSON fixture must be an object")
+        return payload
+    if args.issue:
+        return load_live_work_unit("issue", str(args.issue).lstrip("#"))
+    return load_live_work_unit("pr", str(args.pr).lstrip("#"))
+
+
+def work_unit_kind(payload: dict[str, object]) -> str:
+    explicit = str(payload.get("kind") or payload.get("_asgk_requested_kind") or "").lower()
+    if explicit in {"issue", "pr"}:
+        return explicit
+    if "pull_request" in payload or "merged" in payload or "mergeable" in payload:
+        return "pr"
+    return "issue"
+
+
+def path_matches_allowed(path: str, allowed_path: str) -> bool:
+    path = normalize_repo_path(path)
+    allowed = normalize_repo_path(allowed_path).strip('"').strip("'")
+    if not allowed or allowed in {"none", "none_for_source_only_release_execution"}:
+        return False
+    if allowed.endswith("/**"):
+        return path.startswith(allowed[:-3].rstrip("/") + "/")
+    if allowed.endswith("/"):
+        return path.startswith(allowed)
+    if any(char in allowed for char in "*?[]"):
+        return fnmatch.fnmatchcase(path, allowed)
+    return path == allowed
+
+
+def extract_allowed_paths(body: str) -> list[str]:
+    packet = parse_simple_task_packet_yaml(body)
+    allowed = packet.get("allowed_paths")
+    if isinstance(allowed, list):
+        return [
+            normalize_repo_path(str(item).strip().strip('"').strip("'"))
+            for item in allowed
+            if str(item).strip().strip('"').strip("'")
+        ]
+    if isinstance(allowed, str) and allowed.strip():
+        return [normalize_repo_path(allowed.strip().strip('"').strip("'"))]
+    return []
+
+
+def check_work_unit_payload(
+    payload: dict[str, object],
+    changed_paths: list[str],
+) -> tuple[str, list[dict[str, object]], list[str]]:
+    findings: list[dict[str, object]] = []
+    kind = work_unit_kind(payload)
+    number = payload.get("number")
+    state = str(payload.get("state") or "").lower()
+    body = str(payload.get("body") or "")
+
+    def add(field: str, reason: str, fix: str) -> None:
+        findings.append({
+            "severity": "FAIL",
+            "field": field,
+            "reason": reason,
+            "recommended_fix": fix,
+        })
+
+    if kind == "issue":
+        if "pull_request" in payload:
+            add(
+                "kind",
+                f"Work unit #{number or 'unknown'} is a pull request, not an issue.",
+                "Use --pr for PR follow-up work or select an open issue with allowed_paths.",
+            )
+        if state != "open":
+            add(
+                "state",
+                f"Issue state is not open: {state or 'missing'}.",
+                "Select an open issue or create a new durable issue before changing files.",
+            )
+    elif kind == "pr":
+        merged = payload.get("merged")
+        if state not in {"open"} or merged is True:
+            add(
+                "state",
+                f"PR state is not open or is already merged: state={state or 'missing'}, merged={merged}.",
+                "Use only an open PR that still needs follow-up fixes, or create a new issue.",
+            )
+    else:
+        add("kind", f"Unknown work-unit kind: {kind}", "Provide an issue or PR payload.")
+
+    if has_see_chat(body):
+        add(
+            "body",
+            "Work-unit body contains chat-only authority phrase: see chat.",
+            "Move scope, acceptance, and handoff authority into the issue, PR, or repo docs.",
+        )
+
+    allowed_paths = extract_allowed_paths(body)
+    if not allowed_paths:
+        add(
+            "allowed_paths",
+            "Work-unit body does not include material allowed_paths.",
+            "Add explicit allowed_paths to the GitHub issue, PR, or task packet.",
+        )
+
+    normalized_changed_paths = [normalize_repo_path(path) for path in changed_paths if normalize_repo_path(path)]
+    if not normalized_changed_paths:
+        add(
+            "changed_paths",
+            "No changed paths were provided or detected.",
+            "Run this check with --paths-file or --git-base/--git-head after creating a bounded diff.",
+        )
+
+    unauthorized = [
+        path for path in normalized_changed_paths
+        if allowed_paths and not any(path_matches_allowed(path, allowed) for allowed in allowed_paths)
+    ]
+    for path in unauthorized:
+        add(
+            "changed_paths",
+            f"Changed path is outside allowed_paths: {path}",
+            "Remove the change, update the durable issue before writing, or create a separate issue.",
+        )
+
+    hygiene = run_hygiene_capture(normalized_changed_paths)
+    if hygiene.returncode != 0:
+        add(
+            "changed_paths",
+            "Changed-path hygiene failed for the supplied paths.",
+            "Remove protected/runtime/private-source-like paths or keep the work human-gated.",
+        )
+
+    return ("fail" if findings else "pass"), findings, allowed_paths
+
+
+def print_work_unit_result(
+    payload: dict[str, object],
+    result: str,
+    findings: list[dict[str, object]],
+    allowed_paths: list[str],
+    changed_paths: list[str],
+    *,
+    as_json: bool,
+) -> int:
+    output = {
+        "result": result,
+        "low_risk_inferred": False,
+        "work_unit": {
+            "kind": work_unit_kind(payload),
+            "number": payload.get("number"),
+            "state": payload.get("state"),
+            "url": payload.get("html_url") or payload.get("url"),
+        },
+        "allowed_paths": allowed_paths,
+        "changed_paths": changed_paths,
+        "findings": findings,
+    }
+    if as_json:
+        print(json.dumps(output, indent=2, sort_keys=True))
+    elif findings:
+        for finding in findings:
+            print(
+                f"{finding['severity']}: {finding['field']} - "
+                f"{finding['reason']} Fix: {finding['recommended_fix']}"
+            )
+        print("Work-unit check result: fail. No low-risk status was inferred.")
+    else:
+        print("Work-unit check passed. No low-risk status was inferred.")
+    return 1 if findings else 0
 
 
 def field_block_lines(text: str, field: str) -> list[str] | None:
@@ -1141,6 +1425,15 @@ def cmd_negative(args: argparse.Namespace) -> int:
             ]
             for fixture in RELEASE_STATE_NEGATIVE_FIXTURES
         ])
+    if args.case == "work-unit":
+        return run_expected_failures([
+            [
+                "python3", "scripts/asgk.py", "work-unit-check",
+                "--json-file", fixture,
+                "--paths-file", paths_file,
+            ]
+            for fixture, paths_file in WORK_UNIT_NEGATIVE_FIXTURES
+        ])
     if args.case == "all":
         changed = cmd_negative(argparse.Namespace(case="changed-paths"))
         textual = cmd_negative(argparse.Namespace(case="textual"))
@@ -1148,7 +1441,8 @@ def cmd_negative(args: argparse.Namespace) -> int:
         pr_status = cmd_negative(argparse.Namespace(case="pr-status"))
         target_install = cmd_negative(argparse.Namespace(case="target-install"))
         release_state = cmd_negative(argparse.Namespace(case="release-state"))
-        return 1 if changed or textual or policy_gate or pr_status or target_install or release_state else 0
+        work_unit = cmd_negative(argparse.Namespace(case="work-unit"))
+        return 1 if changed or textual or policy_gate or pr_status or target_install or release_state or work_unit else 0
     print(f"FAIL: unsupported negative case group: {args.case}")
     return 1
 
@@ -1213,6 +1507,35 @@ def cmd_check_pr(args: argparse.Namespace) -> int:
 
     result, findings = check_pr_status_payload(payload)
     return print_pr_status_result(payload, result, findings, as_json=args.json)
+
+
+def cmd_work_unit_check(args: argparse.Namespace) -> int:
+    using_paths_file = bool(args.paths_file)
+    using_git_range = bool(args.git_base or args.git_head)
+    if using_paths_file == using_git_range:
+        return print_failures(["provide exactly one of --paths-file or --git-base/--git-head"])
+    if using_git_range and not (args.git_base and args.git_head):
+        return print_failures(["--git-base and --git-head must be provided together"])
+
+    try:
+        payload = load_work_unit_payload(args)
+        changed_paths = (
+            read_changed_path_list(args.paths_file)
+            if args.paths_file
+            else load_git_changed_paths(args.git_base, args.git_head)
+        )
+    except (RuntimeError, ValueError, json.JSONDecodeError) as exc:
+        return print_failures([str(exc)])
+
+    result, findings, allowed_paths = check_work_unit_payload(payload, changed_paths)
+    return print_work_unit_result(
+        payload,
+        result,
+        findings,
+        allowed_paths,
+        changed_paths,
+        as_json=args.json,
+    )
 
 
 def cmd_status_check(args: argparse.Namespace) -> int:
@@ -1503,7 +1826,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.set_defaults(func=cmd_hygiene)
 
     p = sub.add_parser("negative", help="Run opt-in negative checks.")
-    p.add_argument("case", nargs="?", default="changed-paths", choices=["changed-paths", "textual", "policy-gate", "pr-status", "target-install", "release-state", "all"])
+    p.add_argument("case", nargs="?", default="changed-paths", choices=["changed-paths", "textual", "policy-gate", "pr-status", "target-install", "release-state", "work-unit", "all"])
     p.set_defaults(func=cmd_negative)
 
     p = sub.add_parser("policy-gate", help="Run PR-body policy gate checks.")
@@ -1517,6 +1840,16 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--json-file", help="Fixture or captured gh pr view JSON payload.")
     p.add_argument("--json", action="store_true", help="Emit machine-readable JSON output.")
     p.set_defaults(func=cmd_check_pr)
+
+    p = sub.add_parser("work-unit-check", help="Check live work-unit authority against changed paths.")
+    p.add_argument("--issue", help="GitHub issue number for live gh REST lookup.")
+    p.add_argument("--pr", help="GitHub pull request number for live gh REST lookup.")
+    p.add_argument("--json-file", help="Fixture or captured issue/PR JSON payload.")
+    p.add_argument("--paths-file", help="Newline-delimited changed-path list.")
+    p.add_argument("--git-base", help="Base revision for git diff --name-only.")
+    p.add_argument("--git-head", help="Head revision for git diff --name-only.")
+    p.add_argument("--json", action="store_true", help="Emit machine-readable JSON output.")
+    p.set_defaults(func=cmd_work_unit_check)
 
     p = sub.add_parser("status-check", help="Check docs/handoff/CURRENT_STATUS.md for compactness and stale markers.")
     p.add_argument("--file", default="docs/handoff/CURRENT_STATUS.md")

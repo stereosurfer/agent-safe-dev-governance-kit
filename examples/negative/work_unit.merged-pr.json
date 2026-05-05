@@ -1,0 +1,8 @@
+{
+  "kind": "pr",
+  "number": 151,
+  "state": "closed",
+  "merged": true,
+  "html_url": "https://github.com/stereosurfer/agent-safe-dev-governance-kit/pull/151",
+  "body": "## Required Task Fields\n\n```yaml\nlane: validation_tooling\nintelligence_level: advanced\ndurable_source_of_truth: \"Merged PR #151\"\nobjective: \"Bad fixture: merged PR must not authorize new writes.\"\nallowed_paths:\n  - scripts/asgk.py\nexpected_output:\n  - none\nplan:\n  - should fail\nchecklist:\n  - should fail\nacceptance_sheet:\n  - should fail\nnon_goals:\n  - new work\nstop_conditions:\n  - merged PR\nrollback_expectations:\n  - none\n```\n"
+}
