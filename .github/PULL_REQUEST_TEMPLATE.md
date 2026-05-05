@@ -46,6 +46,7 @@ current_status_impact:
   status: updated | not_applicable | deferred
   reason:
   current_status_updated_in_this_pr: true | false
+  post_merge_safe: true | false | not_applicable
   follow_up_issue: none | "#<number>"
 ```
 
