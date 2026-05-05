@@ -27,9 +27,9 @@ v1.0 readiness does not require runtime-specific adapters, full YAML parsing, Sa
 | CLI entrypoint | ready as minimal wrapper | required |
 | Parser robustness | sufficient for v1 core | required |
 | Runtime-specific adapters | deferred | v2.0 |
-| Product packaging | source-only release path selected | release preparation |
+| Product packaging | source-only GitHub release completed | source-only v1.0 complete |
 | Real-world field test | completed | required before release preparation |
-| Final readiness review | ready to propose release execution | required before release execution |
+| Final readiness review | completed before release execution | satisfied |
 | License | Apache-2.0 selected | required before public release |
 
 ## V1.0 Readiness Dimensions
@@ -329,21 +329,16 @@ Current assessment:
 
 ```yaml
 final_v1_readiness_review:
-  status: ready_to_propose_release_execution
+  status: completed_before_release_execution
   blocker: false
   reviewed_by_issue: "#120"
-  result: "No v1.0 core blocker is currently recorded. Release execution may be proposed only in a later separate human-gated issue."
+  result: "No v1.0 core blocker was recorded before release execution. Issue #130 later executed the source-only GitHub release after explicit human approval."
   remaining_human_gates:
-    - license selection
-    - release tag creation
-    - GitHub release creation
     - package publication
     - external distribution
-  not_authorized_by_this_review:
-    - creating a tag
-    - creating a GitHub release
+  remaining_not_authorized_by_this_review_or_release:
     - publishing a package
-    - starting release execution
+    - external distribution beyond source-only GitHub release
 ```
 
 ### 11. License And Distribution Path
@@ -357,23 +352,24 @@ license_and_distribution_path:
   issue: "#124"
   selected_license: Apache-2.0
   license_file: LICENSE
-  license_file_status: created_with_spdx_identifier_and_official_license_url
+  license_file_status: full_apache_2_0_text
   selected_distribution_path: source_only_github_release
   remaining_human_gates:
-    - release tag creation
-    - GitHub release creation
     - package publication
     - external distribution beyond source-only GitHub release
-  note: "Full Apache-2.0 standard text may be added later if GitHub license auto-detection or downstream packaging requires it."
+  note: "Source-only GitHub release v1.0.0 was executed under issue #130."
 ```
 
 ## Release Preparation Sequence Gate
 
-The generic governance core and the required v1.1 sequence gates are satisfied enough to execute a source-only v1.0 release only through a later separate issue. Release execution is not started by this audit.
+The generic governance core and the required v1.1 sequence gates were satisfied
+enough to execute a source-only v1.0 release only through a later separate issue.
+Issue #130 completed that source-only release execution after explicit human
+approval.
 
 ```yaml
 release_preparation_gate:
-  status: ready_to_open_source_only_release_execution_issue
+  status: source_only_release_executed_by_130
   required_before_release_execution:
     - review docs/control/V1_1_STABILIZATION_PLAN.md
     - complete Vertical Governance Completion at thin-router layer
@@ -391,6 +387,7 @@ release_preparation_gate:
     current_status_closeout: "#118 / PR #119"
     final_readiness_review: "#120 / PR #121"
     license_and_distribution_path: "#124"
+    release_execution: "#130"
 ```
 
 ## V1.0 Blockers
@@ -414,7 +411,9 @@ completed_sequence_gates:
   - license_and_distribution_path
 ```
 
-This distinction matters: the core is not being released by this audit. The audit only records that the next appropriate gate is a separate human-gated source-only release execution issue.
+This distinction matters: the audit did not itself release the core. The later
+human-gated release-execution issue #130 created the source-only v1.0.0 GitHub
+release.
 
 ## V1.1 Stabilization Work
 
@@ -473,9 +472,13 @@ v2_0_deferred:
 ```yaml
 readiness_decision:
   version_target: v1.0
-  current_recommendation: open_source_only_release_execution_issue_after_human_review
-  reason: Apache-2.0 and source-only GitHub release path are selected; no v1.0 core blocker is currently recorded; release execution must still happen only through a later separate human-gated issue.
-  required_next_step: create a separate human-gated source-only release execution issue covering target commit, final checks, tag/GitHub release decision, release notes, and rollback/revoke plan.
+  current_recommendation: source_only_release_completed
+  reason: Apache-2.0 and source-only GitHub release path were selected; no v1.0 core blocker was recorded; issue #130 confirmed target commit, final checks, release notes, rollback/revoke plan, and explicit human approval.
+  release:
+    tag_name: v1.0.0
+    target_commit: "7d2e364c4c53d1296c7ce1c2d241291837d54c61"
+    url: https://github.com/stereosurfer/agent-safe-dev-governance-kit/releases/tag/v1.0.0
+  required_next_step: none_for_v1_0_release_execution
 ```
 
 ## Audit Use
