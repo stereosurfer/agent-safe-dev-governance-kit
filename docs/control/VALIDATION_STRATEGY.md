@@ -480,6 +480,7 @@ future_cli_mapping:
       - fetch PR metadata through gh pr view
       - check draft state, merge state, review decision, and status check rollup
       - run PR-body policy gate on the fetched body
+      - require the Merge Decision issue to appear in GitHub closing issue references
       - run governance hygiene on fetched changed file paths
       - report checkable gates and unresolved human-review gates
       - never infer low-risk status
@@ -488,6 +489,7 @@ future_cli_mapping:
     current_behavior:
       - run the same PR-status validator from a captured or fixture JSON payload
       - support deterministic positive and negative tests without network access
+      - fail closed when fixture metadata contains only non-closing issue references
 
   asgk task-packet-check --file task_packet.yaml:
     current_behavior:

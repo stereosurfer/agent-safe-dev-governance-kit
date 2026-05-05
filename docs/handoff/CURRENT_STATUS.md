@@ -4,7 +4,7 @@ This is the compact current-status surface for the repository. It is overwritten
 not appended. Historical detail belongs in GitHub issues, PRs, comments, and
 merge commits.
 
-Last updated: `2026-05-05T12:20:35Z`
+Last updated: `2026-05-05T12:40:53Z`
 
 ## Durable source of truth
 
@@ -23,9 +23,10 @@ post-merge-safe current-status policy, v1.x product-entry documentation,
 source-only adoption/license-handling clarification, target-install
 license-handling tooling alignment, source-only v1.1.0 release execution,
 PR-body policy-gate default CI wiring, pull-request changed-path hygiene CI
-wiring, GitHub PR status validation, and task-packet schema-shaped validation
-are complete. The risk-gate mechanization sequence is complete at the repository
-tooling level, with the remaining default-CI self-certification limit recorded in
+wiring, GitHub PR status validation, PR closing issue reference validation, and
+task-packet schema-shaped validation are complete. The risk-gate mechanization
+sequence is complete at the repository tooling level, with the remaining
+default-CI self-certification limit recorded in
 `docs/control/VALIDATION_STRATEGY.md`.
 
 Apache-2.0 is the selected v1.0 license. The selected distribution path is a
@@ -64,8 +65,9 @@ Pull-request CI also runs the PR-body policy gate from the GitHub event payload
 and changed-path hygiene from the checked-out git diff. Policy-gate negative
 fixtures also run in default CI. Target-install negative fixtures remain opt-in
 through `python3 scripts/asgk.py negative target-install`.
-PR-level status can be checked with `python3 scripts/asgk.py check-pr --pr
-<number>` after GitHub Actions have reported.
+PR-level status, including GitHub closing issue references, can be checked with
+`python3 scripts/asgk.py check-pr --pr <number>` after GitHub Actions have
+reported.
 Task packets can be checked as JSON, canonical YAML-like packets, or negative
 fixtures with `python3 scripts/asgk.py task-packet-check --file <path>`.
 
