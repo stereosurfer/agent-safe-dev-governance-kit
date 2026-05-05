@@ -4,7 +4,7 @@ This is the compact current-status surface for the repository. It is overwritten
 not appended. Historical detail belongs in GitHub issues, PRs, comments, and
 merge commits.
 
-Last updated: `2026-05-05T05:12:52Z`
+Last updated: `2026-05-05T06:33:24Z`
 
 ## Durable source of truth
 
@@ -26,16 +26,17 @@ source-only GitHub release. Tag `v1.0.0` and GitHub release `ASGK v1.0.0` were
 created from target commit `7d2e364c4c53d1296c7ce1c2d241291837d54c61` under
 issue #130 after explicit human approval and final validation.
 
-Package publication, runtime-specific adapters, installer scaffold work, and
-external distribution beyond source-only GitHub release remain human-gated.
+Package publication, runtime-specific adapters, installer scaffold work,
+external distribution beyond source-only GitHub release, and repository
+visibility changes remain human-gated.
 
 ## Active work
 
 ```yaml
-issue: "#130 [RELEASE] Execute source-only v1.0 release"
-pr: "#131 release: record v1.0.0 source-only release closeout"
-branch: codex/release-v1.0.0-closeout-130
-state: release_closeout_pr_open
+issue: "#132 [PUBLIC] Audit repository before making public"
+pr: none
+branch: main
+state: public_readiness_audit_report_ready
 ```
 
 ## Current validation entrypoint
@@ -59,6 +60,7 @@ remain opt-in through `python3 scripts/asgk.py negative target-install`.
 - schema breaking changes
 - new dependencies
 - package publication without explicit human-gated issue
+- repository visibility change without explicit human approval
 - automatic handoff final-judgment generation
 - installer scaffold before checker/planner and decision governance are stable
 - low-risk status by agent declaration
@@ -83,6 +85,8 @@ cache, or external preparation outputs are currently authorized.
 
 ## Next safe action
 
-Review PR #131 for the #130 release closeout documentation update. Do not start
-package publication, installer scaffold, runtime adapter, external distribution,
-or v2.0 follow-up work without a new durable GitHub issue.
+Review the #132 public-readiness audit report and its current-status PR. After
+that, decide whether to approve changing the existing repository visibility to
+public. Do not start public visibility change, package publication, installer
+scaffold, runtime adapter, external distribution, or v2.0 follow-up work without
+a new durable GitHub issue and explicit human approval.
