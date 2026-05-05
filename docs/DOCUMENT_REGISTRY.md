@@ -17,8 +17,8 @@ DOCUMENT_REGISTRY.md is repo-local.
 
 This file governs the ASGK repository only. Target repositories must create
 their own `docs/DOCUMENT_REGISTRY.md` from
-`templates/DOCUMENT_REGISTRY.template.md` when they adopt the router + registry
-split.
+`templates/DOCUMENT_REGISTRY.template.md` when they adopt the source-only
+governance scaffold.
 
 ## Relationship To DOCUMENT_MAP.md
 
@@ -69,23 +69,24 @@ roles:
 
 | Document | Role | Canonical for | Read by default | Read when | Owned by lane |
 |---|---|---|---:|---|---|
-| `README.md` | summary | project positioning, install path, operating loop overview | yes | all new sessions | `lane_07_docs_handoff` |
+| `README.md` | summary | project positioning, source-adoption path, operating loop overview | yes | all new sessions | `lane_07_docs_handoff` |
+| `LICENSE` | canonical | Apache-2.0 license for ASGK source release and copied/adapted ASGK-derived material | no | source release review, target-repo license handling, install-surface review | `lane_07_docs_handoff` |
 | `AGENTS.md` | canonical | agent startup order, source-of-truth rule, work-unit rule, stop conditions | yes | all agent sessions | `lane_00_controller` |
 | `docs/handoff/CURRENT_STATUS.md` | status | compact current repo snapshot and next safe work | yes | all new sessions, handoff recovery, handoff updates | `lane_07_docs_handoff` |
 | current GitHub issue or PR | canonical | active task objective, allowed paths, acceptance, validation, merge state | yes | every work unit | active task lane |
-| `docs/QUICKSTART.md` | summary | first-use workflow, onboarding, and target-repo install-surface orientation | no | onboarding and first repository smoke test | `lane_07_docs_handoff` |
-| `docs/INSTALL_SURFACE.md` | canonical | target-project install surface, copy/template/customize/do-not-copy boundaries | no | installing ASGK into another repository, field-test preparation, target-repo scaffold planning | `lane_07_docs_handoff` |
+| `docs/QUICKSTART.md` | summary | first-use workflow, onboarding, and target-repo source-adoption orientation | no | onboarding and first repository smoke test | `lane_07_docs_handoff` |
+| `docs/INSTALL_SURFACE.md` | canonical | target-project source-only adoption surface, license handling, copy/template/customize/do-not-copy boundaries | no | adopting ASGK into another repository, field-test preparation, target-repo scaffold planning, license-handling review | `lane_07_docs_handoff` |
 | `docs/DOCUMENT_REGISTRY.md` | canonical | complete repo-local document registry | no | canonical ownership lookup, registry repair, document-map split work | `lane_07_docs_handoff` |
 | `docs/control/DOCUMENT_MAP_POLICY.md` | canonical | document-map router/registry split, size limits, and maintenance rules | no | document-map structure changes, registry split work, target-template navigation changes | `lane_07_docs_handoff` |
 | `docs/EVOLUTION_MODEL.md` | canonical | docs-driven evolution, self-governance, self-validation maturity model | no | roadmap/evolution discussion | `lane_07_docs_handoff` |
 
-## Installation And Target Project Templates
+## Source Adoption And Target Project Templates
 
 | Document | Role | Canonical for | Read by default | Read when | Owned by lane |
 |---|---|---|---:|---|---|
-| `templates/DOCUMENT_MAP.template.md` | template | target-project document-map router starter structure | no | installing ASGK into another repository, target-repo document-map creation | `lane_07_docs_handoff` |
-| `templates/DOCUMENT_REGISTRY.template.md` | template | target-project document-registry starter structure | no | installing ASGK into another repository, target-repo document-registry creation | `lane_07_docs_handoff` |
-| `templates/agent_rules.template.yaml` | template | target-project clean assignment/worker rules starter structure | no | installing ASGK into another repository, target-repo agent-rules creation | `lane_07_docs_handoff` |
+| `templates/DOCUMENT_MAP.template.md` | template | target-project document-map router starter structure | no | adopting ASGK into another repository, target-repo document-map creation | `lane_07_docs_handoff` |
+| `templates/DOCUMENT_REGISTRY.template.md` | template | target-project document-registry starter structure | no | adopting ASGK into another repository, target-repo document-registry creation | `lane_07_docs_handoff` |
+| `templates/agent_rules.template.yaml` | template | target-project clean assignment/worker rules starter structure | no | adopting ASGK into another repository, target-repo agent-rules creation | `lane_07_docs_handoff` |
 | `templates/decision_packet.template.yaml` | template | reusable vertical-governance decision packet starting point | no | creating a decision packet for a major decision point | `lane_07_docs_handoff` |
 
 Template ownership rule:
