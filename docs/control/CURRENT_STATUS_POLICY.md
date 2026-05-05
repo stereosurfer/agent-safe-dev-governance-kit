@@ -155,6 +155,37 @@ status_refresh_decision:
 If status refresh is required but cannot be made accurate inside the same PR,
 open a separate bounded status-refresh issue immediately after closeout.
 
+## Release Execution Closeout Rule
+
+Release execution changes the repo-level recovery surface whenever a tag,
+GitHub release, release title, release URL, release target commit, or release
+rollback/revoke state changes.
+
+```yaml
+release_execution_status_closeout:
+  required_when:
+    - git tag is created, deleted, moved, or revoked
+    - GitHub release is created, edited, deleted, or revoked
+    - release target commit changes
+    - release notes or rollback/revoke plan materially change
+  same_pr_allowed_when:
+    - release execution work includes authorized file changes
+    - CURRENT_STATUS.md can be made post-merge-safe before merge
+  metadata_only_release_path:
+    rule: "Do not edit files in the release execution work unit."
+    required_follow_up:
+      - create an immediate bounded status-refresh issue
+      - open a status-only PR for docs/handoff/CURRENT_STATUS.md
+      - record the follow-up issue or PR in the release execution closeout comment
+  release_not_fully_closed_until:
+    - CURRENT_STATUS.md is accurate for the post-release repo state
+    - or a bounded status-refresh issue exists and is linked from the release issue closeout
+```
+
+A metadata-only release issue may close after tag/release creation only if its
+closeout comment records the immediate status-refresh follow-up. Otherwise, the
+release has been executed but the repo handoff surface is not fully closed out.
+
 ## PR Status Freshness Gate
 
 Every PR must explicitly classify its `CURRENT_STATUS.md` impact in the PR body.
