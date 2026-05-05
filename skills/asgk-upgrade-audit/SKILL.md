@@ -231,6 +231,4 @@ refresh issue first if stale status would mislead the next session.
 
 ## Exit Artifact
 
-A concise audit report plus a bounded GitHub issue draft. Do not perform file
-updates unless the target repository already has a durable issue authorizing the
-specific allowed paths.
+A concise audit report plus a bounded GitHub issue draft, including `safe_update_candidates`, `manual_merge_required`, and `never_overwrite`. Do not perform file updates unless the target repository already has a durable issue authorizing the specific allowed paths.
