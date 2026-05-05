@@ -4,7 +4,7 @@ This is the compact current-status surface for the repository. It is overwritten
 not appended. Historical detail belongs in GitHub issues, PRs, comments, and
 merge commits.
 
-Last updated: `2026-05-05T11:45:38Z`
+Last updated: `2026-05-05T12:06:42Z`
 
 ## Durable source of truth
 
@@ -24,7 +24,8 @@ source-only adoption/license-handling clarification, target-install
 license-handling tooling alignment, source-only v1.1.0 release execution, and
 PR-body policy-gate default CI wiring, and pull-request changed-path hygiene CI
 wiring are complete. A GitHub PR status validator command is available for live
-or fixture-based PR status checks.
+or fixture-based PR status checks. Task-packet schema-shaped validation is wired
+into `python3 scripts/asgk.py task-packet-check`.
 
 Apache-2.0 is the selected v1.0 license. The selected distribution path is a
 source-only GitHub release. Tag `v1.0.0` and GitHub release `ASGK v1.0.0` were
@@ -64,6 +65,8 @@ fixtures also run in default CI. Target-install negative fixtures remain opt-in
 through `python3 scripts/asgk.py negative target-install`.
 PR-level status can be checked with `python3 scripts/asgk.py check-pr --pr
 <number>` after GitHub Actions have reported.
+Task packets can be checked as JSON, canonical YAML-like packets, or negative
+fixtures with `python3 scripts/asgk.py task-packet-check --file <path>`.
 
 ## Closed gates
 

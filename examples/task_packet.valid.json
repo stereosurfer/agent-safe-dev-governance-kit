@@ -1,0 +1,44 @@
+{
+  "task_id": "TASK-JSON-001",
+  "lane": "lane_07_docs_handoff",
+  "intelligence_level": "advanced",
+  "intelligence_level_reason": "Validation tooling changes require careful schema judgment.",
+  "durable_source_of_truth": "GitHub issue #157",
+  "objective": "Validate a JSON task packet fixture.",
+  "product_context": "ASGK uses task packets for durable agent-executable work.",
+  "current_repository_context": "Validation tooling is present.",
+  "files_to_inspect_first": [
+    "AGENTS.md",
+    "docs/control/TASK_PACKET_FORMAT.md"
+  ],
+  "allowed_paths": [
+    "scripts/asgk.py",
+    "examples/task_packet.valid.json"
+  ],
+  "expected_changes": [
+    "Add deterministic task-packet schema coverage."
+  ],
+  "expected_output": "Task packet schema validation passes.",
+  "non_goals": [
+    "No dependency changes."
+  ],
+  "constraints": [
+    "No chat-only authority."
+  ],
+  "plan": [
+    "Run task-packet-check."
+  ],
+  "checklist": [
+    "[ ] Validator passes."
+  ],
+  "acceptance_sheet": [
+    "[ ] Fixture is accepted."
+  ],
+  "validation_commands": [
+    "python3 scripts/asgk.py task-packet-check --file examples/task_packet.valid.json"
+  ],
+  "stop_conditions": [
+    "schema_validation_fails"
+  ],
+  "rollback_expectations": "Remove this fixture and validator changes."
+}

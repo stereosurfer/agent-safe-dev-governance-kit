@@ -46,6 +46,11 @@ validation_layers:
     current_status: implemented_in_default_pull_request_ci
     purpose: read-only fail-closed PR-body policy gate check without low-risk inference
 
+  task_packet_schema_check:
+    command: python3 scripts/asgk.py task-packet-check --file <task_packet>
+    current_status: implemented_dependency_free_json_and_canonical_yaml_shape
+    purpose: validate canonical task-packet required fields, scalar/list shape, material values, intelligence level, and chat-only authority
+
   github_actions:
     workflow: .github/workflows/bootstrap-validation.yml
     current_status: implemented
@@ -56,7 +61,7 @@ validation_layers:
     purpose: prove that known-bad inputs are blocked
 
   cli_wrapper:
-    current_status: implemented_policy_gate_and_pr_status_wrappers
+    current_status: implemented_policy_gate_pr_status_and_task_packet_schema_wrappers
     purpose: expose validation through stable local commands
 ```
 
@@ -305,7 +310,20 @@ negative_validation_targets:
   see_chat_source_of_truth:
     bad_input: "durable_source_of_truth: see chat"
     expected: blocked
-    owner: validate_bootstrap_or_task_packet_validator
+    owner: task_packet_schema_check
+    fixture: examples/negative/task_packet.see-chat.yaml
+
+  missing_task_packet_stop_conditions:
+    bad_input: "task packet missing stop_conditions"
+    expected: blocked
+    owner: task_packet_schema_check
+    fixture: examples/negative/task_packet.no-stop.yaml
+
+  empty_task_packet_required_list:
+    bad_input: "task packet allowed_paths exists but has no material item"
+    expected: blocked
+    owner: task_packet_schema_check
+    fixture: examples/negative/task_packet.empty-list.yaml
 
   missing_merge_decision:
     bad_input: "PR body without Merge Decision section"
@@ -470,6 +488,15 @@ future_cli_mapping:
     current_behavior:
       - run the same PR-status validator from a captured or fixture JSON payload
       - support deterministic positive and negative tests without network access
+
+  asgk task-packet-check --file task_packet.yaml:
+    current_behavior:
+      - validate JSON task packets, canonical YAML-like task packets, and negative fixtures with bad_input
+      - require every field from docs/control/TASK_PACKET_FORMAT.md
+      - require scalar/list shape and material list items
+      - block see chat authority
+      - validate known intelligence level values
+      - avoid external YAML dependencies
 ```
 
 CLI work must not add new dependencies in its first version unless a separate
@@ -524,7 +551,6 @@ run validator -> read compact failure output -> inspect only files named by fail
 ```yaml
 known_gaps:
   - PR status validator is not wired into default CI because a running workflow cannot certify its own final status
-  - no task-packet schema validator is wired as a full JSON/YAML validator
 ```
 
 These gaps are not blockers for docs-only governance work. They should become

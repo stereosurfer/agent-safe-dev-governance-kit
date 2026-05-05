@@ -21,7 +21,49 @@ MERGE_DECISION_REQUIRED_FIELDS = [
     "runtime_artifact_boundary", "safety_review", "human_gates_checked",
     "result", "reason",
 ]
-TASK_PACKET_REQUIRED_FIELDS = ["durable_source_of_truth", "allowed_paths", "stop_conditions"]
+TASK_PACKET_REQUIRED_FIELDS = [
+    "task_id",
+    "lane",
+    "intelligence_level",
+    "intelligence_level_reason",
+    "durable_source_of_truth",
+    "objective",
+    "product_context",
+    "current_repository_context",
+    "files_to_inspect_first",
+    "allowed_paths",
+    "expected_changes",
+    "expected_output",
+    "non_goals",
+    "constraints",
+    "plan",
+    "checklist",
+    "acceptance_sheet",
+    "validation_commands",
+    "stop_conditions",
+    "rollback_expectations",
+]
+TASK_PACKET_LIST_FIELDS = [
+    "files_to_inspect_first",
+    "allowed_paths",
+    "expected_changes",
+    "non_goals",
+    "constraints",
+    "plan",
+    "checklist",
+    "acceptance_sheet",
+    "validation_commands",
+    "stop_conditions",
+]
+TASK_PACKET_SCALAR_FIELDS = [
+    field for field in TASK_PACKET_REQUIRED_FIELDS if field not in TASK_PACKET_LIST_FIELDS
+]
+TASK_PACKET_ALLOWED_INTELLIGENCE_LEVELS = {
+    "fast_basic",
+    "standard",
+    "advanced",
+    "frontier",
+}
 HANDOFF_REQUIRED_FIELDS = [
     "active_issue", "active_pr", "branch", "objective", "current_state",
     "completed", "remaining", "allowed_paths", "modified_files",
@@ -66,6 +108,7 @@ EXPECTED_FAILURE_CHECKS = [
     ["python3", "scripts/asgk.py", "pr-body-check", "--file", "examples/negative/pr_body.see-chat.md"],
     ["python3", "scripts/asgk.py", "task-packet-check", "--file", "examples/negative/task_packet.see-chat.yaml"],
     ["python3", "scripts/asgk.py", "task-packet-check", "--file", "examples/negative/task_packet.no-stop.yaml"],
+    ["python3", "scripts/asgk.py", "task-packet-check", "--file", "examples/negative/task_packet.empty-list.yaml"],
     ["python3", "scripts/asgk.py", "handoff-check", "--file", "examples/negative/handoff.missing-active-issue.yaml"],
     ["python3", "scripts/asgk.py", "handoff-check", "--file", "examples/negative/handoff.empty-next-safe-action.yaml"],
     ["python3", "scripts/asgk.py", "handoff-check", "--file", "examples/negative/handoff.unknown-validation-status.yaml"],
@@ -350,6 +393,118 @@ def list_field_has_material_item(text: str, field: str) -> bool:
         if item and item.group(1).strip().strip('"').strip("'"):
             return True
     return False
+
+
+def yaml_dedent(lines: list[str]) -> str:
+    material = [line for line in lines if line.strip()]
+    if not material:
+        return ""
+    min_indent = min(len(re.match(r"^[ \t]*", line).group(0).replace("\t", "    ")) for line in material)
+    return "\n".join(line[min_indent:] if len(line) >= min_indent else line for line in lines)
+
+
+def task_packet_yaml_source(text: str) -> str:
+    bad_input = field_block_lines(text, "bad_input")
+    if bad_input is not None:
+        return yaml_dedent(bad_input)
+    task_packet = field_block_lines(text, "task_packet")
+    if task_packet is not None:
+        return yaml_dedent(task_packet)
+    return text
+
+
+def parse_simple_task_packet_yaml(text: str) -> dict[str, object]:
+    """Parse the repository's dependency-free task-packet YAML subset.
+
+    This is not a general YAML parser. It covers the canonical task-packet shape:
+    top-level scalar fields and top-level list fields. For full YAML features,
+    keep the source in JSON or add a separately approved dependency.
+    """
+
+    packet: dict[str, object] = {}
+    lines = text.splitlines()
+    index = 0
+    while index < len(lines):
+        line = lines[index]
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#"):
+            index += 1
+            continue
+        match = re.match(r"^([A-Za-z0-9_\-]+)[ \t]*:[ \t]*(.*?)\s*$", line)
+        if not match:
+            index += 1
+            continue
+        field = match.group(1)
+        value = match.group(2).strip()
+        if value:
+            packet[field] = value.strip('"').strip("'")
+            index += 1
+            continue
+
+        children: list[str] = []
+        index += 1
+        while index < len(lines):
+            child = lines[index]
+            child_stripped = child.strip()
+            if child_stripped and not child.startswith((" ", "\t")) and re.match(r"^[A-Za-z0-9_\-]+[ \t]*:", child_stripped):
+                break
+            if child_stripped:
+                item = re.match(r"^[ \t]*-[ \t]*(.*?)\s*$", child)
+                if item:
+                    item_value = item.group(1).strip().strip('"').strip("'")
+                    if item_value:
+                        children.append(item_value)
+            index += 1
+        packet[field] = children
+    return packet
+
+
+def load_task_packet_payload(path: str | Path) -> tuple[dict[str, object], str]:
+    text = read_text(path)
+    if path_str := str(path):
+        if path_str.endswith(".json"):
+            payload = json.loads(text)
+            if not isinstance(payload, dict):
+                raise ValueError("task packet JSON must be an object")
+            candidate = payload.get("bad_input") or payload.get("task_packet") or payload
+            if not isinstance(candidate, dict):
+                raise ValueError("bad_input or task_packet must be an object")
+            return candidate, text
+    source = task_packet_yaml_source(text)
+    return parse_simple_task_packet_yaml(source), text
+
+
+def task_packet_schema_failures(packet: dict[str, object], source_text: str) -> list[str]:
+    failures: list[str] = []
+    for field in TASK_PACKET_REQUIRED_FIELDS:
+        if field not in packet:
+            failures.append(f"missing task packet field: {field}")
+
+    for field in TASK_PACKET_SCALAR_FIELDS:
+        if field in packet:
+            value = packet[field]
+            if not isinstance(value, str) or not value.strip():
+                failures.append(f"{field} must be a non-empty scalar")
+
+    for field in TASK_PACKET_LIST_FIELDS:
+        if field in packet:
+            value = packet[field]
+            if not isinstance(value, list):
+                failures.append(f"{field} must be a list")
+            elif not any(isinstance(item, str) and item.strip() for item in value):
+                failures.append(f"{field} must contain at least one material item")
+
+    intelligence_level = str(packet.get("intelligence_level", "")).strip().strip('"').strip("'")
+    if intelligence_level and intelligence_level not in TASK_PACKET_ALLOWED_INTELLIGENCE_LEVELS:
+        failures.append(
+            "intelligence_level must be one of: "
+            + ", ".join(sorted(TASK_PACKET_ALLOWED_INTELLIGENCE_LEVELS))
+        )
+
+    if has_see_chat(source_text):
+        failures.append("task packet contains forbidden chat-only authority phrase: see chat")
+
+    return failures
 
 
 def print_failures(failures: list[str]) -> int:
@@ -1077,17 +1232,11 @@ def cmd_pr_body_check(args: argparse.Namespace) -> int:
 
 
 def cmd_task_packet_check(args: argparse.Namespace) -> int:
-    text = read_text(args.file)
-    failures: list[str] = []
-    for field in TASK_PACKET_REQUIRED_FIELDS:
-        if not line_field_exists(text, field):
-            failures.append(f"missing task packet field: {field}")
-    if has_see_chat(text):
-        failures.append("task packet contains forbidden chat-only authority phrase: see chat")
-    durable_source = field_value(text, "durable_source_of_truth")
-    if durable_source is not None and not durable_source:
-        failures.append("durable_source_of_truth is empty")
-    return print_failures(failures)
+    try:
+        packet, source_text = load_task_packet_payload(args.file)
+    except (json.JSONDecodeError, ValueError) as exc:
+        return print_failures([f"invalid task packet format: {exc}"])
+    return print_failures(task_packet_schema_failures(packet, source_text))
 
 
 def cmd_handoff_check(args: argparse.Namespace) -> int:
