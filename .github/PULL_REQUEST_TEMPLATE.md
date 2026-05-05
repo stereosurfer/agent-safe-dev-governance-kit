@@ -46,6 +46,7 @@ action, release/public/license/milestone gates, or handoff recovery state.
 Update `docs/handoff/CURRENT_STATUS.md` only when leaving it unchanged would
 mislead the next session. If the PR updates `CURRENT_STATUS.md`, make it
 post-merge-safe; do not point active work at the PR that is about to merge.
+Use `deferred` only when a bounded follow-up path is necessary.
 
 ```yaml
 current_status_impact:
