@@ -4,7 +4,7 @@ This is the compact current-status surface for the repository. It is overwritten
 not appended. Historical detail belongs in GitHub issues, PRs, comments, and
 merge commits.
 
-Last updated: `2026-05-04T23:40:00Z`
+Last updated: `2026-05-05T04:45:00Z`
 
 ## Durable source of truth
 
@@ -17,20 +17,21 @@ Last updated: `2026-05-04T23:40:00Z`
 
 ASGK v1.x stabilization, Vertical Governance Completion, the first real-world
 field test, post-field-test readiness audit, planning-only v1.0 release
-preparation, and final v1.0 readiness review are complete.
+preparation, final v1.0 readiness review, license/distribution decision, and full
+Apache-2.0 license text replacement are complete.
 
-The active work records the human-approved v1.0 license and distribution path:
-Apache-2.0 with a source-only GitHub release path. Release execution has not
-started. Tag creation, GitHub release creation, package publication, and external
-distribution beyond source-only GitHub release remain human-gated.
+Apache-2.0 is the selected v1.0 license. The selected distribution path is a
+source-only GitHub release. Release execution has not started. Tag creation,
+GitHub release creation, package publication, and external distribution beyond
+source-only GitHub release remain human-gated.
 
 ## Active work
 
 ```yaml
-issue: "#124 [RELEASE] Decide v1.0 license and release execution path"
+issue: none
 pr: none
-branch: release/license-and-path-124
-state: in_progress
+branch: none
+state: no_active_work
 ```
 
 ## Current validation entrypoint
@@ -62,10 +63,10 @@ remain opt-in through `python3 scripts/asgk.py negative target-install`.
 ## Last completed
 
 ```yaml
-issue: "#120 [RELEASE] Final v1.0 readiness review"
-pr: "#121 docs: perform final v1 readiness review"
-merge_commit: "f3b1a6cf909b431230443fdf80462555fa456eb8"
-note: "Final v1.0 readiness review records ready_to_propose_release_execution, but release execution remains blocked until a separate human-gated issue exists."
+issue: "#126 [RELEASE] Replace LICENSE with full Apache-2.0 text"
+pr: "#127 release: replace license with full Apache 2.0 text"
+merge_commit: "b7db87c473f7c5785343c27a70cce18b536d21c0"
+note: "LICENSE now contains complete Apache-2.0 text. Release execution remains blocked until a separate human-gated issue exists."
 ```
 
 ## Runtime artifact status
@@ -75,7 +76,7 @@ cache, or external preparation outputs are currently authorized.
 
 ## Next safe action
 
-Complete the license and release-path PR for issue #124. Keep the work limited to
-recording Apache-2.0, source-only GitHub release path, and related planning/status
-updates. Do not tag, publish, package, create a GitHub release, or start release
-execution in this work unit.
+Open a separate human-gated source-only v1.0 release execution issue. It should
+confirm the target commit, final checks, tag/GitHub release decision, release
+notes, and rollback or revoke plan. Do not tag, publish, package, create a GitHub
+release, or start release execution without explicit human approval in that issue.
