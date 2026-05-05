@@ -148,6 +148,7 @@ tag_release_process:
     - check git status and target commit
     - create tag only in release-execution issue
     - create GitHub release only if explicitly approved
+    - refresh docs/handoff/CURRENT_STATUS.md in the same authorized PR or create an immediate status-only closeout issue/PR
   forbidden_here:
     - git tag
     - gh release create
@@ -229,6 +230,15 @@ release_execution_boundary:
     - explicit human approval
     - final readiness evidence
     - rollback or revoke plan
+    - post-release CURRENT_STATUS closeout path
+  status_closeout_requires:
+    - "If release execution is metadata-only, create an immediate bounded status-refresh issue/PR."
+    - "If release execution authorizes file changes, update docs/handoff/CURRENT_STATUS.md only when the result is post-merge-safe."
+    - "Record the status-refresh issue, PR, or completed status update in the release execution closeout comment."
+  release_execution_not_fully_closed_until:
+    - "tag and GitHub release are complete"
+    - "final validation evidence is recorded"
+    - "CURRENT_STATUS.md is post-release accurate or a bounded status-refresh issue exists"
 ```
 
 ## Release Execution Result
@@ -253,6 +263,9 @@ release_execution_result:
     - dependency changes
     - schema or workflow changes
     - external distribution beyond GitHub source release
+  status_closeout:
+    v1_0_followup: "Issue #130 was followed by a separate current-status closeout path."
+    rule_after_v1_1: "Future release execution must record a same-PR status update or immediate status-refresh issue/PR before claiming full closeout."
 ```
 
 ## Acceptance Criteria For This Planning Stage
