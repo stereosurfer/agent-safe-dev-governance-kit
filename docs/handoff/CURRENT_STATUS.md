@@ -4,7 +4,7 @@ This is the compact current-status surface for the repository. It is overwritten
 not appended. Historical detail belongs in GitHub issues, PRs, comments, and
 merge commits.
 
-Last updated: `2026-05-04T23:10:00Z`
+Last updated: `2026-05-04T23:40:00Z`
 
 ## Durable source of truth
 
@@ -19,17 +19,18 @@ ASGK v1.x stabilization, Vertical Governance Completion, the first real-world
 field test, post-field-test readiness audit, planning-only v1.0 release
 preparation, and final v1.0 readiness review are complete.
 
-The final readiness review records that no v1.0 core blocker is currently known
-and that release execution may be proposed only through a later separate
-human-gated issue. Release execution has not started.
+The active work records the human-approved v1.0 license and distribution path:
+Apache-2.0 with a source-only GitHub release path. Release execution has not
+started. Tag creation, GitHub release creation, package publication, and external
+distribution beyond source-only GitHub release remain human-gated.
 
 ## Active work
 
 ```yaml
-issue: none
+issue: "#124 [RELEASE] Decide v1.0 license and release execution path"
 pr: none
-branch: none
-state: no_active_work
+branch: release/license-and-path-124
+state: in_progress
 ```
 
 ## Current validation entrypoint
@@ -74,7 +75,7 @@ cache, or external preparation outputs are currently authorized.
 
 ## Next safe action
 
-Open a separate human-gated release decision issue. The likely next issue is
-`[RELEASE] Decide v1.0 license and release execution path`. Do not tag, publish,
-package, choose a license, create a GitHub release, or start release execution
-without explicit human approval in that issue.
+Complete the license and release-path PR for issue #124. Keep the work limited to
+recording Apache-2.0, source-only GitHub release path, and related planning/status
+updates. Do not tag, publish, package, create a GitHub release, or start release
+execution in this work unit.
