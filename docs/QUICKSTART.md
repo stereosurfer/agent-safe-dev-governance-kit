@@ -188,7 +188,29 @@ main
 If a change needs paths outside the issue's allowed paths, stop and update the
 durable issue or create a new issue. Do not silently expand scope.
 
-### 3. Change Only Allowed Paths
+### 3. Run Work-Unit Preflight
+
+Before committing or opening a PR, check that the selected live work unit still
+authorizes the local diff:
+
+```bash
+python3 scripts/asgk.py work-unit-check \
+  --issue <issue-number> \
+  --git-base origin/main \
+  --git-head WORKTREE
+```
+
+For existing PR follow-up work, use `--pr <pr-number>`. Use
+`--git-head WORKTREE` before committing so uncommitted and untracked local files
+are checked. Use `--git-head HEAD` after committing. For deterministic fixtures
+or captured metadata, use `--json-file work_unit.json` with
+`--paths-file changed-paths.txt`.
+
+This is a preflight and pre-PR guard. It blocks stale, wrong-type, closed,
+merged, or outside-allowed-path work when run, but it does not intercept every
+editor or agent filesystem write before the write occurs.
+
+### 4. Change Only Allowed Paths
 
 Use the issue as the boundary. If the issue says docs-only, do not change
 scripts, schemas, workflows, dependencies, or protected paths.
@@ -208,7 +230,7 @@ runtime artifacts or private source material
 When a protected path is required, record the trigger in the PR and keep the
 merge human-gated.
 
-### 4. Decide Current Status Impact
+### 5. Decide Current Status Impact
 
 Most small PRs should not update `docs/handoff/CURRENT_STATUS.md`.
 
@@ -240,7 +262,7 @@ python3 scripts/asgk.py current-status-impact-check \
 
 This check is local-only. It does not query GitHub.
 
-### 5. Validate
+### 6. Validate
 
 For governance or scaffold changes:
 
@@ -252,13 +274,14 @@ Useful focused checks:
 
 ```bash
 python3 scripts/asgk.py negative all
+python3 scripts/asgk.py work-unit-check --issue <issue-number> --git-base origin/main --git-head WORKTREE
 python3 scripts/policy_gate_check.py --pr-body pr.md
 git diff --check
 ```
 
 For project-specific code changes, also run the tests required by the issue.
 
-### 6. Open The PR
+### 7. Open The PR
 
 Every PR should include:
 
