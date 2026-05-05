@@ -4,6 +4,7 @@ import argparse
 import json
 import re
 import subprocess
+import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -189,6 +190,13 @@ def run_many(commands: list[list[str]]) -> int:
         print(f"FAIL: {failures} command(s) failed.")
         return 1
     return 0
+
+
+def run_policy_gate(pr_body: str | Path, *, as_json: bool = False) -> int:
+    command = ["python3", "scripts/policy_gate_check.py", "--pr-body", str(pr_body)]
+    if as_json:
+        command.append("--json")
+    return subprocess.run(command, cwd=ROOT).returncode
 
 
 def run_expected_failures(commands: list[list[str]]) -> int:
@@ -626,6 +634,37 @@ def cmd_negative(args: argparse.Namespace) -> int:
     return 1
 
 
+def cmd_policy_gate(args: argparse.Namespace) -> int:
+    if bool(args.pr_body) == bool(args.github_event):
+        return print_failures(["provide exactly one of --pr-body or --github-event"])
+
+    if args.pr_body:
+        return run_policy_gate(rel(args.pr_body), as_json=args.json)
+
+    event = json.loads(rel(args.github_event).read_text(encoding="utf-8"))
+    pull_request = event.get("pull_request")
+    if not isinstance(pull_request, dict):
+        payload = {
+            "result": "skipped",
+            "reason": "GitHub event payload does not contain a pull_request object.",
+            "low_risk_inferred": False,
+        }
+        if args.json:
+            print(json.dumps(payload, indent=2, sort_keys=True))
+        else:
+            print("Policy gate skipped: GitHub event payload has no pull_request object.")
+        return 0
+
+    body = pull_request.get("body")
+    if body is None:
+        body = ""
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        body_path = Path(tmpdir) / "pull_request_body.md"
+        body_path.write_text(str(body), encoding="utf-8")
+        return run_policy_gate(body_path, as_json=args.json)
+
+
 def cmd_status_check(args: argparse.Namespace) -> int:
     status_path = rel(args.file)
     failures: list[str] = []
@@ -909,6 +948,12 @@ def build_parser() -> argparse.ArgumentParser:
     p = sub.add_parser("negative", help="Run opt-in negative checks.")
     p.add_argument("case", nargs="?", default="changed-paths", choices=["changed-paths", "textual", "policy-gate", "target-install", "all"])
     p.set_defaults(func=cmd_negative)
+
+    p = sub.add_parser("policy-gate", help="Run PR-body policy gate checks.")
+    p.add_argument("--pr-body", help="Path to a PR body markdown file.")
+    p.add_argument("--github-event", help="Path to a GitHub Actions event payload JSON file.")
+    p.add_argument("--json", action="store_true", help="Emit machine-readable JSON output.")
+    p.set_defaults(func=cmd_policy_gate)
 
     p = sub.add_parser("status-check", help="Check docs/handoff/CURRENT_STATUS.md for compactness and stale markers.")
     p.add_argument("--file", default="docs/handoff/CURRENT_STATUS.md")

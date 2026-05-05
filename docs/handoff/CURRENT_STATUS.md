@@ -4,7 +4,7 @@ This is the compact current-status surface for the repository. It is overwritten
 not appended. Historical detail belongs in GitHub issues, PRs, comments, and
 merge commits.
 
-Last updated: `2026-05-05T07:55:00Z`
+Last updated: `2026-05-05T10:51:29Z`
 
 ## Durable source of truth
 
@@ -21,8 +21,8 @@ preparation, final v1.0 readiness review, license/distribution decision, full
 Apache-2.0 license text replacement, source-only v1.0 release execution,
 post-merge-safe current-status policy, v1.x product-entry documentation,
 source-only adoption/license-handling clarification, target-install
-license-handling tooling alignment, and source-only v1.1.0 release execution are
-complete.
+license-handling tooling alignment, source-only v1.1.0 release execution, and
+PR-body policy-gate default CI wiring are complete.
 
 Apache-2.0 is the selected v1.0 license. The selected distribution path is a
 source-only GitHub release. Tag `v1.0.0` and GitHub release `ASGK v1.0.0` were
@@ -56,9 +56,9 @@ python3 scripts/asgk.py doctor
 
 The workflow also runs the positive handoff fixture and core negative checks for
 changed paths, closeout status, PR bodies, task packets, and handoff packets.
-Policy-gate negative fixtures remain opt-in through
-`python3 scripts/asgk.py negative policy-gate`. Target-install negative fixtures
-remain opt-in through `python3 scripts/asgk.py negative target-install`.
+Pull-request CI also runs the PR-body policy gate from the GitHub event payload
+and runs policy-gate negative fixtures. Target-install negative fixtures remain
+opt-in through `python3 scripts/asgk.py negative target-install`.
 
 ## Closed gates
 

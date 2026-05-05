@@ -43,20 +43,20 @@ validation_layers:
 
   policy_gate_check:
     script: scripts/policy_gate_check.py
-    current_status: implemented_initial
+    current_status: implemented_in_default_pull_request_ci
     purpose: read-only fail-closed PR-body policy gate check without low-risk inference
 
   github_actions:
     workflow: .github/workflows/bootstrap-validation.yml
     current_status: implemented
-    purpose: run repository validation on push and pull request
+    purpose: run repository validation on push and pull request; run PR-body policy gate on pull_request events
 
   negative_validation:
-    current_status: implemented_opt_in_fixtures_and_policy_gate_command
+    current_status: implemented_with_policy_gate_fixtures_in_default_ci
     purpose: prove that known-bad inputs are blocked
 
   cli_wrapper:
-    current_status: partial_policy_gate_negative_wrapped
+    current_status: implemented_policy_gate_wrapper
     purpose: expose validation through stable local commands
 ```
 
@@ -214,6 +214,8 @@ gates are mechanically coherent.
 ```bash
 python3 scripts/policy_gate_check.py --pr-body pr_body.md
 python3 scripts/policy_gate_check.py --pr-body pr_body.md --json
+python3 scripts/asgk.py policy-gate --pr-body pr_body.md
+python3 scripts/asgk.py policy-gate --github-event "$GITHUB_EVENT_PATH"
 ```
 
 ## GitHub Actions
@@ -225,6 +227,8 @@ owns:
   - repeatable CI execution of scaffold validation
   - repeatable CI execution of bootstrap validation
   - whitespace/diff check
+  - pull_request PR-body policy gate execution from the GitHub event payload
+  - policy-gate negative fixture execution
 ```
 
 ### Does Not Own
@@ -236,6 +240,7 @@ does_not_own:
   - human approval
   - low-risk merge decision by itself
   - external system checks
+  - full live GitHub PR status validation
 ```
 
 ### Blocking Behavior
@@ -419,9 +424,17 @@ future_cli_mapping:
       - python3 scripts/governance_hygiene.py --paths-file changed-paths.txt
 
   asgk policy-gate --pr-body pr_body.md:
-    future_behavior:
+    current_behavior:
       - run scripts/policy_gate_check.py --pr-body pr_body.md
       - report whether declared PR-body gates are mechanically coherent
+      - never infer low-risk status from prose
+
+  asgk policy-gate --github-event "$GITHUB_EVENT_PATH":
+    current_behavior:
+      - read pull_request.body from the GitHub Actions event payload
+      - run scripts/policy_gate_check.py on that PR body
+      - skip non-pull_request event payloads without failing push builds
+      - never call the GitHub API
       - never infer low-risk status from prose
 
   asgk negative policy-gate:
@@ -432,7 +445,7 @@ future_cli_mapping:
       - python3 scripts/policy_gate_check.py --pr-body examples/negative/policy_gate/pr_body.human-gates-pending.md
       - python3 scripts/policy_gate_check.py --pr-body examples/negative/policy_gate/pr_body.see-chat-authority.md
     expected: all commands fail
-    default_ci: false
+    default_ci: true
 
   asgk check-pr <number>:
     future_behavior:
@@ -496,9 +509,6 @@ run validator -> read compact failure output -> inspect only files named by fail
 ```yaml
 known_gaps:
   - governance_hygiene.py does not yet fetch git diff by itself
-  - policy_gate_check.py has opt-in negative fixture coverage through scripts/asgk.py but no positive wrapper command
-  - policy_gate_check.py is not yet wired into default CI
-  - policy-gate fixtures are opt-in and not wired into default CI
   - no full GitHub PR status validator exists yet
   - no task-packet schema validator is wired as a full JSON/YAML validator
 ```
