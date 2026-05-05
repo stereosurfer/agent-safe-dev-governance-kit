@@ -600,7 +600,14 @@ def cmd_validate(_args: argparse.Namespace) -> int:
 
 
 def cmd_hygiene(args: argparse.Namespace) -> int:
-    command = ["python3", "scripts/governance_hygiene.py", "--paths-file", args.paths_file]
+    command = ["python3", "scripts/governance_hygiene.py"]
+    if args.paths_file:
+        command.extend(["--paths-file", args.paths_file])
+    if args.git_base or args.git_head:
+        if args.git_base:
+            command.extend(["--git-base", args.git_base])
+        if args.git_head:
+            command.extend(["--git-head", args.git_head])
     if args.expect_blocked:
         command.append("--expect-blocked")
     return run_many([command])
@@ -941,7 +948,9 @@ def build_parser() -> argparse.ArgumentParser:
     p.set_defaults(func=cmd_validate)
 
     p = sub.add_parser("hygiene", help="Run changed-path governance hygiene.")
-    p.add_argument("--paths-file", required=True)
+    p.add_argument("--paths-file")
+    p.add_argument("--git-base")
+    p.add_argument("--git-head")
     p.add_argument("--expect-blocked", action="store_true")
     p.set_defaults(func=cmd_hygiene)
 

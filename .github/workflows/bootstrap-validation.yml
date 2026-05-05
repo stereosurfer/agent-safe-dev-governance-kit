@@ -8,6 +8,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -16,6 +18,9 @@ jobs:
       - name: PR policy gate
         if: github.event_name == 'pull_request'
         run: python3 scripts/asgk.py policy-gate --github-event "$GITHUB_EVENT_PATH"
+      - name: PR changed-path hygiene
+        if: github.event_name == 'pull_request'
+        run: python3 scripts/asgk.py hygiene --git-base "${{ github.event.pull_request.base.sha }}" --git-head HEAD
       - name: Negative policy gate fixtures
         run: python3 scripts/asgk.py negative policy-gate
       - name: Positive handoff fixture
