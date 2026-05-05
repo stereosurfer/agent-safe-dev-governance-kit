@@ -53,6 +53,7 @@ core_skills:
   evidence_audit: skills/asgk-evidence-audit/SKILL.md
 assessment_and_transfer_skills:
   target_install_audit: skills/asgk-target-install-audit/SKILL.md
+  upgrade_audit: skills/asgk-upgrade-audit/SKILL.md
   governance_health_check: skills/asgk-governance-health-check/SKILL.md
 ```
 
@@ -78,6 +79,9 @@ when_claims_matter:
 
 when_adopting_asgk_elsewhere:
   - target_install_audit
+
+when_updating_existing_asgk_adoption:
+  - upgrade_audit
 
 weekly_or_milestone_review:
   - governance_health_check
@@ -121,17 +125,20 @@ architecture_touchpoints:
       - asgk-startup
       - asgk-issue-scoping
       - asgk-gatekeeper
+      - asgk-upgrade-audit
 
   docs/control/CURRENT_STATUS_POLICY.md:
     affected_skills:
       - asgk-current-status-handoff
       - asgk-post-merge-closeout
+      - asgk-upgrade-audit
 
   docs/control/HUMAN_GATED_OPERATIONS.md:
     affected_skills:
       - asgk-issue-scoping
       - asgk-gatekeeper
       - asgk-pr-evidence-merge-decision
+      - asgk-upgrade-audit
 
   docs/control/LOW_RISK_AUTONOMOUS_MERGE_POLICY.md:
     affected_skills:
@@ -150,10 +157,12 @@ architecture_touchpoints:
   docs/control/TARGET_INSTALL_CHECKLIST.md:
     affected_skills:
       - asgk-target-install-audit
+      - asgk-upgrade-audit
 
   docs/INSTALL_SURFACE.md:
     affected_skills:
       - asgk-target-install-audit
+      - asgk-upgrade-audit
 
   scripts/asgk.py:
     affected_skills:
@@ -162,16 +171,19 @@ architecture_touchpoints:
       - asgk-current-status-handoff
       - asgk-evidence-audit
       - asgk-target-install-audit
+      - asgk-upgrade-audit
       - asgk-governance-health-check
 
   .github/PULL_REQUEST_TEMPLATE.md:
     affected_skills:
       - asgk-pr-evidence-merge-decision
       - asgk-gatekeeper
+      - asgk-upgrade-audit
 
   .github/ISSUE_TEMPLATE/agent_task.yml:
     affected_skills:
       - asgk-issue-scoping
+      - asgk-upgrade-audit
 
   docs/handoff/CURRENT_STATUS.md:
     affected_skills:
@@ -234,4 +246,13 @@ target_install_audit
   -> adoption readiness report
   -> bounded adoption issue
   -> adoption PR plan
+```
+
+Use this sequence for existing ASGK adoption upgrades:
+
+```text
+upgrade_audit
+  -> upgrade audit report
+  -> bounded upgrade issue
+  -> manual merge or safe reusable-surface update plan
 ```
