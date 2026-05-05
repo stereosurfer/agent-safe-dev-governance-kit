@@ -110,6 +110,9 @@ POLICY_GATE_NEGATIVE_FIXTURES = [
     "examples/negative/policy_gate/pr_body.human-gates-pending.md",
     "examples/negative/policy_gate/pr_body.see-chat-authority.md",
 ]
+PR_STATUS_NEGATIVE_FIXTURES = [
+    "examples/negative/pr_status.draft-failing.json",
+]
 TARGET_INSTALL_NEGATIVE_FIXTURES = [
     "examples/negative/target_install/missing_required_files",
     "examples/negative/target_install/repo_local_readiness_surface",
@@ -197,6 +200,29 @@ def run_policy_gate(pr_body: str | Path, *, as_json: bool = False) -> int:
     if as_json:
         command.append("--json")
     return subprocess.run(command, cwd=ROOT).returncode
+
+
+def run_policy_gate_capture(pr_body: str | Path) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        ["python3", "scripts/policy_gate_check.py", "--pr-body", str(pr_body)],
+        cwd=ROOT,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+    )
+
+
+def run_hygiene_capture(paths: list[str]) -> subprocess.CompletedProcess[str]:
+    with tempfile.TemporaryDirectory() as tmpdir:
+        paths_file = Path(tmpdir) / "changed_paths.txt"
+        paths_file.write_text("\n".join(paths) + ("\n" if paths else ""), encoding="utf-8")
+        return subprocess.run(
+            ["python3", "scripts/governance_hygiene.py", "--paths-file", str(paths_file)],
+            cwd=ROOT,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+        )
 
 
 def run_expected_failures(commands: list[list[str]]) -> int:
@@ -333,6 +359,171 @@ def print_failures(failures: list[str]) -> int:
         return 1
     print("Check passed.")
     return 0
+
+
+def add_pr_status_finding(
+    findings: list[dict[str, str]],
+    field: str,
+    reason: str,
+    recommended_fix: str,
+) -> None:
+    findings.append(
+        {
+            "severity": "FAIL",
+            "field": field,
+            "reason": reason,
+            "recommended_fix": recommended_fix,
+        }
+    )
+
+
+def check_status_rollup(status_rollup: object, findings: list[dict[str, str]]) -> None:
+    if not isinstance(status_rollup, list) or not status_rollup:
+        add_pr_status_finding(
+            findings,
+            "statusCheckRollup",
+            "No status checks were reported for this PR.",
+            "Wait for GitHub Actions or investigate missing required checks.",
+        )
+        return
+
+    passing_conclusions = {"SUCCESS", "SKIPPED", "NEUTRAL"}
+    for item in status_rollup:
+        if not isinstance(item, dict):
+            add_pr_status_finding(
+                findings,
+                "statusCheckRollup",
+                "Status check entry is not an object.",
+                "Fetch PR status with gh pr view --json statusCheckRollup.",
+            )
+            continue
+        name = str(item.get("name") or item.get("context") or "unnamed_check")
+        status = str(item.get("status") or "").upper()
+        conclusion = str(item.get("conclusion") or "").upper()
+        if status and status != "COMPLETED":
+            add_pr_status_finding(
+                findings,
+                f"statusCheckRollup.{name}",
+                f"Status check is not complete: {status}.",
+                "Wait for the check to complete before merge eligibility.",
+            )
+        elif conclusion not in passing_conclusions:
+            add_pr_status_finding(
+                findings,
+                f"statusCheckRollup.{name}",
+                f"Status check conclusion is not passing: {conclusion or 'missing'}.",
+                "Fix the failing check or keep the PR merge-blocked.",
+            )
+
+
+def pr_file_paths(files: object) -> list[str]:
+    if not isinstance(files, list):
+        return []
+    paths: list[str] = []
+    for item in files:
+        if isinstance(item, str):
+            paths.append(item)
+        elif isinstance(item, dict):
+            path = item.get("path") or item.get("filename")
+            if path:
+                paths.append(str(path))
+    return paths
+
+
+def check_pr_status_payload(payload: dict[str, object]) -> tuple[str, list[dict[str, str]]]:
+    findings: list[dict[str, str]] = []
+
+    if payload.get("state") != "OPEN":
+        add_pr_status_finding(
+            findings,
+            "state",
+            f"PR state is not OPEN: {payload.get('state') or 'missing'}.",
+            "Validate only open PRs before merge eligibility.",
+        )
+
+    if payload.get("isDraft") is True:
+        add_pr_status_finding(
+            findings,
+            "isDraft",
+            "PR is still draft.",
+            "Mark the PR ready for review only after gates are complete.",
+        )
+
+    merge_state = str(payload.get("mergeStateStatus") or "").upper()
+    if merge_state != "CLEAN":
+        add_pr_status_finding(
+            findings,
+            "mergeStateStatus",
+            f"PR merge state is not CLEAN: {merge_state or 'missing'}.",
+            "Resolve merge conflicts, blocked state, or pending mergeability before merge.",
+        )
+
+    review_decision = str(payload.get("reviewDecision") or "").upper()
+    if review_decision in {"CHANGES_REQUESTED", "REVIEW_REQUIRED"}:
+        add_pr_status_finding(
+            findings,
+            "reviewDecision",
+            f"Review decision blocks merge: {review_decision}.",
+            "Resolve requested changes or required review before merge eligibility.",
+        )
+
+    check_status_rollup(payload.get("statusCheckRollup"), findings)
+
+    body = payload.get("body")
+    if body is None:
+        body = ""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        body_path = Path(tmpdir) / "pull_request_body.md"
+        body_path.write_text(str(body), encoding="utf-8")
+        policy_gate = run_policy_gate_capture(body_path)
+        if policy_gate.returncode != 0:
+            add_pr_status_finding(
+                findings,
+                "body",
+                "PR body policy gate failed.",
+                "Fix Current Status Impact, Merge Decision, source-of-truth, or PR structure fields.",
+            )
+
+    if "files" not in payload:
+        add_pr_status_finding(
+            findings,
+            "files",
+            "PR file list is missing.",
+            "Fetch PR metadata with gh pr view --json files or provide a fixture with files.",
+        )
+    else:
+        hygiene = run_hygiene_capture(pr_file_paths(payload.get("files")))
+        if hygiene.returncode != 0:
+            add_pr_status_finding(
+                findings,
+                "files",
+                "Changed-path hygiene failed.",
+                "Remove protected/runtime/private-source-like paths or keep the PR human-gated.",
+            )
+
+    return ("fail" if findings else "pass", findings)
+
+
+def print_pr_status_result(payload: dict[str, object], result: str, findings: list[dict[str, str]], *, as_json: bool) -> int:
+    output = {
+        "result": result,
+        "low_risk_inferred": False,
+        "pr": payload.get("number"),
+        "url": payload.get("url"),
+        "findings": findings,
+    }
+    if as_json:
+        print(json.dumps(output, indent=2, sort_keys=True))
+    elif findings:
+        for finding in findings:
+            print(
+                f"{finding['severity']}: {finding['field']} - "
+                f"{finding['reason']} Fix: {finding['recommended_fix']}"
+            )
+        print("PR status check result: fail. No low-risk status was inferred.")
+    else:
+        print("PR status check passed. No low-risk status was inferred.")
+    return 1 if findings else 0
 
 
 def add_target_install_finding(
@@ -626,6 +817,11 @@ def cmd_negative(args: argparse.Namespace) -> int:
             ["python3", "scripts/policy_gate_check.py", "--pr-body", fixture]
             for fixture in POLICY_GATE_NEGATIVE_FIXTURES
         ])
+    if args.case == "pr-status":
+        return run_expected_failures([
+            ["python3", "scripts/asgk.py", "check-pr", "--json-file", fixture]
+            for fixture in PR_STATUS_NEGATIVE_FIXTURES
+        ])
     if args.case == "target-install":
         return run_expected_failures([
             ["python3", "scripts/asgk.py", "target-install-check", "--repo-root", fixture]
@@ -635,8 +831,9 @@ def cmd_negative(args: argparse.Namespace) -> int:
         changed = cmd_negative(argparse.Namespace(case="changed-paths"))
         textual = cmd_negative(argparse.Namespace(case="textual"))
         policy_gate = cmd_negative(argparse.Namespace(case="policy-gate"))
+        pr_status = cmd_negative(argparse.Namespace(case="pr-status"))
         target_install = cmd_negative(argparse.Namespace(case="target-install"))
-        return 1 if changed or textual or policy_gate or target_install else 0
+        return 1 if changed or textual or policy_gate or pr_status or target_install else 0
     print(f"FAIL: unsupported negative case group: {args.case}")
     return 1
 
@@ -670,6 +867,37 @@ def cmd_policy_gate(args: argparse.Namespace) -> int:
         body_path = Path(tmpdir) / "pull_request_body.md"
         body_path.write_text(str(body), encoding="utf-8")
         return run_policy_gate(body_path, as_json=args.json)
+
+
+def cmd_check_pr(args: argparse.Namespace) -> int:
+    if bool(args.pr) == bool(args.json_file):
+        return print_failures(["provide exactly one of --pr or --json-file"])
+
+    if args.json_file:
+        payload = json.loads(rel(args.json_file).read_text(encoding="utf-8"))
+    else:
+        command = [
+            "gh", "pr", "view", str(args.pr),
+            "--json",
+            "number,title,state,isDraft,mergeStateStatus,reviewDecision,statusCheckRollup,body,files,url",
+        ]
+        result = subprocess.run(
+            command,
+            cwd=ROOT,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+        )
+        if result.returncode != 0:
+            print(result.stdout.strip() or "FAIL: gh pr view failed.")
+            return result.returncode
+        payload = json.loads(result.stdout)
+
+    if not isinstance(payload, dict):
+        return print_failures(["PR status payload must be a JSON object"])
+
+    result, findings = check_pr_status_payload(payload)
+    return print_pr_status_result(payload, result, findings, as_json=args.json)
 
 
 def cmd_status_check(args: argparse.Namespace) -> int:
@@ -955,7 +1183,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.set_defaults(func=cmd_hygiene)
 
     p = sub.add_parser("negative", help="Run opt-in negative checks.")
-    p.add_argument("case", nargs="?", default="changed-paths", choices=["changed-paths", "textual", "policy-gate", "target-install", "all"])
+    p.add_argument("case", nargs="?", default="changed-paths", choices=["changed-paths", "textual", "policy-gate", "pr-status", "target-install", "all"])
     p.set_defaults(func=cmd_negative)
 
     p = sub.add_parser("policy-gate", help="Run PR-body policy gate checks.")
@@ -963,6 +1191,12 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--github-event", help="Path to a GitHub Actions event payload JSON file.")
     p.add_argument("--json", action="store_true", help="Emit machine-readable JSON output.")
     p.set_defaults(func=cmd_policy_gate)
+
+    p = sub.add_parser("check-pr", help="Check GitHub PR status and checkable merge gates.")
+    p.add_argument("--pr", help="GitHub pull request number for live gh lookup.")
+    p.add_argument("--json-file", help="Fixture or captured gh pr view JSON payload.")
+    p.add_argument("--json", action="store_true", help="Emit machine-readable JSON output.")
+    p.set_defaults(func=cmd_check_pr)
 
     p = sub.add_parser("status-check", help="Check docs/handoff/CURRENT_STATUS.md for compactness and stale markers.")
     p.add_argument("--file", default="docs/handoff/CURRENT_STATUS.md")
