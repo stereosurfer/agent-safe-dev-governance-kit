@@ -9,6 +9,7 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 
 COPY_AS_IS = [
+    "LICENSE",
     "AGENTS.md",
     "docs/control/CONTEXT_BUDGET_POLICY.md",
     "docs/control/AGENT_CAPABILITY_MATRIX.md",
@@ -87,6 +88,13 @@ POST_INSTALL_CHECKS = [
     "Create first governance smoke-test issue.",
 ]
 
+LICENSE_HANDLING = {
+    "source_license": "LICENSE",
+    "license": "Apache-2.0",
+    "target_action": "Preserve ASGK Apache-2.0 notices for copied or adapted ASGK-derived material.",
+    "not_implied": "Copying ASGK's LICENSE does not automatically relicense the whole target repository.",
+}
+
 
 def path_status(repo_root: Path, path: str) -> str:
     return "present" if (repo_root / path).exists() else "missing"
@@ -122,6 +130,7 @@ def build_plan(repo_root: Path) -> dict[str, Any]:
         "template_then_customize": template_then_customize,
         "customize_required": customize_required,
         "do_not_copy": do_not_copy,
+        "license_handling": LICENSE_HANDLING,
         "post_install_checks": POST_INSTALL_CHECKS,
         "next_layer": "target-install-scaffold may be implemented later, but only from an explicit reviewed plan.",
     }
@@ -131,7 +140,7 @@ def print_plan_text(plan: dict[str, Any]) -> None:
     print("Target install plan (read-only)")
     print(f"repo_root: {plan['repo_root']}")
     print(f"writes_files: {plan['writes_files']}")
-    for section in ["copy_as_is", "template_then_customize", "customize_required", "do_not_copy", "post_install_checks"]:
+    for section in ["copy_as_is", "template_then_customize", "customize_required", "do_not_copy", "license_handling", "post_install_checks"]:
         print(f"\n## {section}")
         items = plan[section]
         if isinstance(items, list):
@@ -142,6 +151,9 @@ def print_plan_text(plan: dict[str, Any]) -> None:
                     print(f"- {label}: {details}")
                 else:
                     print(f"- {item}")
+        elif isinstance(items, dict):
+            for key, value in items.items():
+                print(f"- {key}: {value}")
 
 
 def main() -> int:

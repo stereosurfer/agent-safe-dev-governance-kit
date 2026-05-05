@@ -55,6 +55,7 @@ python3 scripts/asgk.py target-install-plan
 ```yaml
 validation_categories:
   required_files: blocking
+  license_handling: warning
   template_derived_files: blocking_or_warning
   customize_required_files: planned
   forbidden_repo_local_surfaces: blocking_or_warning
@@ -63,6 +64,28 @@ validation_categories:
   document_navigation_split: blocking
   current_status_freshness: planned
   validation_command_presence: warning
+```
+
+## License Handling Checks
+
+The validator warns when no visible license or notice handling surface exists.
+This is warning-only by default because target repositories may have their own
+repository-level license policy.
+
+```yaml
+license_handling_checks:
+  warn_if_missing_all:
+    - LICENSE
+    - LICENSE.md
+    - NOTICE
+    - NOTICE.md
+    - THIRD_PARTY_NOTICES.md
+    - docs/LICENSE.md
+    - docs/NOTICE.md
+  blocking_by_default: false
+  warning_reason: "No visible surface explains how ASGK Apache-2.0 notices are preserved for copied or adapted ASGK-derived material."
+  recommended_fix: "Add LICENSE/NOTICE handling or document ASGK Apache-2.0 attribution in the target repository's existing license or notice surface."
+  non_goal: "Do not require the target repository to adopt Apache-2.0 globally."
 ```
 
 ## Required-file Checks
@@ -269,6 +292,11 @@ target_install_plan:
     - path
     - reason
     - target_status
+  license_handling:
+    - source_license
+    - license
+    - target_action
+    - not_implied
   post_install_checks:
     - command_or_action
 ```

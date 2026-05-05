@@ -48,6 +48,37 @@ optional_tooling_files:
   - scripts/asgk.py
 ```
 
+## License Handling
+
+ASGK v1.x is released under Apache-2.0. A target repository that copies or
+adapts ASGK-derived files must preserve the applicable license and notice
+handling for that material.
+
+This does not mean the target repository must adopt Apache-2.0 as its global
+license. The target owner must decide and record the target repository's own
+license policy.
+
+```yaml
+license_handling_checks:
+  visible_surface:
+    examples:
+      - LICENSE
+      - LICENSE.md
+      - NOTICE
+      - NOTICE.md
+      - THIRD_PARTY_NOTICES.md
+      - docs/LICENSE.md
+      - docs/NOTICE.md
+  warning_if_missing: true
+  blocking_by_default: false
+  must_preserve:
+    - ASGK Apache-2.0 notice for copied or adapted ASGK-derived material
+    - applicable copyright notices
+    - modification notices where Apache-2.0 requires them
+  must_not_imply:
+    - copying ASGK LICENSE automatically relicenses the whole target repository
+```
+
 ## Template-derived Target Files
 
 These files must be created from target-project templates and then customized.
@@ -181,6 +212,7 @@ These surfaces require a scoped v2.0 adapter/profile issue.
 ```yaml
 target_install_acceptance:
   - required target files exist or explicitly documented as not applicable
+  - license or notice handling for ASGK-derived material is visible or explicitly documented
   - docs/DOCUMENT_MAP.md is a compact router
   - docs/DOCUMENT_REGISTRY.md is target-specific
   - agent/agent_rules.yaml uses clean target terminology

@@ -113,6 +113,15 @@ TARGET_INSTALL_NEGATIVE_FIXTURES = [
     "examples/negative/target_install/missing_required_files",
     "examples/negative/target_install/repo_local_readiness_surface",
 ]
+TARGET_INSTALL_LICENSE_NOTICE_PATHS = [
+    "LICENSE",
+    "LICENSE.md",
+    "NOTICE",
+    "NOTICE.md",
+    "THIRD_PARTY_NOTICES.md",
+    "docs/LICENSE.md",
+    "docs/NOTICE.md",
+]
 TARGET_INSTALL_REQUIRED_FILES = [
     "AGENTS.md",
     "README.md",
@@ -360,6 +369,17 @@ def target_install_findings(root: Path) -> list[dict[str, str | bool]]:
                 "Create the file from the ASGK install surface or explicitly document why it is not applicable.",
                 blocking=True,
             )
+
+    if not any(repo_path(root, path).exists() for path in TARGET_INSTALL_LICENSE_NOTICE_PATHS):
+        add_target_install_finding(
+            findings,
+            "WARN",
+            "license_handling",
+            "LICENSE",
+            "no visible license or notice handling surface found",
+            "Add LICENSE/NOTICE handling or document how ASGK Apache-2.0 notices are preserved for copied or adapted ASGK-derived material.",
+            blocking=False,
+        )
 
     document_map_path = repo_path(root, "docs/DOCUMENT_MAP.md")
     if document_map_path.exists():
