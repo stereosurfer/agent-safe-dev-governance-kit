@@ -4,7 +4,7 @@ This is the compact current-status surface for the repository. It is overwritten
 not appended. Historical detail belongs in GitHub issues, PRs, comments, and
 merge commits.
 
-Last updated: `2026-05-06T00:46:21Z`
+Last updated: `2026-05-06T12:29:13Z`
 
 ## Durable source of truth
 
@@ -26,28 +26,29 @@ PR-body policy-gate default CI wiring, pull-request changed-path hygiene CI
 wiring, GitHub PR status validation, PR closing issue reference validation, and
 task-packet schema-shaped validation are complete. ASGK Skill Pack v0 source is
 available under `skills/`, with usage and maintenance touchpoint guidance in
-`docs/SKILL_PACK.md`. Source-only v1.3.0 release execution is complete. The
-risk-gate mechanization and release-state closeout checkpoint sequence is
-complete at the repository tooling level, with the remaining default-CI
-self-certification limit recorded in `docs/control/VALIDATION_STRATEGY.md`.
-v1.3.0 is the latest completed source-only release and carries the operational
-burden-reduction theme: current-status defaults reduce unnecessary handoff
-updates, ASGK upgrade audit reduces target-upgrade guesswork, work-unit
-preflight validation reduces stale-authority checks, release-state alignment
-reduces release closeout drift, and release-prep skill guidance reduces
-pre-release sequencing mistakes.
+`docs/SKILL_PACK.md`. Source-only v1.4.0 release execution is complete. The
+risk-gate mechanization, release-state closeout checkpoint sequence, PR body
+preflight wrapper, live PR allowed-path verification, target adoption dependency
+alignment, and bootstrap workflow maintenance are complete at the repository
+tooling level, with the remaining default-CI self-certification limit recorded
+in `docs/control/VALIDATION_STRATEGY.md`. v1.4.0 is the latest completed
+source-only release and carries the governance-preflight hardening theme:
+PR body preflight reduces missing-section churn, `check-pr` allowed-path
+verification reduces wrong-scope PRs, target adoption dependency alignment
+reduces incomplete installs, workflow maintenance reduces near-term CI drift,
+and roadmap cleanup reduces stale release baselines.
 
 Apache-2.0 is the selected v1.0 license. The selected distribution path is a
 source-only GitHub release. Completed source-only releases are recorded in
 GitHub releases and release issues: `v1.0.0` / `ASGK v1.0.0` under #130,
 `v1.1.0` / `ASGK v1.1.0` under #145, `v1.2.0` / `ASGK v1.2.0` under #169, and
-`v1.3.0` / `ASGK v1.3.0` under #188.
+`v1.3.0` / `ASGK v1.3.0` under #188, and `v1.4.0` / `ASGK v1.4.0` under #194.
 
-Tag `v1.3.0` and GitHub release `ASGK v1.3.0` were created from target commit
-`afe0f3c47040fc271bdbef9ec1e6a5055e8be30d` under issue #188 after explicit
-human approval and final validation. v1.3.0 remains a source-only GitHub
-release; no package, installer, runtime adapter, dependency, schema, workflow,
-or repository visibility change was performed.
+Tag `v1.4.0` and GitHub release `ASGK v1.4.0` were created from target commit
+`ac39c4da8044560398730fb2a4d811656f79a239` under issue #194 after explicit
+human approval and final validation. v1.4.0 remains a source-only GitHub
+release; no package, installer, runtime adapter, dependency, schema, repository
+visibility change, or v2.0 work was performed.
 
 Package publication, runtime-specific adapters, installer scaffold work,
 external distribution beyond source-only GitHub release, and repository
@@ -98,14 +99,14 @@ fixtures with `python3 scripts/asgk.py task-packet-check --file <path>`.
 ## Last completed
 
 ```yaml
-issue: "#188 [RELEASE] Execute source-only v1.3.0 release"
-state: "v1.3.0 source-only release executed and release-state docs synchronized"
-latest_completed_release: "ASGK v1.3.0"
-latest_completed_tag: v1.3.0
-target_commit: "afe0f3c47040fc271bdbef9ec1e6a5055e8be30d"
-release_url: "https://github.com/stereosurfer/agent-safe-dev-governance-kit/releases/tag/v1.3.0"
+issue: "#194 [RELEASE TRAIN] ASGK v1.4.0 cleanup and source-only release"
+state: "v1.4.0 source-only release executed and release-state docs synchronized"
+latest_completed_release: "ASGK v1.4.0"
+latest_completed_tag: v1.4.0
+target_commit: "ac39c4da8044560398730fb2a4d811656f79a239"
+release_url: "https://github.com/stereosurfer/agent-safe-dev-governance-kit/releases/tag/v1.4.0"
 validation: "python3 scripts/asgk.py doctor passed before release execution; release-state-check and doctor passed during release-state closeout"
-note: "No package, installer, runtime adapter, dependency, schema, workflow, repository visibility, or v2 work was performed."
+note: "No package, installer, runtime adapter, dependency, schema, repository visibility, or v2 work was performed."
 ```
 
 ## Runtime artifact status
@@ -115,6 +116,5 @@ cache, or external preparation outputs are currently authorized.
 
 ## Next safe action
 
-No active release-state follow-up is required after this PR merges. Future
-release, package, installer, adapter, visibility, dependency, schema, workflow,
-or v2 work must start from a separate durable issue with the required human gate.
+No active release-state follow-up is required after the v1.4.0 closeout PR
+merges. Future gated work must start from a separate durable issue.

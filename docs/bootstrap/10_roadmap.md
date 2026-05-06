@@ -31,16 +31,16 @@ milestone:
 
 ```yaml
 active_milestone:
-  name: v1.3 source-only release closeout
-  controller_issue: "#188"
+  name: v1.4 source-only release closeout
+  controller_issue: "#194"
   milestone_status: release_executed_closeout_ready
-  goal: "Record the completed source-only ASGK v1.3.0 release focused on operational burden reduction while preserving human gates for repository visibility, package/installer work, runtime-specific adapters, and future release decisions."
-  reason: "ASGK v1.3.0 is released from issue #188 as a source-only GitHub release. The release reduces repeated agent/human work around stale handoffs, ambiguous PR readiness, work-unit authority checks, release-state drift, and release-prep sequencing."
+  goal: "Record the completed source-only ASGK v1.4.0 release focused on PR governance preflight hardening while preserving human gates for repository visibility, package/installer work, runtime-specific adapters, and future release decisions."
+  reason: "ASGK v1.4.0 is released from issue #194 as a source-only GitHub release. The release reduces repeated agent/human work around PR body mistakes, wrong-scope PRs, target adoption omissions, workflow maintenance drift, and release-roadmap baselines."
   deliverables:
-    - "README, roadmap, and current status identify v1.3.0 as the latest completed source-only release"
-    - "v1.3.0 release notes explain the burden-reduction theme instead of only listing features"
-    - "v1.3.0 released scope names current-status, upgrade-audit, work-unit preflight, release-state, and release-prep skill hardening"
-    - "issue #188 records target tag, release title, target commit, final validation, product-entry/handoff docs to synchronize, release-state-check command, and rollback or revoke plan"
+    - "README, roadmap, and current status identify v1.4.0 as the latest completed source-only release"
+    - "v1.4.0 release notes explain the governance-preflight hardening theme instead of only listing features"
+    - "v1.4.0 released scope names PR body preflight, check-pr allowed_paths verification, target adoption dependency alignment, workflow maintenance, and roadmap cleanup"
+    - "issue #194 records target tag, release title, target commit, final validation, product-entry/handoff docs to synchronize, release-state-check command, and rollback or revoke plan"
   non_goals:
     - repository visibility change without explicit human approval
     - package publication
@@ -49,8 +49,8 @@ active_milestone:
     - future release execution without a new human-gated release issue
     - new dependencies unless explicitly human-gated
   acceptance:
-    - completed v1.3.0 release state remains recorded in GitHub release, tag, issue #188, and closeout docs
-    - v1.3.0 is described as a completed source-only release
+    - completed v1.4.0 release state remains recorded in GitHub release, tag, issue #194, and closeout docs
+    - v1.4.0 is described as a completed source-only release
     - public visibility decision remains human-gated through #132 or a successor issue
     - future release execution starts only from a separate durable GitHub issue with explicit human approval
   risks:
@@ -68,8 +68,8 @@ active_milestone:
     - external distribution beyond source-only GitHub release
     - runtime-specific adapter or installer work
   phase_exit_criteria:
-    - v1_3_release_state_closeout_merged_or_followup_recorded
-    - no_active_post_v1_3_0_release_state_follow_up_required
+    - v1_4_release_state_closeout_merged_or_followup_recorded
+    - no_active_post_v1_4_0_release_state_follow_up_required
 ```
 
 ## Completed Recent Milestones / Gates
@@ -122,6 +122,12 @@ completed_recent:
   source_only_v1_2_release_execution:
     result: "Issue #169 created tag v1.2.0 and GitHub release ASGK v1.2.0 at target commit 8e243845ec9963ccacd9b79eb789031e4b68bb1a after final doctor validation and explicit human approval."
     release_url: https://github.com/stereosurfer/agent-safe-dev-governance-kit/releases/tag/v1.2.0
+  source_only_v1_3_release_execution:
+    result: "Issue #188 created tag v1.3.0 and GitHub release ASGK v1.3.0 at target commit afe0f3c47040fc271bdbef9ec1e6a5055e8be30d after final doctor validation and explicit human approval."
+    release_url: https://github.com/stereosurfer/agent-safe-dev-governance-kit/releases/tag/v1.3.0
+  source_only_v1_4_release_execution:
+    result: "Issue #194 created tag v1.4.0 and GitHub release ASGK v1.4.0 at target commit ac39c4da8044560398730fb2a4d811656f79a239 after final doctor validation and explicit human approval."
+    release_url: https://github.com/stereosurfer/agent-safe-dev-governance-kit/releases/tag/v1.4.0
 ```
 
 ## Likely Next Directions
@@ -136,10 +142,10 @@ likely_next_directions:
     durable_source: "new release-planning issue only if a human requests it"
     status: not_started
     possible_scope:
-      - targeted validation or documentation improvements after v1.3.0
+      - targeted validation or documentation improvements after v1.4.0
       - source-only release-state closeout if a later release is approved
       - optional adoption-surface refinements
-    non_goal: "Do not move existing tags or rewrite v1.0.0/v1.1.0/v1.2.0/v1.3.0 release history."
+    non_goal: "Do not move existing tags or rewrite v1.0.0/v1.1.0/v1.2.0/v1.3.0/v1.4.0 release history."
   v2_runtime_adapters:
     durable_source: "future v2.0 adapter/profile issues"
     status: deferred

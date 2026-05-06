@@ -317,6 +317,45 @@ v1_3_release_preparation:
     - runtime adapter, installer scaffold, dependency, workflow, schema, or v2.0 work
 ```
 
+## v1.4 Release Preparation Record
+
+```yaml
+v1_4_release_preparation:
+  issue: "#194"
+  status: executed_by_194
+  latest_completed_release: "ASGK v1.4.0"
+  release_title: "ASGK v1.4.0"
+  release_theme: "Governance-preflight hardening for governed agent workflows."
+  released_scope:
+    - "PR body governance preflight wrapper path to catch missing PR sections before GitHub Actions"
+    - "check-pr changed-file comparison against closing issue allowed_paths"
+    - "target adoption dependency alignment for policy_gate_check.py"
+    - "bootstrap validation workflow action refresh and explicit read-only permissions"
+    - "release-roadmap stale baseline cleanup before release execution"
+  execution_record:
+    issue: "#194"
+    target_commit: "ac39c4da8044560398730fb2a4d811656f79a239"
+    tag_name: v1.4.0
+    release_url: https://github.com/stereosurfer/agent-safe-dev-governance-kit/releases/tag/v1.4.0
+    release_type: source_only_github_release
+    validation:
+      command: python3 scripts/asgk.py doctor
+      result: passed_before_release
+    closeout:
+      product_entry_and_handoff_docs:
+        - README.md
+        - docs/bootstrap/10_roadmap.md
+        - docs/handoff/CURRENT_STATUS.md
+        - docs/control/V1_RELEASE_PREPARATION_PLAN.md
+      required_validation:
+        - python3 scripts/asgk.py release-state-check --tag v1.4.0 --release-title "ASGK v1.4.0"
+        - python3 scripts/asgk.py doctor
+  not_performed:
+    - package publication
+    - repository visibility change
+    - runtime adapter, installer scaffold, dependency, schema, or v2.0 work
+```
+
 ## Acceptance Criteria For This Planning Stage
 
 ```yaml
