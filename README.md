@@ -159,22 +159,18 @@ human-gated trigger before it can be treated as low risk.
 
 ## Current Release State
 
-ASGK v1.2.1 is the latest completed source-only GitHub release under the
+ASGK v1.3.0 is the latest completed source-only GitHub release under the
 Apache-2.0 license.
 
-v1.2.1 includes the v1.2 risk-gate mechanization, PR closing reference
-validation, ASGK Skill Pack v0, and the release-state closeout checkpoint. It
-remains a source-only GitHub release: no package, installer, runtime adapter,
-dependency, schema, workflow, or repository visibility change is included.
-
-v1.3 is in source-only release preparation. Its theme is operational burden
-reduction: fewer stale handoffs, fewer ambiguous PR states, fewer residual
-branch/source-of-truth checks, and fewer post-release documentation surprises.
-The prepared scope includes current-status default handling, upgrade-audit skill
-coverage, work-unit preflight validation, release-state alignment after the
-latest patch release, and dedicated release-prep skill guidance. v1.3 release
-execution requires a separate human-gated GitHub issue before tag or GitHub
-release creation.
+v1.3.0 is an operational burden-reduction release for governed agent workflows:
+fewer stale handoffs, fewer ambiguous PR states, fewer residual
+branch/source-of-truth checks, fewer post-release documentation surprises, and
+fewer release sequencing mistakes. The released scope includes current-status
+default handling, upgrade-audit skill coverage, work-unit preflight validation,
+release-state alignment after the latest patch release, and dedicated
+release-prep skill guidance. It remains a source-only GitHub release: no
+package, installer, runtime adapter, dependency, schema, workflow, or repository
+visibility change is included.
 
 The v1.x line is the generic repo-governance product line. Later runtime-specific
 profiles or adapters are planned as optional optimization layers, not as the

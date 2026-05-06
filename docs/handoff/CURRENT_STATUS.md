@@ -4,7 +4,7 @@ This is the compact current-status surface for the repository. It is overwritten
 not appended. Historical detail belongs in GitHub issues, PRs, comments, and
 merge commits.
 
-Last updated: `2026-05-05T14:04:52Z`
+Last updated: `2026-05-06T00:46:21Z`
 
 ## Durable source of truth
 
@@ -26,25 +26,26 @@ PR-body policy-gate default CI wiring, pull-request changed-path hygiene CI
 wiring, GitHub PR status validation, PR closing issue reference validation, and
 task-packet schema-shaped validation are complete. ASGK Skill Pack v0 source is
 available under `skills/`, with usage and maintenance touchpoint guidance in
-`docs/SKILL_PACK.md`. Source-only v1.2.1 release execution is complete. The
+`docs/SKILL_PACK.md`. Source-only v1.3.0 release execution is complete. The
 risk-gate mechanization and release-state closeout checkpoint sequence is
 complete at the repository tooling level, with the remaining default-CI
 self-certification limit recorded in `docs/control/VALIDATION_STRATEGY.md`.
-Post-v1.2.1 governance hardening is prepared as the v1.3 source-only candidate
-scope with an operational burden-reduction theme: current-status defaults reduce
-unnecessary handoff updates, ASGK upgrade audit reduces target-upgrade guesswork,
-work-unit preflight validation reduces stale-authority checks, v1.2.1
-release-state alignment reduces release closeout drift, and release-prep skill
-guidance reduces pre-release sequencing mistakes.
+v1.3.0 is the latest completed source-only release and carries the operational
+burden-reduction theme: current-status defaults reduce unnecessary handoff
+updates, ASGK upgrade audit reduces target-upgrade guesswork, work-unit
+preflight validation reduces stale-authority checks, release-state alignment
+reduces release closeout drift, and release-prep skill guidance reduces
+pre-release sequencing mistakes.
 
 Apache-2.0 is the selected v1.0 license. The selected distribution path is a
 source-only GitHub release. Completed source-only releases are recorded in
 GitHub releases and release issues: `v1.0.0` / `ASGK v1.0.0` under #130,
-`v1.1.0` / `ASGK v1.1.0` under #145, and `v1.2.0` / `ASGK v1.2.0` under #169.
+`v1.1.0` / `ASGK v1.1.0` under #145, `v1.2.0` / `ASGK v1.2.0` under #169, and
+`v1.3.0` / `ASGK v1.3.0` under #188.
 
-Tag `v1.2.1` and GitHub release `ASGK v1.2.1` were created from target commit
-`e872cbae3aa6a22236fedad8d79c4483a1508b37` under issue #174 after explicit
-human approval and final validation. v1.2.1 remains a source-only GitHub
+Tag `v1.3.0` and GitHub release `ASGK v1.3.0` were created from target commit
+`afe0f3c47040fc271bdbef9ec1e6a5055e8be30d` under issue #188 after explicit
+human approval and final validation. v1.3.0 remains a source-only GitHub
 release; no package, installer, runtime adapter, dependency, schema, workflow,
 or repository visibility change was performed.
 
@@ -97,13 +98,14 @@ fixtures with `python3 scripts/asgk.py task-packet-check --file <path>`.
 ## Last completed
 
 ```yaml
-issue: "#186 [RELEASE] Prepare source-only v1.3 release"
-state: "v1.3 release preparation ready for human-gated execution issue"
-latest_completed_release: "ASGK v1.2.1"
-latest_completed_tag: v1.2.1
-candidate_release: "ASGK v1.3.0"
-validation: "python3 scripts/asgk.py doctor and release-state-check for v1.2.1 passed during preparation"
-note: "No v1.3 tag, GitHub release, package, installer, runtime adapter, dependency, schema, workflow, repository visibility, or v2 work was performed."
+issue: "#188 [RELEASE] Execute source-only v1.3.0 release"
+state: "v1.3.0 source-only release executed and release-state docs synchronized"
+latest_completed_release: "ASGK v1.3.0"
+latest_completed_tag: v1.3.0
+target_commit: "afe0f3c47040fc271bdbef9ec1e6a5055e8be30d"
+release_url: "https://github.com/stereosurfer/agent-safe-dev-governance-kit/releases/tag/v1.3.0"
+validation: "python3 scripts/asgk.py doctor passed before release execution; release-state-check and doctor passed during release-state closeout"
+note: "No package, installer, runtime adapter, dependency, schema, workflow, repository visibility, or v2 work was performed."
 ```
 
 ## Runtime artifact status
@@ -113,7 +115,6 @@ cache, or external preparation outputs are currently authorized.
 
 ## Next safe action
 
-Open a separate human-gated v1.3 release-execution issue before creating a tag
-or GitHub release. The execution issue must name the tag, release title, target
-commit, final validation, product-entry and handoff docs to synchronize,
-`release-state-check` command, and rollback or revoke plan.
+No active release-state follow-up is required after this PR merges. Future
+release, package, installer, adapter, visibility, dependency, schema, workflow,
+or v2 work must start from a separate durable issue with the required human gate.

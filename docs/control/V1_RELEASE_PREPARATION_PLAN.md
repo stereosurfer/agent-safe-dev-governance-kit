@@ -283,28 +283,35 @@ release_execution_result:
 ```yaml
 v1_3_release_preparation:
   issue: "#186"
-  status: prepared_for_separate_human_gated_execution_issue
-  latest_completed_release: "ASGK v1.2.1"
-  candidate_release_title: "ASGK v1.3.0"
+  status: executed_by_188
+  latest_completed_release: "ASGK v1.3.0"
+  release_title: "ASGK v1.3.0"
   release_theme: "Operational burden reduction for governed agent workflows."
-  candidate_scope:
+  released_scope:
     - "current-status default and post-merge closeout guidance hardening to reduce unnecessary handoff churn"
     - "ASGK upgrade-audit skill to reduce target-upgrade ambiguity"
     - "work-unit preflight validation to reduce stale or wrong-authority work"
     - "v1.2.1 release-state alignment to reduce post-release documentation drift"
     - "release-prep and release-execution skill guidance to reduce release sequencing mistakes"
-  execution_requires:
-    - separate GitHub issue
-    - explicit human approval
-    - exact tag and release title
-    - target commit
-    - final `python3 scripts/asgk.py doctor`
-    - target `python3 scripts/asgk.py release-state-check --tag <tag> --release-title "<title>"`
-    - product-entry and handoff docs to synchronize
-    - rollback or revoke plan
-  not_authorized_by_preparation:
-    - tag creation
-    - GitHub release creation
+  execution_record:
+    issue: "#188"
+    target_commit: "afe0f3c47040fc271bdbef9ec1e6a5055e8be30d"
+    tag_name: v1.3.0
+    release_url: https://github.com/stereosurfer/agent-safe-dev-governance-kit/releases/tag/v1.3.0
+    release_type: source_only_github_release
+    validation:
+      command: python3 scripts/asgk.py doctor
+      result: passed_before_release
+    closeout:
+      product_entry_and_handoff_docs:
+        - README.md
+        - docs/bootstrap/10_roadmap.md
+        - docs/handoff/CURRENT_STATUS.md
+        - docs/control/V1_RELEASE_PREPARATION_PLAN.md
+      required_validation:
+        - python3 scripts/asgk.py release-state-check --tag v1.3.0 --release-title "ASGK v1.3.0"
+        - python3 scripts/asgk.py doctor
+  not_performed:
     - package publication
     - repository visibility change
     - runtime adapter, installer scaffold, dependency, workflow, schema, or v2.0 work
