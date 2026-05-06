@@ -26,25 +26,19 @@ PR-body policy-gate default CI wiring, pull-request changed-path hygiene CI
 wiring, GitHub PR status validation, PR closing issue reference validation, and
 task-packet schema-shaped validation are complete. ASGK Skill Pack v0 source is
 available under `skills/`, with usage and maintenance touchpoint guidance in
-`docs/SKILL_PACK.md`. Source-only v1.2.0 release execution is complete. The
-risk-gate mechanization sequence is complete at the repository tooling level,
-with the remaining default-CI self-certification limit recorded in
-`docs/control/VALIDATION_STRATEGY.md`.
+`docs/SKILL_PACK.md`. Source-only v1.2.1 release execution is complete. The
+risk-gate mechanization and release-state closeout checkpoint sequence is
+complete at the repository tooling level, with the remaining default-CI
+self-certification limit recorded in `docs/control/VALIDATION_STRATEGY.md`.
 
 Apache-2.0 is the selected v1.0 license. The selected distribution path is a
-source-only GitHub release. Tag `v1.0.0` and GitHub release `ASGK v1.0.0` were
-created from target commit `7d2e364c4c53d1296c7ce1c2d241291837d54c61` under
-issue #130 after explicit human approval and final validation.
+source-only GitHub release. Completed source-only releases are recorded in
+GitHub releases and release issues: `v1.0.0` / `ASGK v1.0.0` under #130,
+`v1.1.0` / `ASGK v1.1.0` under #145, and `v1.2.0` / `ASGK v1.2.0` under #169.
 
-Tag `v1.1.0` and GitHub release `ASGK v1.1.0` were created from target commit
-`2bcf59dee754d8223b715ff904eca709aa5d53a5` under issue #145 after explicit
-human approval and final validation. v1.1.0 remains a source-only GitHub
-release; no package, installer, runtime adapter, dependency, schema, workflow,
-or repository visibility change was performed.
-
-Tag `v1.2.0` and GitHub release `ASGK v1.2.0` were created from target commit
-`8e243845ec9963ccacd9b79eb789031e4b68bb1a` under issue #169 after explicit
-human approval and final validation. v1.2.0 remains a source-only GitHub
+Tag `v1.2.1` and GitHub release `ASGK v1.2.1` were created from target commit
+`e872cbae3aa6a22236fedad8d79c4483a1508b37` under issue #174 after explicit
+human approval and final validation. v1.2.1 remains a source-only GitHub
 release; no package, installer, runtime adapter, dependency, schema, workflow,
 or repository visibility change was performed.
 
@@ -97,13 +91,13 @@ fixtures with `python3 scripts/asgk.py task-packet-check --file <path>`.
 ## Last completed
 
 ```yaml
-issue: "#169 [RELEASE] Execute source-only v1.2 release"
-release: "ASGK v1.2.0"
-tag: v1.2.0
-target_commit: "8e243845ec9963ccacd9b79eb789031e4b68bb1a"
-release_url: "https://github.com/stereosurfer/agent-safe-dev-governance-kit/releases/tag/v1.2.0"
+issue: "#174 [RELEASE] Execute source-only v1.2.1 release"
+release: "ASGK v1.2.1"
+tag: v1.2.1
+target_commit: "e872cbae3aa6a22236fedad8d79c4483a1508b37"
+release_url: "https://github.com/stereosurfer/agent-safe-dev-governance-kit/releases/tag/v1.2.1"
 validation: "python3 scripts/asgk.py doctor passed before release execution"
-note: "Source-only v1.2.0 release completed and issue #169 closed. No package, installer, runtime adapter, dependency, schema, workflow, repository visibility, or v2 work was performed."
+note: "Source-only v1.2.1 release completed and issue #174 closed. No package, installer, runtime adapter, dependency, schema, workflow, repository visibility, or v2 work was performed."
 ```
 
 ## Runtime artifact status
