@@ -40,7 +40,14 @@ Each evidence item needs a limit or non-proof.
 3. Mark `result: merge_blocked` while draft, CI pending, live `check-pr` failing, or human gates remain.
 4. Mark `checks_passed: true` only when validation evidence supports it.
 5. Do not use chat-only authority or vague `passed` claims without evidence.
-6. Run PR-body policy checks when possible.
+6. Before creating or editing a PR body, run local file-backed PR body
+   preflight when available:
+
+   ```bash
+   python3 scripts/pr_governance_preflight.py check --body-file <body-file>
+   ```
+
+   Use the same wrapper for `gh pr create` or `gh pr edit` when possible.
 
 ## Stop States
 

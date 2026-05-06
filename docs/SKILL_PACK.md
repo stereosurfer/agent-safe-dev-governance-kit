@@ -188,6 +188,12 @@ architecture_touchpoints:
       - asgk-upgrade-audit
       - asgk-governance-health-check
 
+  scripts/pr_governance_preflight.py:
+    affected_skills:
+      - asgk-pr-evidence-merge-decision
+      - asgk-gatekeeper
+      - asgk-upgrade-audit
+
   .github/PULL_REQUEST_TEMPLATE.md:
     affected_skills:
       - asgk-pr-evidence-merge-decision

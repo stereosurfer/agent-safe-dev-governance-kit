@@ -46,6 +46,7 @@ Optional when the target repo uses ASGK CLI checks:
 ```yaml
 optional_tooling_files:
   - scripts/asgk.py
+  - scripts/pr_governance_preflight.py
 ```
 
 ## License Handling

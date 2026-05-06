@@ -21,6 +21,7 @@ COPY_AS_IS = [
     ".github/PULL_REQUEST_TEMPLATE.md",
     ".github/ISSUE_TEMPLATE/agent_task.yml",
     "scripts/asgk.py",
+    "scripts/pr_governance_preflight.py",
 ]
 
 TEMPLATE_THEN_CUSTOMIZE = [
