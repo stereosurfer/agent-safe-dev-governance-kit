@@ -46,6 +46,11 @@ validation_layers:
     current_status: implemented_in_default_pull_request_ci
     purpose: read-only fail-closed PR-body policy gate check without low-risk inference
 
+  pr_governance_preflight:
+    script: scripts/pr_governance_preflight.py
+    current_status: implemented_local_pr_create_edit_preflight
+    purpose: run PR body structure and policy checks before file-backed gh pr create/edit
+
   work_unit_check:
     command: python3 scripts/asgk.py work-unit-check --issue <number> --git-base origin/main --git-head WORKTREE
     current_status: implemented_live_and_fixture_modes
@@ -229,6 +234,36 @@ python3 scripts/policy_gate_check.py --pr-body pr_body.md
 python3 scripts/policy_gate_check.py --pr-body pr_body.md --json
 python3 scripts/asgk.py policy-gate --pr-body pr_body.md
 python3 scripts/asgk.py policy-gate --github-event "$GITHUB_EVENT_PATH"
+```
+
+## `scripts/pr_governance_preflight.py`
+
+### Owns
+
+```yaml
+owns:
+  - file-backed PR body preflight before `gh pr create`
+  - file-backed PR body preflight before `gh pr edit`
+  - local sequencing of `asgk.py pr-body-check` and `policy_gate_check.py`
+  - rejection of inline PR body flags when using the wrapper
+```
+
+### Does Not Own
+
+```yaml
+does_not_own:
+  - GitHub merge approval
+  - low-risk inference
+  - semantic review of PR evidence claims
+  - replacing gh, GitHub Actions, or human-gated release policy
+```
+
+### Expected Use
+
+```bash
+python3 scripts/pr_governance_preflight.py check --body-file pr.md
+python3 scripts/pr_governance_preflight.py create --body-file pr.md -- <gh-pr-create-args>
+python3 scripts/pr_governance_preflight.py edit --body-file pr.md -- <gh-pr-edit-args>
 ```
 
 ## GitHub Actions
