@@ -522,6 +522,7 @@ future_cli_mapping:
       - run PR-body policy gate on the fetched body
       - require the Merge Decision issue to appear in GitHub closing issue references
       - run governance hygiene on fetched changed file paths
+      - compare PR changed files against closing issue allowed_paths
       - report checkable gates and unresolved human-review gates
       - never infer low-risk status
 

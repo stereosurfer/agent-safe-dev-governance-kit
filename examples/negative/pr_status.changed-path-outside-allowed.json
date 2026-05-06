@@ -1,0 +1,30 @@
+{
+  "number": 162,
+  "title": "Changed path outside allowed_paths fixture",
+  "state": "OPEN",
+  "isDraft": false,
+  "mergeStateStatus": "CLEAN",
+  "reviewDecision": "APPROVED",
+  "url": "https://github.com/example/repo/pull/162",
+  "statusCheckRollup": [
+    {
+      "__typename": "CheckRun",
+      "name": "validate",
+      "status": "COMPLETED",
+      "conclusion": "SUCCESS"
+    }
+  ],
+  "files": [
+    {
+      "path": "scripts/asgk.py"
+    }
+  ],
+  "closingIssuesReferences": [
+    {
+      "number": 162,
+      "url": "https://github.com/example/repo/issues/162",
+      "body": "## Required Task Fields\n\n```yaml\nlane: validation_tooling\nintelligence_level: advanced\ndurable_source_of_truth: \"GitHub issue #162\"\nobjective: \"Negative fixture for PR status allowed-path checking.\"\nallowed_paths:\n  - docs/QUICKSTART.md\nexpected_output:\n  - one validation PR\nplan:\n  - check fails\nchecklist:\n  - check fails\nacceptance_sheet:\n  - fixture fails\nnon_goals:\n  - scripts changes\nstop_conditions:\n  - outside allowed paths\nrollback_expectations:\n  - revert PR\n```\n"
+    }
+  ],
+  "body": "## Summary\n\nNegative PR status fixture for changed path outside closing issue allowed_paths.\n\n## Task Reference\n\nCloses #162.\n\n## Changed Files\n\n- scripts/asgk.py\n\n## Validation\n\nExpected failure.\n\n## Evidence Of Completion\n\nFixture only.\n\n## Scope Boundaries\n\nAllowed paths intentionally do not include scripts/asgk.py.\n\n## Current Status Impact\n\n```yaml\ncurrent_status_impact:\n  status: not_applicable\n  reason: negative fixture only\n  current_status_updated_in_this_pr: false\n  post_merge_safe: not_applicable\n  follow_up_issue: none\n```\n\n## Runtime Output Status\n\nNone.\n\n## Merge Decision\n\n```yaml\nmerge_decision:\n  issue: \"#162\"\n  lane: validation_tooling\n  intelligence_level: advanced\n  durable_source_of_truth: \"fixture\"\n  checks_passed: true\n  allowed_paths_checked: true\n  expected_output_checked: true\n  contracts_checked: not_applicable\n  schemas_checked: not_applicable\n  storage_boundary: clean\n  runtime_artifact_boundary: clean\n  safety_review: complete\n  human_gates_checked: true\n  result: merge_allowed\n  reason: fixture intentionally touches a file outside issue allowed_paths\n```\n\n## Known Gaps\n\nExpected failure.\n\n## Handoff Report\n\nNo follow-up.\n"
+}
