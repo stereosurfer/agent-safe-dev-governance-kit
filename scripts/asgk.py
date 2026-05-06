@@ -168,6 +168,7 @@ POLICY_GATE_NEGATIVE_FIXTURES = [
 PR_STATUS_NEGATIVE_FIXTURES = [
     "examples/negative/pr_status.draft-failing.json",
     "examples/negative/pr_status.missing-closing-reference.json",
+    "examples/negative/pr_status.changed-path-outside-allowed.json",
 ]
 TARGET_INSTALL_NEGATIVE_FIXTURES = [
     "examples/negative/target_install/missing_required_files",
@@ -936,6 +937,71 @@ def check_closing_issue_reference(payload: dict[str, object], body: str, finding
         )
 
 
+def pr_status_issue_payload(payload: dict[str, object], issue_number: int) -> dict[str, object] | None:
+    for key in ["issue", "closingIssue", "workUnit"]:
+        candidate = payload.get(key)
+        if isinstance(candidate, dict):
+            number = candidate.get("number")
+            if number == issue_number or str(number) == str(issue_number):
+                return candidate
+
+    references = payload.get("closingIssuesReferences")
+    if isinstance(references, list):
+        for item in references:
+            if not isinstance(item, dict):
+                continue
+            number = item.get("number")
+            if number == issue_number or str(number) == str(issue_number):
+                if item.get("body") is not None:
+                    return item
+
+    if payload.get("_asgk_live_lookup") is True:
+        try:
+            return load_live_work_unit("issue", str(issue_number))
+        except RuntimeError:
+            return None
+    return None
+
+
+def check_pr_issue_allowed_paths(payload: dict[str, object], body: str, findings: list[dict[str, str]]) -> None:
+    issue_number = merge_decision_issue_number(body)
+    if issue_number is None:
+        return
+    if "files" not in payload:
+        return
+
+    issue_payload = pr_status_issue_payload(payload, issue_number)
+    if issue_payload is None:
+        add_pr_status_finding(
+            findings,
+            "issue.allowed_paths",
+            f"Closing issue #{issue_number} body is unavailable for allowed_paths verification.",
+            "Fetch live PR status with --pr or provide fixture issue metadata with body and allowed_paths.",
+        )
+        return
+
+    issue_body = str(issue_payload.get("body") or "")
+    allowed_paths = extract_allowed_paths(issue_body)
+    if not allowed_paths:
+        add_pr_status_finding(
+            findings,
+            "issue.allowed_paths",
+            f"Closing issue #{issue_number} does not include material allowed_paths.",
+            "Add explicit allowed_paths to the closing issue before merge eligibility.",
+        )
+        return
+
+    for path in pr_file_paths(payload.get("files")):
+        normalized = normalize_repo_path(path)
+        if not any(path_matches_allowed(normalized, allowed) for allowed in allowed_paths):
+            add_pr_status_finding(
+                findings,
+                "files.allowed_paths",
+                f"PR file is outside closing issue allowed_paths: {normalized}",
+                "Remove the file from this PR or update the durable issue before merge eligibility.",
+            )
+
+
 def check_pr_status_payload(payload: dict[str, object]) -> tuple[str, list[dict[str, str]]]:
     findings: list[dict[str, str]] = []
 
@@ -992,6 +1058,7 @@ def check_pr_status_payload(payload: dict[str, object]) -> tuple[str, list[dict[
             )
 
     check_closing_issue_reference(payload, body_text, findings)
+    check_pr_issue_allowed_paths(payload, body_text, findings)
 
     if "files" not in payload:
         add_pr_status_finding(
@@ -1506,6 +1573,8 @@ def cmd_check_pr(args: argparse.Namespace) -> int:
             print(result.stdout.strip() or "FAIL: gh pr view failed.")
             return result.returncode
         payload = json.loads(result.stdout)
+        if isinstance(payload, dict):
+            payload["_asgk_live_lookup"] = True
 
     if not isinstance(payload, dict):
         return print_failures(["PR status payload must be a JSON object"])
