@@ -240,6 +240,7 @@ release_execution_boundary:
     - "docs/bootstrap/10_roadmap.md must not describe the released version as an active candidate or pending release execution."
     - "Run `python3 scripts/asgk.py release-state-check --tag <tag> --release-title \"<title>\"` after release-state docs are updated."
     - "If product-entry docs are intentionally deferred, record the bounded follow-up issue before claiming release closeout is complete."
+    - "Before v1.3 or later release execution begins, the release issue must name the exact product-entry and handoff docs that will be synchronized and the target `release-state-check` command."
   release_execution_not_fully_closed_until:
     - "tag and GitHub release are complete"
     - "final validation evidence is recorded"
@@ -273,6 +274,7 @@ release_execution_result:
     v1_0_followup: "Issue #130 was followed by a separate current-status closeout path."
     rule_after_v1_1: "Future release execution must record a same-PR status update or immediate status-refresh issue/PR before claiming full closeout."
     rule_after_v1_2: "Future release execution must also verify product-entry release-state docs with release-state-check or record a bounded follow-up before claiming full closeout."
+    rule_before_v1_3: "Future release execution issues must include the product-entry/handoff document synchronization plan before tag or GitHub release execution is attempted."
 ```
 
 ## Acceptance Criteria For This Planning Stage

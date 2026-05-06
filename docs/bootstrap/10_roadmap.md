@@ -31,13 +31,13 @@ milestone:
 
 ```yaml
 active_milestone:
-  name: Post-v1.2 stewardship
+  name: Post-v1.2.1 stewardship
   controller_issue: "new durable GitHub issue required before further work"
   milestone_status: no_active_release_execution
-  goal: "Keep the v1.2.0 source-only release state durable while preserving human gates for repository visibility, package/installer work, runtime-specific adapters, and future release decisions."
-  reason: "ASGK v1.2.0 is released. Follow-up status and product-entry closeout should keep README, roadmap, and CURRENT_STATUS aligned with the completed source-only release state."
+  goal: "Keep the v1.2.1 source-only release state durable while preserving human gates for repository visibility, package/installer work, runtime-specific adapters, and future release decisions."
+  reason: "ASGK v1.2.1 is released. Follow-up status and product-entry closeout should keep README, roadmap, and CURRENT_STATUS aligned with the completed source-only release state before any v1.3 release preparation proceeds."
   deliverables:
-    - "README, roadmap, and current status remain aligned with v1.2.0 as the latest completed source-only release"
+    - "README, roadmap, and current status remain aligned with v1.2.1 as the latest completed source-only release"
     - "release-state closeout checkpoint remains available before future release execution is treated as fully closed"
     - "future release/version decisions start from new durable GitHub issues"
   non_goals:
@@ -48,7 +48,7 @@ active_milestone:
     - v1.3 or later release execution without a new release issue
     - new dependencies unless explicitly human-gated
   acceptance:
-    - completed v1.2.0 release state remains recorded in GitHub release, tag, issue #169, and closeout docs
+    - completed v1.2.1 release state remains recorded in GitHub release, tag, issue #174, and closeout docs
     - product-entry release-state docs describe the released version as completed, not as pre-release work
     - public visibility decision remains human-gated through #132 or a successor issue
     - future v1.x or v2.0 work starts only from a new durable GitHub issue
