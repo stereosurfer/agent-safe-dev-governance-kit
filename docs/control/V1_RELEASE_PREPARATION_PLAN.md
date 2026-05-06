@@ -241,6 +241,7 @@ release_execution_boundary:
     - "Run `python3 scripts/asgk.py release-state-check --tag <tag> --release-title \"<title>\"` after release-state docs are updated."
     - "If product-entry docs are intentionally deferred, record the bounded follow-up issue before claiming release closeout is complete."
     - "Before v1.3 or later release execution begins, the release issue must name the exact product-entry and handoff docs that will be synchronized and the target `release-state-check` command."
+    - "Use `skills/asgk-release-prep/SKILL.md` when planning, executing, or closing out source-only releases."
   release_execution_not_fully_closed_until:
     - "tag and GitHub release are complete"
     - "final validation evidence is recorded"

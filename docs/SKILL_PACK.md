@@ -51,6 +51,8 @@ core_skills:
   post_merge_closeout: skills/asgk-post-merge-closeout/SKILL.md
   current_status_handoff: skills/asgk-current-status-handoff/SKILL.md
   evidence_audit: skills/asgk-evidence-audit/SKILL.md
+release_skills:
+  release_prep: skills/asgk-release-prep/SKILL.md
 assessment_and_transfer_skills:
   target_install_audit: skills/asgk-target-install-audit/SKILL.md
   upgrade_audit: skills/asgk-upgrade-audit/SKILL.md
@@ -75,6 +77,10 @@ after_merge:
   - current_status_handoff
 
 when_claims_matter:
+  - evidence_audit
+
+when_planning_or_executing_release:
+  - release_prep
   - evidence_audit
 
 when_adopting_asgk_elsewhere:
@@ -133,11 +139,18 @@ architecture_touchpoints:
       - asgk-post-merge-closeout
       - asgk-upgrade-audit
 
+  docs/control/V1_RELEASE_PREPARATION_PLAN.md:
+    affected_skills:
+      - asgk-release-prep
+      - asgk-current-status-handoff
+      - asgk-post-merge-closeout
+
   docs/control/HUMAN_GATED_OPERATIONS.md:
     affected_skills:
       - asgk-issue-scoping
       - asgk-gatekeeper
       - asgk-pr-evidence-merge-decision
+      - asgk-release-prep
       - asgk-upgrade-audit
 
   docs/control/LOW_RISK_AUTONOMOUS_MERGE_POLICY.md:
@@ -170,6 +183,7 @@ architecture_touchpoints:
       - asgk-post-merge-closeout
       - asgk-current-status-handoff
       - asgk-evidence-audit
+      - asgk-release-prep
       - asgk-target-install-audit
       - asgk-upgrade-audit
       - asgk-governance-health-check
@@ -190,6 +204,7 @@ architecture_touchpoints:
       - asgk-startup
       - asgk-current-status-handoff
       - asgk-post-merge-closeout
+      - asgk-release-prep
       - asgk-governance-health-check
 ```
 
@@ -255,4 +270,15 @@ upgrade_audit
   -> upgrade audit report
   -> bounded upgrade issue
   -> manual merge or safe reusable-surface update plan
+```
+
+Use this sequence for source-only release work:
+
+```text
+release_prep
+  -> evidence_audit
+  -> gatekeeper
+  -> release execution only after explicit human approval
+  -> release_prep closeout
+  -> current_status_handoff
 ```
