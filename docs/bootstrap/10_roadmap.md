@@ -31,27 +31,28 @@ milestone:
 
 ```yaml
 active_milestone:
-  name: Post-v1.2.1 stewardship
+  name: v1.3 source-only release preparation
   controller_issue: "new durable GitHub issue required before further work"
-  milestone_status: no_active_release_execution
-  goal: "Keep the v1.2.1 source-only release state durable while preserving human gates for repository visibility, package/installer work, runtime-specific adapters, and future release decisions."
-  reason: "ASGK v1.2.1 is released. Follow-up status and product-entry closeout should keep README, roadmap, and CURRENT_STATUS aligned with the completed source-only release state before any v1.3 release preparation proceeds."
+  milestone_status: release_prepared_execution_not_started
+  goal: "Prepare a source-only ASGK v1.3 release focused on operational burden reduction while preserving human gates for tag creation, GitHub release creation, repository visibility, package/installer work, runtime-specific adapters, and future release decisions."
+  reason: "ASGK v1.2.1 is released and post-v1.2.1 governance hardening has landed on main. The v1.3 candidate reduces repeated agent/human work around stale handoffs, ambiguous PR readiness, work-unit authority checks, release-state drift, and release-prep sequencing. v1.3 release execution must start from a separate human-gated GitHub issue."
   deliverables:
-    - "README, roadmap, and current status remain aligned with v1.2.1 as the latest completed source-only release"
-    - "release-state closeout checkpoint remains available before future release execution is treated as fully closed"
-    - "future release/version decisions start from new durable GitHub issues"
+    - "README, roadmap, and current status identify v1.2.1 as the latest completed source-only release"
+    - "v1.3 release notes explain the burden-reduction theme instead of only listing features"
+    - "v1.3 prepared scope names current-status, upgrade-audit, work-unit preflight, release-state, and release-prep skill hardening after the latest patch release"
+    - "future v1.3 release execution issue must name target tag, release title, target commit, final validation, product-entry/handoff docs to synchronize, release-state-check command, and rollback or revoke plan"
   non_goals:
     - repository visibility change without explicit human approval
     - package publication
     - runtime-specific adapters
     - installer scaffold or target repository writes
-    - v1.3 or later release execution without a new release issue
+    - v1.3 release execution without a new human-gated release issue
     - new dependencies unless explicitly human-gated
   acceptance:
     - completed v1.2.1 release state remains recorded in GitHub release, tag, issue #174, and closeout docs
-    - product-entry release-state docs describe the released version as completed, not as pre-release work
+    - v1.3 is described as prepared/candidate only, not as released
     - public visibility decision remains human-gated through #132 or a successor issue
-    - future v1.x or v2.0 work starts only from a new durable GitHub issue
+    - v1.3 release execution starts only from a separate durable GitHub issue with explicit human approval
   risks:
     - follow-up work may accidentally expand v1.0 source-only scope
     - v2.0 runtime adapter expectations may be confused with v1.0 readiness
@@ -67,8 +68,8 @@ active_milestone:
     - external distribution beyond source-only GitHub release
     - runtime-specific adapter or installer work
   phase_exit_criteria:
-    - public_visibility_decision_recorded_or_deferred
-    - no_active_post_v1_product_entry_follow_up_required
+    - v1_3_release_execution_issue_created_or_deferred
+    - no_active_post_v1_2_1_release_state_follow_up_required
 ```
 
 ## Completed Recent Milestones / Gates

@@ -278,6 +278,38 @@ release_execution_result:
     rule_before_v1_3: "Future release execution issues must include the product-entry/handoff document synchronization plan before tag or GitHub release execution is attempted."
 ```
 
+## v1.3 Release Preparation Record
+
+```yaml
+v1_3_release_preparation:
+  issue: "#186"
+  status: prepared_for_separate_human_gated_execution_issue
+  latest_completed_release: "ASGK v1.2.1"
+  candidate_release_title: "ASGK v1.3.0"
+  release_theme: "Operational burden reduction for governed agent workflows."
+  candidate_scope:
+    - "current-status default and post-merge closeout guidance hardening to reduce unnecessary handoff churn"
+    - "ASGK upgrade-audit skill to reduce target-upgrade ambiguity"
+    - "work-unit preflight validation to reduce stale or wrong-authority work"
+    - "v1.2.1 release-state alignment to reduce post-release documentation drift"
+    - "release-prep and release-execution skill guidance to reduce release sequencing mistakes"
+  execution_requires:
+    - separate GitHub issue
+    - explicit human approval
+    - exact tag and release title
+    - target commit
+    - final `python3 scripts/asgk.py doctor`
+    - target `python3 scripts/asgk.py release-state-check --tag <tag> --release-title "<title>"`
+    - product-entry and handoff docs to synchronize
+    - rollback or revoke plan
+  not_authorized_by_preparation:
+    - tag creation
+    - GitHub release creation
+    - package publication
+    - repository visibility change
+    - runtime adapter, installer scaffold, dependency, workflow, schema, or v2.0 work
+```
+
 ## Acceptance Criteria For This Planning Stage
 
 ```yaml

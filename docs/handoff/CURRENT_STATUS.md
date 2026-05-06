@@ -30,6 +30,12 @@ available under `skills/`, with usage and maintenance touchpoint guidance in
 risk-gate mechanization and release-state closeout checkpoint sequence is
 complete at the repository tooling level, with the remaining default-CI
 self-certification limit recorded in `docs/control/VALIDATION_STRATEGY.md`.
+Post-v1.2.1 governance hardening is prepared as the v1.3 source-only candidate
+scope with an operational burden-reduction theme: current-status defaults reduce
+unnecessary handoff updates, ASGK upgrade audit reduces target-upgrade guesswork,
+work-unit preflight validation reduces stale-authority checks, v1.2.1
+release-state alignment reduces release closeout drift, and release-prep skill
+guidance reduces pre-release sequencing mistakes.
 
 Apache-2.0 is the selected v1.0 license. The selected distribution path is a
 source-only GitHub release. Completed source-only releases are recorded in
@@ -91,13 +97,13 @@ fixtures with `python3 scripts/asgk.py task-packet-check --file <path>`.
 ## Last completed
 
 ```yaml
-issue: "#174 [RELEASE] Execute source-only v1.2.1 release"
-release: "ASGK v1.2.1"
-tag: v1.2.1
-target_commit: "e872cbae3aa6a22236fedad8d79c4483a1508b37"
-release_url: "https://github.com/stereosurfer/agent-safe-dev-governance-kit/releases/tag/v1.2.1"
-validation: "python3 scripts/asgk.py doctor passed before release execution"
-note: "Source-only v1.2.1 release completed and issue #174 closed. No package, installer, runtime adapter, dependency, schema, workflow, repository visibility, or v2 work was performed."
+issue: "#186 [RELEASE] Prepare source-only v1.3 release"
+state: "v1.3 release preparation ready for human-gated execution issue"
+latest_completed_release: "ASGK v1.2.1"
+latest_completed_tag: v1.2.1
+candidate_release: "ASGK v1.3.0"
+validation: "python3 scripts/asgk.py doctor and release-state-check for v1.2.1 passed during preparation"
+note: "No v1.3 tag, GitHub release, package, installer, runtime adapter, dependency, schema, workflow, repository visibility, or v2 work was performed."
 ```
 
 ## Runtime artifact status
@@ -107,7 +113,7 @@ cache, or external preparation outputs are currently authorized.
 
 ## Next safe action
 
-Open a new durable GitHub issue before starting further work. Do not tag, create
-a GitHub release, change repository visibility, publish a package, add an
-installer scaffold, add a runtime adapter, or start v2.0 follow-up work without
-a new durable GitHub issue and explicit human approval where required.
+Open a separate human-gated v1.3 release-execution issue before creating a tag
+or GitHub release. The execution issue must name the tag, release title, target
+commit, final validation, product-entry and handoff docs to synchronize,
+`release-state-check` command, and rollback or revoke plan.
