@@ -136,10 +136,10 @@ likely_next_directions:
     durable_source: "new release-planning issue only if a human requests it"
     status: not_started
     possible_scope:
-      - targeted validation or documentation improvements after v1.2.0
+      - targeted validation or documentation improvements after v1.3.0
       - source-only release-state closeout if a later release is approved
       - optional adoption-surface refinements
-    non_goal: "Do not move existing tags or rewrite v1.0.0/v1.1.0/v1.2.0 release history."
+    non_goal: "Do not move existing tags or rewrite v1.0.0/v1.1.0/v1.2.0/v1.3.0 release history."
   v2_runtime_adapters:
     durable_source: "future v2.0 adapter/profile issues"
     status: deferred
