@@ -133,10 +133,13 @@ For a first governed change in a repository that already has ASGK adopted:
 4. Create a branch from current main.
 5. Change only the allowed paths.
 6. Run python3 scripts/asgk.py doctor.
-7. Open a PR using .github/PULL_REQUEST_TEMPLATE.md.
+7. Draft the PR body in a file using .github/PULL_REQUEST_TEMPLATE.md.
 8. Fill the Current Status Impact and Merge Decision Record sections.
-9. Wait for GitHub Actions when they apply.
-10. Merge only when policy, validation, CI, and human gates allow it.
+9. Run local PR body governance preflight before PR create/edit:
+   python3 scripts/pr_governance_preflight.py check --body-file <body-file>
+10. Open or update the PR with the checked body file.
+11. Wait for GitHub Actions when they apply.
+12. Merge only when policy, validation, CI, and human gates allow it.
 ```
 
 Do not copy this repository's internal

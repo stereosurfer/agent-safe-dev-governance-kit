@@ -274,6 +274,7 @@ Useful focused checks:
 
 ```bash
 python3 scripts/asgk.py negative all
+python3 scripts/pr_governance_preflight.py check --body-file pr.md
 python3 scripts/asgk.py work-unit-check --issue <issue-number> --git-base origin/main --git-head WORKTREE
 python3 scripts/policy_gate_check.py --pr-body pr.md
 git diff --check
@@ -282,6 +283,24 @@ git diff --check
 For project-specific code changes, also run the tests required by the issue.
 
 ### 7. Open The PR
+
+Draft the PR body in a file. Run local PR body governance preflight before
+creating or editing the PR body:
+
+```bash
+python3 scripts/pr_governance_preflight.py check --body-file pr.md
+```
+
+For file-backed create/edit flows, use the wrapper so the body is checked before
+`gh` submits it:
+
+```bash
+python3 scripts/pr_governance_preflight.py create --body-file pr.md -- <gh-pr-create-args>
+python3 scripts/pr_governance_preflight.py edit --body-file pr.md -- <gh-pr-edit-args>
+```
+
+GitHub Actions remains the final governance backstop. Local preflight is the
+first defense against missing PR body sections.
 
 Every PR should include:
 

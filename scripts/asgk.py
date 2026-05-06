@@ -12,8 +12,12 @@ ROOT = Path(__file__).resolve().parents[1]
 
 PR_REQUIRED_HEADINGS = [
     "Summary", "Task Reference", "Changed Files", "Validation",
-    "Evidence Of Completion", "Scope Boundaries", "Runtime Output Status",
-    "Merge Decision", "Known Gaps", "Handoff Report",
+    "Evidence Of Completion", "Scope Boundaries", "Current Status Impact",
+    "Runtime Output Status", "Merge Decision", "Known Gaps", "Handoff Report",
+]
+CURRENT_STATUS_IMPACT_REQUIRED_FIELDS = [
+    "status", "reason", "current_status_updated_in_this_pr",
+    "post_merge_safe", "follow_up_issue",
 ]
 MERGE_DECISION_REQUIRED_FIELDS = [
     "issue", "lane", "intelligence_level", "durable_source_of_truth",
@@ -106,6 +110,7 @@ NEGATIVE_CHANGED_PATH_FIXTURES = [
 ]
 EXPECTED_FAILURE_CHECKS = [
     ["python3", "scripts/asgk.py", "pr-body-check", "--file", "examples/negative/pr_body.no-merge-decision.md"],
+    ["python3", "scripts/asgk.py", "pr-body-check", "--file", "examples/negative/pr_body.no-current-status-impact.md"],
     ["python3", "scripts/asgk.py", "pr-body-check", "--file", "examples/negative/pr_body.see-chat.md"],
     ["python3", "scripts/asgk.py", "task-packet-check", "--file", "examples/negative/task_packet.see-chat.yaml"],
     ["python3", "scripts/asgk.py", "task-packet-check", "--file", "examples/negative/task_packet.no-stop.yaml"],
@@ -1699,6 +1704,13 @@ def cmd_pr_body_check(args: argparse.Namespace) -> int:
             failures.append(f"missing PR heading: ## {heading}")
     if has_see_chat(text):
         failures.append("PR body contains forbidden chat-only authority phrase: see chat")
+    if "Current Status Impact" not in headings:
+        failures.append("missing Current Status Impact section")
+    else:
+        current_status_section = markdown_section(text, "Current Status Impact")
+        for field in CURRENT_STATUS_IMPACT_REQUIRED_FIELDS:
+            if not line_field_exists(current_status_section, field):
+                failures.append(f"missing Current Status Impact field: {field}")
     if "Merge Decision" not in headings:
         failures.append("missing Merge Decision section")
     else:
@@ -1706,7 +1718,7 @@ def cmd_pr_body_check(args: argparse.Namespace) -> int:
             if not line_field_exists(text, field):
                 failures.append(f"missing Merge Decision field: {field}")
     result = field_value(text, "result")
-    if result and result not in {"merge_allowed", "merge_blocked"}:
+    if result and "|" not in result and result not in {"merge_allowed", "merge_blocked"}:
         failures.append("Merge Decision field result must be merge_allowed or merge_blocked")
     checks_passed = field_value(text, "checks_passed")
     if checks_passed and checks_passed.lower() in {"pending", "unknown", "pending github actions"}:

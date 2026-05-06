@@ -39,7 +39,7 @@ REQUIRED_TERMS = {
 
 CONTROL_REQUIRED_SECTIONS = ['Purpose','Durable Control Surfaces','Work Unit State Model','Task Packet Format','Agent Report Format','Operating Loop','Anti-drift Rules','Human Gates','Definition of Done']
 TASK_PACKET_FIELDS = ['task_id','lane','intelligence_level','durable_source_of_truth','objective','allowed_paths','expected_output','plan','checklist','acceptance_sheet','stop_conditions','rollback_expectations']
-PR_HEADINGS = ['Summary','Task Reference','Changed Files','Validation','Evidence Of Completion','Scope Boundaries','Runtime Output Status','Merge Decision','Known Gaps','Handoff Report']
+PR_HEADINGS = ['Summary','Task Reference','Changed Files','Validation','Evidence Of Completion','Scope Boundaries','Current Status Impact','Runtime Output Status','Merge Decision','Known Gaps','Handoff Report']
 ISSUE_FIELDS = ['objective','durable_source_of_truth','lane','intelligence_level','allowed_paths','expected_output','acceptance_sheet','stop_conditions']
 
 def fail(msg):

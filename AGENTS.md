@@ -43,11 +43,20 @@ Use this generic profile by default for all repository work.
 6. Create or use a task branch.
 7. Modify only files allowed by the current issue, PR, or task packet.
 8. Run the required validation.
-9. Open or update a pull request.
-10. Wait for CI when CI applies.
-11. Update the Merge Decision Record before merge eligibility.
-12. Merge only when the issue, policy, validation, CI, and merge boundary permit it.
-13. Comment on and close the issue after merge when closeout is authorized.
+9. Before opening or updating a pull request body, write the body to a file and
+   run local PR body governance preflight:
+
+   ```bash
+   python3 scripts/pr_governance_preflight.py check --body-file <body-file>
+   ```
+
+   Use the same wrapper for PR body create/edit when possible. Do not submit
+   inline PR bodies or bypass local PR body preflight.
+10. Open or update a pull request.
+11. Wait for CI when CI applies.
+12. Update the Merge Decision Record before merge eligibility.
+13. Merge only when the issue, policy, validation, CI, and merge boundary permit it.
+14. Comment on and close the issue after merge when closeout is authorized.
 
 ## Generic Purity Rule
 
@@ -170,6 +179,12 @@ For governance/scaffold changes:
 
 ```bash
 python3 scripts/asgk.py doctor
+```
+
+For PR body create/edit preflight:
+
+```bash
+python3 scripts/pr_governance_preflight.py check --body-file <body-file>
 ```
 
 For code changes, run the project-specific tests named in the issue or acceptance criteria.
