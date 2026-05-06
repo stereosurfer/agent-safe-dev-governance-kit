@@ -102,6 +102,7 @@ roles:
 | `skills/asgk-post-merge-closeout/SKILL.md` | skill | post-merge issue/status closeout procedure | no | after a PR merges or stale issue closeout is suspected | `lane_07_docs_handoff` |
 | `skills/asgk-current-status-handoff/SKILL.md` | skill | current-status impact and handoff refresh procedure | no | updating or auditing `docs/handoff/CURRENT_STATUS.md` | `lane_07_docs_handoff` |
 | `skills/asgk-evidence-audit/SKILL.md` | skill | validation and completion evidence classification procedure | no | auditing PR evidence, reports, or release notes | `lane_07_docs_handoff` |
+| `skills/asgk-release-prep/SKILL.md` | skill | source-only release planning, human-gated execution, and release-state closeout procedure | no | planning, executing, or closing out an ASGK source-only release | `lane_07_docs_handoff` |
 | `skills/asgk-target-install-audit/SKILL.md` | skill | target-repository ASGK adoption audit procedure | no | evaluating or transferring ASGK into another repository | `lane_07_docs_handoff` |
 | `skills/asgk-governance-health-check/SKILL.md` | skill | periodic governance drift health-check procedure | no | weekly review, milestone review, or public/customer handoff | `lane_07_docs_handoff` |
 
