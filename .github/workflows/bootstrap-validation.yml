@@ -31,6 +31,12 @@ jobs:
             echo "Expected PR-body missing Merge Decision fixture to fail, but it passed."
             exit 1
           fi
+      - name: Negative check PR body missing current status impact
+        run: |
+          if python3 scripts/asgk.py pr-body-check --file examples/negative/pr_body.no-current-status-impact.md; then
+            echo "Expected PR-body missing Current Status Impact fixture to fail, but it passed."
+            exit 1
+          fi
       - name: Negative check PR body chat authority
         run: |
           suffix=chat
