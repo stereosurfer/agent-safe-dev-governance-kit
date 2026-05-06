@@ -166,6 +166,7 @@ copy_as_is:
   - .github/PULL_REQUEST_TEMPLATE.md
   - .github/ISSUE_TEMPLATE/agent_task.yml
   - scripts/asgk.py
+  - scripts/policy_gate_check.py
   - scripts/pr_governance_preflight.py
   - skills/*
 ```
@@ -180,8 +181,8 @@ Notes:
 - `scripts/asgk.py` may be copied only if its checked file expectations match
   the target scaffold or are explicitly adapted later.
 - `scripts/pr_governance_preflight.py` is a thin helper around `scripts/asgk.py`
-  and `scripts/policy_gate_check.py`; copy it only with the matching local
-  validation scripts and PR template.
+  and `scripts/policy_gate_check.py`; copy it only with those matching local
+  validation scripts and the matching PR template.
 - `skills/*` may be copied into an agent client skill directory or kept as
   repository-reference procedures. Skills sequence existing repo/GitHub gates;
   they do not replace target repository authority or add a separate compliance
