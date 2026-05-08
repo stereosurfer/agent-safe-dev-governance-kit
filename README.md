@@ -162,18 +162,17 @@ human-gated trigger before it can be treated as low risk.
 
 ## Current Release State
 
-ASGK v1.5.0 is the latest completed source-only GitHub release under the
+ASGK v1.5.1 is the latest completed source-only GitHub release under the
 Apache-2.0 license.
 
-v1.5.0 is a context-boundary and closeout-learning hardening release for
-governed agent workflows: tighter task-level context gates, repository-context
-token measurement, fuller work-unit task-field checks, quieter chat output for
-routine governance mechanics, and a centralized advisory issue closeout review
-ledger. The released scope includes `files_to_inspect_first` validation against
-empty or overbroad read requests, `context-budget-measure`, required task-field
-validation in work-unit checks, `Chat Output Hygiene`, and issue-level closeout
-learning guidance. It remains a source-only GitHub release: no package,
-installer, runtime adapter, dependency, schema, repository visibility change, or
+v1.5.1 is a small skill-output hygiene patch on the v1.5 line. It keeps the
+v1.5.0 context-boundary and closeout-learning hardening scope, then sharpens
+source-distributed skill guidance so routine validation evidence is summarized
+first, closeout comments link to existing PR/release/CI evidence instead of
+repeating full logs, Issue Closeout Reviews still require reusable lessons, and
+`skills/*` releases remind operators that installed client skills do not update
+automatically. It remains a source-only GitHub release: no package, installer,
+runtime adapter, dependency, schema, workflow, repository visibility change, or
 v2.0 work is included.
 
 The v1.x line is the generic repo-governance product line. Later runtime-specific

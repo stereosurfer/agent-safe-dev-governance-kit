@@ -401,6 +401,49 @@ v1_5_release_preparation:
     - runtime adapter, installer scaffold, dependency, workflow, schema, or v2.0 work
 ```
 
+## v1.5.1 Release Preparation Record
+
+```yaml
+v1_5_1_release_preparation:
+  implementation_issue: "#213"
+  implementation_pr: "#214"
+  execution_issue: "#215"
+  status: executed_by_215
+  latest_completed_release: "ASGK v1.5.1"
+  release_title: "ASGK v1.5.1"
+  release_theme: "Skill-output hygiene patch for duplicate governance evidence reduction."
+  released_scope:
+    - "summary-first validation evidence guidance in PR evidence skill"
+    - "compact post-merge closeout comments that link to existing evidence instead of repeating full logs"
+    - "Issue Closeout Review reusable-lesson threshold clarification"
+    - "installed/client skill sync reminder for releases or closeouts that change skills/*"
+  execution_record:
+    issue: "#215"
+    target_commit: "4f0c25e44fbc4ae763474133a8ec9ba8011bb0a6"
+    tag_name: v1.5.1
+    release_url: https://github.com/stereosurfer/agent-safe-dev-governance-kit/releases/tag/v1.5.1
+    release_type: source_only_github_release
+    validation:
+      command: python3 scripts/asgk.py doctor
+      result: passed_before_release
+    closeout:
+      product_entry_and_handoff_docs:
+        - README.md
+        - docs/bootstrap/10_roadmap.md
+        - docs/handoff/CURRENT_STATUS.md
+        - docs/control/V1_RELEASE_PREPARATION_PLAN.md
+      required_validation:
+        - python3 scripts/asgk.py release-state-check --tag v1.5.1 --release-title "ASGK v1.5.1"
+        - python3 scripts/asgk.py doctor
+      installed_skill_sync: reminder_given
+      rollback_or_revoke_plan_recorded: true
+  not_performed:
+    - package publication
+    - repository visibility change
+    - runtime adapter, installer scaffold, dependency, workflow, schema, validator, or v2.0 work
+    - automatic installed/global client skill synchronization
+```
+
 ## Acceptance Criteria For This Planning Stage
 
 ```yaml

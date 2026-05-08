@@ -31,16 +31,16 @@ milestone:
 
 ```yaml
 active_milestone:
-  name: v1.5 source-only release closeout
-  controller_issue: "#211"
+  name: v1.5.1 source-only patch release closeout
+  controller_issue: "#215"
   milestone_status: release_executed_closeout_complete
-  goal: "Record the completed source-only ASGK v1.5.0 release focused on context-boundary and closeout-learning hardening while preserving human gates for repository visibility, package/installer work, runtime-specific adapters, and future release decisions."
-  reason: "ASGK v1.5.0 is released from issue #211 as a source-only GitHub release. The release reduces repeated over-reading, task-field under-validation, chat transcript noise, and scattered issue-level learning."
+  goal: "Record the completed source-only ASGK v1.5.1 patch release focused on reducing duplicate governance evidence movement in skills while preserving human gates for repository visibility, package/installer work, runtime-specific adapters, and future release decisions."
+  reason: "ASGK v1.5.1 is released from issue #215 as a source-only GitHub release. The patch sharpens skill guidance around summary-first validation evidence, compact closeout comments, reusable Issue Closeout Reviews, and installed-skill sync reminders."
   deliverables:
-    - "README, roadmap, and current status identify v1.5.0 as the latest completed source-only release"
-    - "v1.5.0 release notes explain the context-boundary and closeout-learning hardening theme"
-    - "v1.5.0 released scope names files_to_inspect_first validation, context-budget-measure, work-unit task-field validation, Chat Output Hygiene, and the Issue Closeout Review ledger pattern"
-    - "issue #211 records target tag, release title, target commit, final validation, product-entry/handoff docs to synchronize, release-state-check command, and rollback or revoke plan"
+    - "README, roadmap, and current status identify v1.5.1 as the latest completed source-only release"
+    - "v1.5.1 release notes explain the skill-output hygiene patch theme"
+    - "v1.5.1 released scope names summary-first PR evidence, compact closeout comments, reusable-lesson threshold, and installed-skill sync reminders"
+    - "issue #215 records target tag, release title, target commit, final validation, product-entry/handoff docs to synchronize, release-state-check command, and rollback or revoke plan"
   non_goals:
     - repository visibility change without explicit human approval
     - package publication
@@ -49,8 +49,8 @@ active_milestone:
     - future release execution without a new human-gated release issue
     - new dependencies unless explicitly human-gated
   acceptance:
-    - completed v1.5.0 release state remains recorded in GitHub release, tag, issue #211, and closeout docs
-    - v1.5.0 is described as a completed source-only release
+    - completed v1.5.1 release state remains recorded in GitHub release, tag, issue #215, and closeout docs
+    - v1.5.1 is described as a completed source-only release
     - public visibility decision remains human-gated through #132 or a successor issue
     - future release execution starts only from a separate durable GitHub issue with explicit human approval
   risks:
@@ -131,6 +131,9 @@ completed_recent:
   source_only_v1_5_release_execution:
     result: "Issue #211 created tag v1.5.0 and GitHub release ASGK v1.5.0 at target commit 4460a99c5baefd26b99a22fc2139da9b3d8ad994 after final doctor validation and explicit human approval."
     release_url: https://github.com/stereosurfer/agent-safe-dev-governance-kit/releases/tag/v1.5.0
+  source_only_v1_5_1_release_execution:
+    result: "Issue #215 created tag v1.5.1 and GitHub release ASGK v1.5.1 at target commit 4f0c25e44fbc4ae763474133a8ec9ba8011bb0a6 after final doctor validation and explicit human approval."
+    release_url: https://github.com/stereosurfer/agent-safe-dev-governance-kit/releases/tag/v1.5.1
 ```
 
 ## Likely Next Directions
@@ -144,8 +147,8 @@ likely_next_directions:
   future_v1_x_release:
     durable_source: "future human-gated release issue"
     status: human_gated
-    note: "Any release after v1.5.0 must start from a separate durable issue with exact tag, title, target commit, final validation, product-entry/handoff closeout plan, and rollback or revoke plan."
-    non_goal: "Do not move existing tags or rewrite v1.0.0/v1.1.0/v1.2.0/v1.3.0/v1.4.0/v1.5.0 release history."
+    note: "Any release after v1.5.1 must start from a separate durable issue with exact tag, title, target commit, final validation, product-entry/handoff closeout plan, and rollback or revoke plan."
+    non_goal: "Do not move existing tags or rewrite v1.0.0/v1.1.0/v1.2.0/v1.3.0/v1.4.0/v1.5.0/v1.5.1 release history."
   v2_runtime_adapters:
     durable_source: "future v2.0 adapter/profile issues"
     status: deferred

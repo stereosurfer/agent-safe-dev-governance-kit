@@ -4,7 +4,7 @@ This is the compact current-status surface for the repository. It is
 overwritten, not appended. Historical detail belongs in GitHub issues, PRs,
 comments, releases, and merge commits.
 
-Last updated: `2026-05-08T05:31:17Z`
+Last updated: `2026-05-08T11:10:55Z`
 
 ## Durable source of truth
 
@@ -20,23 +20,22 @@ Apache-2.0 license. The default operating profile remains generic; runtime
 profiles, adapters, installers, packages, external distribution, and repository
 visibility changes remain human-gated or deferred.
 
-ASGK v1.5.0 is the latest completed source-only GitHub release. It was executed
-under issue #211 after final doctor validation and explicit human approval. The
-release theme is context-boundary and closeout-learning hardening: tighter
-`files_to_inspect_first` gates, repository-context token measurement, fuller
-work-unit task-field checks, quieter chat output for routine governance
-mechanics, and centralized advisory issue closeout review guidance.
+ASGK v1.5.1 is the latest completed source-only GitHub release. It was executed
+under issue #215 after final doctor validation and explicit human approval. The
+release is a small skill-output hygiene patch: summary-first validation
+evidence, compact closeout comments, reusable-lesson threshold clarification,
+and installed/client skill sync reminders when `skills/*` changes.
 
 Completed source-only releases are recorded in GitHub releases and release
 issues: `v1.0.0` / `ASGK v1.0.0` under #130, `v1.1.0` / `ASGK v1.1.0` under
 #145, `v1.2.0` / `ASGK v1.2.0` under #169, `v1.3.0` / `ASGK v1.3.0` under
-#188, `v1.4.0` / `ASGK v1.4.0` under #194, and `v1.5.0` / `ASGK v1.5.0` under
-#211.
+#188, `v1.4.0` / `ASGK v1.4.0` under #194, `v1.5.0` / `ASGK v1.5.0` under
+#211, and `v1.5.1` / `ASGK v1.5.1` under #215.
 
-Tag `v1.5.0` and GitHub release `ASGK v1.5.0` were created from target commit
-`4460a99c5baefd26b99a22fc2139da9b3d8ad994`. v1.5.0 remains source-only: no
-package, installer, runtime adapter, dependency, schema, workflow, repository
-visibility change, or v2.0 work was performed.
+Tag `v1.5.1` and GitHub release `ASGK v1.5.1` were created from target commit
+`4f0c25e44fbc4ae763474133a8ec9ba8011bb0a6`. v1.5.1 remains source-only: no
+package, installer, runtime adapter, dependency, schema, workflow, validator,
+repository visibility change, or v2.0 work was performed.
 
 ## Active work
 
@@ -78,14 +77,14 @@ Additional focused checks:
 ## Last completed
 
 ```yaml
-issue: "#211 Execute ASGK v1.5.0 source-only release"
-state: "v1.5.0 source-only release executed and release-state docs synchronized"
-latest_completed_release: "ASGK v1.5.0"
-latest_completed_tag: v1.5.0
-target_commit: "4460a99c5baefd26b99a22fc2139da9b3d8ad994"
-release_url: "https://github.com/stereosurfer/agent-safe-dev-governance-kit/releases/tag/v1.5.0"
+issue: "#215 Execute ASGK v1.5.1 source-only patch release"
+state: "v1.5.1 source-only release executed and release-state docs synchronized"
+latest_completed_release: "ASGK v1.5.1"
+latest_completed_tag: v1.5.1
+target_commit: "4f0c25e44fbc4ae763474133a8ec9ba8011bb0a6"
+release_url: "https://github.com/stereosurfer/agent-safe-dev-governance-kit/releases/tag/v1.5.1"
 validation: "python3 scripts/asgk.py doctor passed before release execution; release-state-check and doctor passed during release-state closeout"
-note: "No package, installer, runtime adapter, dependency, schema, workflow, repository visibility, or v2.0 work was performed."
+note: "No package, installer, runtime adapter, dependency, schema, workflow, validator, repository visibility, or v2.0 work was performed."
 ```
 
 ## Runtime artifact status
@@ -95,5 +94,5 @@ model cache, or external preparation outputs are currently authorized.
 
 ## Next safe action
 
-No active release-state follow-up is required after the v1.5.0 closeout PR
+No active release-state follow-up is required after the v1.5.1 closeout PR
 merges. Future gated work must start from a separate durable issue.
