@@ -40,7 +40,11 @@ Each evidence item needs a limit or non-proof.
 3. Mark `result: merge_blocked` while draft, CI pending, live `check-pr` failing, or human gates remain.
 4. Mark `checks_passed: true` only when validation evidence supports it.
 5. Do not use chat-only authority or vague `passed` claims without evidence.
-6. Before creating or editing a PR body, run local file-backed PR body
+6. Use summary-first validation evidence. Record command name, result, key
+   evidence, and limits; do not paste full routine command logs when PR, CI, or
+   issue artifacts already preserve the full output. Include fuller detail only
+   for failures, blockers, material behavior changes, or reviewer decisions.
+7. Before creating or editing a PR body, run local file-backed PR body
    preflight when available:
 
    ```bash
