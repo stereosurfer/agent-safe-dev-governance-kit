@@ -162,25 +162,19 @@ human-gated trigger before it can be treated as low risk.
 
 ## Current Release State
 
-ASGK v1.4.0 is the latest completed source-only GitHub release under the
+ASGK v1.5.0 is the latest completed source-only GitHub release under the
 Apache-2.0 license.
 
-v1.4.0 is a governance-preflight hardening release for governed agent
-workflows: fewer PR body misses, fewer wrong-scope PRs, clearer target adoption
-dependencies, lower CI maintenance risk, and cleaner release-roadmap baselines.
-The released scope includes PR body preflight wrapper usage, `check-pr`
-allowed-path verification against closing issues, target adoption inclusion of
-the policy gate checker, refreshed bootstrap validation workflow actions, and
-roadmap cleanup before release closeout. It remains a source-only GitHub
-release: no package, installer, runtime adapter, dependency, schema, repository
-visibility change, or v2.0 work is included.
-
-ASGK v1.5.0 is not released yet. The current v1.5 candidate preparation track
-targets context-boundary and closeout-learning hardening: tighter context read
-gates, repo-context token measurement, required work-unit task-field checks,
-chat output hygiene, and a centralized advisory issue closeout review ledger.
-Release execution still requires a separate human-gated issue naming the exact
-tag, title, target commit, final validation, and rollback or revoke plan.
+v1.5.0 is a context-boundary and closeout-learning hardening release for
+governed agent workflows: tighter task-level context gates, repository-context
+token measurement, fuller work-unit task-field checks, quieter chat output for
+routine governance mechanics, and a centralized advisory issue closeout review
+ledger. The released scope includes `files_to_inspect_first` validation against
+empty or overbroad read requests, `context-budget-measure`, required task-field
+validation in work-unit checks, `Chat Output Hygiene`, and issue-level closeout
+learning guidance. It remains a source-only GitHub release: no package,
+installer, runtime adapter, dependency, schema, repository visibility change, or
+v2.0 work is included.
 
 The v1.x line is the generic repo-governance product line. Later runtime-specific
 profiles or adapters are planned as optional optimization layers, not as the
