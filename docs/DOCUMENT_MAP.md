@@ -14,12 +14,8 @@ default.
 DOCUMENT_MAP.md is repo-local.
 ```
 
-This file governs the ASGK repository only. It is not the document map to copy
-unchanged into repositories that install or adopt ASGK.
-
-Target repositories must create their own compact `docs/DOCUMENT_MAP.md` from
-`templates/DOCUMENT_MAP.template.md` and their own full
-`docs/DOCUMENT_REGISTRY.md` from `templates/DOCUMENT_REGISTRY.template.md`.
+This file governs only the ASGK repository. Target repositories must create their
+own compact map and full registry from the templates under `templates/`.
 
 ## Core Rule
 
@@ -65,12 +61,13 @@ progressive_disclosure_surfaces:
     path: docs/SKILL_PACK.md
     purpose: optional ASGK skill-pack source and usage modes
     read_by_default: false
+  issue_closeout_reviews: {path: docs/handoff/ISSUE_CLOSEOUT_REVIEWS.md, purpose: advisory issue-level decision and pitfall review ledger, read_by_default: false}
 ```
 
 ## Default Startup Set
 
-Every new agent session should start with only this minimal set unless the
-current issue, PR, or handoff packet points elsewhere:
+Start every new agent session with this minimal set unless the current issue,
+PR, or handoff packet points elsewhere:
 
 ```yaml
 default_startup_set:
