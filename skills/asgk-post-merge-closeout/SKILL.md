@@ -28,8 +28,14 @@ This skill closes only work that is already satisfied by durable GitHub and repo
 6. Decide whether `docs/handoff/CURRENT_STATUS.md` needs refresh under the current-status policy.
 7. Recommend no status refresh when `CURRENT_STATUS.md` remains accurate for the next session.
 8. Recommend a status refresh only when stale repo-level recovery state would mislead the next session.
-9. If status refresh is required, open a bounded issue or PR for that refresh.
-10. Stop. Do not begin unrelated work.
+9. Decide whether the issue qualifies for an advisory Issue Closeout Review in
+   `docs/handoff/ISSUE_CLOSEOUT_REVIEWS.md`.
+10. If the ledger is in the current issue's allowed paths, update it with one
+    compact entry; otherwise record `no_ledger_update` in the issue closeout
+    comment or open a bounded follow-up issue only when the lesson is genuinely
+    reusable.
+11. If status refresh is required, open a bounded issue or PR for that refresh.
+12. Stop. Do not begin unrelated work.
 
 ## Closeout Decision Test
 
@@ -44,6 +50,27 @@ status_refresh_not_required_when:
   - PR did not change active work, next safe action, or gated repo-level state
   - issue and PR history already hold the completed-work details
 ```
+
+## Issue Closeout Review Test
+
+```yaml
+review_entry_required_when:
+  - issue has more than one PR
+  - issue is a release train or milestone closeout
+  - issue changes validation behavior, docs/control/**, .github/**, or scripts/**
+  - issue includes human-gated authorization
+  - issue had failed attempts or repeated correction loops
+  - issue produced a reusable operational lesson
+review_entry_optional_when:
+  - single small docs-only PR
+  - typo, formatting, or simple target-file update
+review_entry_not_needed_when:
+  - issue is duplicate, abandoned, or has no reusable lesson
+```
+
+Issue Closeout Reviews are advisory. They do not override AGENTS.md, current
+issue or PR scope, validators, control policies, merge decisions, CURRENT_STATUS,
+or human gates.
 
 ## Stop States
 
