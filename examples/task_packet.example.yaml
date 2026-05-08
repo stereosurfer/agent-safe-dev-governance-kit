@@ -8,6 +8,7 @@ product_context: "Prevents AI over-simplification."
 current_repository_context: "Bootstrap docs exist."
 files_to_inspect_first:
   - "AGENTS.md"
+  - "current GitHub issue or PR"
   - "docs/control/CONTROL_LAYER_V0.md"
 allowed_paths:
   - "docs/control/"

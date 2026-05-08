@@ -6,15 +6,21 @@ body:
     attributes:
       label: objective
       description: One concrete result.
+    validations:
+      required: true
   - type: textarea
     id: durable_source_of_truth
     attributes:
       label: durable_source_of_truth
       description: GitHub issue, PR, or repo document. Do not write see chat.
+    validations:
+      required: true
   - type: input
     id: lane
     attributes:
       label: lane
+    validations:
+      required: true
   - type: dropdown
     id: intelligence_level
     attributes:
@@ -24,31 +30,79 @@ body:
         - standard
         - advanced
         - frontier
+    validations:
+      required: true
+  - type: textarea
+    id: reason
+    attributes:
+      label: reason
+      description: Why the selected intelligence level and task scope are sufficient.
+    validations:
+      required: true
+  - type: dropdown
+    id: context_read_set
+    attributes:
+      label: context_read_set
+      description: Required context read set from docs/control/CONTEXT_BUDGET_POLICY.md.
+      options:
+        - startup
+        - docs_only
+        - control_policy
+        - decision_point
+        - schema_or_contract
+        - security_or_storage
+        - merge_decision
+        - tooling_or_validation
+        - promotion_or_output_readiness
+        - multi_agent_or_lane
+    validations:
+      required: true
   - type: textarea
     id: allowed_paths
     attributes:
       label: allowed_paths
+    validations:
+      required: true
   - type: textarea
     id: expected_output
     attributes:
       label: expected_output
+    validations:
+      required: true
   - type: textarea
     id: plan
     attributes:
       label: plan
+    validations:
+      required: true
   - type: textarea
     id: checklist
     attributes:
       label: checklist
+    validations:
+      required: true
   - type: textarea
     id: acceptance_sheet
     attributes:
       label: acceptance_sheet
+    validations:
+      required: true
+  - type: textarea
+    id: non_goals
+    attributes:
+      label: non_goals
+      description: What this task must not change or expand into.
+    validations:
+      required: true
   - type: textarea
     id: stop_conditions
     attributes:
       label: stop_conditions
+    validations:
+      required: true
   - type: textarea
     id: rollback_expectations
     attributes:
       label: rollback_expectations
+    validations:
+      required: true

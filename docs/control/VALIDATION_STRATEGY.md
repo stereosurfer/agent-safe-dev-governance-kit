@@ -365,6 +365,12 @@ negative_validation_targets:
     owner: task_packet_schema_check
     fixture: examples/negative/task_packet.empty-list.yaml
 
+  overbroad_files_to_inspect_first:
+    bad_input: "task packet asks to inspect the whole repo or docs/**"
+    expected: blocked
+    owner: task_packet_schema_check
+    fixture: examples/negative/task_packet.overbroad-files-to-inspect.yaml
+
   missing_merge_decision:
     bad_input: "PR body without Merge Decision section"
     expected: blocked
@@ -561,9 +567,19 @@ future_cli_mapping:
       - validate JSON task packets, canonical YAML-like task packets, and negative fixtures with bad_input
       - require every field from docs/control/TASK_PACKET_FORMAT.md
       - require scalar/list shape and material list items
+      - block overbroad files_to_inspect_first requests such as whole repo, all docs, docs/**, ., *, and directories
       - block see chat authority
       - validate known intelligence level values
       - avoid external YAML dependencies
+
+  asgk context-budget-measure --task-packet task_packet.yaml:
+    current_behavior:
+      - run task-packet validation before measuring
+      - read only concrete repo files named by files_to_inspect_first
+      - report pseudo references such as current GitHub issue or PR without pretending they are repo files
+      - report bytes, characters, and estimated_repo_context_tokens using a dependency-free characters / 4 heuristic
+      - label actual model tokens as unavailable unless a client/provider usage source is explicitly supplied elsewhere
+      - fail closed for missing files, unreadable text, or overbroad read requests
 ```
 
 CLI work must not add new dependencies in its first version unless a separate
