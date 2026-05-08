@@ -139,12 +139,22 @@ likely_next_directions:
     status: human_gated
     note: "Changing the existing repository to public exposes the full git history, issues, PRs, releases, and GitHub Actions logs."
   future_v1_x_release:
-    durable_source: "new release-planning issue only if a human requests it"
-    status: not_started
-    possible_scope:
-      - targeted validation or documentation improvements after v1.4.0
-      - source-only release-state closeout if a later release is approved
-      - optional adoption-surface refinements
+    durable_source: "#209 for preparation; separate explicit approval issue required for execution"
+    status: prepared_not_executed
+    candidate:
+      tag: v1.5.0
+      title: "ASGK v1.5.0"
+      theme: "Context-boundary and closeout-learning hardening."
+      possible_scope:
+        - context read gate hardening and repo-context token measurement
+        - required work-unit task-field completeness
+        - chat output hygiene for routine governance mechanics
+        - centralized advisory issue closeout review ledger
+      release_execution_requires:
+        - exact target commit after release-prep PR merge
+        - final python3 scripts/asgk.py doctor
+        - explicit human approval for tag and GitHub release creation
+        - post-release README, roadmap, CURRENT_STATUS, and release-prep closeout
     non_goal: "Do not move existing tags or rewrite v1.0.0/v1.1.0/v1.2.0/v1.3.0/v1.4.0 release history."
   v2_runtime_adapters:
     durable_source: "future v2.0 adapter/profile issues"
