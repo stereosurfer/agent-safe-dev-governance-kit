@@ -48,6 +48,24 @@ TASK_PACKET_REQUIRED_FIELDS = [
     "stop_conditions",
     "rollback_expectations",
 ]
+WORK_UNIT_REQUIRED_FIELDS = [
+    "lane",
+    "intelligence_level",
+    "reason",
+    "durable_source_of_truth",
+    "objective",
+    "plan",
+    "checklist",
+    "acceptance_sheet",
+    "allowed_paths",
+    "expected_output",
+    "non_goals",
+    "stop_conditions",
+    "rollback_expectations",
+]
+WORK_UNIT_FIELD_ALIASES = {
+    "reason": ["reason", "intelligence_level_reason"],
+}
 TASK_PACKET_LIST_FIELDS = [
     "files_to_inspect_first",
     "allowed_paths",
@@ -230,6 +248,10 @@ WORK_UNIT_NEGATIVE_FIXTURES = [
     (
         "examples/work_unit.valid-issue.json",
         "examples/negative/work_unit.changed-paths.outside-allowed.txt",
+    ),
+    (
+        "examples/negative/work_unit.missing-task-fields.json",
+        "examples/negative/work_unit.missing-task-fields.paths.txt",
     ),
 ]
 TARGET_INSTALL_LICENSE_NOTICE_PATHS = [
@@ -563,18 +585,76 @@ def path_matches_allowed(path: str, allowed_path: str) -> bool:
     return path == allowed
 
 
-def extract_allowed_paths(body: str) -> list[str]:
-    packet = parse_simple_task_packet_yaml(body)
-    allowed = packet.get("allowed_paths")
-    if isinstance(allowed, list):
+def normalized_task_field_label(label: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "_", label.strip().lower()).strip("_")
+
+
+def parse_markdown_task_field_sections(text: str) -> dict[str, object]:
+    fields: dict[str, object] = {}
+    matches = list(re.finditer(r"^#{2,6}\s+(.+?)\s*$", text, flags=re.MULTILINE))
+    for index, match in enumerate(matches):
+        field = normalized_task_field_label(match.group(1))
+        if not field:
+            continue
+        start = match.end()
+        end = matches[index + 1].start() if index + 1 < len(matches) else len(text)
+        content = text[start:end].strip()
+        if not content or content in {"_No response_", "No response"}:
+            continue
+        fields[field] = content
+    return fields
+
+
+def parse_work_unit_task_fields(body: str) -> dict[str, object]:
+    fields = parse_markdown_task_field_sections(body)
+    fields.update(parse_simple_task_packet_yaml(body))
+    return fields
+
+
+def material_items(value: object) -> list[str]:
+    if isinstance(value, list):
         return [
-            normalize_repo_path(str(item).strip().strip('"').strip("'"))
-            for item in allowed
+            str(item).strip().strip('"').strip("'")
+            for item in value
             if str(item).strip().strip('"').strip("'")
         ]
-    if isinstance(allowed, str) and allowed.strip():
-        return [normalize_repo_path(allowed.strip().strip('"').strip("'"))]
-    return []
+    if not isinstance(value, str):
+        return []
+    items: list[str] = []
+    for line in value.splitlines():
+        cleaned = line.strip()
+        if not cleaned or cleaned in {"```", "```yaml", "```text"}:
+            continue
+        cleaned = re.sub(r"^[-*]\s+", "", cleaned)
+        cleaned = re.sub(r"^- \[[ xX]\]\s+", "", cleaned)
+        cleaned = cleaned.strip().strip('"').strip("'")
+        if cleaned:
+            items.append(cleaned)
+    return items
+
+
+def work_unit_field_value(fields: dict[str, object], field: str) -> object | None:
+    for candidate in WORK_UNIT_FIELD_ALIASES.get(field, [field]):
+        if candidate in fields:
+            return fields[candidate]
+    return None
+
+
+def work_unit_required_field_failures(fields: dict[str, object]) -> list[str]:
+    failures: list[str] = []
+    for field in WORK_UNIT_REQUIRED_FIELDS:
+        value = work_unit_field_value(fields, field)
+        if not material_items(value):
+            failures.append(f"Work-unit body missing material required task field: {field}")
+    return failures
+
+
+def extract_allowed_paths(body: str) -> list[str]:
+    fields = parse_work_unit_task_fields(body)
+    return [
+        normalize_repo_path(item)
+        for item in material_items(fields.get("allowed_paths"))
+    ]
 
 
 def check_work_unit_payload(
@@ -624,6 +704,14 @@ def check_work_unit_payload(
             "body",
             "Work-unit body contains chat-only authority phrase: see chat.",
             "Move scope, acceptance, and handoff authority into the issue, PR, or repo docs.",
+        )
+
+    task_fields = parse_work_unit_task_fields(body)
+    for failure in work_unit_required_field_failures(task_fields):
+        add(
+            "required_task_fields",
+            failure,
+            "Add the missing field to the GitHub issue, PR, or task packet before changing files.",
         )
 
     allowed_paths = extract_allowed_paths(body)

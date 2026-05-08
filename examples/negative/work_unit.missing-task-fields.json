@@ -1,0 +1,7 @@
+{
+  "kind": "issue",
+  "number": 2050,
+  "state": "open",
+  "html_url": "https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/2050",
+  "body": "## Required Task Fields\n\n```yaml\nlane: validation_tooling\nintelligence_level: advanced\ndurable_source_of_truth: \"GitHub issue #2050\"\nobjective: \"Bad fixture: missing required task fields must not authorize work.\"\nallowed_paths:\n  - scripts/asgk.py\nexpected_output:\n  - one validation PR\n```\n"
+}

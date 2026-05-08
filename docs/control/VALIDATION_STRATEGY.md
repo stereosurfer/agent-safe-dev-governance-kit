@@ -371,6 +371,12 @@ negative_validation_targets:
     owner: task_packet_schema_check
     fixture: examples/negative/task_packet.overbroad-files-to-inspect.yaml
 
+  missing_work_unit_required_fields:
+    bad_input: "work unit issue body has allowed_paths but omits required task fields"
+    expected: blocked
+    owner: work_unit_check
+    fixture: examples/negative/work_unit.missing-task-fields.json
+
   missing_merge_decision:
     bad_input: "PR body without Merge Decision section"
     expected: blocked
@@ -542,6 +548,8 @@ future_cli_mapping:
     current_behavior:
       - fetch the issue through GitHub REST using gh api
       - fail if the issue is closed or is actually a pull request
+      - fail if required agent task fields are missing or have no material value
+      - support required fields in YAML-like task blocks or GitHub issue-form heading sections
       - parse allowed_paths from the issue body task fields
       - compare local git diff changed paths against allowed_paths
       - support WORKTREE as a git head alias for uncommitted and untracked local files
@@ -560,7 +568,7 @@ future_cli_mapping:
     current_behavior:
       - run the same work-unit validator from fixture or captured JSON
       - support deterministic positive and negative tests without network access
-      - fail closed for merged PR fixtures and outside-allowed-path fixtures
+      - fail closed for merged PR fixtures, missing-task-field fixtures, and outside-allowed-path fixtures
 
   asgk task-packet-check --file task_packet.yaml:
     current_behavior:
