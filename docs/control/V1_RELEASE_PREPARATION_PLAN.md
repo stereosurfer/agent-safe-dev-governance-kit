@@ -356,6 +356,51 @@ v1_4_release_preparation:
     - runtime adapter, installer scaffold, dependency, schema, or v2.0 work
 ```
 
+## v1.5 Release Candidate Preparation Record
+
+```yaml
+v1_5_release_candidate_preparation:
+  issue: "#209"
+  status: prepared_not_executed
+  latest_completed_release_remains: "ASGK v1.4.0"
+  candidate_tag: v1.5.0
+  candidate_release_title: "ASGK v1.5.0"
+  candidate_theme: "Context-boundary and closeout-learning hardening for governed agent workflows."
+  candidate_scope:
+    - "context read gate hardening through files_to_inspect_first validation"
+    - "repo-context token measurement through context-budget-measure"
+    - "work-unit required task-field completeness before changed paths can authorize work"
+    - "chat output hygiene so routine governance mechanics stay out of chat"
+    - "centralized advisory Issue Closeout Review ledger for reusable decisions and pitfalls"
+  preparation_scope:
+    - "fix Chat Output Hygiene gap in AGENTS.md"
+    - "clarify Issue Closeout Review self-bootstrap/no-ledger-update behavior"
+    - "record v1.5 candidate release framing without claiming release completion"
+  release_execution_required:
+    durable_issue: "new or updated release execution issue with explicit human approval"
+    exact_tag: v1.5.0
+    exact_release_title: "ASGK v1.5.0"
+    exact_target_commit: "current main after the release-prep PR merges"
+    release_type: source_only_github_release
+    final_validation:
+      - python3 scripts/asgk.py doctor
+    post_release_closeout_docs:
+      - README.md
+      - docs/bootstrap/10_roadmap.md
+      - docs/handoff/CURRENT_STATUS.md
+      - docs/control/V1_RELEASE_PREPARATION_PLAN.md
+    post_release_validation:
+      - python3 scripts/asgk.py release-state-check --tag v1.5.0 --release-title "ASGK v1.5.0"
+      - python3 scripts/asgk.py doctor
+    rollback_or_revoke_plan_required: true
+  not_authorized_by_this_preparation:
+    - tag creation
+    - GitHub release creation
+    - package publication
+    - repository visibility change
+    - runtime adapter, installer scaffold, dependency, workflow, schema, or v2.0 work
+```
+
 ## Acceptance Criteria For This Planning Stage
 
 ```yaml

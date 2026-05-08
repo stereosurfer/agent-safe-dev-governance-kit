@@ -31,6 +31,20 @@ Task objectives, plans, checklists, acceptance sheets, allowed paths, expected o
 The phrase "see chat" is not acceptable for task scope, acceptance, handoff, or merge authority.
 ```
 
+## Chat Output Hygiene
+
+Routine governance mechanics must be silent in chat.
+
+Only blockers, material decisions, validation failures, human gates, scope
+conflicts, and final results should be user-visible.
+
+Full evidence, command logs, validation details, changed-file lists, and merge
+rationale belong in PR bodies, issue comments, CI logs, or handoff artifacts.
+
+Do not narrate routine steps such as creating branches, checking files, running
+ordinary validators, counting tool calls, or restating why repo-native
+governance exists unless that information changes the user's next decision.
+
 ## Generic Operating Profile
 
 Use this generic profile by default for all repository work.

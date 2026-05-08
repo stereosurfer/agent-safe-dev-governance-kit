@@ -175,6 +175,13 @@ roadmap cleanup before release closeout. It remains a source-only GitHub
 release: no package, installer, runtime adapter, dependency, schema, repository
 visibility change, or v2.0 work is included.
 
+ASGK v1.5.0 is not released yet. The current v1.5 candidate preparation track
+targets context-boundary and closeout-learning hardening: tighter context read
+gates, repo-context token measurement, required work-unit task-field checks,
+chat output hygiene, and a centralized advisory issue closeout review ledger.
+Release execution still requires a separate human-gated issue naming the exact
+tag, title, target commit, final validation, and rollback or revoke plan.
+
 The v1.x line is the generic repo-governance product line. Later runtime-specific
 profiles or adapters are planned as optional optimization layers, not as the
 default governance model.

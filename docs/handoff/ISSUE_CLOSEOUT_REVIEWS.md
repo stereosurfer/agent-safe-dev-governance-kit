@@ -60,11 +60,18 @@ not_needed_when:
   - issue is closed as duplicate
   - issue is abandoned without implementation
   - no reusable lesson exists
+self_bootstrap_exception:
+  - "An issue that creates or materially revises this ledger may record `no_ledger_update` when the reusable rule is already captured in the ledger guidance and PR evidence."
 ```
 
 If the ledger is not in the current issue's allowed paths, do not edit it
 silently. Record `no_ledger_update` in the issue closeout comment or open a
 bounded follow-up issue when the review is genuinely useful.
+
+When recording `no_ledger_update`, include the reason. Acceptable reasons are:
+the issue has no reusable lesson, the ledger was not authorized for the current
+work unit, or the issue is a self-bootstrap ledger change whose reusable lesson
+is already captured in the ledger guidance itself.
 
 ## Entry Limits
 

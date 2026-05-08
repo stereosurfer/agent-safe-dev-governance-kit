@@ -66,6 +66,10 @@ review_entry_optional_when:
   - typo, formatting, or simple target-file update
 review_entry_not_needed_when:
   - issue is duplicate, abandoned, or has no reusable lesson
+self_bootstrap_exception:
+  - issue creates or materially revises docs/handoff/ISSUE_CLOSEOUT_REVIEWS.md
+  - reusable rule is already captured in the ledger guidance and PR evidence
+  - issue closeout comment records no_ledger_update with this reason
 ```
 
 Issue Closeout Reviews are advisory. They do not override AGENTS.md, current
