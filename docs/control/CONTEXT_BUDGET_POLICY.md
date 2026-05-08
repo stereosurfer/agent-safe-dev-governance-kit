@@ -190,6 +190,10 @@ docs_only:
     - validation_script_change_required
 ```
 
+Reading `.github/PULL_REQUEST_TEMPLATE.md` to prepare a governed PR body is a
+context read, not a `.github/**` write. Modifying `.github/**` still triggers the
+escalation rules in `AGENTS.md`.
+
 ### `control_policy`
 
 Use for governance/control documents such as work-unit state, low-risk merge,
@@ -215,6 +219,11 @@ control_policy:
     - human-gated operation would be expanded
     - validation behavior change is required but not scoped
 ```
+
+Selecting `control_policy` is a context classification only. Changing
+`docs/control/**` still requires the escalation record, stricter validation, and
+human-gated handling required by `AGENTS.md`; read-set selection must not be used
+to bypass those gates.
 
 ### `decision_point`
 
