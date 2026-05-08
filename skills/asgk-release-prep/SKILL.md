@@ -103,6 +103,16 @@ python3 scripts/asgk.py doctor
 If `release-state-check` fails after release execution, do not weaken the
 checker. Open or use a bounded closeout issue for the stale docs.
 
+Use summary-first closeout evidence. Record release metadata, validation result,
+key evidence, and limits; keep full routine logs in PR, CI, release, or issue
+artifacts instead of repeating them in chat or closeout comments.
+
+If the release changed `skills/*`, remind the operator that source-distributed
+skills do not automatically update installed client skills. Do not write to
+installed/global skill directories unless explicitly asked. Record
+`installed_skill_sync` as `not_applicable`, `reminder_given`, or
+`synced_by_explicit_user_request`.
+
 ## Stop States
 
 - `blocked`: release target, release issue, approval, validation, or docs plan is missing.
@@ -116,9 +126,10 @@ checker. Open or use a bounded closeout issue for the stale docs.
 
 For planning: a release-prep issue or release-execution issue proposal.
 
-For execution: release issue comment with target commit, validation evidence,
+For execution: release issue comment with target commit, validation summary,
 approval source, tag/release URL, and rollback or revoke plan.
 
 For closeout: PR body or issue comment showing `release-state-check`, `doctor`,
 Current Status Impact, Merge Decision, remaining human gates, and whether a
-bounded follow-up issue exists.
+bounded follow-up issue exists. If `skills/*` changed, include the installed
+skill sync status.

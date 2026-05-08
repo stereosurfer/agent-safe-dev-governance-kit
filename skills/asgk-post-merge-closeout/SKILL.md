@@ -25,17 +25,24 @@ This skill closes only work that is already satisfied by durable GitHub and repo
 3. Inspect the expected issue state.
 4. If the issue is still open but satisfied, comment evidence and close it.
 5. If the issue was not satisfied, stop with a blocker report.
-6. Decide whether `docs/handoff/CURRENT_STATUS.md` needs refresh under the current-status policy.
-7. Recommend no status refresh when `CURRENT_STATUS.md` remains accurate for the next session.
-8. Recommend a status refresh only when stale repo-level recovery state would mislead the next session.
-9. Decide whether the issue qualifies for an advisory Issue Closeout Review in
+6. Keep closeout comments compact. Link to the PR, release, CI, or validator
+   evidence instead of repeating full validation logs already preserved there.
+7. If the merged PR changed `skills/*`, remind the operator that
+   source-distributed skills do not automatically update installed client
+   skills. Do not write to installed/global skill directories unless explicitly
+   asked. Record `installed_skill_sync` as `not_applicable`, `reminder_given`,
+   or `synced_by_explicit_user_request`.
+8. Decide whether `docs/handoff/CURRENT_STATUS.md` needs refresh under the current-status policy.
+9. Recommend no status refresh when `CURRENT_STATUS.md` remains accurate for the next session.
+10. Recommend a status refresh only when stale repo-level recovery state would mislead the next session.
+11. Decide whether the issue qualifies for an advisory Issue Closeout Review in
    `docs/handoff/ISSUE_CLOSEOUT_REVIEWS.md`.
-10. If the ledger is in the current issue's allowed paths, update it with one
+12. If the ledger is in the current issue's allowed paths, update it with one
     compact entry; otherwise record `no_ledger_update` in the issue closeout
     comment or open a bounded follow-up issue only when the lesson is genuinely
     reusable.
-11. If status refresh is required, open a bounded issue or PR for that refresh.
-12. Stop. Do not begin unrelated work.
+13. If status refresh is required, open a bounded issue or PR for that refresh.
+14. Stop. Do not begin unrelated work.
 
 ## Closeout Decision Test
 
@@ -61,6 +68,8 @@ review_entry_required_when:
   - issue includes human-gated authorization
   - issue had failed attempts or repeated correction loops
   - issue produced a reusable operational lesson
+  - required criteria still include a reusable lesson; do not write a review
+    only because the issue is formal, human-gated, or release-shaped
 review_entry_optional_when:
   - single small docs-only PR
   - typo, formatting, or simple target-file update
