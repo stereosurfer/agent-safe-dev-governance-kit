@@ -9,6 +9,7 @@
   "current_repository_context": "Validation tooling is present.",
   "files_to_inspect_first": [
     "AGENTS.md",
+    "current GitHub issue or PR",
     "docs/control/TASK_PACKET_FORMAT.md"
   ],
   "allowed_paths": [

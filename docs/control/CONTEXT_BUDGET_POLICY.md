@@ -584,7 +584,8 @@ do_not_load_by_default:
 ## Required Report Section
 
 Every PR or Agent Report should include a compact context section when the work
-is non-trivial:
+is non-trivial. This section belongs in the existing PR or Agent Report; do not
+create a separate context protocol, context pack, or sidecar context artifact.
 
 ```md
 ## Context Budget
@@ -596,9 +597,19 @@ Expanded files read:
 - <path or none>
 Expansion reason:
 - <reason or none>
+Estimated repo-context tokens: <integer or not_measured>
+Measurement source: <command, fixture, or not_measured>
+Actual model tokens: <integer or unavailable>
+Actual model token source: <client_usage_log, provider_usage, or not_provided>
 Files intentionally not read:
 - <category or path>
 ```
+
+Estimated repo-context tokens are a local, dependency-free approximation of repo
+file text named by the work unit. They are not provider billing tokens and do not
+include GitHub issue text, system/developer prompts, chat history, tool output,
+retrieved web/app content, or model completion tokens. Record actual model token
+usage only when a client or provider usage log is explicitly available.
 
 For handoff recovery, include the handoff packet source and the next safe action.
 

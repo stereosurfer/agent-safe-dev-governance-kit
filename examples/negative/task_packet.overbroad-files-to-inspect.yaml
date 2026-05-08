@@ -1,0 +1,40 @@
+negative_case:
+  id: NEG-031-overbroad-files-to-inspect
+  title: Task packet asks the agent to inspect the whole repository
+  expected_outcome: blocked
+  owner: task_packet_schema_validator
+  should_block_positive_validation: false
+
+bad_input:
+  task_id: "NEG-031"
+  lane: "lane_00_controller"
+  intelligence_level: "standard"
+  intelligence_level_reason: "bad example"
+  durable_source_of_truth: "GitHub issue #000"
+  objective: "This should be blocked because files_to_inspect_first is overbroad."
+  product_context: "negative fixture"
+  current_repository_context: "negative fixture"
+  files_to_inspect_first:
+    - "AGENTS.md"
+    - "whole repo"
+    - "docs/**"
+  allowed_paths:
+    - "docs/control/TASK_PACKET_FORMAT.md"
+  expected_changes:
+    - "invalid"
+  expected_output: "blocked task packet"
+  non_goals:
+    - "none"
+  constraints:
+    - "none"
+  plan:
+    - "Read everything before acting."
+  checklist:
+    - "[ ] invalid"
+  acceptance_sheet:
+    - "[ ] invalid"
+  validation_commands:
+    - "python3 scripts/asgk.py task-packet-check --file examples/negative/task_packet.overbroad-files-to-inspect.yaml"
+  stop_conditions:
+    - "overbroad_context_read_request"
+  rollback_expectations: "Close without work."

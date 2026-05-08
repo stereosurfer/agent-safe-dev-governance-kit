@@ -103,6 +103,50 @@ CURRENT_STATUS_IMPACT_ALLOWED_VALUES = {"updated", "not_applicable", "deferred"}
 CANONICAL_CURRENT_STATUS_PATH = "docs/handoff/CURRENT_STATUS.md"
 TRUE_VALUES = {"true", "yes"}
 EMPTY_FOLLOWUP_VALUES = {"", "none", "null", "tbd", "todo"}
+CONTEXT_TOKEN_ESTIMATE_CHARS_PER_TOKEN = 4
+CONTEXT_MEASUREMENT_METHOD = (
+    "estimated_repo_context_tokens = ceil(characters / 4); repo files only; "
+    "excludes issue/PR text, system prompt, chat, tool output, model completion, "
+    "and provider billing usage."
+)
+CONTEXT_PSEUDO_REFS = {
+    "current github issue or pr",
+    "current issue or pr",
+    "current issue",
+    "current pr",
+    "open prs or current issue when relevant",
+    "target file",
+}
+OVERBROAD_FILES_TO_INSPECT_REFS = {
+    ".",
+    "/",
+    "*",
+    "**",
+    "repo",
+    "repository",
+    "whole repo",
+    "whole repository",
+    "entire repo",
+    "entire repository",
+    "full repo",
+    "full repository",
+    "everything",
+    "all files",
+    "all docs",
+    "all documents",
+    "docs",
+    "docs/",
+    "docs/*",
+    "docs/**",
+    "docs/control",
+    "docs/control/",
+    "docs/control/*",
+    "docs/control/**",
+    "docs/bootstrap",
+    "docs/bootstrap/",
+    "docs/bootstrap/*",
+    "docs/bootstrap/**",
+}
 NEGATIVE_CHANGED_PATH_FIXTURES = [
     "examples/negative/changed_paths.runtime-artifact.txt",
     "examples/negative/changed_paths.protected.txt",
@@ -115,6 +159,7 @@ EXPECTED_FAILURE_CHECKS = [
     ["python3", "scripts/asgk.py", "task-packet-check", "--file", "examples/negative/task_packet.see-chat.yaml"],
     ["python3", "scripts/asgk.py", "task-packet-check", "--file", "examples/negative/task_packet.no-stop.yaml"],
     ["python3", "scripts/asgk.py", "task-packet-check", "--file", "examples/negative/task_packet.empty-list.yaml"],
+    ["python3", "scripts/asgk.py", "task-packet-check", "--file", "examples/negative/task_packet.overbroad-files-to-inspect.yaml"],
     ["python3", "scripts/asgk.py", "handoff-check", "--file", "examples/negative/handoff.missing-active-issue.yaml"],
     ["python3", "scripts/asgk.py", "handoff-check", "--file", "examples/negative/handoff.empty-next-safe-action.yaml"],
     ["python3", "scripts/asgk.py", "handoff-check", "--file", "examples/negative/handoff.unknown-validation-status.yaml"],
@@ -774,6 +819,137 @@ def load_task_packet_payload(path: str | Path) -> tuple[dict[str, object], str]:
     return parse_simple_task_packet_yaml(source), text
 
 
+def context_ref_text(value: object) -> str:
+    return normalize_repo_path(str(value).strip().strip('"').strip("'"))
+
+
+def normalized_context_ref(value: object) -> str:
+    return context_ref_text(value).lower()
+
+
+def task_packet_files_to_inspect_first(packet: dict[str, object]) -> list[str]:
+    value = packet.get("files_to_inspect_first")
+    if not isinstance(value, list):
+        return []
+    return [context_ref_text(item) for item in value if str(item).strip().strip('"').strip("'")]
+
+
+def is_context_pseudo_ref(value: object) -> bool:
+    return normalized_context_ref(value) in CONTEXT_PSEUDO_REFS
+
+
+def is_overbroad_files_to_inspect_ref(value: object) -> bool:
+    ref = context_ref_text(value)
+    lowered = ref.lower()
+    if lowered in OVERBROAD_FILES_TO_INSPECT_REFS:
+        return True
+    if any(char in ref for char in "*?[]"):
+        return True
+    if is_context_pseudo_ref(ref):
+        return False
+    candidate = rel(ref)
+    return candidate.exists() and candidate.is_dir()
+
+
+def task_packet_context_ref_failures(packet: dict[str, object]) -> list[str]:
+    failures: list[str] = []
+    for item in task_packet_files_to_inspect_first(packet):
+        if is_overbroad_files_to_inspect_ref(item):
+            failures.append(f"files_to_inspect_first contains overbroad read request: {item}")
+    return failures
+
+
+def estimate_tokens_from_characters(characters: int) -> int:
+    if characters <= 0:
+        return 0
+    return (characters + CONTEXT_TOKEN_ESTIMATE_CHARS_PER_TOKEN - 1) // CONTEXT_TOKEN_ESTIMATE_CHARS_PER_TOKEN
+
+
+def context_budget_measurement(packet: dict[str, object]) -> dict[str, object]:
+    files: list[dict[str, object]] = []
+    missing_refs: list[str] = []
+    pseudo_refs: list[str] = []
+    overbroad_refs: list[str] = []
+    read_errors: list[dict[str, str]] = []
+    total_bytes = 0
+    total_characters = 0
+
+    for ref in task_packet_files_to_inspect_first(packet):
+        if is_overbroad_files_to_inspect_ref(ref):
+            overbroad_refs.append(ref)
+            continue
+        if is_context_pseudo_ref(ref):
+            pseudo_refs.append(ref)
+            continue
+        path = rel(ref)
+        if not path.exists():
+            missing_refs.append(ref)
+            continue
+        if path.is_dir():
+            overbroad_refs.append(ref)
+            continue
+        try:
+            raw = path.read_bytes()
+            text = raw.decode("utf-8")
+        except UnicodeDecodeError as exc:
+            read_errors.append({"path": ref, "error": f"utf-8 decode failed: {exc}"})
+            continue
+        total_bytes += len(raw)
+        total_characters += len(text)
+        files.append({
+            "path": ref,
+            "bytes": len(raw),
+            "characters": len(text),
+            "estimated_tokens": estimate_tokens_from_characters(len(text)),
+        })
+
+    return {
+        "files": files,
+        "files_count": len(files),
+        "bytes": total_bytes,
+        "characters": total_characters,
+        "estimated_repo_context_tokens": estimate_tokens_from_characters(total_characters),
+        "measurement_method": CONTEXT_MEASUREMENT_METHOD,
+        "actual_model_tokens": "unavailable",
+        "actual_model_token_source": "not_provided",
+        "pseudo_refs": pseudo_refs,
+        "missing_refs": missing_refs,
+        "overbroad_refs": overbroad_refs,
+        "read_errors": read_errors,
+        "limits": (
+            "Estimate covers UTF-8 text from repo files named in files_to_inspect_first only; "
+            "it does not include GitHub issue or PR body text, system/developer prompts, chat history, "
+            "tool output, retrieved web/app content, or model completion tokens."
+        ),
+    }
+
+
+def print_context_budget_measurement(measurement: dict[str, object], *, as_json: bool) -> int:
+    blocking = bool(measurement["missing_refs"] or measurement["overbroad_refs"] or measurement["read_errors"])
+    if as_json:
+        payload = {"result": "fail" if blocking else "pass", **measurement}
+        print(json.dumps(payload, indent=2, sort_keys=True))
+    else:
+        print("Context budget measurement:")
+        print(f"files_count: {measurement['files_count']}")
+        print(f"bytes: {measurement['bytes']}")
+        print(f"characters: {measurement['characters']}")
+        print(f"estimated_repo_context_tokens: {measurement['estimated_repo_context_tokens']}")
+        print(f"measurement_method: {measurement['measurement_method']}")
+        print(f"actual_model_tokens: {measurement['actual_model_tokens']}")
+        print(f"actual_model_token_source: {measurement['actual_model_token_source']}")
+        for field in ["pseudo_refs", "missing_refs", "overbroad_refs", "read_errors"]:
+            values = measurement[field]
+            if values:
+                print(f"{field}:")
+                for value in values:
+                    print(f"- {value}")
+            else:
+                print(f"{field}: none")
+        print(f"limits: {measurement['limits']}")
+    return 1 if blocking else 0
+
+
 def task_packet_schema_failures(packet: dict[str, object], source_text: str) -> list[str]:
     failures: list[str] = []
     for field in TASK_PACKET_REQUIRED_FIELDS:
@@ -803,6 +979,8 @@ def task_packet_schema_failures(packet: dict[str, object], source_text: str) -> 
 
     if has_see_chat(source_text):
         failures.append("task packet contains forbidden chat-only authority phrase: see chat")
+
+    failures.extend(task_packet_context_ref_failures(packet))
 
     return failures
 
@@ -1803,6 +1981,18 @@ def cmd_task_packet_check(args: argparse.Namespace) -> int:
     return print_failures(task_packet_schema_failures(packet, source_text))
 
 
+def cmd_context_budget_measure(args: argparse.Namespace) -> int:
+    try:
+        packet, source_text = load_task_packet_payload(args.task_packet)
+    except (json.JSONDecodeError, ValueError) as exc:
+        return print_failures([f"invalid task packet format: {exc}"])
+    failures = task_packet_schema_failures(packet, source_text)
+    if failures:
+        return print_failures(failures)
+    measurement = context_budget_measurement(packet)
+    return print_context_budget_measurement(measurement, as_json=args.json)
+
+
 def cmd_handoff_check(args: argparse.Namespace) -> int:
     text = read_text(args.file)
     failures: list[str] = []
@@ -1960,6 +2150,11 @@ def build_parser() -> argparse.ArgumentParser:
     p = sub.add_parser("task-packet-check", help="Check required task packet fields.")
     p.add_argument("--file", required=True)
     p.set_defaults(func=cmd_task_packet_check)
+
+    p = sub.add_parser("context-budget-measure", help="Estimate repo-context tokens from task packet files_to_inspect_first.")
+    p.add_argument("--task-packet", required=True)
+    p.add_argument("--json", action="store_true", help="Emit machine-readable JSON output.")
+    p.set_defaults(func=cmd_context_budget_measure)
 
     p = sub.add_parser("handoff-check", help="Check generic handoff packet completeness.")
     p.add_argument("--file", required=True)
