@@ -31,16 +31,16 @@ milestone:
 
 ```yaml
 active_milestone:
-  name: v1.4 source-only release closeout
-  controller_issue: "#194"
-  milestone_status: release_executed_closeout_ready
-  goal: "Record the completed source-only ASGK v1.4.0 release focused on PR governance preflight hardening while preserving human gates for repository visibility, package/installer work, runtime-specific adapters, and future release decisions."
-  reason: "ASGK v1.4.0 is released from issue #194 as a source-only GitHub release. The release reduces repeated agent/human work around PR body mistakes, wrong-scope PRs, target adoption omissions, workflow maintenance drift, and release-roadmap baselines."
+  name: v1.5 source-only release closeout
+  controller_issue: "#211"
+  milestone_status: release_executed_closeout_complete
+  goal: "Record the completed source-only ASGK v1.5.0 release focused on context-boundary and closeout-learning hardening while preserving human gates for repository visibility, package/installer work, runtime-specific adapters, and future release decisions."
+  reason: "ASGK v1.5.0 is released from issue #211 as a source-only GitHub release. The release reduces repeated over-reading, task-field under-validation, chat transcript noise, and scattered issue-level learning."
   deliverables:
-    - "README, roadmap, and current status identify v1.4.0 as the latest completed source-only release"
-    - "v1.4.0 release notes explain the governance-preflight hardening theme instead of only listing features"
-    - "v1.4.0 released scope names PR body preflight, check-pr allowed_paths verification, target adoption dependency alignment, workflow maintenance, and roadmap cleanup"
-    - "issue #194 records target tag, release title, target commit, final validation, product-entry/handoff docs to synchronize, release-state-check command, and rollback or revoke plan"
+    - "README, roadmap, and current status identify v1.5.0 as the latest completed source-only release"
+    - "v1.5.0 release notes explain the context-boundary and closeout-learning hardening theme"
+    - "v1.5.0 released scope names files_to_inspect_first validation, context-budget-measure, work-unit task-field validation, Chat Output Hygiene, and the Issue Closeout Review ledger pattern"
+    - "issue #211 records target tag, release title, target commit, final validation, product-entry/handoff docs to synchronize, release-state-check command, and rollback or revoke plan"
   non_goals:
     - repository visibility change without explicit human approval
     - package publication
@@ -49,8 +49,8 @@ active_milestone:
     - future release execution without a new human-gated release issue
     - new dependencies unless explicitly human-gated
   acceptance:
-    - completed v1.4.0 release state remains recorded in GitHub release, tag, issue #194, and closeout docs
-    - v1.4.0 is described as a completed source-only release
+    - completed v1.5.0 release state remains recorded in GitHub release, tag, issue #211, and closeout docs
+    - v1.5.0 is described as a completed source-only release
     - public visibility decision remains human-gated through #132 or a successor issue
     - future release execution starts only from a separate durable GitHub issue with explicit human approval
   risks:
@@ -128,6 +128,9 @@ completed_recent:
   source_only_v1_4_release_execution:
     result: "Issue #194 created tag v1.4.0 and GitHub release ASGK v1.4.0 at target commit ac39c4da8044560398730fb2a4d811656f79a239 after final doctor validation and explicit human approval."
     release_url: https://github.com/stereosurfer/agent-safe-dev-governance-kit/releases/tag/v1.4.0
+  source_only_v1_5_release_execution:
+    result: "Issue #211 created tag v1.5.0 and GitHub release ASGK v1.5.0 at target commit 4460a99c5baefd26b99a22fc2139da9b3d8ad994 after final doctor validation and explicit human approval."
+    release_url: https://github.com/stereosurfer/agent-safe-dev-governance-kit/releases/tag/v1.5.0
 ```
 
 ## Likely Next Directions
@@ -139,23 +142,10 @@ likely_next_directions:
     status: human_gated
     note: "Changing the existing repository to public exposes the full git history, issues, PRs, releases, and GitHub Actions logs."
   future_v1_x_release:
-    durable_source: "#209 for preparation; separate explicit approval issue required for execution"
-    status: prepared_not_executed
-    candidate:
-      tag: v1.5.0
-      title: "ASGK v1.5.0"
-      theme: "Context-boundary and closeout-learning hardening."
-      possible_scope:
-        - context read gate hardening and repo-context token measurement
-        - required work-unit task-field completeness
-        - chat output hygiene for routine governance mechanics
-        - centralized advisory issue closeout review ledger
-      release_execution_requires:
-        - exact target commit after release-prep PR merge
-        - final python3 scripts/asgk.py doctor
-        - explicit human approval for tag and GitHub release creation
-        - post-release README, roadmap, CURRENT_STATUS, and release-prep closeout
-    non_goal: "Do not move existing tags or rewrite v1.0.0/v1.1.0/v1.2.0/v1.3.0/v1.4.0 release history."
+    durable_source: "future human-gated release issue"
+    status: human_gated
+    note: "Any release after v1.5.0 must start from a separate durable issue with exact tag, title, target commit, final validation, product-entry/handoff closeout plan, and rollback or revoke plan."
+    non_goal: "Do not move existing tags or rewrite v1.0.0/v1.1.0/v1.2.0/v1.3.0/v1.4.0/v1.5.0 release history."
   v2_runtime_adapters:
     durable_source: "future v2.0 adapter/profile issues"
     status: deferred
