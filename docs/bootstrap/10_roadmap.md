@@ -31,16 +31,16 @@ milestone:
 
 ```yaml
 active_milestone:
-  name: v1.5.2 source-only patch release closeout
-  controller_issue: "#219"
+  name: v1.5.3 source-only patch release closeout
+  controller_issue: "#223"
   milestone_status: release_executed_closeout_complete
-  goal: "Record the completed source-only ASGK v1.5.2 patch release focused on issue-first authority for executable work while preserving human gates for repository visibility, package/installer work, runtime-specific adapters, and future release decisions."
-  reason: "ASGK v1.5.2 is released from issue #219 as a source-only GitHub release. The patch makes GitHub issue/PR authorization primary for executable work and keeps task packets as execution capsules rather than replacement authority when GitHub is available."
+  goal: "Record the completed source-only ASGK v1.5.3 patch release focused on validation-boundary clarity while preserving human gates for repository visibility, package/installer work, runtime-specific adapters, and future release decisions."
+  reason: "ASGK v1.5.3 is released from issue #223 as a source-only GitHub release. The patch clarifies that governance validation proves workflow and merge evidence, not application semantics, security correctness, privacy safety, dependency health, or API freshness."
   deliverables:
-    - "README, roadmap, and current status identify v1.5.2 as the latest completed source-only release"
-    - "v1.5.2 release notes explain the issue-first authority hardening theme"
-    - "v1.5.2 released scope names AGENTS.md issue-first wording, task-packet documentation, task-packet-check hardening, and the executable no-GitHub-issue negative fixture"
-    - "issue #219 records target tag, release title, target commit, final validation, product-entry/handoff docs to synchronize, release-state-check command, and rollback or revoke plan"
+    - "README, roadmap, and current status identify v1.5.3 as the latest completed source-only release"
+    - "v1.5.3 release notes explain the validation-boundary hardening theme"
+    - "v1.5.3 released scope names validation-boundary docs, project-specific validation template fields, PR context read-set reporting, and workspace-state-check"
+    - "issue #223 records target tag, release title, target commit, final validation, product-entry/handoff docs to synchronize, release-state-check command, and rollback or revoke plan"
   non_goals:
     - repository visibility change without explicit human approval
     - package publication
@@ -49,8 +49,8 @@ active_milestone:
     - future release execution without a new human-gated release issue
     - new dependencies unless explicitly human-gated
   acceptance:
-    - completed v1.5.2 release state remains recorded in GitHub release, tag, issue #219, and closeout docs
-    - v1.5.2 is described as a completed source-only release
+    - completed v1.5.3 release state remains recorded in GitHub release, tag, issue #223, and closeout docs
+    - v1.5.3 is described as a completed source-only release
     - public visibility decision remains human-gated through #132 or a successor issue
     - future release execution starts only from a separate durable GitHub issue with explicit human approval
   risks:
@@ -68,8 +68,8 @@ active_milestone:
     - external distribution beyond source-only GitHub release
     - runtime-specific adapter or installer work
   phase_exit_criteria:
-    - v1_4_release_state_closeout_merged_or_followup_recorded
-    - no_active_post_v1_4_0_release_state_follow_up_required
+    - v1_5_3_release_state_closeout_merged_or_followup_recorded
+    - no_active_post_v1_5_3_release_state_follow_up_required
 ```
 
 ## Completed Recent Milestones / Gates
@@ -137,6 +137,9 @@ completed_recent:
   source_only_v1_5_2_release_execution:
     result: "Issue #219 created tag v1.5.2 and GitHub release ASGK v1.5.2 at target commit f04bda2ad9656321b5fdcc07afb25c72d2a56b0b after final doctor validation and explicit human approval."
     release_url: https://github.com/stereosurfer/agent-safe-dev-governance-kit/releases/tag/v1.5.2
+  source_only_v1_5_3_release_execution:
+    result: "Issue #223 created tag v1.5.3 and GitHub release ASGK v1.5.3 at target commit 612f6fd12d788e0164ff37a38f804a8ca76d448f after final doctor validation and explicit human approval."
+    release_url: https://github.com/stereosurfer/agent-safe-dev-governance-kit/releases/tag/v1.5.3
 ```
 
 ## Likely Next Directions
@@ -150,8 +153,8 @@ likely_next_directions:
   future_v1_x_release:
     durable_source: "future human-gated release issue"
     status: human_gated
-    note: "Any release after v1.5.2 must start from a separate durable issue with exact tag, title, target commit, final validation, product-entry/handoff closeout plan, and rollback or revoke plan."
-    non_goal: "Do not move existing tags or rewrite v1.0.0/v1.1.0/v1.2.0/v1.3.0/v1.4.0/v1.5.0/v1.5.1/v1.5.2 release history."
+    note: "Any release after v1.5.3 must start from a separate durable issue with exact tag, title, target commit, final validation, product-entry/handoff closeout plan, and rollback or revoke plan."
+    non_goal: "Do not move existing tags or rewrite v1.0.0/v1.1.0/v1.2.0/v1.3.0/v1.4.0/v1.5.0/v1.5.1/v1.5.2/v1.5.3 release history."
   v2_runtime_adapters:
     durable_source: "future v2.0 adapter/profile issues"
     status: deferred

@@ -489,6 +489,49 @@ v1_5_2_release_preparation:
     - installed/global client skill synchronization
 ```
 
+## v1.5.3 Release Preparation Record
+
+```yaml
+v1_5_3_release_preparation:
+  implementation_issue: "#221"
+  implementation_pr: "#222"
+  execution_issue: "#223"
+  status: executed_by_223
+  latest_completed_release: "ASGK v1.5.3"
+  release_title: "ASGK v1.5.3"
+  release_theme: "Validation-boundary hardening for governance evidence, project-specific tests, and workspace hygiene."
+  released_scope:
+    - "README, quickstart, validation strategy, and merge-decision docs clarify what ASGK governance validation does and does not prove"
+    - "issue and PR templates add project-specific validation and context read-set reporting surfaces"
+    - "workspace-state-check reports stale merged branches and untracked local artifacts without inferring merge readiness"
+    - "workspace-state positive and warning fixtures are covered by the negative suite"
+  execution_record:
+    issue: "#223"
+    target_commit: "612f6fd12d788e0164ff37a38f804a8ca76d448f"
+    tag_name: v1.5.3
+    release_url: https://github.com/stereosurfer/agent-safe-dev-governance-kit/releases/tag/v1.5.3
+    release_type: source_only_github_release
+    validation:
+      command: python3 scripts/asgk.py doctor
+      result: passed_before_release
+    closeout:
+      product_entry_and_handoff_docs:
+        - README.md
+        - docs/bootstrap/10_roadmap.md
+        - docs/handoff/CURRENT_STATUS.md
+        - docs/control/V1_RELEASE_PREPARATION_PLAN.md
+      required_validation:
+        - python3 scripts/asgk.py release-state-check --tag v1.5.3 --release-title "ASGK v1.5.3"
+        - python3 scripts/asgk.py doctor
+      installed_skill_sync: not_applicable
+      rollback_or_revoke_plan_recorded: true
+  not_performed:
+    - package publication
+    - repository visibility change
+    - runtime adapter, installer scaffold, dependency, workflow, schema, or v2.0 work
+    - installed/global client skill synchronization
+```
+
 ```yaml
 acceptance:
   - Apache-2.0 license decision is recorded
