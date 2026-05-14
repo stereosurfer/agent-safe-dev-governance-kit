@@ -22,6 +22,57 @@ existing low-risk and auto-merge policy gates pass. Validators may confirm only
 mechanically checkable gates. Missing, unknown, pending, ambiguous, or
 unverifiable gates keep the PR human-gated.
 
+Validation evidence must not be stretched beyond the layer that produced it.
+ASGK governance validation can show that repository control surfaces, PR bodies,
+allowed paths, handoff state, and negative fixtures are coherent. It does not
+prove application semantics, third-party API freshness, security correctness,
+privacy safety, dependency health, licensing correctness, or production
+readiness unless the current issue names project-specific or external checks for
+those claims.
+
+## Validation Boundary
+
+```yaml
+validation_boundary:
+  asgk_governance_validation:
+    proves:
+      - repository scaffold and control-surface shape
+      - PR body and Merge Decision Record structure
+      - allowed-path and protected-path hygiene when supplied with changed paths
+      - runtime artifact path hygiene when supplied with changed paths
+      - known-bad governance fixtures are blocked
+    does_not_prove:
+      - generated code semantics
+      - third-party API freshness
+      - SQL injection or XSS absence
+      - private data never left the local runtime
+      - dependency or license safety
+
+  project_specific_validation:
+    owner: current GitHub issue or PR
+    examples:
+      - unit tests
+      - integration tests
+      - type checks
+      - lint checks
+      - app-specific smoke tests
+    required_pr_evidence:
+      - command
+      - result
+      - concrete evidence
+      - coverage limits
+
+  external_specialist_validation:
+    owner: project policy or human-gated issue
+    examples:
+      - security scanner
+      - dependency audit
+      - privacy or egress review
+      - current upstream documentation lookup
+      - legal or license review
+    rule: not provided by ASGK unless explicitly added by the adopting project
+```
+
 ## Validation Layers
 
 ```yaml
@@ -56,6 +107,11 @@ validation_layers:
     current_status: implemented_live_and_fixture_modes
     purpose: fail closed when the selected issue/PR is stale, wrong-type, missing allowed_paths, or local changed paths exceed allowed_paths
 
+  workspace_state_check:
+    command: python3 scripts/asgk.py workspace-state-check
+    current_status: implemented_live_and_fixture_modes
+    purpose: report local checkout hygiene such as merged/stale work branches and untracked artifacts without inferring merge readiness
+
   task_packet_schema_check:
     command: python3 scripts/asgk.py task-packet-check --file <task_packet>
     current_status: implemented_dependency_free_json_and_canonical_yaml_shape
@@ -67,7 +123,7 @@ validation_layers:
     purpose: run repository validation on push and pull request; run PR-body policy gate on pull_request events
 
   negative_validation:
-    current_status: implemented_with_policy_gate_fixtures_in_default_ci
+    current_status: implemented_with_policy_gate_and_workspace_state_fixtures
     purpose: prove that known-bad inputs are blocked
 
   cli_wrapper:
@@ -569,6 +625,15 @@ future_cli_mapping:
       - run the same work-unit validator from fixture or captured JSON
       - support deterministic positive and negative tests without network access
       - fail closed for merged PR fixtures, missing-task-field fixtures, and outside-allowed-path fixtures
+
+  asgk workspace-state-check:
+    current_behavior:
+      - inspect the local branch, upstream branch, merged-into-base state, and untracked paths
+      - warn when a session is still on a branch already merged into the base ref
+      - warn when unrelated untracked local artifacts are present
+      - return zero by default so local artifacts are surfaced without forcing deletion
+      - support --strict for callers that want warnings to fail
+      - support deterministic fixture checks with --json-file and --expect-warnings
 
   asgk task-packet-check --file task_packet.yaml:
     current_behavior:

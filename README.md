@@ -50,6 +50,14 @@ fields, PR evidence, allowed-path boundaries, stop conditions, validation
 commands, merge records, human-gated operations, and compact current-status
 handoff.
 
+ASGK does not prove that generated code is semantically correct, secure, private,
+or based on current third-party APIs. It blocks unsupported workflow and merge
+claims: missing issue authority, vague validation evidence, out-of-scope file
+changes, unresolved human gates, runtime-artifact leakage, and stale handoff
+state. Project tests, type checks, security scanners, dependency audits, current
+documentation lookup, privacy controls, code review, and human judgment remain
+separate responsibilities.
+
 ## Product Shape
 
 ASGK v1.x is distributed as a source-only governance kit:
@@ -95,6 +103,9 @@ governance model. ASGK v1.x deliberately keeps the default layer generic.
 - Local validation through `python3 scripts/asgk.py doctor`.
 - Negative checks for governance hygiene, PR bodies, handoff packets, target
   install readiness, and stale current-status patterns.
+- Explicit validation-boundary wording so `doctor` evidence is not treated as a
+  substitute for project-specific tests, security review, privacy review, or API
+  freshness checks.
 - PR-level status validation for draft state, mergeability, review decision,
   status checks, PR-body policy, changed-path hygiene, and GitHub closing issue
   references.
@@ -189,6 +200,11 @@ ASGK v1.x does not:
 - auto-approve high-risk work;
 - publish packages or installers by default;
 - manage project-specific architecture, product strategy, or domain schemas;
+- detect every hallucinated API, stale dependency usage, SQL injection, XSS,
+  privacy leak, license issue, or production-readiness defect;
+- prevent an external agent runtime from sending private code or data to a model
+  provider; ASGK can require gates and records, but runtime egress controls live
+  outside the governance kit;
 - remove the need for tests, code review, and human judgment.
 
 ## Where To Read Next

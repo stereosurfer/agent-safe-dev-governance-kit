@@ -39,6 +39,12 @@ Structured validation fields are attribution aids, not a substitute for
 judgment. Reviewers should treat empty or generic evidence, limits, or reason
 text as merge-blocking until clarified.
 
+Validation claims must stay inside their evidence boundary. `doctor` and ASGK
+policy checks prove governance-surface behavior, not application semantics,
+security correctness, privacy safety, dependency health, or current third-party
+API usage. Code-changing PRs should name the project-specific tests that cover
+the changed behavior and explicitly state any coverage limits.
+
 Use this vocabulary when practical:
 
 ```yaml
@@ -66,6 +72,11 @@ validation:
     source: github_actions | external_ci | not_run | not_applicable
     evidence: "Named check, run URL, or reason not applicable."
     limits: "What CI does not prove."
+  project_specific_tests:
+    status: passed | failed | not_run | not_applicable
+    source: freshly_rerun | github_actions | existing_durable_record | not_run | not_applicable
+    evidence: "Named test, typecheck, smoke test, or reason not applicable."
+    limits: "What changed behavior, API freshness, security, or privacy claims this does not prove."
 ```
 
 Examples of invalid validation summaries:
