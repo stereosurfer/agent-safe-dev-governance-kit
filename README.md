@@ -162,18 +162,18 @@ human-gated trigger before it can be treated as low risk.
 
 ## Current Release State
 
-ASGK v1.5.1 is the latest completed source-only GitHub release under the
+ASGK v1.5.2 is the latest completed source-only GitHub release under the
 Apache-2.0 license.
 
-v1.5.1 is a small skill-output hygiene patch on the v1.5 line. It keeps the
-v1.5.0 context-boundary and closeout-learning hardening scope, then sharpens
-source-distributed skill guidance so routine validation evidence is summarized
-first, closeout comments link to existing PR/release/CI evidence instead of
-repeating full logs, Issue Closeout Reviews still require reusable lessons, and
-`skills/*` releases remind operators that installed client skills do not update
-automatically. It remains a source-only GitHub release: no package, installer,
-runtime adapter, dependency, schema, workflow, repository visibility change, or
-v2.0 work is included.
+v1.5.2 is a small issue-first authority hardening patch on the v1.5 line. It
+keeps the v1.5.0 context-boundary and v1.5.1 skill-output hygiene scope, then
+closes an ambiguity where executable work could treat a repo task packet or repo
+document as a same-level substitute for a GitHub issue when GitHub is available.
+Task packets remain useful execution capsules, but executable implementation,
+validation, UI/test, runtime, storage-boundary, and handoff-changing work must
+start from a GitHub issue or already-open PR. It remains a source-only GitHub
+release: no package, installer, runtime adapter, dependency, schema, workflow,
+repository visibility change, or v2.0 work is included.
 
 The v1.x line is the generic repo-governance product line. Later runtime-specific
 profiles or adapters are planned as optional optimization layers, not as the
