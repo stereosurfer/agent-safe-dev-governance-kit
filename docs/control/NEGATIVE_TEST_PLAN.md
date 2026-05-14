@@ -106,7 +106,8 @@ changed to treat them as expected failures.
 | `NEG-027-release-decision-low-risk` | release/publication decision marked low-risk | human_gated | human gate / PR review | `examples/negative/pr_body.release-low-risk.md` | Never low-risk. |
 | `NEG-028-missing-rollback` | high-risk issue lacks rollback expectations | blocked | issue template / PR review | `examples/negative/issue.no-rollback.md` | Required for risky tasks. |
 | `NEG-029-missing-stop-conditions` | task packet lacks stop conditions | blocked | task packet validator | `examples/negative/task_packet.no-stop.yaml` | Agent may overrun scope. |
-| `NEG-030-doc-map-not-updated` | new canonical doc added but `docs/DOCUMENT_MAP.md` not updated | request_changes | PR review / document map | `examples/negative/pr_body.doc-map-stale.md` | Prevent ownership drift. |
+| `NEG-030-executable-task-packet-without-issue` | executable task packet uses only a repo document as authority while GitHub is available | blocked | task packet validator | `examples/negative/task_packet.executable-no-github-issue.yaml` | Task packets refine issue scope; they do not replace issue-first authorization. |
+| `NEG-031-doc-map-not-updated` | new canonical doc added but `docs/DOCUMENT_MAP.md` not updated | request_changes | PR review / document map | `examples/negative/pr_body.doc-map-stale.md` | Prevent ownership drift. |
 
 ## Implementation Phases
 

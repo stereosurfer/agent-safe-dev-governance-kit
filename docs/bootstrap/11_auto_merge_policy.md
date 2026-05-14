@@ -9,7 +9,7 @@ auto_merge_allowed_when:
   - PR is linked to an approved issue
   - lane is declared and matches the issue
   - intelligence level is declared and justified
-  - durable source of truth is a GitHub issue or repo document
+  - durable source of truth is a GitHub issue or PR for executable work
   - objective, plan, checklist, and acceptance sheet are outside chat
   - changed files are inside allowed paths
   - expected output is declared and matches the issue
@@ -51,6 +51,7 @@ auto_merge_forbidden_when:
   - lane or task packet is missing from the PR
   - objective, plan, checklist, or acceptance sheet exists only in chat
   - durable source of truth is missing or says see chat
+  - executable work relies on a task packet or repo document instead of a GitHub issue or PR while GitHub is available
   - intelligence level or reason is missing
   - allowed paths are missing or contradicted
   - expected output is missing or contradicted

@@ -30,6 +30,10 @@ Every significant project change should be:
 
 Chat logs can guide work, but they are not authoritative.
 
+When GitHub is available, executable work starts from a GitHub issue or
+already-open PR. Task packets are execution capsules for that scope, not a
+same-level replacement for the issue/PR.
+
 ## Work Unit State Model
 
 ```text

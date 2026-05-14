@@ -31,6 +31,21 @@ Task objectives, plans, checklists, acceptance sheets, allowed paths, expected o
 The phrase "see chat" is not acceptable for task scope, acceptance, handoff, or merge authority.
 ```
 
+## Issue-first rule
+
+When GitHub is available, every executable implementation, validation, UI/test,
+runtime, storage-boundary, or handoff-changing work unit must start from a
+GitHub issue or an already-open pull request before file edits.
+
+A repo task packet may refine, route, or execute the issue/PR scope, but it must
+not replace the issue/PR as primary authorization for executable work.
+
+Repo task packets or repo documents may be the primary durable source only for
+explicit docs-only planning/control work, or when GitHub is unavailable. If
+GitHub is unavailable, the task packet must record
+`github_issue_status: pending_unavailable`, and the agent must retry issue
+creation before PR creation or merge.
+
 ## Chat Output Hygiene
 
 Routine governance mechanics must be silent in chat.
@@ -55,7 +70,8 @@ Use this generic profile by default for all repository work.
 4. Confirm allowed paths.
 5. Confirm expected output, non-goals, validation, and stop conditions.
 6. Create or use a task branch.
-7. Modify only files allowed by the current issue, PR, or task packet.
+7. Modify only files allowed by the current issue or PR; a task packet may
+   narrow those paths but must not expand or replace them for executable work.
 8. Run the required validation.
 9. Before opening or updating a pull request body, write the body to a file and
    run local PR body governance preflight:

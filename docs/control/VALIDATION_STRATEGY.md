@@ -59,7 +59,7 @@ validation_layers:
   task_packet_schema_check:
     command: python3 scripts/asgk.py task-packet-check --file <task_packet>
     current_status: implemented_dependency_free_json_and_canonical_yaml_shape
-    purpose: validate canonical task-packet required fields, scalar/list shape, material values, intelligence level, and chat-only authority
+    purpose: validate canonical task-packet required fields, scalar/list shape, material values, intelligence level, chat-only authority, and issue-first authority for executable task packets
 
   github_actions:
     workflow: .github/workflows/bootstrap-validation.yml
@@ -577,6 +577,7 @@ future_cli_mapping:
       - require scalar/list shape and material list items
       - block overbroad files_to_inspect_first requests such as whole repo, all docs, docs/**, ., *, and directories
       - block see chat authority
+      - block executable task packets that do not name a GitHub issue or PR when GitHub is available
       - validate known intelligence level values
       - avoid external YAML dependencies
 

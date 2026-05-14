@@ -15,7 +15,11 @@ The controller owns:
 - worker assignment packets
 - failure thresholds and notification conditions
 
-Before spawning a worker, the controller must create or update a durable source of truth with objective, plan, checklist, acceptance sheet, allowed paths, expected output, non-goals, stop conditions, and rollback expectations.
+Before spawning a worker for executable work, the controller must create or
+select a GitHub issue or already-open pull request with objective, plan,
+checklist, acceptance sheet, allowed paths, expected output, non-goals, stop
+conditions, and rollback expectations. Task packets may narrow and route that
+GitHub scope; they must not replace it when GitHub is available.
 
 ## Worker duties
 
@@ -25,7 +29,7 @@ A worker must:
 
 - read `AGENTS.md`;
 - read its lane packet;
-- read the durable issue/repo document;
+- read the durable GitHub issue or PR;
 - stay inside allowed paths;
 - avoid reverting unrelated changes;
 - run relevant validation;

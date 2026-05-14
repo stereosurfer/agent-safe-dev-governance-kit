@@ -12,7 +12,7 @@ body:
     id: durable_source_of_truth
     attributes:
       label: durable_source_of_truth
-      description: GitHub issue, PR, or repo document. Do not write see chat.
+      description: GitHub issue or PR for executable work; repo documents only for explicitly docs-only planning/control work or GitHub-unavailable fallback. Do not write see chat.
     validations:
       required: true
   - type: input
