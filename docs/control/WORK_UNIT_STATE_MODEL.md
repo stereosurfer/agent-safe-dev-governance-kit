@@ -25,6 +25,8 @@ states:
 ## Transition rules
 
 - `idea` cannot go directly to `pr_open` or `merged`.
-- `task_packet_ready` requires durable source of truth.
+- `task_packet_ready` requires a GitHub issue or PR for executable work when
+  GitHub is available. A task packet may refine the scope, but it cannot be the
+  primary authorization for file edits.
 - `accepted` requires validation evidence.
 - `merged` requires Merge Decision Record or explicit human approval.

@@ -4,6 +4,8 @@
   "intelligence_level": "advanced",
   "intelligence_level_reason": "Validation tooling changes require careful schema judgment.",
   "durable_source_of_truth": "GitHub issue #157",
+  "github_issue_status": "available",
+  "work_unit_kind": "implementation",
   "objective": "Validate a JSON task packet fixture.",
   "product_context": "ASGK uses task packets for durable agent-executable work.",
   "current_repository_context": "Validation tooling is present.",

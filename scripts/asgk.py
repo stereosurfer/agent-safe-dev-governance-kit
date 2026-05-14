@@ -135,6 +135,20 @@ CONTEXT_PSEUDO_REFS = {
     "open prs or current issue when relevant",
     "target file",
 }
+DOCS_ONLY_PRIMARY_PATH_PREFIXES = (
+    "docs/control/",
+    "docs/bootstrap/",
+)
+DOCS_ONLY_PRIMARY_PATHS = {
+    "docs/control",
+    "docs/bootstrap",
+    "docs/DOCUMENT_MAP.md",
+    "docs/DOCUMENT_REGISTRY.md",
+    "docs/EVOLUTION_MODEL.md",
+    "docs/QUICKSTART.md",
+    "docs/INSTALL_SURFACE.md",
+    "docs/SKILL_PACK.md",
+}
 OVERBROAD_FILES_TO_INSPECT_REFS = {
     ".",
     "/",
@@ -178,6 +192,7 @@ EXPECTED_FAILURE_CHECKS = [
     ["python3", "scripts/asgk.py", "task-packet-check", "--file", "examples/negative/task_packet.no-stop.yaml"],
     ["python3", "scripts/asgk.py", "task-packet-check", "--file", "examples/negative/task_packet.empty-list.yaml"],
     ["python3", "scripts/asgk.py", "task-packet-check", "--file", "examples/negative/task_packet.overbroad-files-to-inspect.yaml"],
+    ["python3", "scripts/asgk.py", "task-packet-check", "--file", "examples/negative/task_packet.executable-no-github-issue.yaml"],
     ["python3", "scripts/asgk.py", "handoff-check", "--file", "examples/negative/handoff.missing-active-issue.yaml"],
     ["python3", "scripts/asgk.py", "handoff-check", "--file", "examples/negative/handoff.empty-next-safe-action.yaml"],
     ["python3", "scripts/asgk.py", "handoff-check", "--file", "examples/negative/handoff.unknown-validation-status.yaml"],
@@ -922,6 +937,62 @@ def task_packet_files_to_inspect_first(packet: dict[str, object]) -> list[str]:
     return [context_ref_text(item) for item in value if str(item).strip().strip('"').strip("'")]
 
 
+def task_packet_allowed_paths(packet: dict[str, object]) -> list[str]:
+    value = packet.get("allowed_paths")
+    if not isinstance(value, list):
+        return []
+    return [context_ref_text(item) for item in value if str(item).strip().strip('"').strip("'")]
+
+
+def task_packet_scalar(packet: dict[str, object], field: str) -> str:
+    value = packet.get(field)
+    if isinstance(value, str):
+        return value.strip()
+    return ""
+
+
+def has_github_issue_or_pr_ref(value: object) -> bool:
+    text = str(value).strip().lower()
+    if not text:
+        return False
+    if re.search(r"github\.com/.+/(issues|pull)/\d+", text):
+        return True
+    if re.search(r"\b(github[ -]?)?(issue|pr|pull request)\s*#?\d+\b", text):
+        return True
+    return bool(re.search(r"^#\d+\b", text))
+
+
+def task_packet_github_issue_unavailable(packet: dict[str, object]) -> bool:
+    return task_packet_scalar(packet, "github_issue_status").lower() == "pending_unavailable"
+
+
+def task_packet_docs_only_primary_allowed(packet: dict[str, object]) -> bool:
+    kind = task_packet_scalar(packet, "work_unit_kind").lower().replace("-", "_").replace(" ", "_")
+    if kind not in {"docs_only_planning", "docs_only_control"}:
+        return False
+    allowed_paths = task_packet_allowed_paths(packet)
+    return bool(allowed_paths) and all(is_docs_only_primary_path(path) for path in allowed_paths)
+
+
+def is_docs_only_primary_path(path: object) -> bool:
+    normalized = normalize_repo_path(str(path).strip().strip('"').strip("'"))
+    return normalized in DOCS_ONLY_PRIMARY_PATHS or normalized.startswith(DOCS_ONLY_PRIMARY_PATH_PREFIXES)
+
+
+def task_packet_issue_first_failures(packet: dict[str, object]) -> list[str]:
+    source = task_packet_scalar(packet, "durable_source_of_truth")
+    if has_github_issue_or_pr_ref(source):
+        return []
+    if task_packet_github_issue_unavailable(packet):
+        return []
+    if task_packet_docs_only_primary_allowed(packet):
+        return []
+    return [
+        "executable task packet durable_source_of_truth must name a GitHub issue or PR when GitHub is available; "
+        "task packets may refine issue scope but must not replace it, except for docs-only planning/control paths"
+    ]
+
+
 def is_context_pseudo_ref(value: object) -> bool:
     return normalized_context_ref(value) in CONTEXT_PSEUDO_REFS
 
@@ -1068,6 +1139,7 @@ def task_packet_schema_failures(packet: dict[str, object], source_text: str) -> 
     if has_see_chat(source_text):
         failures.append("task packet contains forbidden chat-only authority phrase: see chat")
 
+    failures.extend(task_packet_issue_first_failures(packet))
     failures.extend(task_packet_context_ref_failures(packet))
 
     return failures

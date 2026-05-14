@@ -27,6 +27,35 @@ rollback_expectations:
 
 No field may say `see chat`.
 
+## Issue-First Authority
+
+When GitHub is available, an executable task packet must name a GitHub issue or
+pull request in `durable_source_of_truth`.
+
+Task packets refine executable scope. They do not replace the GitHub issue or PR
+that authorizes file edits.
+
+Use this field when a task packet cannot point at a GitHub issue yet:
+
+```yaml
+github_issue_status: pending_unavailable
+```
+
+The agent must retry issue creation before PR creation or merge. Repo documents
+or task packets may be primary authority only for explicitly docs-only planning
+or control work whose `allowed_paths` stay inside planning/control docs, marked
+with:
+
+```yaml
+work_unit_kind: docs_only_planning
+```
+
+or:
+
+```yaml
+work_unit_kind: docs_only_control
+```
+
 ## Context Read Gate
 
 `files_to_inspect_first` is the task-level context read gate. It must name the
