@@ -88,6 +88,13 @@ body:
     validations:
       required: true
   - type: textarea
+    id: project_specific_validation
+    attributes:
+      label: project_specific_validation
+      description: Commands or checks required beyond ASGK governance validation, plus the behavior or risk they cover. Use not_applicable with a reason for docs-only work.
+    validations:
+      required: true
+  - type: textarea
     id: non_goals
     attributes:
       label: non_goals

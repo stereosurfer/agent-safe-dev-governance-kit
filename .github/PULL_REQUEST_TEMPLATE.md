@@ -2,6 +2,17 @@
 
 ## Task Reference
 
+## Context Read Set
+
+```yaml
+context_read_set:
+  selected:
+  files_read:
+    - path or durable pseudo-reference
+  expansion_reason: none | reason
+  limits: "Context read set records bounded repository context only. It is not a runtime profile, behavior profile, or proof that external documentation was current."
+```
+
 ## Changed Files
 
 ## Validation
@@ -33,6 +44,12 @@ validation_evidence:
       evidence:
       limits:
       current_work_unit_rerun: true | false
+  project_specific_tests:
+    - command:
+      status: passed | failed | not_run | not_applicable
+      source: freshly_rerun | github_actions | existing_durable_record | not_run
+      evidence: behavior, typecheck, smoke test, or reason not run
+      limits: what this does not prove about code semantics, API freshness, security, privacy, or production readiness
 ```
 
 ## Evidence Of Completion

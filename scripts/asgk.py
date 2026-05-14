@@ -269,6 +269,9 @@ WORK_UNIT_NEGATIVE_FIXTURES = [
         "examples/negative/work_unit.missing-task-fields.paths.txt",
     ),
 ]
+WORKSPACE_STATE_NEGATIVE_FIXTURES = [
+    "examples/negative/workspace_state.stale-branch-untracked.json",
+]
 TARGET_INSTALL_LICENSE_NOTICE_PATHS = [
     "LICENSE",
     "LICENSE.md",
@@ -389,6 +392,21 @@ def run_expected_failures(commands: list[list[str]]) -> int:
         print(f"FAIL: {unexpected_passes} expected-failure check(s) unexpectedly passed.")
         return 1
     print(f"Expected-failure checks passed: {len(commands)} command(s) failed as expected.")
+    return 0
+
+
+def run_expected_successes(commands: list[list[str]]) -> int:
+    failures = 0
+    for command in commands:
+        print("+ expect success: " + " ".join(command))
+        result = subprocess.run(command, cwd=ROOT)
+        if result.returncode != 0:
+            print("FAIL: expected command to pass, but it failed.")
+            failures += 1
+    if failures:
+        print(f"FAIL: {failures} expected-success check(s) failed.")
+        return 1
+    print(f"Expected-success checks passed: {len(commands)} command(s) passed as expected.")
     return 0
 
 
@@ -513,6 +531,70 @@ def load_git_changed_paths(git_base: str, git_head: str) -> list[str]:
         for line in result.stdout.splitlines()
         if normalize_repo_path(line)
     ]
+
+
+def git_output(args: list[str]) -> tuple[int, str]:
+    result = subprocess.run(
+        args,
+        cwd=ROOT,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+    )
+    return result.returncode, result.stdout.strip()
+
+
+def live_workspace_state(base_ref: str) -> dict[str, object]:
+    branch_code, branch_output = git_output(["git", "branch", "--show-current"])
+    branch = branch_output if branch_code == 0 else ""
+
+    upstream_code, upstream_output = git_output([
+        "git", "rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}",
+    ])
+    upstream = upstream_output if upstream_code == 0 else ""
+
+    untracked_code, untracked_output = git_output(["git", "ls-files", "--others", "--exclude-standard"])
+    untracked_paths = [
+        normalize_repo_path(line)
+        for line in untracked_output.splitlines()
+        if normalize_repo_path(line)
+    ] if untracked_code == 0 else []
+
+    diff_code, diff_output = git_output(["git", "diff", "--name-only"])
+    cached_code, cached_output = git_output(["git", "diff", "--cached", "--name-only"])
+    changed_paths = sorted({
+        normalize_repo_path(line)
+        for output in (
+            diff_output if diff_code == 0 else "",
+            cached_output if cached_code == 0 else "",
+            untracked_output if untracked_code == 0 else "",
+        )
+        for line in output.splitlines()
+        if normalize_repo_path(line)
+    })
+
+    merged_into_base = False
+    merged_check_error = ""
+    if branch:
+        merged_code, merged_output = git_output(["git", "branch", "--merged", base_ref, "--format", "%(refname:short)"])
+        if merged_code == 0:
+            merged_into_base = branch in {
+                line.strip()
+                for line in merged_output.splitlines()
+                if line.strip()
+            }
+        else:
+            merged_check_error = merged_output or f"git branch --merged {base_ref} failed"
+
+    return {
+        "branch": branch,
+        "upstream": upstream,
+        "base_ref": base_ref,
+        "merged_into_base": merged_into_base,
+        "merged_check_error": merged_check_error,
+        "untracked_paths": untracked_paths,
+        "changed_paths": changed_paths,
+    }
 
 
 def read_changed_path_list(path: str | Path) -> list[str]:
@@ -1440,6 +1522,103 @@ def print_pr_status_result(payload: dict[str, object], result: str, findings: li
     return 1 if findings else 0
 
 
+def workspace_state_findings(payload: dict[str, object], *, main_branch: str) -> list[dict[str, object]]:
+    findings: list[dict[str, object]] = []
+    branch = str(payload.get("branch") or "")
+    base_ref = str(payload.get("base_ref") or "origin/main")
+    upstream = str(payload.get("upstream") or "")
+    merged_into_base = bool(payload.get("merged_into_base"))
+    merged_check_error = str(payload.get("merged_check_error") or "")
+    untracked = payload.get("untracked_paths")
+    untracked_paths = [str(path) for path in untracked] if isinstance(untracked, list) else []
+    changed = payload.get("changed_paths")
+    changed_paths = [str(path) for path in changed] if isinstance(changed, list) else []
+    branch_is_stale = bool(payload.get("branch_is_stale"))
+    if "branch_is_stale" not in payload:
+        branch_is_stale = bool(branch and branch != main_branch and merged_into_base and not changed_paths)
+
+    if not branch:
+        findings.append({
+            "severity": "WARN",
+            "field": "branch",
+            "reason": "Current checkout appears to be detached or branch name is unavailable.",
+            "recommended_fix": "Confirm the intended work branch before editing files.",
+        })
+    elif branch_is_stale:
+        findings.append({
+            "severity": "WARN",
+            "field": "branch",
+            "reason": f"Current branch `{branch}` is already merged into `{base_ref}`.",
+            "recommended_fix": "Switch to main or create a fresh issue branch before starting a new work unit.",
+        })
+
+    if branch != main_branch and not upstream:
+        findings.append({
+            "severity": "WARN",
+            "field": "upstream",
+            "reason": f"Current branch `{branch or '<detached>'}` has no upstream branch recorded.",
+            "recommended_fix": "Confirm branch tracking before relying on remote status.",
+        })
+
+    if merged_check_error:
+        findings.append({
+            "severity": "WARN",
+            "field": "merged_into_base",
+            "reason": f"Could not check whether the branch is merged into `{base_ref}`: {merged_check_error}",
+            "recommended_fix": "Fetch the base ref or run the check again with a valid --base-ref.",
+        })
+
+    if untracked_paths:
+        findings.append({
+            "severity": "WARN",
+            "field": "untracked_paths",
+            "reason": f"Workspace has {len(untracked_paths)} untracked path(s).",
+            "recommended_fix": "Leave unrelated local artifacts alone, or intentionally move/remove them outside this work unit before validating changed-path scope.",
+            "paths": untracked_paths,
+        })
+
+    return findings
+
+
+def print_workspace_state_result(
+    payload: dict[str, object],
+    findings: list[dict[str, object]],
+    *,
+    as_json: bool,
+    strict: bool,
+    expect_warnings: bool,
+) -> int:
+    result = "warn" if findings else "pass"
+    output = {
+        "result": result,
+        "strict": strict,
+        "expect_warnings": expect_warnings,
+        "low_risk_inferred": False,
+        "state": payload,
+        "findings": findings,
+    }
+    if as_json:
+        print(json.dumps(output, indent=2, sort_keys=True))
+    elif findings:
+        for finding in findings:
+            paths = finding.get("paths")
+            suffix = f" Paths: {', '.join(paths)}" if isinstance(paths, list) and paths else ""
+            print(
+                f"WARN: {finding['field']} - {finding['reason']} "
+                f"Fix: {finding['recommended_fix']}{suffix}"
+            )
+        print("Workspace state check result: warn. No merge status was inferred.")
+    else:
+        print("Workspace state check passed. No merge status was inferred.")
+
+    if expect_warnings and not findings:
+        print("FAIL: expected workspace-state warnings, but none were reported.")
+        return 1
+    if strict and findings:
+        return 1
+    return 0
+
+
 def add_target_install_finding(
     findings: list[dict[str, str | bool]],
     severity: str,
@@ -1844,6 +2023,15 @@ def cmd_negative(args: argparse.Namespace) -> int:
             ]
             for fixture, paths_file in WORK_UNIT_NEGATIVE_FIXTURES
         ])
+    if args.case == "workspace-state":
+        return run_expected_successes([
+            [
+                "python3", "scripts/asgk.py", "workspace-state-check",
+                "--json-file", fixture,
+                "--expect-warnings",
+            ]
+            for fixture in WORKSPACE_STATE_NEGATIVE_FIXTURES
+        ])
     if args.case == "all":
         changed = cmd_negative(argparse.Namespace(case="changed-paths"))
         textual = cmd_negative(argparse.Namespace(case="textual"))
@@ -1852,7 +2040,11 @@ def cmd_negative(args: argparse.Namespace) -> int:
         target_install = cmd_negative(argparse.Namespace(case="target-install"))
         release_state = cmd_negative(argparse.Namespace(case="release-state"))
         work_unit = cmd_negative(argparse.Namespace(case="work-unit"))
-        return 1 if changed or textual or policy_gate or pr_status or target_install or release_state or work_unit else 0
+        workspace_state = cmd_negative(argparse.Namespace(case="workspace-state"))
+        return 1 if (
+            changed or textual or policy_gate or pr_status or target_install
+            or release_state or work_unit or workspace_state
+        ) else 0
     print(f"FAIL: unsupported negative case group: {args.case}")
     return 1
 
@@ -2239,6 +2431,23 @@ def cmd_release_state_check(args: argparse.Namespace) -> int:
     return print_failures(failures)
 
 
+def cmd_workspace_state_check(args: argparse.Namespace) -> int:
+    if args.json_file:
+        payload = json.loads(read_text(args.json_file))
+        if not isinstance(payload, dict):
+            return print_failures(["workspace-state JSON fixture must be an object"])
+    else:
+        payload = live_workspace_state(args.base_ref)
+    findings = workspace_state_findings(payload, main_branch=args.main_branch)
+    return print_workspace_state_result(
+        payload,
+        findings,
+        as_json=args.json,
+        strict=args.strict,
+        expect_warnings=args.expect_warnings,
+    )
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="ASGK minimal validation CLI.")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -2257,7 +2466,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.set_defaults(func=cmd_hygiene)
 
     p = sub.add_parser("negative", help="Run opt-in negative checks.")
-    p.add_argument("case", nargs="?", default="changed-paths", choices=["changed-paths", "textual", "policy-gate", "pr-status", "target-install", "release-state", "work-unit", "all"])
+    p.add_argument("case", nargs="?", default="changed-paths", choices=["changed-paths", "textual", "policy-gate", "pr-status", "target-install", "release-state", "work-unit", "workspace-state", "all"])
     p.set_defaults(func=cmd_negative)
 
     p = sub.add_parser("policy-gate", help="Run PR-body policy gate checks.")
@@ -2281,6 +2490,15 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--git-head", help="Head revision for git diff --name-only.")
     p.add_argument("--json", action="store_true", help="Emit machine-readable JSON output.")
     p.set_defaults(func=cmd_work_unit_check)
+
+    p = sub.add_parser("workspace-state-check", help="Report local workspace hygiene without inferring merge readiness.")
+    p.add_argument("--json-file", help="Fixture or captured workspace-state JSON payload.")
+    p.add_argument("--main-branch", default="main", help="Main branch name used to identify non-work branches.")
+    p.add_argument("--base-ref", default="origin/main", help="Base ref used for merged-branch checks.")
+    p.add_argument("--strict", action="store_true", help="Return nonzero when warnings are present.")
+    p.add_argument("--expect-warnings", action="store_true", help="Return nonzero unless at least one warning is present.")
+    p.add_argument("--json", action="store_true", help="Emit machine-readable JSON output.")
+    p.set_defaults(func=cmd_workspace_state_check)
 
     p = sub.add_parser("status-check", help="Check docs/handoff/CURRENT_STATUS.md for compactness and stale markers.")
     p.add_argument("--file", default="docs/handoff/CURRENT_STATUS.md")

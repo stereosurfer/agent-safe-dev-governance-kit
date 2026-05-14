@@ -270,17 +270,31 @@ For governance or scaffold changes:
 python3 scripts/asgk.py doctor
 ```
 
+`doctor` is a governance and scaffold validation entrypoint. It checks ASGK
+surface integrity, compact status hygiene, changed-path guardrails, and known-bad
+negative fixtures. It does not prove application behavior, code semantics,
+security correctness, privacy safety, dependency health, or whether an agent used
+current third-party API documentation.
+
 Useful focused checks:
 
 ```bash
 python3 scripts/asgk.py negative all
 python3 scripts/pr_governance_preflight.py check --body-file pr.md
 python3 scripts/asgk.py work-unit-check --issue <issue-number> --git-base origin/main --git-head WORKTREE
+python3 scripts/asgk.py workspace-state-check
 python3 scripts/policy_gate_check.py --pr-body pr.md
 git diff --check
 ```
 
 For project-specific code changes, also run the tests required by the issue.
+Record what those tests cover and what they do not prove in the PR Validation
+section.
+
+`workspace-state-check` is a startup hygiene check. By default it reports local
+warnings such as untracked artifacts or a branch already merged into the base ref
+without failing the work unit; use `--strict` only when a caller wants those
+warnings to block.
 
 ### 7. Open The PR
 
@@ -307,6 +321,7 @@ Every PR should include:
 ```text
 ## Summary
 ## Task Reference
+## Context Read Set
 ## Changed Files
 ## Validation
 ## Evidence Of Completion

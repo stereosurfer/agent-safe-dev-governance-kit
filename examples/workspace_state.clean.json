@@ -1,0 +1,10 @@
+{
+  "base_ref": "origin/main",
+  "branch_is_stale": false,
+  "branch": "main",
+  "changed_paths": [],
+  "merged_check_error": "",
+  "merged_into_base": false,
+  "untracked_paths": [],
+  "upstream": "origin/main"
+}
