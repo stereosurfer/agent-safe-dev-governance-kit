@@ -446,6 +446,49 @@ v1_5_1_release_preparation:
 
 ## Acceptance Criteria For This Planning Stage
 
+## v1.5.2 Release Preparation Record
+
+```yaml
+v1_5_2_release_preparation:
+  implementation_issue: "#217"
+  implementation_pr: "#218"
+  execution_issue: "#219"
+  status: executed_by_219
+  latest_completed_release: "ASGK v1.5.2"
+  release_title: "ASGK v1.5.2"
+  release_theme: "Issue-first authority hardening for executable task packets and agent rules."
+  released_scope:
+    - "explicit AGENTS.md issue-first rule for executable implementation, validation, UI/test, runtime, storage-boundary, and handoff-changing work"
+    - "task-packet documentation that keeps task packets as issue/PR execution capsules rather than replacement authority"
+    - "task-packet-check failure for executable packets without GitHub issue or PR authority when GitHub is available"
+    - "negative fixture for executable repo-document-only task packet authority"
+  execution_record:
+    issue: "#219"
+    target_commit: "f04bda2ad9656321b5fdcc07afb25c72d2a56b0b"
+    tag_name: v1.5.2
+    release_url: https://github.com/stereosurfer/agent-safe-dev-governance-kit/releases/tag/v1.5.2
+    release_type: source_only_github_release
+    validation:
+      command: python3 scripts/asgk.py doctor
+      result: passed_before_release
+    closeout:
+      product_entry_and_handoff_docs:
+        - README.md
+        - docs/bootstrap/10_roadmap.md
+        - docs/handoff/CURRENT_STATUS.md
+        - docs/control/V1_RELEASE_PREPARATION_PLAN.md
+      required_validation:
+        - python3 scripts/asgk.py release-state-check --tag v1.5.2 --release-title "ASGK v1.5.2"
+        - python3 scripts/asgk.py doctor
+      installed_skill_sync: not_applicable
+      rollback_or_revoke_plan_recorded: true
+  not_performed:
+    - package publication
+    - repository visibility change
+    - runtime adapter, installer scaffold, dependency, workflow, schema, validator, or v2.0 work
+    - installed/global client skill synchronization
+```
+
 ```yaml
 acceptance:
   - Apache-2.0 license decision is recorded
