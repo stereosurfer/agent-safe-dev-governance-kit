@@ -274,6 +274,9 @@ WORKSPACE_STATE_NEGATIVE_FIXTURES = [
     "examples/negative/workspace_state.stale-branch-untracked.json",
 ]
 COMPACT_GOVERNANCE_RED_TEAM_CHECK = "scripts/compact_governance_red_team_check.py"
+COMPACT_ISSUE_SCOPE_NEGATIVE_FIXTURES = [
+    "examples/negative/compact_governance/issue-scope.missing-allowed-paths.json",
+]
 COMPACT_SCOPE_LOCK_NEGATIVE_FIXTURES = [
     "examples/negative/compact_governance/scope-lock.missing-allowed-paths.json",
 ]
@@ -757,6 +760,61 @@ def extract_allowed_paths(body: str) -> list[str]:
         normalize_repo_path(item)
         for item in material_items(fields.get("allowed_paths"))
     ]
+
+
+def canonical_issue_scope_from_payload(payload: dict[str, object]) -> tuple[str, dict[str, object]]:
+    kind = work_unit_kind(payload)
+    number = payload.get("number")
+    state = str(payload.get("state") or "").lower()
+    title = str(payload.get("title") or "")
+    fields = parse_work_unit_task_fields(str(payload.get("body") or ""))
+    findings: list[dict[str, str]] = []
+    canonical_fields: dict[str, list[str]] = {}
+
+    if kind != "issue":
+        findings.append({
+            "field": "kind",
+            "reason": f"canonical issue scope requires an issue payload, got {kind}",
+        })
+
+    for field in WORK_UNIT_REQUIRED_FIELDS:
+        value = work_unit_field_value(fields, field)
+        items = material_items(value)
+        if field == "allowed_paths":
+            items = [normalize_repo_path(item) for item in items]
+        if not items:
+            findings.append({
+                "field": field,
+                "reason": "missing material issue scope field",
+            })
+        canonical_fields[field] = items
+
+    canonical_issue_scope = {
+        "version": "asgk.compact_issue_scope.v1",
+        "source": {
+            "kind": kind,
+            "number": number,
+            "state": state,
+            "title": title,
+        },
+        "required_fields": WORK_UNIT_REQUIRED_FIELDS,
+        "fields": canonical_fields,
+        "allowed_paths": canonical_fields.get("allowed_paths", []),
+        "scope_rules": {
+            "task_packet_may_narrow": True,
+            "task_packet_must_not_expand": True,
+            "low_risk_inferred": False,
+        },
+    }
+
+    result = "fail" if findings else "pass"
+    return result, {
+        "result": result,
+        "issue": number,
+        "canonical_issue_scope": canonical_issue_scope,
+        "low_risk_inferred": False,
+        "findings": findings,
+    }
 
 
 def compact_scope_lock_from_payload(payload: dict[str, object]) -> tuple[str, dict[str, object]]:
@@ -2091,6 +2149,14 @@ def cmd_negative(args: argparse.Namespace) -> int:
         return run_many([
             ["python3", COMPACT_GOVERNANCE_RED_TEAM_CHECK],
         ])
+    if args.case == "compact-issue-scope":
+        return run_expected_failures([
+            [
+                "python3", "scripts/asgk.py", "compact-issue-scope",
+                "--json-file", fixture,
+            ]
+            for fixture in COMPACT_ISSUE_SCOPE_NEGATIVE_FIXTURES
+        ])
     if args.case == "compact-scope-lock":
         return run_expected_failures([
             [
@@ -2109,11 +2175,12 @@ def cmd_negative(args: argparse.Namespace) -> int:
         work_unit = cmd_negative(argparse.Namespace(case="work-unit"))
         workspace_state = cmd_negative(argparse.Namespace(case="workspace-state"))
         compact_governance = cmd_negative(argparse.Namespace(case="compact-governance"))
+        compact_issue_scope = cmd_negative(argparse.Namespace(case="compact-issue-scope"))
         compact_scope_lock = cmd_negative(argparse.Namespace(case="compact-scope-lock"))
         return 1 if (
             changed or textual or policy_gate or pr_status or target_install
             or release_state or work_unit or workspace_state or compact_governance
-            or compact_scope_lock
+            or compact_issue_scope or compact_scope_lock
         ) else 0
     print(f"FAIL: unsupported negative case group: {args.case}")
     return 1
@@ -2210,6 +2277,33 @@ def cmd_work_unit_check(args: argparse.Namespace) -> int:
         changed_paths,
         as_json=args.json,
     )
+
+
+def cmd_compact_issue_scope(args: argparse.Namespace) -> int:
+    sources = [bool(args.issue), bool(args.json_file)]
+    if sum(sources) != 1:
+        return print_failures(["provide exactly one of --issue or --json-file"])
+    try:
+        payload = (
+            load_live_work_unit("issue", str(args.issue).lstrip("#"))
+            if args.issue
+            else json.loads(read_text(args.json_file))
+        )
+    except (RuntimeError, json.JSONDecodeError) as exc:
+        return print_failures([str(exc)])
+    if not isinstance(payload, dict):
+        return print_failures(["compact issue-scope payload must be a JSON object"])
+
+    result, output = canonical_issue_scope_from_payload(payload)
+    if args.json:
+        print(json.dumps(output, indent=2, sort_keys=True))
+    elif result == "pass":
+        print(f"Canonical issue scope passed for issue #{output.get('issue')}.")
+    else:
+        for finding in output.get("findings", []):
+            print(f"FAIL: {finding['field']} - {finding['reason']}")
+        print("Canonical issue scope failed. No low-risk status was inferred.")
+    return 0 if result == "pass" else 1
 
 
 def cmd_compact_scope_lock(args: argparse.Namespace) -> int:
@@ -2563,8 +2657,14 @@ def build_parser() -> argparse.ArgumentParser:
     p.set_defaults(func=cmd_hygiene)
 
     p = sub.add_parser("negative", help="Run opt-in negative checks.")
-    p.add_argument("case", nargs="?", default="changed-paths", choices=["changed-paths", "textual", "policy-gate", "pr-status", "target-install", "release-state", "work-unit", "workspace-state", "compact-governance", "compact-scope-lock", "all"])
+    p.add_argument("case", nargs="?", default="changed-paths", choices=["changed-paths", "textual", "policy-gate", "pr-status", "target-install", "release-state", "work-unit", "workspace-state", "compact-governance", "compact-issue-scope", "compact-scope-lock", "all"])
     p.set_defaults(func=cmd_negative)
+
+    p = sub.add_parser("compact-issue-scope", help="Emit a canonical compact-governance issue scope object.")
+    p.add_argument("--issue", help="GitHub issue number for live gh REST lookup.")
+    p.add_argument("--json-file", help="Fixture or captured issue JSON payload.")
+    p.add_argument("--json", action="store_true", help="Emit machine-readable JSON output.")
+    p.set_defaults(func=cmd_compact_issue_scope)
 
     p = sub.add_parser("compact-scope-lock", help="Emit a deterministic compact-governance scope lock from an issue.")
     p.add_argument("--issue", help="GitHub issue number for live gh REST lookup.")

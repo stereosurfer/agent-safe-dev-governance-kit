@@ -124,9 +124,27 @@ turns these modeled states into live validators:
 
 Until those validators exist, verbose PR bodies remain the safer default.
 
+## Canonical Issue Scope Primitive
+
+The first dependency is a canonical issue scope object:
+
+```bash
+python3 scripts/asgk.py compact-issue-scope --issue <number> --json
+python3 scripts/asgk.py compact-issue-scope --json-file examples/compact_governance/issue_scope.valid-issue.json --json
+```
+
+The command compiles the issue fields already required by issue-first work into
+a stable `canonical_issue_scope` object. It normalizes `allowed_paths`, reports
+missing material fields as findings, and always emits `low_risk_inferred:
+false`.
+
+This object is not a task packet, PR report, merge decision, or handoff. Later
+compact-governance work may reference it, hash it, or compare it to live issue
+state, but it does not replace the GitHub issue as the source of task authority.
+
 ## Scope Lock Primitive
 
-The first implementation primitive is opt-in:
+The scope-lock primitive is also opt-in:
 
 ```bash
 python3 scripts/asgk.py compact-scope-lock --issue <number> --json
