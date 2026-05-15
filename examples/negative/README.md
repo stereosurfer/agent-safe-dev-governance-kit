@@ -83,3 +83,4 @@ Until such tools exist, these fixtures are documentation-backed test targets for
 | NEG-041 | `compact_governance/issue-scope.missing-allowed-paths.json` | blocked |
 | NEG-042 | `compact_governance/scope-lock.stale-capture.json` | blocked |
 | NEG-043 | `compact_governance/pr-report.metadata-unavailable.json` | fail_closed |
+| NEG-044 | `compact_governance/pr-report.claim-conflicts-with-tool-state.json` | blocked |

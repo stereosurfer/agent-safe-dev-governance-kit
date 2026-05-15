@@ -290,6 +290,7 @@ COMPACT_SCOPE_LOCK_NEGATIVE_CASES = [
     ],
 ]
 COMPACT_PR_REPORT_NEGATIVE_FIXTURES = [
+    "examples/negative/compact_governance/pr-report.claim-conflicts-with-tool-state.json",
     "examples/negative/compact_governance/pr-report.metadata-unavailable.json",
 ]
 TARGET_INSTALL_LICENSE_NOTICE_PATHS = [
@@ -931,6 +932,49 @@ def compact_pr_report_status_checks(status_rollup: object) -> list[dict[str, str
     return checks
 
 
+def compact_pr_report_agent_claims(payload: dict[str, object], body: str) -> dict[str, object]:
+    merge_section = markdown_section(body, "Merge Decision")
+    pr_body_claims = {
+        "merge_decision_result": normalized_field_value(merge_section, "result"),
+        "checks_passed": normalized_field_value(merge_section, "checks_passed"),
+        "human_gates_checked": normalized_field_value(merge_section, "human_gates_checked"),
+        "validation_evidence_checked": normalized_field_value(merge_section, "validation_evidence_checked"),
+    }
+    merge_ready_claimed = pr_body_claims["merge_decision_result"] == "merge_allowed"
+    sources = ["pr_body.merge_decision.result"] if merge_ready_claimed else []
+
+    fixture_claims: dict[str, object] = {}
+    raw_fixture_claims = payload.get("agent_claims")
+    if isinstance(raw_fixture_claims, dict):
+        fixture_claims = dict(raw_fixture_claims)
+        fixture_merge_result = str(fixture_claims.get("merge_result") or "").lower()
+        if fixture_merge_result == "merge_allowed":
+            merge_ready_claimed = True
+            sources.append("agent_claims.merge_result")
+        if fixture_claims.get("auto_merge_eligible") is True:
+            merge_ready_claimed = True
+            sources.append("agent_claims.auto_merge_eligible")
+
+    return {
+        "merge_ready_claimed": merge_ready_claimed,
+        "claim_sources": sorted(set(sources)),
+        "pr_body": pr_body_claims,
+        "fixture": fixture_claims,
+    }
+
+
+def compact_pr_report_claim_conflict_findings(
+    agent_claims: dict[str, object],
+    tool_findings: list[dict[str, str]],
+) -> list[dict[str, str]]:
+    if not tool_findings or agent_claims.get("merge_ready_claimed") is not True:
+        return []
+    return [{
+        "field": "agent_claims",
+        "reason": "merge-ready claim conflicts with tool-derived blocking state",
+    }]
+
+
 def compact_pr_report_from_payload(payload: dict[str, object]) -> tuple[str, dict[str, object]]:
     if payload.get("metadata_available") is False:
         return "fail_closed", {
@@ -944,6 +988,7 @@ def compact_pr_report_from_payload(payload: dict[str, object]) -> tuple[str, dic
 
     pr_number = payload.get("number")
     body = str(payload.get("body") or "")
+    agent_claims = compact_pr_report_agent_claims(payload, body)
     changed_paths = pr_file_paths(payload.get("files"))
     issue_number = merge_decision_issue_number(body)
     issue_payload = pr_status_issue_payload(payload, issue_number) if issue_number is not None else None
@@ -987,6 +1032,8 @@ def compact_pr_report_from_payload(payload: dict[str, object]) -> tuple[str, dic
             "reason": str(finding.get("reason") or "PR status check failed"),
         })
 
+    findings.extend(compact_pr_report_claim_conflict_findings(agent_claims, findings))
+
     restricted_boundaries = compact_pr_report_restricted_boundaries(changed_paths)
     derived_state = "fail" if findings else ("requires_human" if restricted_boundaries else "checkable_pass")
     result = "fail" if findings else "pass"
@@ -994,6 +1041,7 @@ def compact_pr_report_from_payload(payload: dict[str, object]) -> tuple[str, dic
         "result": result,
         "derived_state": derived_state,
         "low_risk_inferred": False,
+        "agent_claims": agent_claims,
         "pr": {
             "number": pr_number,
             "url": payload.get("url"),

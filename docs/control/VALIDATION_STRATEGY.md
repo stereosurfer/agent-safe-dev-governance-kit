@@ -704,6 +704,8 @@ future_cli_mapping:
       - include canonical issue scope and scope lock output
       - include PR body policy-gate and changed-path gate results
       - detect restricted governance boundaries
+      - expose extracted PR-body and fixture merge-readiness claims as report evidence
+      - fail when merge-ready claims conflict with tool-derived blocking findings
       - fail closed when required PR metadata is unavailable
       - never infer low-risk status
 
@@ -715,7 +717,7 @@ future_cli_mapping:
 
   asgk negative compact-pr-report:
     current_behavior:
-      - run compact-pr-report against metadata-unavailable fixtures as expected failures
+      - run compact-pr-report against metadata-unavailable and claim-conflict fixtures as expected failures
     expected: all commands fail
     default_ci: false unless a future issue explicitly wires it into CI
 

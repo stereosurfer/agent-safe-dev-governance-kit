@@ -1,0 +1,56 @@
+{
+  "expected_result": "fail",
+  "number": 236,
+  "title": "Conflicting compact PR report fixture",
+  "state": "OPEN",
+  "isDraft": false,
+  "mergeStateStatus": "CLEAN",
+  "reviewDecision": "",
+  "url": "https://example.invalid/pr/236",
+  "statusCheckRollup": [
+    {
+      "name": "validate",
+      "status": "IN_PROGRESS",
+      "conclusion": "",
+      "detailsUrl": "https://example.invalid/actions/2"
+    }
+  ],
+  "files": [
+    {
+      "path": "scripts/asgk.py"
+    }
+  ],
+  "closingIssuesReferences": [
+    {
+      "number": 1000,
+      "body": "## Required Task Fields\n\n```yaml\nlane: validation_tooling\nintelligence_level: frontier\nreason: \"Fixture issue supports claim-conflict detection.\"\ndurable_source_of_truth: \"GitHub issue #1000\"\nobjective: \"Reject claim conflicts in compact PR reports.\"\nallowed_paths:\n  - scripts/asgk.py\nexpected_output:\n  - compact PR report rejects conflicting claims\nplan:\n  - add conflict detection\nchecklist:\n  - command fails on conflict\nacceptance_sheet:\n  - report fails on merge-ready claim conflict\nnon_goals:\n  - no compact PR body default\nstop_conditions:\n  - claim could override tool state\nrollback_expectations:\n  - revert PR\n```"
+    }
+  ],
+  "body": "## Summary\n\nThis fixture claims merge readiness while tool-derived CI state is still blocked.\n\nCloses #1000\n\n## Task Reference\n\n- GitHub issue: #1000\n\n## Context Read Set\n\n```yaml\ncontext_read_set:\n  selected: tooling_or_validation\n  files_read:\n    - scripts/asgk.py\n  expansion_reason: none\n  limits: \"Fixture only.\"\n```\n\n## Changed Files\n\n- `scripts/asgk.py`\n\n## Validation\n\n```yaml\nvalidation_evidence:\n  local_commands:\n    - command: \"fixture\"\n      status: passed\n      source: freshly_rerun\n      evidence: \"Fixture claim.\"\n      limits: \"Fixture only.\"\n  ci_checks:\n    - name: validate\n      status: pending\n      source: github_actions\n      evidence: \"Fixture CI is pending.\"\n      limits: \"Fixture only.\"\n  inferred_or_prior_evidence: []\n  project_specific_tests:\n    - command: \"not_applicable\"\n      status: not_applicable\n      source: not_applicable\n      evidence: \"Fixture only.\"\n      limits: \"Fixture only.\"\n```\n\n## Evidence Of Completion\n\n- Fixture intentionally overclaims completion.\n\n## Scope Boundaries\n\n- Fixture only.\n\n## Current Status Impact\n\n```yaml\ncurrent_status_impact:\n  status: not_applicable\n  reason: \"Fixture does not change CURRENT_STATUS.md.\"\n  current_status_updated_in_this_pr: false\n  post_merge_safe: not_applicable\n  follow_up_issue: none\n```\n\n## Runtime Output Status\n\nNo runtime outputs.\n\n## Merge Decision\n\n```yaml\nmerge_decision:\n  issue: \"Closes #1000\"\n  lane: validation_tooling\n  intelligence_level: frontier\n  durable_source_of_truth: \"GitHub issue #1000 and this PR body\"\n  checks_passed: true\n  allowed_paths_checked: true\n  expected_output_checked: true\n  contracts_checked: true\n  schemas_checked: not_applicable\n  storage_boundary: not_applicable\n  runtime_artifact_boundary: true\n  safety_review: true\n  human_gates_checked: true\n  validation_evidence_checked: true\n  validation_claim_source:\n    local_doctor: freshly_rerun\n    ci: github_actions\n  result: merge_allowed\n  reason: \"Fixture intentionally conflicts with pending tool-derived CI state.\"\n```\n\n## Known Gaps\n\n- Fixture only.\n\n## Handoff Report\n\nNo handoff action.\n",
+  "issue_scope": {
+    "scope_hash": "claim-conflict-scope",
+    "allowed_paths": [
+      "scripts/asgk.py"
+    ]
+  },
+  "scope_lock": {
+    "scope_hash": "claim-conflict-scope"
+  },
+  "pr": {
+    "metadata_available": true,
+    "changed_paths": [
+      "scripts/asgk.py"
+    ],
+    "ci_status": "pending",
+    "current_status_changed": false,
+    "current_status_impact": "not_applicable"
+  },
+  "task_packet": {
+    "allowed_paths": [
+      "scripts/asgk.py"
+    ]
+  },
+  "agent_claims": {
+    "merge_result": "merge_allowed"
+  }
+}
