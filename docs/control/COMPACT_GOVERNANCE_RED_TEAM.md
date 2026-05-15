@@ -123,3 +123,20 @@ turns these modeled states into live validators:
   restating unchanged scope.
 
 Until those validators exist, verbose PR bodies remain the safer default.
+
+## Scope Lock Primitive
+
+The first implementation primitive is opt-in:
+
+```bash
+python3 scripts/asgk.py compact-scope-lock --issue <number> --json
+python3 scripts/asgk.py compact-scope-lock --json-file examples/compact_governance/scope_lock.valid-issue.json --json
+```
+
+The command extracts the required task fields already used by `work-unit-check`,
+normalizes `allowed_paths`, and emits a deterministic `scope_hash`.
+
+This scope lock is not a merge decision. It does not make a PR low risk and
+does not let a task packet expand issue scope. Later compact-report work must
+compare a PR's captured scope lock to the live issue scope and fail when the
+hash changes.

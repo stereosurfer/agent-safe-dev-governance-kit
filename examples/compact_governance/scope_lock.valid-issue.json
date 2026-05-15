@@ -1,0 +1,34 @@
+{
+  "expected_result": "pass",
+  "kind": "issue",
+  "number": 227,
+  "state": "open",
+  "issue_scope": {
+    "scope_hash": "fixture-scope-lock",
+    "allowed_paths": [
+      "scripts/asgk.py",
+      "examples/compact_governance/**",
+      "examples/negative/compact_governance/**"
+    ]
+  },
+  "scope_lock": {
+    "scope_hash": "fixture-scope-lock"
+  },
+  "pr": {
+    "metadata_available": true,
+    "changed_paths": [
+      "scripts/asgk.py",
+      "examples/compact_governance/scope_lock.valid-issue.json"
+    ],
+    "ci_status": "success",
+    "current_status_changed": false
+  },
+  "task_packet": {
+    "allowed_paths": [
+      "scripts/asgk.py",
+      "examples/compact_governance/**"
+    ]
+  },
+  "agent_claims": {},
+  "body": "## Required Task Fields\n\n```yaml\nlane: validation_tooling\nintelligence_level: frontier\nreason: \"Fixture includes complete compact scope-lock task fields.\"\ndurable_source_of_truth: \"GitHub issue #227\"\nobjective: \"Generate a deterministic compact governance scope lock.\"\nallowed_paths:\n  - scripts/asgk.py\n  - examples/compact_governance/**\n  - examples/negative/compact_governance/**\nexpected_output:\n  - scope lock JSON\nplan:\n  - add command\nchecklist:\n  - command passes\nacceptance_sheet:\n  - scope hash stable\nnon_goals:\n  - no default compact governance\nstop_conditions:\n  - default governance behavior would change\nrollback_expectations:\n  - revert PR\n```"
+}

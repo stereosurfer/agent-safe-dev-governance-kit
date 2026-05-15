@@ -1,0 +1,22 @@
+{
+  "expected_result": "fail",
+  "kind": "issue",
+  "number": 227,
+  "state": "open",
+  "issue_scope": {
+    "scope_hash": "missing-allowed-paths",
+    "allowed_paths": []
+  },
+  "scope_lock": {
+    "scope_hash": "missing-allowed-paths"
+  },
+  "pr": {
+    "metadata_available": true,
+    "changed_paths": [],
+    "ci_status": "success",
+    "current_status_changed": false
+  },
+  "task_packet": {},
+  "agent_claims": {},
+  "body": "## Required Task Fields\n\n```yaml\nlane: validation_tooling\nintelligence_level: frontier\nreason: \"Negative fixture omits allowed_paths.\"\ndurable_source_of_truth: \"GitHub issue #227\"\nobjective: \"Generate a deterministic compact governance scope lock.\"\nexpected_output:\n  - scope lock JSON\nplan:\n  - add command\nchecklist:\n  - command fails\nacceptance_sheet:\n  - missing allowed paths blocks\nnon_goals:\n  - no default compact governance\nstop_conditions:\n  - default governance behavior would change\nrollback_expectations:\n  - revert PR\n```"
+}

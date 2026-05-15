@@ -2,6 +2,7 @@
 from __future__ import annotations
 import argparse
 import fnmatch
+import hashlib
 import json
 import re
 import subprocess
@@ -273,6 +274,9 @@ WORKSPACE_STATE_NEGATIVE_FIXTURES = [
     "examples/negative/workspace_state.stale-branch-untracked.json",
 ]
 COMPACT_GOVERNANCE_RED_TEAM_CHECK = "scripts/compact_governance_red_team_check.py"
+COMPACT_SCOPE_LOCK_NEGATIVE_FIXTURES = [
+    "examples/negative/compact_governance/scope-lock.missing-allowed-paths.json",
+]
 TARGET_INSTALL_LICENSE_NOTICE_PATHS = [
     "LICENSE",
     "LICENSE.md",
@@ -753,6 +757,56 @@ def extract_allowed_paths(body: str) -> list[str]:
         normalize_repo_path(item)
         for item in material_items(fields.get("allowed_paths"))
     ]
+
+
+def compact_scope_lock_from_payload(payload: dict[str, object]) -> tuple[str, dict[str, object]]:
+    kind = work_unit_kind(payload)
+    number = payload.get("number")
+    fields = parse_work_unit_task_fields(str(payload.get("body") or ""))
+    findings: list[dict[str, str]] = []
+    canonical: dict[str, list[str]] = {}
+
+    if kind != "issue":
+        findings.append({
+            "field": "kind",
+            "reason": f"compact scope lock requires an issue payload, got {kind}",
+        })
+
+    for field in WORK_UNIT_REQUIRED_FIELDS:
+        value = work_unit_field_value(fields, field)
+        items = material_items(value)
+        if field == "allowed_paths":
+            items = [normalize_repo_path(item) for item in items]
+        if not items:
+            findings.append({
+                "field": field,
+                "reason": "missing material scope field",
+            })
+        canonical[field] = items
+
+    if findings:
+        return "fail", {
+            "result": "fail",
+            "issue": number,
+            "low_risk_inferred": False,
+            "findings": findings,
+        }
+
+    canonical_scope = {
+        "issue": number,
+        "fields": canonical,
+    }
+    encoded = json.dumps(canonical_scope, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    scope_hash = hashlib.sha256(encoded).hexdigest()
+    return "pass", {
+        "result": "pass",
+        "issue": number,
+        "scope_hash": scope_hash,
+        "allowed_paths": canonical["allowed_paths"],
+        "canonical_scope": canonical_scope,
+        "low_risk_inferred": False,
+        "findings": [],
+    }
 
 
 def check_work_unit_payload(
@@ -2037,6 +2091,14 @@ def cmd_negative(args: argparse.Namespace) -> int:
         return run_many([
             ["python3", COMPACT_GOVERNANCE_RED_TEAM_CHECK],
         ])
+    if args.case == "compact-scope-lock":
+        return run_expected_failures([
+            [
+                "python3", "scripts/asgk.py", "compact-scope-lock",
+                "--json-file", fixture,
+            ]
+            for fixture in COMPACT_SCOPE_LOCK_NEGATIVE_FIXTURES
+        ])
     if args.case == "all":
         changed = cmd_negative(argparse.Namespace(case="changed-paths"))
         textual = cmd_negative(argparse.Namespace(case="textual"))
@@ -2047,9 +2109,11 @@ def cmd_negative(args: argparse.Namespace) -> int:
         work_unit = cmd_negative(argparse.Namespace(case="work-unit"))
         workspace_state = cmd_negative(argparse.Namespace(case="workspace-state"))
         compact_governance = cmd_negative(argparse.Namespace(case="compact-governance"))
+        compact_scope_lock = cmd_negative(argparse.Namespace(case="compact-scope-lock"))
         return 1 if (
             changed or textual or policy_gate or pr_status or target_install
             or release_state or work_unit or workspace_state or compact_governance
+            or compact_scope_lock
         ) else 0
     print(f"FAIL: unsupported negative case group: {args.case}")
     return 1
@@ -2146,6 +2210,33 @@ def cmd_work_unit_check(args: argparse.Namespace) -> int:
         changed_paths,
         as_json=args.json,
     )
+
+
+def cmd_compact_scope_lock(args: argparse.Namespace) -> int:
+    sources = [bool(args.issue), bool(args.json_file)]
+    if sum(sources) != 1:
+        return print_failures(["provide exactly one of --issue or --json-file"])
+    try:
+        payload = (
+            load_live_work_unit("issue", str(args.issue).lstrip("#"))
+            if args.issue
+            else json.loads(read_text(args.json_file))
+        )
+    except (RuntimeError, json.JSONDecodeError) as exc:
+        return print_failures([str(exc)])
+    if not isinstance(payload, dict):
+        return print_failures(["compact scope-lock payload must be a JSON object"])
+
+    result, output = compact_scope_lock_from_payload(payload)
+    if args.json:
+        print(json.dumps(output, indent=2, sort_keys=True))
+    elif result == "pass":
+        print(f"Compact scope lock passed for issue #{output.get('issue')}: {output.get('scope_hash')}")
+    else:
+        for finding in output.get("findings", []):
+            print(f"FAIL: {finding['field']} - {finding['reason']}")
+        print("Compact scope lock failed. No low-risk status was inferred.")
+    return 0 if result == "pass" else 1
 
 
 def cmd_status_check(args: argparse.Namespace) -> int:
@@ -2472,8 +2563,14 @@ def build_parser() -> argparse.ArgumentParser:
     p.set_defaults(func=cmd_hygiene)
 
     p = sub.add_parser("negative", help="Run opt-in negative checks.")
-    p.add_argument("case", nargs="?", default="changed-paths", choices=["changed-paths", "textual", "policy-gate", "pr-status", "target-install", "release-state", "work-unit", "workspace-state", "compact-governance", "all"])
+    p.add_argument("case", nargs="?", default="changed-paths", choices=["changed-paths", "textual", "policy-gate", "pr-status", "target-install", "release-state", "work-unit", "workspace-state", "compact-governance", "compact-scope-lock", "all"])
     p.set_defaults(func=cmd_negative)
+
+    p = sub.add_parser("compact-scope-lock", help="Emit a deterministic compact-governance scope lock from an issue.")
+    p.add_argument("--issue", help="GitHub issue number for live gh REST lookup.")
+    p.add_argument("--json-file", help="Fixture or captured issue JSON payload.")
+    p.add_argument("--json", action="store_true", help="Emit machine-readable JSON output.")
+    p.set_defaults(func=cmd_compact_scope_lock)
 
     p = sub.add_parser("policy-gate", help="Run PR-body policy gate checks.")
     p.add_argument("--pr-body", help="Path to a PR body markdown file.")

@@ -43,11 +43,13 @@ modes before compact governance becomes a default rule:
 
 ```bash
 python3 scripts/asgk.py negative compact-governance
+python3 scripts/asgk.py negative compact-scope-lock
 ```
 
 That command succeeds only when the positive fixture passes and every negative
 fixture produces its expected blocked, failed, fail-closed, or human-gated
-state.
+state. The compact scope-lock negative command succeeds only when malformed
+scope-lock inputs fail as expected.
 
 ## Future CLI Usage
 
@@ -75,3 +77,4 @@ Until such tools exist, these fixtures are documentation-backed test targets for
 | NEG-022 | `pr_body.external-call-no-gate.md` | human_gated |
 | NEG-029 | `task_packet.no-stop.yaml` | blocked |
 | NEG-032..NEG-039 | `compact_governance/*.json` | blocked / failed / fail_closed / human_gated |
+| NEG-040 | `compact_governance/scope-lock.missing-allowed-paths.json` | blocked |
