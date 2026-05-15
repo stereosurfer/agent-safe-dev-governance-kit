@@ -1,0 +1,39 @@
+{
+  "expected_result": "fail",
+  "issue_scope": {
+    "scope_hash": "current-scope-hash",
+    "allowed_paths": [
+      "scripts/asgk.py",
+      "examples/compact_governance/**",
+      "examples/negative/compact_governance/**"
+    ]
+  },
+  "scope_lock": {
+    "version": "asgk.compact_scope_lock.v1",
+    "issue": 232,
+    "scope_hash": "stale-captured-scope-hash",
+    "canonical_issue_scope_version": "asgk.compact_issue_scope.v1",
+    "allowed_paths": [
+      "scripts/asgk.py",
+      "examples/compact_governance/**",
+      "examples/negative/compact_governance/**"
+    ],
+    "low_risk_inferred": false
+  },
+  "pr": {
+    "metadata_available": true,
+    "changed_paths": [
+      "scripts/asgk.py",
+      "examples/negative/compact_governance/scope-lock.stale-capture.json"
+    ],
+    "ci_status": "success",
+    "current_status_changed": false
+  },
+  "task_packet": {
+    "allowed_paths": [
+      "scripts/asgk.py",
+      "examples/negative/compact_governance/**"
+    ]
+  },
+  "agent_claims": {}
+}
