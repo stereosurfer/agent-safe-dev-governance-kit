@@ -124,6 +124,8 @@ changed to treat them as expected failures.
 | `NEG-045-compact-task-packet-expands-issue-scope` | delta-only task packet adds `allowed_paths` outside source issue scope | blocked | compact task-packet command | `examples/negative/compact_governance/task-packet-delta-expands-scope.json` | Delta packets may narrow issue scope, not expand it. |
 | `NEG-046-compact-pr-body-failed-report` | compact PR body references a failed compiled report while PR prose claims merge-ready | blocked | compact PR body command | `examples/negative/compact_governance/pr_body.compact.failed-report.md` | Compact PR bodies must not turn report references into merge authority. |
 | `NEG-047-compact-handoff-hides-stale-current-status` | compact handoff marks current status `not_applicable` while completed work remains in active work | blocked | compact handoff command | `examples/negative/compact_governance/handoff.compact.hides-stale-current-status.yaml` | Compact handoff cannot hide stale active issue, PR, or branch references. |
+| `NEG-048-compact-target-upgrade-overwrites-target-state` | compact target-upgrade manifest copies target-owned current status as-is or marks it overwritten | blocked | compact target-upgrade command | `examples/negative/compact_governance/target_upgrade/manifest.overwrites-current-status.json` | Target-owned state must be preserved or manually merged. |
+| `NEG-049-compact-target-upgrade-default-enabled` | compact target-upgrade manifest enables compact governance by default | blocked | compact target-upgrade command | `examples/negative/compact_governance/target_upgrade/manifest.default-enabled.json` | Target upgrades must remain opt-in until the target issue explicitly enables a profile. |
 
 ## Implementation Phases
 

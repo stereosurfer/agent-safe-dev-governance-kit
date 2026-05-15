@@ -1,0 +1,76 @@
+{
+  "version": "asgk.compact_target_upgrade.v1",
+  "target_repository": "example/recent-asgk-target",
+  "source_asgk_reference": "v1.x-compact-governance",
+  "classification": "recent_asgk",
+  "upgrade_mode": "audit_and_plan",
+  "target_repository_writes_performed": false,
+  "durable_upgrade_issue_required": true,
+  "compact_governance": {
+    "default_enabled": false,
+    "profiles": [
+      "compact issue scope",
+      "scope lock",
+      "compact PR report",
+      "delta task packet",
+      "compact PR body",
+      "compact handoff"
+    ]
+  },
+  "license_notice_handling": {
+    "asgk_apache_2_notice_preserved": true,
+    "target_license_replaced": false,
+    "notice_surface": "target LICENSE or NOTICE surface preserves ASGK Apache-2.0 attribution"
+  },
+  "target_owned_state": {
+    "preserved": [
+      "docs/handoff/CURRENT_STATUS.md",
+      "docs/DOCUMENT_MAP.md",
+      "docs/DOCUMENT_REGISTRY.md",
+      "docs/bootstrap/00_project_brief.md",
+      "docs/bootstrap/01_physical_boundaries.md",
+      "docs/bootstrap/02_storage_roots.md",
+      "docs/bootstrap/03_tech_stack.md",
+      "LICENSE"
+    ],
+    "overwritten_paths": []
+  },
+  "surface_plan": {
+    "copy_as_is": [
+      "scripts/asgk.py",
+      "scripts/policy_gate_check.py",
+      "scripts/pr_governance_preflight.py",
+      "docs/control/COMPACT_GOVERNANCE_RED_TEAM.md",
+      "docs/control/COMPACT_PR_BODY_PROFILE.md",
+      "docs/control/COMPACT_HANDOFF_PROFILE.md",
+      "docs/control/COMPACT_TARGET_UPGRADE_PROFILE.md"
+    ],
+    "manual_merge_required": [
+      "AGENTS.md",
+      ".github/PULL_REQUEST_TEMPLATE.md",
+      "docs/control/CURRENT_STATUS_POLICY.md"
+    ],
+    "never_overwrite": [
+      "docs/handoff/CURRENT_STATUS.md",
+      "docs/DOCUMENT_MAP.md",
+      "docs/DOCUMENT_REGISTRY.md",
+      "docs/bootstrap/00_project_brief.md",
+      "docs/bootstrap/01_physical_boundaries.md",
+      "docs/bootstrap/02_storage_roots.md",
+      "docs/bootstrap/03_tech_stack.md",
+      "LICENSE"
+    ]
+  },
+  "validation": {
+    "commands": [
+      "python3 scripts/asgk.py doctor",
+      "python3 scripts/asgk.py target-install-check --repo-root .",
+      "python3 scripts/asgk.py compact-target-upgrade-check --manifest <manifest>"
+    ]
+  },
+  "human_gates": [
+    "target repository issue authorizes allowed paths before writes",
+    "target repository license owner confirms notice surface",
+    "target repository reviewers approve manual merges into target-owned docs"
+  ]
+}

@@ -416,6 +416,13 @@ profile and current-status stale active-work detection:
 python3 scripts/asgk.py negative compact-handoff
 ```
 
+Compact target-upgrade manifests are opt-in checks for upgrading ASGK-adopted
+repositories to compact governance without overwriting target-owned state:
+
+```bash
+python3 scripts/asgk.py negative compact-target-upgrade
+```
+
 ```yaml
 negative_validation_targets:
   see_chat_source_of_truth:
@@ -776,6 +783,22 @@ future_cli_mapping:
   asgk negative compact-handoff:
     current_behavior:
       - run compact-handoff-check against stale active-work fixtures as expected failures
+    expected: all commands fail
+    default_ci: false unless a future issue explicitly wires it into CI
+
+  asgk compact-target-upgrade-check --manifest manifest.json:
+    current_behavior:
+      - validate compact target-upgrade manifest version, mode, classification, and durable issue requirement
+      - require target_repository_writes_performed false
+      - require compact_governance.default_enabled false
+      - require ASGK Apache-2.0 notice preservation and no target license replacement
+      - block copying target-owned CURRENT_STATUS, document maps, registries, bootstrap docs, or LICENSE as-is
+      - require target validation commands and human gates
+      - never infer low-risk status
+
+  asgk negative compact-target-upgrade:
+    current_behavior:
+      - run compact-target-upgrade-check against default-enabled and overwrite fixtures as expected failures
     expected: all commands fail
     default_ci: false unless a future issue explicitly wires it into CI
 
