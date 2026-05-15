@@ -4,7 +4,7 @@ This is the compact current-status surface for the repository. It is
 overwritten, not appended. Historical detail belongs in GitHub issues, PRs,
 comments, releases, and merge commits.
 
-Last updated: `2026-05-14T14:50:27Z`
+Last updated: `2026-05-14T16:55:56Z`
 
 ## Durable source of truth
 
@@ -20,25 +20,24 @@ Apache-2.0 license. The default operating profile remains generic; runtime
 profiles, adapters, installers, packages, external distribution, and repository
 visibility changes remain human-gated or deferred.
 
-ASGK v1.5.2 is the latest completed source-only GitHub release. It was executed
-under issue #219 after final doctor validation and explicit human approval. The
-release is a small issue-first authority hardening patch: executable
-implementation, validation, UI/test, runtime, storage-boundary, and
-handoff-changing work must start from a GitHub issue or already-open PR when
-GitHub is available, while task packets remain execution capsules rather than
-replacement authority.
+ASGK v1.5.3 is the latest completed source-only GitHub release. It was executed
+under issue #223 after final doctor validation and explicit human approval. The
+release is a validation-boundary hardening patch: ASGK governance checks prove
+workflow and merge evidence, not application semantics, security correctness,
+privacy safety, dependency health, or current third-party API usage.
 
 Completed source-only releases are recorded in GitHub releases and release
 issues: `v1.0.0` / `ASGK v1.0.0` under #130, `v1.1.0` / `ASGK v1.1.0` under
 #145, `v1.2.0` / `ASGK v1.2.0` under #169, `v1.3.0` / `ASGK v1.3.0` under
 #188, `v1.4.0` / `ASGK v1.4.0` under #194, `v1.5.0` / `ASGK v1.5.0` under
-#211, `v1.5.1` / `ASGK v1.5.1` under #215, and `v1.5.2` / `ASGK v1.5.2` under
-#219.
+#211, `v1.5.1` / `ASGK v1.5.1` under #215, `v1.5.2` / `ASGK v1.5.2` under
+#219, and `v1.5.3` / `ASGK v1.5.3` under #223.
 
-Tag `v1.5.2` and GitHub release `ASGK v1.5.2` were created from target commit
-`f04bda2ad9656321b5fdcc07afb25c72d2a56b0b`. v1.5.2 remains source-only: no
-package, installer, runtime adapter, dependency, schema, workflow, validator,
-repository visibility change, or v2.0 work was performed.
+Tag `v1.5.3` and GitHub release `ASGK v1.5.3` were created from target commit
+`612f6fd12d788e0164ff37a38f804a8ca76d448f`. v1.5.3 remains source-only: no
+package, installer, runtime adapter, dependency, schema, workflow, repository
+visibility change, cloud/API/model lane, MCP change, or v2.0 work was
+performed.
 
 ## Active work
 
@@ -80,14 +79,14 @@ Additional focused checks:
 ## Last completed
 
 ```yaml
-issue: "#219 Execute ASGK v1.5.2 source-only patch release"
-state: "v1.5.2 source-only release executed and release-state docs synchronized"
-latest_completed_release: "ASGK v1.5.2"
-latest_completed_tag: v1.5.2
-target_commit: "f04bda2ad9656321b5fdcc07afb25c72d2a56b0b"
-release_url: "https://github.com/stereosurfer/agent-safe-dev-governance-kit/releases/tag/v1.5.2"
+issue: "#223 Execute ASGK v1.5.3 source-only patch release"
+state: "v1.5.3 source-only release executed and release-state docs synchronized"
+latest_completed_release: "ASGK v1.5.3"
+latest_completed_tag: v1.5.3
+target_commit: "612f6fd12d788e0164ff37a38f804a8ca76d448f"
+release_url: "https://github.com/stereosurfer/agent-safe-dev-governance-kit/releases/tag/v1.5.3"
 validation: "python3 scripts/asgk.py doctor passed before release execution; release-state-check and doctor passed during release-state closeout"
-note: "No package, installer, runtime adapter, dependency, schema, workflow, validator, repository visibility, or v2.0 work was performed."
+note: "No package, installer, runtime adapter, dependency, schema, workflow, repository visibility, cloud/API/model lane, MCP change, or v2.0 work was performed."
 ```
 
 ## Runtime artifact status
@@ -97,5 +96,5 @@ model cache, or external preparation outputs are currently authorized.
 
 ## Next safe action
 
-No active release-state follow-up is required after the v1.5.2 closeout PR
+No active release-state follow-up is required after the v1.5.3 closeout PR
 merges. Future gated work must start from a separate durable issue.
