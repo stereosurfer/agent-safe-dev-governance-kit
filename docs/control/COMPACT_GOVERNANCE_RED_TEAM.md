@@ -175,3 +175,9 @@ state, closing issue scope, scope lock, and restricted-boundary state into a
 tool-derived report. Missing PR metadata fails closed. The report may support
 future compact PR bodies, but it is not itself a merge decision and always keeps
 `low_risk_inferred: false`.
+
+The report also extracts merge-readiness claims from PR-body Merge Decision
+fields and optional fixture `agent_claims`. Those claims are evidence only. If a
+claim says the PR is merge-ready while the tool-derived report has blocking
+findings, the report fails with a claim-conflict finding instead of allowing PR
+prose to override live state.
