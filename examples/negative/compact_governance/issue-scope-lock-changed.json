@@ -1,0 +1,30 @@
+{
+  "case_id": "compact-negative-issue-scope-lock-changed",
+  "description": "The issue scope changed after the compact PR captured a scope lock.",
+  "expected_result": "fail",
+  "issue_scope": {
+    "issue": 225,
+    "scope_hash": "scope-v2",
+    "allowed_paths": [
+      "examples/compact_governance/**"
+    ]
+  },
+  "scope_lock": {
+    "issue": 225,
+    "scope_hash": "scope-v1"
+  },
+  "pr": {
+    "metadata_available": true,
+    "changed_paths": [
+      "examples/compact_governance/reference_delta.valid.json"
+    ],
+    "ci_status": "success",
+    "current_status_changed": false,
+    "current_status_impact": "not_applicable",
+    "restricted_boundaries": []
+  },
+  "task_packet": {
+    "allowed_paths": []
+  },
+  "agent_claims": {}
+}

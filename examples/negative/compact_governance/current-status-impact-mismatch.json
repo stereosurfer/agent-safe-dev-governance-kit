@@ -1,0 +1,30 @@
+{
+  "case_id": "compact-negative-current-status-impact-mismatch",
+  "description": "CURRENT_STATUS changed, but compact PR state says the impact is not applicable.",
+  "expected_result": "fail",
+  "issue_scope": {
+    "issue": 225,
+    "scope_hash": "scope-v1",
+    "allowed_paths": [
+      "docs/handoff/CURRENT_STATUS.md"
+    ]
+  },
+  "scope_lock": {
+    "issue": 225,
+    "scope_hash": "scope-v1"
+  },
+  "pr": {
+    "metadata_available": true,
+    "changed_paths": [
+      "docs/handoff/CURRENT_STATUS.md"
+    ],
+    "ci_status": "success",
+    "current_status_changed": true,
+    "current_status_impact": "not_applicable",
+    "restricted_boundaries": []
+  },
+  "task_packet": {
+    "allowed_paths": []
+  },
+  "agent_claims": {}
+}

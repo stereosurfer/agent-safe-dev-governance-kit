@@ -38,6 +38,17 @@ python3 scripts/governance_hygiene.py \
 Each command should return success because the file intentionally contains paths
 that must be blocked.
 
+Compact-governance red-team fixtures model reference-first / delta-only failure
+modes before compact governance becomes a default rule:
+
+```bash
+python3 scripts/asgk.py negative compact-governance
+```
+
+That command succeeds only when the positive fixture passes and every negative
+fixture produces its expected blocked, failed, fail-closed, or human-gated
+state.
+
 ## Future CLI Usage
 
 Future tools may run selected cases with commands such as:
@@ -63,3 +74,4 @@ Until such tools exist, these fixtures are documentation-backed test targets for
 | NEG-014 | `storage_profile.drive-api.json` | blocked |
 | NEG-022 | `pr_body.external-call-no-gate.md` | human_gated |
 | NEG-029 | `task_packet.no-stop.yaml` | blocked |
+| NEG-032..NEG-039 | `compact_governance/*.json` | blocked / failed / fail_closed / human_gated |

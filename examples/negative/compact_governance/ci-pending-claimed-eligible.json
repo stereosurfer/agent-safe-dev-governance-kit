@@ -1,0 +1,33 @@
+{
+  "case_id": "compact-negative-ci-pending-claimed-eligible",
+  "description": "Agent-authored prose implies merge readiness while CI is still pending.",
+  "expected_result": "fail",
+  "issue_scope": {
+    "issue": 225,
+    "scope_hash": "scope-v1",
+    "allowed_paths": [
+      "examples/compact_governance/**"
+    ]
+  },
+  "scope_lock": {
+    "issue": 225,
+    "scope_hash": "scope-v1"
+  },
+  "pr": {
+    "metadata_available": true,
+    "changed_paths": [
+      "examples/compact_governance/reference_delta.valid.json"
+    ],
+    "ci_status": "pending",
+    "current_status_changed": false,
+    "current_status_impact": "not_applicable",
+    "restricted_boundaries": []
+  },
+  "task_packet": {
+    "allowed_paths": []
+  },
+  "agent_claims": {
+    "merge_result": "merge_allowed",
+    "checks_passed": true
+  }
+}

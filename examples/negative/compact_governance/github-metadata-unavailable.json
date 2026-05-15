@@ -1,0 +1,28 @@
+{
+  "case_id": "compact-negative-github-metadata-unavailable",
+  "description": "Compact governance cannot verify the issue/PR metadata and must fail closed.",
+  "expected_result": "fail_closed",
+  "issue_scope": {
+    "issue": 225,
+    "scope_hash": "scope-v1",
+    "allowed_paths": [
+      "examples/compact_governance/**"
+    ]
+  },
+  "scope_lock": {
+    "issue": 225,
+    "scope_hash": "scope-v1"
+  },
+  "pr": {
+    "metadata_available": false,
+    "changed_paths": [],
+    "ci_status": "missing",
+    "current_status_changed": false,
+    "current_status_impact": "not_applicable",
+    "restricted_boundaries": []
+  },
+  "task_packet": {
+    "allowed_paths": []
+  },
+  "agent_claims": {}
+}

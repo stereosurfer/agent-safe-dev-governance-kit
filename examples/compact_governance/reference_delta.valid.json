@@ -1,0 +1,37 @@
+{
+  "case_id": "compact-valid-reference-delta",
+  "description": "Reference-first PR state passes only because tool-derived issue scope, scope lock, CI, status impact, and task-packet narrowing agree.",
+  "expected_result": "pass",
+  "issue_scope": {
+    "issue": 225,
+    "scope_hash": "scope-v1",
+    "allowed_paths": [
+      "docs/control/COMPACT_GOVERNANCE_RED_TEAM.md",
+      "examples/compact_governance/**",
+      "examples/negative/compact_governance/**",
+      "scripts/compact_governance_red_team_check.py"
+    ]
+  },
+  "scope_lock": {
+    "issue": 225,
+    "scope_hash": "scope-v1"
+  },
+  "pr": {
+    "metadata_available": true,
+    "changed_paths": [
+      "docs/control/COMPACT_GOVERNANCE_RED_TEAM.md",
+      "examples/compact_governance/reference_delta.valid.json",
+      "scripts/compact_governance_red_team_check.py"
+    ],
+    "ci_status": "success",
+    "current_status_changed": false,
+    "current_status_impact": "not_applicable",
+    "restricted_boundaries": []
+  },
+  "task_packet": {
+    "allowed_paths": [
+      "examples/compact_governance/reference_delta.valid.json"
+    ]
+  },
+  "agent_claims": {}
+}

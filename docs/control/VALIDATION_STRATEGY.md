@@ -401,6 +401,14 @@ through:
 python3 scripts/asgk.py negative target-install
 ```
 
+Compact-governance red-team fixtures are opt-in modeled fixtures under
+`examples/compact_governance/` and `examples/negative/compact_governance/`.
+They can be run without changing default PR templates or merge policy through:
+
+```bash
+python3 scripts/asgk.py negative compact-governance
+```
+
 ```yaml
 negative_validation_targets:
   see_chat_source_of_truth:
@@ -634,6 +642,17 @@ future_cli_mapping:
       - return zero by default so local artifacts are surfaced without forcing deletion
       - support --strict for callers that want warnings to fail
       - support deterministic fixture checks with --json-file and --expect-warnings
+
+  asgk negative compact-governance:
+    current_behavior:
+      - run scripts/compact_governance_red_team_check.py
+      - evaluate positive and negative compact-governance fixtures without GitHub network access
+      - model issue scope, scope lock, PR state, task-packet narrowing, agent-authored claims, and human-gate boundaries
+      - fail closed when fixture metadata is unavailable
+      - verify that agent-authored claims cannot override tool-derived blocking state
+      - preserve current verbose PR body and merge-policy defaults
+    expected: all fixture outcomes match their expected_result fields
+    default_ci: false unless a future issue explicitly wires it into CI
 
   asgk task-packet-check --file task_packet.yaml:
     current_behavior:

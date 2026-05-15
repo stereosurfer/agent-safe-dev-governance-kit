@@ -272,6 +272,7 @@ WORK_UNIT_NEGATIVE_FIXTURES = [
 WORKSPACE_STATE_NEGATIVE_FIXTURES = [
     "examples/negative/workspace_state.stale-branch-untracked.json",
 ]
+COMPACT_GOVERNANCE_RED_TEAM_CHECK = "scripts/compact_governance_red_team_check.py"
 TARGET_INSTALL_LICENSE_NOTICE_PATHS = [
     "LICENSE",
     "LICENSE.md",
@@ -2032,6 +2033,10 @@ def cmd_negative(args: argparse.Namespace) -> int:
             ]
             for fixture in WORKSPACE_STATE_NEGATIVE_FIXTURES
         ])
+    if args.case == "compact-governance":
+        return run_many([
+            ["python3", COMPACT_GOVERNANCE_RED_TEAM_CHECK],
+        ])
     if args.case == "all":
         changed = cmd_negative(argparse.Namespace(case="changed-paths"))
         textual = cmd_negative(argparse.Namespace(case="textual"))
@@ -2041,9 +2046,10 @@ def cmd_negative(args: argparse.Namespace) -> int:
         release_state = cmd_negative(argparse.Namespace(case="release-state"))
         work_unit = cmd_negative(argparse.Namespace(case="work-unit"))
         workspace_state = cmd_negative(argparse.Namespace(case="workspace-state"))
+        compact_governance = cmd_negative(argparse.Namespace(case="compact-governance"))
         return 1 if (
             changed or textual or policy_gate or pr_status or target_install
-            or release_state or work_unit or workspace_state
+            or release_state or work_unit or workspace_state or compact_governance
         ) else 0
     print(f"FAIL: unsupported negative case group: {args.case}")
     return 1
@@ -2466,7 +2472,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.set_defaults(func=cmd_hygiene)
 
     p = sub.add_parser("negative", help="Run opt-in negative checks.")
-    p.add_argument("case", nargs="?", default="changed-paths", choices=["changed-paths", "textual", "policy-gate", "pr-status", "target-install", "release-state", "work-unit", "workspace-state", "all"])
+    p.add_argument("case", nargs="?", default="changed-paths", choices=["changed-paths", "textual", "policy-gate", "pr-status", "target-install", "release-state", "work-unit", "workspace-state", "compact-governance", "all"])
     p.set_defaults(func=cmd_negative)
 
     p = sub.add_parser("policy-gate", help="Run PR-body policy gate checks.")
