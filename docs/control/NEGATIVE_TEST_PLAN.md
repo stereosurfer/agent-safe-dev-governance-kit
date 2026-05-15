@@ -118,6 +118,7 @@ changed to treat them as expected failures.
 | `NEG-039-compact-metadata-unavailable` | issue/PR metadata is unavailable | blocked | compact governance red-team checker | `examples/negative/compact_governance/github-metadata-unavailable.json` | Compact governance must fail closed. |
 | `NEG-040-compact-scope-lock-missing-allowed-paths` | issue scope-lock input lacks material `allowed_paths` | blocked | compact scope-lock command | `examples/negative/compact_governance/scope-lock.missing-allowed-paths.json` | Scope lock cannot be generated without path authority. |
 | `NEG-041-compact-issue-scope-missing-allowed-paths` | canonical issue scope input lacks material `allowed_paths` | blocked | compact issue-scope command | `examples/negative/compact_governance/issue-scope.missing-allowed-paths.json` | Canonical scope cannot be generated without path authority. |
+| `NEG-042-compact-scope-lock-stale-capture` | captured scope lock hash does not match current canonical issue scope | blocked | compact scope-lock command | `examples/negative/compact_governance/scope-lock.stale-capture.json` | Captured scope locks must not survive issue-scope changes. |
 
 ## Implementation Phases
 

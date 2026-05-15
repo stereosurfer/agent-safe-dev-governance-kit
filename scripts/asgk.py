@@ -277,8 +277,17 @@ COMPACT_GOVERNANCE_RED_TEAM_CHECK = "scripts/compact_governance_red_team_check.p
 COMPACT_ISSUE_SCOPE_NEGATIVE_FIXTURES = [
     "examples/negative/compact_governance/issue-scope.missing-allowed-paths.json",
 ]
-COMPACT_SCOPE_LOCK_NEGATIVE_FIXTURES = [
-    "examples/negative/compact_governance/scope-lock.missing-allowed-paths.json",
+COMPACT_SCOPE_LOCK_NEGATIVE_CASES = [
+    [
+        "--json-file",
+        "examples/negative/compact_governance/scope-lock.missing-allowed-paths.json",
+    ],
+    [
+        "--json-file",
+        "examples/compact_governance/scope_lock.valid-issue.json",
+        "--compare-file",
+        "examples/negative/compact_governance/scope-lock.stale-capture.json",
+    ],
 ]
 TARGET_INSTALL_LICENSE_NOTICE_PATHS = [
     "LICENSE",
@@ -818,31 +827,12 @@ def canonical_issue_scope_from_payload(payload: dict[str, object]) -> tuple[str,
 
 
 def compact_scope_lock_from_payload(payload: dict[str, object]) -> tuple[str, dict[str, object]]:
-    kind = work_unit_kind(payload)
-    number = payload.get("number")
-    fields = parse_work_unit_task_fields(str(payload.get("body") or ""))
-    findings: list[dict[str, str]] = []
-    canonical: dict[str, list[str]] = {}
+    scope_result, scope_output = canonical_issue_scope_from_payload(payload)
+    number = scope_output.get("issue")
+    findings: list[dict[str, str]] = list(scope_output.get("findings", []))
+    canonical_issue_scope = scope_output.get("canonical_issue_scope")
 
-    if kind != "issue":
-        findings.append({
-            "field": "kind",
-            "reason": f"compact scope lock requires an issue payload, got {kind}",
-        })
-
-    for field in WORK_UNIT_REQUIRED_FIELDS:
-        value = work_unit_field_value(fields, field)
-        items = material_items(value)
-        if field == "allowed_paths":
-            items = [normalize_repo_path(item) for item in items]
-        if not items:
-            findings.append({
-                "field": field,
-                "reason": "missing material scope field",
-            })
-        canonical[field] = items
-
-    if findings:
+    if scope_result != "pass" or not isinstance(canonical_issue_scope, dict):
         return "fail", {
             "result": "fail",
             "issue": number,
@@ -850,21 +840,55 @@ def compact_scope_lock_from_payload(payload: dict[str, object]) -> tuple[str, di
             "findings": findings,
         }
 
-    canonical_scope = {
-        "issue": number,
-        "fields": canonical,
-    }
-    encoded = json.dumps(canonical_scope, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    encoded = json.dumps(canonical_issue_scope, sort_keys=True, separators=(",", ":")).encode("utf-8")
     scope_hash = hashlib.sha256(encoded).hexdigest()
+    scope_lock = {
+        "version": "asgk.compact_scope_lock.v1",
+        "issue": number,
+        "scope_hash": scope_hash,
+        "canonical_issue_scope_version": canonical_issue_scope.get("version"),
+        "allowed_paths": canonical_issue_scope.get("allowed_paths", []),
+        "low_risk_inferred": False,
+    }
     return "pass", {
         "result": "pass",
         "issue": number,
         "scope_hash": scope_hash,
-        "allowed_paths": canonical["allowed_paths"],
-        "canonical_scope": canonical_scope,
+        "allowed_paths": canonical_issue_scope.get("allowed_paths", []),
+        "scope_lock": scope_lock,
+        "canonical_issue_scope": canonical_issue_scope,
         "low_risk_inferred": False,
         "findings": [],
     }
+
+
+def extract_scope_hash(payload: dict[str, object]) -> str:
+    scope_lock = payload.get("scope_lock")
+    if isinstance(scope_lock, dict):
+        return str(scope_lock.get("scope_hash") or "")
+    return str(payload.get("scope_hash") or "")
+
+
+def compare_scope_lock(current: dict[str, object], captured: dict[str, object]) -> list[dict[str, str]]:
+    current_hash = extract_scope_hash(current)
+    captured_hash = extract_scope_hash(captured)
+    findings: list[dict[str, str]] = []
+    if not captured_hash:
+        findings.append({
+            "field": "compare_file",
+            "reason": "captured scope lock is missing scope_hash",
+        })
+    if not current_hash:
+        findings.append({
+            "field": "scope_hash",
+            "reason": "current scope lock is missing scope_hash",
+        })
+    if current_hash and captured_hash and current_hash != captured_hash:
+        findings.append({
+            "field": "scope_hash",
+            "reason": "captured scope lock does not match current issue scope",
+        })
+    return findings
 
 
 def check_work_unit_payload(
@@ -2161,9 +2185,9 @@ def cmd_negative(args: argparse.Namespace) -> int:
         return run_expected_failures([
             [
                 "python3", "scripts/asgk.py", "compact-scope-lock",
-                "--json-file", fixture,
+                *case,
             ]
-            for fixture in COMPACT_SCOPE_LOCK_NEGATIVE_FIXTURES
+            for case in COMPACT_SCOPE_LOCK_NEGATIVE_CASES
         ])
     if args.case == "all":
         changed = cmd_negative(argparse.Namespace(case="changed-paths"))
@@ -2322,6 +2346,19 @@ def cmd_compact_scope_lock(args: argparse.Namespace) -> int:
         return print_failures(["compact scope-lock payload must be a JSON object"])
 
     result, output = compact_scope_lock_from_payload(payload)
+    if result == "pass" and args.compare_file:
+        try:
+            captured = json.loads(read_text(args.compare_file))
+        except json.JSONDecodeError as exc:
+            return print_failures([str(exc)])
+        if not isinstance(captured, dict):
+            return print_failures(["captured scope-lock payload must be a JSON object"])
+        compare_findings = compare_scope_lock(output, captured)
+        if compare_findings:
+            output["result"] = "fail"
+            output["findings"] = compare_findings
+            result = "fail"
+
     if args.json:
         print(json.dumps(output, indent=2, sort_keys=True))
     elif result == "pass":
@@ -2669,6 +2706,7 @@ def build_parser() -> argparse.ArgumentParser:
     p = sub.add_parser("compact-scope-lock", help="Emit a deterministic compact-governance scope lock from an issue.")
     p.add_argument("--issue", help="GitHub issue number for live gh REST lookup.")
     p.add_argument("--json-file", help="Fixture or captured issue JSON payload.")
+    p.add_argument("--compare-file", help="Captured scope-lock JSON to compare against the current issue scope.")
     p.add_argument("--json", action="store_true", help="Emit machine-readable JSON output.")
     p.set_defaults(func=cmd_compact_scope_lock)
 

@@ -149,10 +149,12 @@ The scope-lock primitive is also opt-in:
 ```bash
 python3 scripts/asgk.py compact-scope-lock --issue <number> --json
 python3 scripts/asgk.py compact-scope-lock --json-file examples/compact_governance/scope_lock.valid-issue.json --json
+python3 scripts/asgk.py compact-scope-lock --issue <number> --compare-file captured-scope-lock.json
 ```
 
-The command extracts the required task fields already used by `work-unit-check`,
-normalizes `allowed_paths`, and emits a deterministic `scope_hash`.
+The command derives the lock from `asgk.compact_issue_scope.v1`, normalizes
+`allowed_paths`, and emits a deterministic `scope_hash`. With `--compare-file`,
+it fails when a captured lock no longer matches the current issue scope.
 
 This scope lock is not a merge decision. It does not make a PR low risk and
 does not let a task packet expand issue scope. Later compact-report work must

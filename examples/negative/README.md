@@ -80,3 +80,4 @@ Until such tools exist, these fixtures are documentation-backed test targets for
 | NEG-032..NEG-039 | `compact_governance/*.json` | blocked / failed / fail_closed / human_gated |
 | NEG-040 | `compact_governance/scope-lock.missing-allowed-paths.json` | blocked |
 | NEG-041 | `compact_governance/issue-scope.missing-allowed-paths.json` | blocked |
+| NEG-042 | `compact_governance/scope-lock.stale-capture.json` | blocked |

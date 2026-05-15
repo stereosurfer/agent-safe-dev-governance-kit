@@ -678,21 +678,21 @@ future_cli_mapping:
   asgk compact-scope-lock --issue <number>:
     current_behavior:
       - fetch the issue through GitHub REST using gh api
-      - extract existing required task fields from the issue body
-      - normalize allowed_paths
-      - emit a deterministic scope_hash and canonical_scope JSON
+      - derive the lock from the canonical issue scope object
+      - emit a deterministic scope_hash, scope_lock JSON, and canonical_issue_scope JSON
       - fail when material scope fields are missing
       - never infer low-risk status
+      - with --compare-file, fail when the captured scope_hash does not match the current issue scope
 
   asgk compact-scope-lock --json-file issue.json:
     current_behavior:
-      - run the same scope-lock extraction against a captured issue fixture
+      - run the same canonical issue scope based lock extraction against a captured issue fixture
       - support deterministic tests without network access
       - fail closed for missing material allowed_paths
 
   asgk negative compact-scope-lock:
     current_behavior:
-      - run compact-scope-lock against missing-scope fixtures as expected failures
+      - run compact-scope-lock against missing-scope and stale-lock fixtures as expected failures
     expected: all commands fail
     default_ci: false unless a future issue explicitly wires it into CI
 
