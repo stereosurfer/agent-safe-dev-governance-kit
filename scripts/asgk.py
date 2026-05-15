@@ -289,6 +289,9 @@ COMPACT_SCOPE_LOCK_NEGATIVE_CASES = [
         "examples/negative/compact_governance/scope-lock.stale-capture.json",
     ],
 ]
+COMPACT_PR_REPORT_NEGATIVE_FIXTURES = [
+    "examples/negative/compact_governance/pr-report.metadata-unavailable.json",
+]
 TARGET_INSTALL_LICENSE_NOTICE_PATHS = [
     "LICENSE",
     "LICENSE.md",
@@ -889,6 +892,125 @@ def compare_scope_lock(current: dict[str, object], captured: dict[str, object]) 
             "reason": "captured scope lock does not match current issue scope",
         })
     return findings
+
+
+def compact_pr_report_restricted_boundaries(paths: list[str]) -> list[str]:
+    boundaries: list[str] = []
+    boundary_patterns = [
+        "AGENTS.md",
+        "CLAUDE.md",
+        ".github/**",
+        ".codex/**",
+        ".claude/**",
+        "docs/control/**",
+        "schemas/**",
+        "contracts/**",
+    ]
+    for path in paths:
+        normalized = normalize_repo_path(path)
+        for pattern in boundary_patterns:
+            if path_matches_allowed(normalized, pattern):
+                boundaries.append(pattern)
+                break
+    return sorted(set(boundaries))
+
+
+def compact_pr_report_status_checks(status_rollup: object) -> list[dict[str, str]]:
+    checks: list[dict[str, str]] = []
+    if not isinstance(status_rollup, list):
+        return checks
+    for item in status_rollup:
+        if not isinstance(item, dict):
+            continue
+        checks.append({
+            "name": str(item.get("name") or item.get("context") or "unnamed_check"),
+            "status": str(item.get("status") or ""),
+            "conclusion": str(item.get("conclusion") or ""),
+            "details_url": str(item.get("detailsUrl") or item.get("targetUrl") or ""),
+        })
+    return checks
+
+
+def compact_pr_report_from_payload(payload: dict[str, object]) -> tuple[str, dict[str, object]]:
+    if payload.get("metadata_available") is False:
+        return "fail_closed", {
+            "result": "fail_closed",
+            "low_risk_inferred": False,
+            "findings": [{
+                "field": "metadata_available",
+                "reason": "GitHub PR metadata is unavailable",
+            }],
+        }
+
+    pr_number = payload.get("number")
+    body = str(payload.get("body") or "")
+    changed_paths = pr_file_paths(payload.get("files"))
+    issue_number = merge_decision_issue_number(body)
+    issue_payload = pr_status_issue_payload(payload, issue_number) if issue_number is not None else None
+
+    issue_scope_output: dict[str, object] | None = None
+    scope_lock_output: dict[str, object] | None = None
+    findings: list[dict[str, str]] = []
+
+    if issue_number is None:
+        findings.append({
+            "field": "issue",
+            "reason": "Merge Decision issue is missing",
+        })
+    elif issue_payload is None:
+        findings.append({
+            "field": "issue",
+            "reason": f"closing issue #{issue_number} metadata is unavailable",
+        })
+    else:
+        scope_result, issue_scope_output = canonical_issue_scope_from_payload(issue_payload)
+        if scope_result != "pass":
+            for finding in issue_scope_output.get("findings", []):
+                if isinstance(finding, dict):
+                    findings.append({
+                        "field": str(finding.get("field") or "issue_scope"),
+                        "reason": str(finding.get("reason") or "canonical issue scope failed"),
+                    })
+        lock_result, scope_lock_output = compact_scope_lock_from_payload(issue_payload)
+        if lock_result != "pass":
+            for finding in scope_lock_output.get("findings", []):
+                if isinstance(finding, dict):
+                    findings.append({
+                        "field": str(finding.get("field") or "scope_lock"),
+                        "reason": str(finding.get("reason") or "scope lock failed"),
+                    })
+
+    pr_status_result, pr_status_findings = check_pr_status_payload(payload)
+    for finding in pr_status_findings:
+        findings.append({
+            "field": str(finding.get("field") or "pr_status"),
+            "reason": str(finding.get("reason") or "PR status check failed"),
+        })
+
+    restricted_boundaries = compact_pr_report_restricted_boundaries(changed_paths)
+    derived_state = "fail" if findings else ("requires_human" if restricted_boundaries else "checkable_pass")
+    result = "fail" if findings else "pass"
+    return result, {
+        "result": result,
+        "derived_state": derived_state,
+        "low_risk_inferred": False,
+        "pr": {
+            "number": pr_number,
+            "url": payload.get("url"),
+            "state": payload.get("state"),
+            "is_draft": payload.get("isDraft"),
+            "merge_state": payload.get("mergeStateStatus"),
+            "review_decision": payload.get("reviewDecision"),
+            "changed_paths": changed_paths,
+            "status_checks": compact_pr_report_status_checks(payload.get("statusCheckRollup")),
+            "closing_issue": issue_number,
+        },
+        "issue_scope": issue_scope_output.get("canonical_issue_scope") if issue_scope_output else None,
+        "scope_lock": scope_lock_output.get("scope_lock") if scope_lock_output else None,
+        "restricted_boundaries": restricted_boundaries,
+        "pr_status_result": pr_status_result,
+        "findings": findings,
+    }
 
 
 def check_work_unit_payload(
@@ -2189,6 +2311,14 @@ def cmd_negative(args: argparse.Namespace) -> int:
             ]
             for case in COMPACT_SCOPE_LOCK_NEGATIVE_CASES
         ])
+    if args.case == "compact-pr-report":
+        return run_expected_failures([
+            [
+                "python3", "scripts/asgk.py", "compact-pr-report",
+                "--json-file", fixture,
+            ]
+            for fixture in COMPACT_PR_REPORT_NEGATIVE_FIXTURES
+        ])
     if args.case == "all":
         changed = cmd_negative(argparse.Namespace(case="changed-paths"))
         textual = cmd_negative(argparse.Namespace(case="textual"))
@@ -2201,10 +2331,11 @@ def cmd_negative(args: argparse.Namespace) -> int:
         compact_governance = cmd_negative(argparse.Namespace(case="compact-governance"))
         compact_issue_scope = cmd_negative(argparse.Namespace(case="compact-issue-scope"))
         compact_scope_lock = cmd_negative(argparse.Namespace(case="compact-scope-lock"))
+        compact_pr_report = cmd_negative(argparse.Namespace(case="compact-pr-report"))
         return 1 if (
             changed or textual or policy_gate or pr_status or target_install
             or release_state or work_unit or workspace_state or compact_governance
-            or compact_issue_scope or compact_scope_lock
+            or compact_issue_scope or compact_scope_lock or compact_pr_report
         ) else 0
     print(f"FAIL: unsupported negative case group: {args.case}")
     return 1
@@ -2272,6 +2403,52 @@ def cmd_check_pr(args: argparse.Namespace) -> int:
 
     result, findings = check_pr_status_payload(payload)
     return print_pr_status_result(payload, result, findings, as_json=args.json)
+
+
+def load_pr_payload(args: argparse.Namespace) -> dict[str, object]:
+    if bool(args.pr) == bool(args.json_file):
+        raise ValueError("provide exactly one of --pr or --json-file")
+    if args.json_file:
+        payload = json.loads(read_text(args.json_file))
+    else:
+        command = [
+            "gh", "pr", "view", str(args.pr),
+            "--json",
+            "number,title,state,isDraft,mergeStateStatus,reviewDecision,statusCheckRollup,body,files,url,closingIssuesReferences",
+        ]
+        result = subprocess.run(
+            command,
+            cwd=ROOT,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+        )
+        if result.returncode != 0:
+            raise RuntimeError(result.stdout.strip() or "gh pr view failed")
+        payload = json.loads(result.stdout)
+        if isinstance(payload, dict):
+            payload["_asgk_live_lookup"] = True
+    if not isinstance(payload, dict):
+        raise ValueError("PR payload must be a JSON object")
+    return payload
+
+
+def cmd_compact_pr_report(args: argparse.Namespace) -> int:
+    try:
+        payload = load_pr_payload(args)
+    except (RuntimeError, ValueError, json.JSONDecodeError) as exc:
+        return print_failures([str(exc)])
+
+    result, output = compact_pr_report_from_payload(payload)
+    if args.json:
+        print(json.dumps(output, indent=2, sort_keys=True))
+    elif result == "pass":
+        print(f"Compact PR report passed for PR #{output.get('pr', {}).get('number')}.")
+    else:
+        for finding in output.get("findings", []):
+            print(f"FAIL: {finding['field']} - {finding['reason']}")
+        print("Compact PR report failed. No low-risk status was inferred.")
+    return 0 if result == "pass" else 1
 
 
 def cmd_work_unit_check(args: argparse.Namespace) -> int:
@@ -2694,7 +2871,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.set_defaults(func=cmd_hygiene)
 
     p = sub.add_parser("negative", help="Run opt-in negative checks.")
-    p.add_argument("case", nargs="?", default="changed-paths", choices=["changed-paths", "textual", "policy-gate", "pr-status", "target-install", "release-state", "work-unit", "workspace-state", "compact-governance", "compact-issue-scope", "compact-scope-lock", "all"])
+    p.add_argument("case", nargs="?", default="changed-paths", choices=["changed-paths", "textual", "policy-gate", "pr-status", "target-install", "release-state", "work-unit", "workspace-state", "compact-governance", "compact-issue-scope", "compact-scope-lock", "compact-pr-report", "all"])
     p.set_defaults(func=cmd_negative)
 
     p = sub.add_parser("compact-issue-scope", help="Emit a canonical compact-governance issue scope object.")
@@ -2709,6 +2886,12 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--compare-file", help="Captured scope-lock JSON to compare against the current issue scope.")
     p.add_argument("--json", action="store_true", help="Emit machine-readable JSON output.")
     p.set_defaults(func=cmd_compact_scope_lock)
+
+    p = sub.add_parser("compact-pr-report", help="Compile a tool-derived compact PR report from GitHub PR metadata.")
+    p.add_argument("--pr", help="GitHub pull request number for live gh lookup.")
+    p.add_argument("--json-file", help="Fixture or captured gh pr view JSON payload.")
+    p.add_argument("--json", action="store_true", help="Emit machine-readable JSON output.")
+    p.set_defaults(func=cmd_compact_pr_report)
 
     p = sub.add_parser("policy-gate", help="Run PR-body policy gate checks.")
     p.add_argument("--pr-body", help="Path to a PR body markdown file.")

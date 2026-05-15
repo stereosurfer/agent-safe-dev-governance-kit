@@ -1,0 +1,21 @@
+{
+  "expected_result": "fail_closed",
+  "metadata_available": false,
+  "issue_scope": {
+    "scope_hash": "metadata-unavailable",
+    "allowed_paths": [
+      "scripts/asgk.py"
+    ]
+  },
+  "scope_lock": {
+    "scope_hash": "metadata-unavailable"
+  },
+  "pr": {
+    "metadata_available": false,
+    "changed_paths": [],
+    "ci_status": "missing",
+    "current_status_changed": false
+  },
+  "task_packet": {},
+  "agent_claims": {}
+}

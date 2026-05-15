@@ -160,3 +160,18 @@ This scope lock is not a merge decision. It does not make a PR low risk and
 does not let a task packet expand issue scope. Later compact-report work must
 compare a PR's captured scope lock to the live issue scope and fail when the
 hash changes.
+
+## Compact PR Report Primitive
+
+The live report compiler is opt-in:
+
+```bash
+python3 scripts/asgk.py compact-pr-report --pr <number> --json
+python3 scripts/asgk.py compact-pr-report --json-file examples/compact_governance/pr_report.valid-pr.json --json
+```
+
+The command compiles PR metadata, changed paths, status checks, PR-body gate
+state, closing issue scope, scope lock, and restricted-boundary state into a
+tool-derived report. Missing PR metadata fails closed. The report may support
+future compact PR bodies, but it is not itself a merge decision and always keeps
+`low_risk_inferred: false`.

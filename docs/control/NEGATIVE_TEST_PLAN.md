@@ -119,6 +119,7 @@ changed to treat them as expected failures.
 | `NEG-040-compact-scope-lock-missing-allowed-paths` | issue scope-lock input lacks material `allowed_paths` | blocked | compact scope-lock command | `examples/negative/compact_governance/scope-lock.missing-allowed-paths.json` | Scope lock cannot be generated without path authority. |
 | `NEG-041-compact-issue-scope-missing-allowed-paths` | canonical issue scope input lacks material `allowed_paths` | blocked | compact issue-scope command | `examples/negative/compact_governance/issue-scope.missing-allowed-paths.json` | Canonical scope cannot be generated without path authority. |
 | `NEG-042-compact-scope-lock-stale-capture` | captured scope lock hash does not match current canonical issue scope | blocked | compact scope-lock command | `examples/negative/compact_governance/scope-lock.stale-capture.json` | Captured scope locks must not survive issue-scope changes. |
+| `NEG-043-compact-pr-report-metadata-unavailable` | PR metadata is unavailable for compact report compilation | fail_closed | compact PR report command | `examples/negative/compact_governance/pr-report.metadata-unavailable.json` | Compact report must not be guessed from agent prose. |
 
 ## Implementation Phases
 

@@ -696,6 +696,29 @@ future_cli_mapping:
     expected: all commands fail
     default_ci: false unless a future issue explicitly wires it into CI
 
+  asgk compact-pr-report --pr <number>:
+    current_behavior:
+      - fetch PR metadata through gh pr view
+      - compile changed paths, status checks, review and mergeability state
+      - load the closing issue scope when available
+      - include canonical issue scope and scope lock output
+      - include PR body policy-gate and changed-path gate results
+      - detect restricted governance boundaries
+      - fail closed when required PR metadata is unavailable
+      - never infer low-risk status
+
+  asgk compact-pr-report --json-file pr.json:
+    current_behavior:
+      - run the same compact PR report compiler against captured PR metadata
+      - support deterministic tests without network access
+      - fail closed for unavailable metadata fixtures
+
+  asgk negative compact-pr-report:
+    current_behavior:
+      - run compact-pr-report against metadata-unavailable fixtures as expected failures
+    expected: all commands fail
+    default_ci: false unless a future issue explicitly wires it into CI
+
   asgk task-packet-check --file task_packet.yaml:
     current_behavior:
       - validate JSON task packets, canonical YAML-like task packets, and negative fixtures with bad_input

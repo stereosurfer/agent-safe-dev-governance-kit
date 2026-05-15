@@ -45,12 +45,13 @@ modes before compact governance becomes a default rule:
 python3 scripts/asgk.py negative compact-governance
 python3 scripts/asgk.py negative compact-issue-scope
 python3 scripts/asgk.py negative compact-scope-lock
+python3 scripts/asgk.py negative compact-pr-report
 ```
 
 That command succeeds only when the positive fixture passes and every negative
 fixture produces its expected blocked, failed, fail-closed, or human-gated
-state. The compact issue-scope and scope-lock negative commands succeed only
-when malformed compact-governance inputs fail as expected.
+state. The compact issue-scope, scope-lock, and PR-report negative commands
+succeed only when malformed compact-governance inputs fail as expected.
 
 ## Future CLI Usage
 
@@ -81,3 +82,4 @@ Until such tools exist, these fixtures are documentation-backed test targets for
 | NEG-040 | `compact_governance/scope-lock.missing-allowed-paths.json` | blocked |
 | NEG-041 | `compact_governance/issue-scope.missing-allowed-paths.json` | blocked |
 | NEG-042 | `compact_governance/scope-lock.stale-capture.json` | blocked |
+| NEG-043 | `compact_governance/pr-report.metadata-unavailable.json` | fail_closed |
