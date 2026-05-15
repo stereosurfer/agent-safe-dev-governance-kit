@@ -43,6 +43,12 @@ Preferred future wrapper:
 python3 scripts/asgk.py target-install-plan
 ```
 
+Compact target-upgrade manifest check:
+
+```bash
+python3 scripts/asgk.py compact-target-upgrade-check --manifest compact-target-upgrade.json
+```
+
 Not yet implemented:
 
 ```bash
@@ -64,6 +70,38 @@ validation_categories:
   document_navigation_split: blocking
   current_status_freshness: planned
   validation_command_presence: warning
+  compact_target_upgrade_manifest: blocking
+```
+
+## Compact Target-Upgrade Checks
+
+The compact target-upgrade checker validates a planning manifest for repositories
+that already adopted ASGK and want to upgrade to compact governance surfaces.
+It is not an installer and does not write target repositories.
+
+```yaml
+compact_target_upgrade_checks:
+  required_version: asgk.compact_target_upgrade.v1
+  required_mode: audit_and_plan
+  default_enablement:
+    compact_governance.default_enabled: false
+  target_writes:
+    target_repository_writes_performed: false
+  durable_authority:
+    durable_upgrade_issue_required: true
+  license_notice:
+    asgk_apache_2_notice_preserved: true
+    target_license_replaced: false
+    notice_surface: required
+  never_overwrite:
+    - docs/handoff/CURRENT_STATUS.md
+    - docs/DOCUMENT_MAP.md
+    - docs/DOCUMENT_REGISTRY.md
+    - docs/bootstrap/00_project_brief.md
+    - docs/bootstrap/01_physical_boundaries.md
+    - docs/bootstrap/02_storage_roots.md
+    - docs/bootstrap/03_tech_stack.md
+    - LICENSE
 ```
 
 ## License Handling Checks

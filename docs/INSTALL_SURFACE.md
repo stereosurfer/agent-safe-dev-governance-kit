@@ -93,6 +93,18 @@ Use upgrade audit to classify the target repository as recent ASGK, older ASGK
 without skills, customized ASGK, partial ASGK, or non-ASGK before proposing
 changes.
 
+Compact-governance upgrades add one more planning check before target writes:
+
+```bash
+python3 scripts/asgk.py compact-target-upgrade-check \
+  --manifest compact-target-upgrade.json
+```
+
+The manifest is a planning artifact. It must confirm that compact governance is
+not enabled by default, target-owned state is preserved, ASGK Apache-2.0 notice
+handling is visible, and target repository writes wait for a bounded target
+issue or PR.
+
 ## License Handling
 
 ASGK v1.0.0 is released under Apache-2.0. Target repositories that copy or adapt

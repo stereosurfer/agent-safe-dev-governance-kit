@@ -17,6 +17,17 @@ A target repository must own its governance state.
 Do not install ASGK by copying ASGK repo-local state into the target repository.
 Use target templates, then customize the result for the target repository.
 
+For existing ASGK-adopted repositories upgrading to compact governance, use an
+upgrade manifest and keep it audit-and-plan until the target repository has its
+own issue or PR:
+
+```bash
+python3 scripts/asgk.py compact-target-upgrade-check --manifest compact-target-upgrade.json
+```
+
+The manifest must preserve target-owned `CURRENT_STATUS.md`, document maps,
+registries, bootstrap docs, and license surfaces.
+
 ## Required Target Files
 
 The target repository should contain these governance surfaces before ASGK is
