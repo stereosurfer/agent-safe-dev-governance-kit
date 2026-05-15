@@ -1,0 +1,33 @@
+{
+  "case_id": "compact-negative-restricted-boundary-human-gate",
+  "description": "A compact report touches a protected governance boundary and must not infer autonomous merge eligibility.",
+  "expected_result": "requires_human",
+  "issue_scope": {
+    "issue": 225,
+    "scope_hash": "scope-v1",
+    "allowed_paths": [
+      "docs/control/HUMAN_GATED_OPERATIONS.md"
+    ]
+  },
+  "scope_lock": {
+    "issue": 225,
+    "scope_hash": "scope-v1"
+  },
+  "pr": {
+    "metadata_available": true,
+    "changed_paths": [
+      "docs/control/HUMAN_GATED_OPERATIONS.md"
+    ],
+    "ci_status": "success",
+    "current_status_changed": false,
+    "current_status_impact": "not_applicable",
+    "restricted_boundaries": [
+      "docs/control/**",
+      "human-gated operation policy"
+    ]
+  },
+  "task_packet": {
+    "allowed_paths": []
+  },
+  "agent_claims": {}
+}

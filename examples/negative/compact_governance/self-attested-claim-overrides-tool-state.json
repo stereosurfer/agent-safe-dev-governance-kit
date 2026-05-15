@@ -1,0 +1,34 @@
+{
+  "case_id": "compact-negative-self-attested-claim-overrides-tool-state",
+  "description": "Agent-authored checked/merge-ready prose conflicts with tool-derived scope failure.",
+  "expected_result": "fail",
+  "issue_scope": {
+    "issue": 225,
+    "scope_hash": "scope-v1",
+    "allowed_paths": [
+      "examples/compact_governance/**"
+    ]
+  },
+  "scope_lock": {
+    "issue": 225,
+    "scope_hash": "scope-v1"
+  },
+  "pr": {
+    "metadata_available": true,
+    "changed_paths": [
+      "scripts/asgk.py"
+    ],
+    "ci_status": "success",
+    "current_status_changed": false,
+    "current_status_impact": "not_applicable",
+    "restricted_boundaries": []
+  },
+  "task_packet": {
+    "allowed_paths": []
+  },
+  "agent_claims": {
+    "merge_result": "merge_allowed",
+    "allowed_paths_checked": true,
+    "human_gates_checked": true
+  }
+}
