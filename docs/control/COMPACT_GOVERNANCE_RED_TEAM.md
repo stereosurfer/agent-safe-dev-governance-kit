@@ -211,3 +211,22 @@ compiled report reference whose JSON state is passing, finding-free, and
 explicitly `low_risk_inferred: false`. The compact body may shorten repeated
 scope prose, but it must keep `Current Status Impact` and `Merge Decision`
 reviewable and cannot make the report itself merge authority.
+
+## Compact Handoff Profile
+
+The compact handoff profile is opt-in and non-default. It is documented in
+`docs/control/COMPACT_HANDOFF_PROFILE.md` and checked with:
+
+```bash
+python3 scripts/asgk.py compact-handoff-check \
+  --file examples/compact_governance/handoff.compact.valid.yaml \
+  --current-status examples/compact_governance/current_status.compact.clean.md \
+  --completed-issue "#240" \
+  --completed-pr "#241" \
+  --completed-branch codex/compact-pr-body-profile-240
+```
+
+The check validates compact recovery fields, `current_status_impact`, the
+current-status file, and completed issue/PR/branch references. It fails when a
+handoff says `not_applicable` while `CURRENT_STATUS.md` still points active work
+at completed work, and it never infers low-risk status.

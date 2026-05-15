@@ -123,6 +123,7 @@ changed to treat them as expected failures.
 | `NEG-044-compact-pr-report-claim-conflict` | PR body or agent claim says merge-ready while tool-derived report findings block merge | blocked | compact PR report command | `examples/negative/compact_governance/pr-report.claim-conflicts-with-tool-state.json` | Merge-readiness prose must not override live status, issue-scope, path, or PR-body findings. |
 | `NEG-045-compact-task-packet-expands-issue-scope` | delta-only task packet adds `allowed_paths` outside source issue scope | blocked | compact task-packet command | `examples/negative/compact_governance/task-packet-delta-expands-scope.json` | Delta packets may narrow issue scope, not expand it. |
 | `NEG-046-compact-pr-body-failed-report` | compact PR body references a failed compiled report while PR prose claims merge-ready | blocked | compact PR body command | `examples/negative/compact_governance/pr_body.compact.failed-report.md` | Compact PR bodies must not turn report references into merge authority. |
+| `NEG-047-compact-handoff-hides-stale-current-status` | compact handoff marks current status `not_applicable` while completed work remains in active work | blocked | compact handoff command | `examples/negative/compact_governance/handoff.compact.hides-stale-current-status.yaml` | Compact handoff cannot hide stale active issue, PR, or branch references. |
 
 ## Implementation Phases
 

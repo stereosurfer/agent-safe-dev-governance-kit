@@ -48,13 +48,15 @@ python3 scripts/asgk.py negative compact-scope-lock
 python3 scripts/asgk.py negative compact-pr-report
 python3 scripts/asgk.py negative compact-task-packet
 python3 scripts/asgk.py negative compact-pr-body
+python3 scripts/asgk.py negative compact-handoff
 ```
 
 That command succeeds only when the positive fixture passes and every negative
 fixture produces its expected blocked, failed, fail-closed, or human-gated
 state. The compact issue-scope, scope-lock, PR-report, task-packet, and PR-body
 negative commands succeed only when malformed compact-governance inputs fail as
-expected.
+expected. The compact handoff negative command succeeds only when stale
+current-status active work is blocked as expected.
 
 ## Future CLI Usage
 
@@ -89,3 +91,4 @@ Until such tools exist, these fixtures are documentation-backed test targets for
 | NEG-044 | `compact_governance/pr-report.claim-conflicts-with-tool-state.json` | blocked |
 | NEG-045 | `compact_governance/task-packet-delta-expands-scope.json` | blocked |
 | NEG-046 | `compact_governance/pr_body.compact.failed-report.md` | blocked |
+| NEG-047 | `compact_governance/handoff.compact.hides-stale-current-status.yaml` | blocked |

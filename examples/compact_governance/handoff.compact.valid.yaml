@@ -1,0 +1,22 @@
+compact_handoff:
+  active_issue: "#240 Add compact PR body profile"
+  active_pr: "#241 Add compact PR body profile check"
+  branch: "codex/compact-pr-body-profile-240"
+  durable_source_of_truth: "GitHub issue #240 and PR #241"
+  objective: "Record that package 6 completed without requiring a repo-level current-status change."
+  state: "merged"
+  allowed_paths:
+    - "docs/control/COMPACT_PR_BODY_PROFILE.md"
+    - "examples/compact_governance/**"
+    - "examples/negative/compact_governance/**"
+    - "scripts/asgk.py"
+  validation_status:
+    status: "pass"
+    evidence: "Fixture models package closeout after local validation, live check-pr, and GitHub Actions passed."
+  current_status_impact:
+    status: "not_applicable"
+    reason: "The package detail is recorded in issue and PR history; the repo-level next safe action remains controlled by #229."
+    current_status_updated_in_this_pr: false
+    post_merge_safe: not_applicable
+    follow_up_issue: none
+  next_safe_action: "Continue #229 with package 7."

@@ -260,6 +260,25 @@ current_status_impact:
   follow_up_issue: none | "#<number>"
 ```
 
+## Compact Handoff Freshness Check
+
+Compact handoff may reduce repeated recovery prose only when it remains
+checkable against this policy.
+
+```bash
+python3 scripts/asgk.py compact-handoff-check \
+  --file handoff.yaml \
+  --current-status docs/handoff/CURRENT_STATUS.md \
+  --completed-issue "#123" \
+  --completed-pr "#124" \
+  --completed-branch codex/example
+```
+
+The check blocks compact handoffs that hide stale active work. A
+`not_applicable` status-impact decision is valid only when the current-status
+active-work block does not still name completed work and the next safe action
+does not describe pre-merge closeout work.
+
 `post_merge_safe: true` means `CURRENT_STATUS.md` will still be accurate after
 the PR merges. If that cannot be stated truthfully, leave the file unchanged and
 record in-flight details in the PR body, issue comment, or handoff packet.
