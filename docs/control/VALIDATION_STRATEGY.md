@@ -654,6 +654,27 @@ future_cli_mapping:
     expected: all fixture outcomes match their expected_result fields
     default_ci: false unless a future issue explicitly wires it into CI
 
+  asgk compact-issue-scope --issue <number>:
+    current_behavior:
+      - fetch the issue through GitHub REST using gh api
+      - extract the existing required work-unit fields from the issue body
+      - normalize allowed_paths
+      - emit an asgk.compact_issue_scope.v1 canonical_issue_scope object
+      - fail when material issue scope fields are missing
+      - never infer low-risk status
+
+  asgk compact-issue-scope --json-file issue.json:
+    current_behavior:
+      - run the same canonical issue scope extraction against a captured issue fixture
+      - support deterministic tests without network access
+      - fail closed for missing material allowed_paths
+
+  asgk negative compact-issue-scope:
+    current_behavior:
+      - run compact-issue-scope against missing-scope fixtures as expected failures
+    expected: all commands fail
+    default_ci: false unless a future issue explicitly wires it into CI
+
   asgk compact-scope-lock --issue <number>:
     current_behavior:
       - fetch the issue through GitHub REST using gh api

@@ -117,6 +117,7 @@ changed to treat them as expected failures.
 | `NEG-038-compact-restricted-boundary-human-gate` | compact report touches protected governance boundary | human_gated | compact governance red-team checker | `examples/negative/compact_governance/restricted-boundary-human-gate.json` | Human-gated state is not merge eligibility. |
 | `NEG-039-compact-metadata-unavailable` | issue/PR metadata is unavailable | blocked | compact governance red-team checker | `examples/negative/compact_governance/github-metadata-unavailable.json` | Compact governance must fail closed. |
 | `NEG-040-compact-scope-lock-missing-allowed-paths` | issue scope-lock input lacks material `allowed_paths` | blocked | compact scope-lock command | `examples/negative/compact_governance/scope-lock.missing-allowed-paths.json` | Scope lock cannot be generated without path authority. |
+| `NEG-041-compact-issue-scope-missing-allowed-paths` | canonical issue scope input lacks material `allowed_paths` | blocked | compact issue-scope command | `examples/negative/compact_governance/issue-scope.missing-allowed-paths.json` | Canonical scope cannot be generated without path authority. |
 
 ## Implementation Phases
 
