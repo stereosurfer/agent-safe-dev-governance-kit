@@ -196,3 +196,18 @@ issue scope, and compares packet `allowed_paths` to issue `allowed_paths`.
 Packets may narrow issue scope, but any packet path outside the issue scope
 fails. The packet remains a routing/execution artifact; it does not replace the
 GitHub issue as primary authorization and never infers low-risk status.
+
+## Compact PR Body Profile
+
+The compact PR body profile is opt-in and non-default. It is documented in
+`docs/control/COMPACT_PR_BODY_PROFILE.md` and checked with:
+
+```bash
+python3 scripts/asgk.py compact-pr-body-check --body-file <body> --report-json <report>
+```
+
+The check preserves existing PR body structure and policy gates, then requires a
+compiled report reference whose JSON state is passing, finding-free, and
+explicitly `low_risk_inferred: false`. The compact body may shorten repeated
+scope prose, but it must keep `Current Status Impact` and `Merge Decision`
+reviewable and cannot make the report itself merge authority.

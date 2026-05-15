@@ -296,6 +296,12 @@ COMPACT_PR_REPORT_NEGATIVE_FIXTURES = [
 COMPACT_TASK_PACKET_NEGATIVE_FIXTURES = [
     "examples/negative/compact_governance/task-packet-delta-expands-scope.json",
 ]
+COMPACT_PR_BODY_NEGATIVE_CASES = [
+    (
+        "examples/negative/compact_governance/pr_body.compact.failed-report.md",
+        "examples/negative/compact_governance/pr-report.metadata-unavailable.json",
+    ),
+]
 TARGET_INSTALL_LICENSE_NOTICE_PATHS = [
     "LICENSE",
     "LICENSE.md",
@@ -1594,6 +1600,109 @@ def compact_task_packet_compare(
     }
 
 
+def compact_pr_body_check(body_file: str | Path, report_file: str | Path) -> tuple[str, dict[str, object]]:
+    body_path = rel(body_file)
+    report_path = rel(report_file)
+    findings: list[dict[str, str]] = []
+
+    if not body_path.exists():
+        findings.append({"field": "body_file", "reason": f"PR body file does not exist: {body_file}"})
+        body_text = ""
+    else:
+        body_text = body_path.read_text(encoding="utf-8")
+
+    headings = markdown_headings(body_text)
+    if "Compiled Report Reference" not in headings:
+        findings.append({
+            "field": "Compiled Report Reference",
+            "reason": "compact PR body must include a Compiled Report Reference section",
+        })
+    else:
+        report_section = markdown_section(body_text, "Compiled Report Reference")
+        if not normalized_field_value(report_section, "report_source"):
+            findings.append({
+                "field": "report_source",
+                "reason": "Compiled Report Reference must name report_source",
+            })
+
+    if body_path.exists():
+        pr_body_result = subprocess.run(
+            ["python3", "scripts/asgk.py", "pr-body-check", "--file", str(body_path)],
+            cwd=ROOT,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+        )
+        if pr_body_result.returncode != 0:
+            findings.append({
+                "field": "pr_body_check",
+                "reason": "compact PR body failed required PR body structure checks",
+            })
+
+        policy_gate = run_policy_gate_capture(body_path)
+        if policy_gate.returncode != 0:
+            findings.append({
+                "field": "policy_gate",
+                "reason": "compact PR body failed policy gate checks",
+            })
+
+    report: dict[str, object] = {}
+    if not report_path.exists():
+        findings.append({"field": "report_json", "reason": f"compact PR report file does not exist: {report_file}"})
+    else:
+        try:
+            loaded_report = json.loads(report_path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as exc:
+            findings.append({"field": "report_json", "reason": f"invalid compact PR report JSON: {exc}"})
+            loaded_report = {}
+        if not isinstance(loaded_report, dict):
+            findings.append({"field": "report_json", "reason": "compact PR report JSON must be an object"})
+        else:
+            report = loaded_report
+
+    report_result = str(report.get("result") or "").lower()
+    if report and report_result != "pass":
+        findings.append({
+            "field": "report.result",
+            "reason": f"compiled report result is not pass: {report_result or 'missing'}",
+        })
+
+    pr_status_result = report.get("pr_status_result")
+    if report and pr_status_result is not None and str(pr_status_result).lower() != "pass":
+        findings.append({
+            "field": "report.pr_status_result",
+            "reason": f"compiled report PR status result is not pass: {pr_status_result}",
+        })
+
+    if report and report.get("low_risk_inferred") is not False:
+        findings.append({
+            "field": "report.low_risk_inferred",
+            "reason": "compiled report must explicitly keep low_risk_inferred false",
+        })
+
+    report_findings = report.get("findings")
+    if isinstance(report_findings, list) and report_findings:
+        findings.append({
+            "field": "report.findings",
+            "reason": "compiled report has blocking findings",
+        })
+
+    result = "fail" if findings else "pass"
+    return result, {
+        "result": result,
+        "low_risk_inferred": False,
+        "body_file": normalize_repo_path(str(body_file)),
+        "report_file": normalize_repo_path(str(report_file)),
+        "compiled_report": {
+            "result": report.get("result"),
+            "derived_state": report.get("derived_state"),
+            "pr_status_result": report.get("pr_status_result"),
+            "low_risk_inferred": report.get("low_risk_inferred"),
+        },
+        "findings": findings,
+    }
+
+
 def print_failures(failures: list[str]) -> int:
     if failures:
         for failure in failures:
@@ -2435,6 +2544,15 @@ def cmd_negative(args: argparse.Namespace) -> int:
             ]
             for fixture in COMPACT_TASK_PACKET_NEGATIVE_FIXTURES
         ])
+    if args.case == "compact-pr-body":
+        return run_expected_failures([
+            [
+                "python3", "scripts/asgk.py", "compact-pr-body-check",
+                "--body-file", body,
+                "--report-json", report,
+            ]
+            for body, report in COMPACT_PR_BODY_NEGATIVE_CASES
+        ])
     if args.case == "all":
         changed = cmd_negative(argparse.Namespace(case="changed-paths"))
         textual = cmd_negative(argparse.Namespace(case="textual"))
@@ -2449,11 +2567,12 @@ def cmd_negative(args: argparse.Namespace) -> int:
         compact_scope_lock = cmd_negative(argparse.Namespace(case="compact-scope-lock"))
         compact_pr_report = cmd_negative(argparse.Namespace(case="compact-pr-report"))
         compact_task_packet = cmd_negative(argparse.Namespace(case="compact-task-packet"))
+        compact_pr_body = cmd_negative(argparse.Namespace(case="compact-pr-body"))
         return 1 if (
             changed or textual or policy_gate or pr_status or target_install
             or release_state or work_unit or workspace_state or compact_governance
             or compact_issue_scope or compact_scope_lock or compact_pr_report
-            or compact_task_packet
+            or compact_task_packet or compact_pr_body
         ) else 0
     print(f"FAIL: unsupported negative case group: {args.case}")
     return 1
@@ -2904,6 +3023,19 @@ def cmd_compact_task_packet_check(args: argparse.Namespace) -> int:
     return 0 if result == "pass" else 1
 
 
+def cmd_compact_pr_body_check(args: argparse.Namespace) -> int:
+    result, output = compact_pr_body_check(args.body_file, args.report_json)
+    if args.json:
+        print(json.dumps(output, indent=2, sort_keys=True))
+    elif result == "pass":
+        print("Compact PR body check passed. No low-risk status was inferred.")
+    else:
+        for finding in output.get("findings", []):
+            print(f"FAIL: {finding['field']} - {finding['reason']}")
+        print("Compact PR body check failed. No low-risk status was inferred.")
+    return 0 if result == "pass" else 1
+
+
 def cmd_context_budget_measure(args: argparse.Namespace) -> int:
     try:
         packet, source_text = load_task_packet_payload(args.task_packet)
@@ -3037,7 +3169,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.set_defaults(func=cmd_hygiene)
 
     p = sub.add_parser("negative", help="Run opt-in negative checks.")
-    p.add_argument("case", nargs="?", default="changed-paths", choices=["changed-paths", "textual", "policy-gate", "pr-status", "target-install", "release-state", "work-unit", "workspace-state", "compact-governance", "compact-issue-scope", "compact-scope-lock", "compact-pr-report", "compact-task-packet", "all"])
+    p.add_argument("case", nargs="?", default="changed-paths", choices=["changed-paths", "textual", "policy-gate", "pr-status", "target-install", "release-state", "work-unit", "workspace-state", "compact-governance", "compact-issue-scope", "compact-scope-lock", "compact-pr-report", "compact-task-packet", "compact-pr-body", "all"])
     p.set_defaults(func=cmd_negative)
 
     p = sub.add_parser("compact-issue-scope", help="Emit a canonical compact-governance issue scope object.")
@@ -3066,6 +3198,12 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--json-file", help="Fixture bundle with issue and task_packet objects.")
     p.add_argument("--json", action="store_true", help="Emit machine-readable JSON output.")
     p.set_defaults(func=cmd_compact_task_packet_check)
+
+    p = sub.add_parser("compact-pr-body-check", help="Check a compact PR body against a compiled report.")
+    p.add_argument("--body-file", required=True, help="Compact PR body markdown file.")
+    p.add_argument("--report-json", required=True, help="Compiled compact PR report JSON file.")
+    p.add_argument("--json", action="store_true", help="Emit machine-readable JSON output.")
+    p.set_defaults(func=cmd_compact_pr_body_check)
 
     p = sub.add_parser("policy-gate", help="Run PR-body policy gate checks.")
     p.add_argument("--pr-body", help="Path to a PR body markdown file.")

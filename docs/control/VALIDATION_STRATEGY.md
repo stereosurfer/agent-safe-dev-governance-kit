@@ -741,6 +741,23 @@ future_cli_mapping:
     expected: all commands fail
     default_ci: false unless a future issue explicitly wires it into CI
 
+  asgk compact-pr-body-check --body-file body.md --report-json report.json:
+    current_behavior:
+      - run required PR body structure checks
+      - run PR body policy gate checks
+      - require a Compiled Report Reference section with report_source
+      - require compiled report result pass
+      - require compiled report pr_status_result pass when present
+      - require compiled report findings to be empty
+      - require compiled report low_risk_inferred false
+      - preserve Current Status Impact and Merge Decision gates
+
+  asgk negative compact-pr-body:
+    current_behavior:
+      - run compact-pr-body-check against failed-report fixtures as expected failures
+    expected: all commands fail
+    default_ci: false unless a future issue explicitly wires it into CI
+
   asgk task-packet-check --file task_packet.yaml:
     current_behavior:
       - validate JSON task packets, canonical YAML-like task packets, and negative fixtures with bad_input
