@@ -122,6 +122,7 @@ changed to treat them as expected failures.
 | `NEG-043-compact-pr-report-metadata-unavailable` | PR metadata is unavailable for compact report compilation | fail_closed | compact PR report command | `examples/negative/compact_governance/pr-report.metadata-unavailable.json` | Compact report must not be guessed from agent prose. |
 | `NEG-044-compact-pr-report-claim-conflict` | PR body or agent claim says merge-ready while tool-derived report findings block merge | blocked | compact PR report command | `examples/negative/compact_governance/pr-report.claim-conflicts-with-tool-state.json` | Merge-readiness prose must not override live status, issue-scope, path, or PR-body findings. |
 | `NEG-045-compact-task-packet-expands-issue-scope` | delta-only task packet adds `allowed_paths` outside source issue scope | blocked | compact task-packet command | `examples/negative/compact_governance/task-packet-delta-expands-scope.json` | Delta packets may narrow issue scope, not expand it. |
+| `NEG-046-compact-pr-body-failed-report` | compact PR body references a failed compiled report while PR prose claims merge-ready | blocked | compact PR body command | `examples/negative/compact_governance/pr_body.compact.failed-report.md` | Compact PR bodies must not turn report references into merge authority. |
 
 ## Implementation Phases
 

@@ -1,0 +1,53 @@
+{
+  "expected_result": "pass",
+  "result": "pass",
+  "derived_state": "checkable_pass",
+  "low_risk_inferred": false,
+  "pr_status_result": "pass",
+  "findings": [],
+  "pr": {
+    "number": 1003,
+    "url": "https://example.invalid/pr/1003",
+    "state": "OPEN",
+    "is_draft": false,
+    "merge_state": "CLEAN",
+    "review_decision": "",
+    "changed_paths": [
+      "scripts/asgk.py"
+    ],
+    "status_checks": [
+      {
+        "name": "validate",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "details_url": "https://example.invalid/actions/3"
+      }
+    ],
+    "closing_issue": 1003,
+    "metadata_available": true,
+    "ci_status": "success",
+    "current_status_changed": false,
+    "current_status_impact": "not_applicable"
+  },
+  "issue_scope": {
+    "scope_hash": "compact-pr-body-profile",
+    "allowed_paths": [
+      "scripts/asgk.py"
+    ]
+  },
+  "scope_lock": {
+    "scope_hash": "compact-pr-body-profile"
+  },
+  "task_packet": {
+    "allowed_paths": [
+      "scripts/asgk.py"
+    ]
+  },
+  "restricted_boundaries": [],
+  "agent_claims": {
+    "merge_ready_claimed": true,
+    "claim_sources": [
+      "pr_body.merge_decision.result"
+    ]
+  }
+}
