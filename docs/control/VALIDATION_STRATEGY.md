@@ -409,6 +409,13 @@ They can be run without changing default PR templates or merge policy through:
 python3 scripts/asgk.py negative compact-governance
 ```
 
+Compact handoff fixtures are opt-in freshness checks for the compact handoff
+profile and current-status stale active-work detection:
+
+```bash
+python3 scripts/asgk.py negative compact-handoff
+```
+
 ```yaml
 negative_validation_targets:
   see_chat_source_of_truth:
@@ -755,6 +762,20 @@ future_cli_mapping:
   asgk negative compact-pr-body:
     current_behavior:
       - run compact-pr-body-check against failed-report fixtures as expected failures
+    expected: all commands fail
+    default_ci: false unless a future issue explicitly wires it into CI
+
+  asgk compact-handoff-check --file handoff.yaml --current-status docs/handoff/CURRENT_STATUS.md:
+    current_behavior:
+      - validate opt-in compact handoff scalar, list, validation_status, and current_status_impact fields
+      - run status-check against the supplied current-status file
+      - fail when completed issue, PR, or branch refs remain in current-status active work
+      - fail when current-status next safe action still describes pre-merge closeout work
+      - never infer low-risk status
+
+  asgk negative compact-handoff:
+    current_behavior:
+      - run compact-handoff-check against stale active-work fixtures as expected failures
     expected: all commands fail
     default_ci: false unless a future issue explicitly wires it into CI
 

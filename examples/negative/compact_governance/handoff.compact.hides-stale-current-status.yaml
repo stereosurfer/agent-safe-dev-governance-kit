@@ -1,0 +1,22 @@
+compact_handoff:
+  active_issue: "#240 Add compact PR body profile"
+  active_pr: "#241 Add compact PR body profile check"
+  branch: "codex/compact-pr-body-profile-240"
+  durable_source_of_truth: "GitHub issue #240 and PR #241"
+  objective: "Negative fixture: claim no current-status update is needed while stale active work remains."
+  state: "merged"
+  allowed_paths:
+    - "docs/control/COMPACT_PR_BODY_PROFILE.md"
+    - "examples/compact_governance/**"
+    - "examples/negative/compact_governance/**"
+    - "scripts/asgk.py"
+  validation_status:
+    status: "pass"
+    evidence: "Negative fixture only."
+  current_status_impact:
+    status: "not_applicable"
+    reason: "Claims GitHub issue and PR history is enough."
+    current_status_updated_in_this_pr: false
+    post_merge_safe: not_applicable
+    follow_up_issue: none
+  next_safe_action: "Continue #229 with the next package."
