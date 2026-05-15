@@ -721,6 +721,26 @@ future_cli_mapping:
     expected: all commands fail
     default_ci: false unless a future issue explicitly wires it into CI
 
+  asgk compact-task-packet-check --issue <number> --file task_packet.yaml:
+    current_behavior:
+      - run canonical task-packet schema validation
+      - derive canonical issue scope from the live GitHub issue
+      - compare task packet allowed_paths to issue allowed_paths
+      - pass when the packet narrows issue scope
+      - fail when the packet expands issue scope
+      - never infer low-risk status
+
+  asgk compact-task-packet-check --json-file bundle.json:
+    current_behavior:
+      - run the same delta-only task-packet comparison against fixture issue and task_packet objects
+      - support deterministic tests without network access
+
+  asgk negative compact-task-packet:
+    current_behavior:
+      - run compact-task-packet-check against scope-expansion fixtures as expected failures
+    expected: all commands fail
+    default_ci: false unless a future issue explicitly wires it into CI
+
   asgk task-packet-check --file task_packet.yaml:
     current_behavior:
       - validate JSON task packets, canonical YAML-like task packets, and negative fixtures with bad_input

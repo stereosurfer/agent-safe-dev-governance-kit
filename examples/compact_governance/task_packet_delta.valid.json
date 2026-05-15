@@ -1,0 +1,71 @@
+{
+  "expected_result": "pass",
+  "issue": {
+    "number": 1001,
+    "state": "open",
+    "title": "Valid delta-only task packet fixture",
+    "body": "## Required Task Fields\n\n```yaml\nlane: validation_tooling\nintelligence_level: frontier\nreason: \"Fixture issue supports delta-only task packet checks.\"\ndurable_source_of_truth: \"GitHub issue #1001\"\nobjective: \"Validate task packet narrowing.\"\nallowed_paths:\n  - scripts/asgk.py\n  - docs/control/TASK_PACKET_FORMAT.md\nexpected_output:\n  - compact task packet check JSON\nplan:\n  - compare packet to issue scope\nchecklist:\n  - command passes\nacceptance_sheet:\n  - packet narrows issue scope\nnon_goals:\n  - no compact governance default\nstop_conditions:\n  - packet expands scope\nrollback_expectations:\n  - revert PR\n```"
+  },
+  "task_packet": {
+    "task_id": "fixture-delta-valid",
+    "lane": "validation_tooling",
+    "intelligence_level": "frontier",
+    "intelligence_level_reason": "Fixture covers compact governance scope comparison.",
+    "durable_source_of_truth": "GitHub issue #1001",
+    "objective": "Validate task packet narrowing.",
+    "product_context": "ASGK compact governance fixture.",
+    "current_repository_context": "Fixture only.",
+    "files_to_inspect_first": [
+      "scripts/asgk.py"
+    ],
+    "allowed_paths": [
+      "scripts/asgk.py"
+    ],
+    "expected_changes": [
+      "Add compact task packet comparison."
+    ],
+    "expected_output": "compact task packet check JSON",
+    "non_goals": [
+      "No compact governance default."
+    ],
+    "constraints": [
+      "Do not expand issue scope."
+    ],
+    "plan": [
+      "Compare packet allowed paths to issue allowed paths."
+    ],
+    "checklist": [
+      "Packet narrows scope."
+    ],
+    "acceptance_sheet": [
+      "narrowing accepted"
+    ],
+    "validation_commands": [
+      "python3 scripts/asgk.py compact-task-packet-check --json-file examples/compact_governance/task_packet_delta.valid.json"
+    ],
+    "stop_conditions": [
+      "Packet expands issue scope."
+    ],
+    "rollback_expectations": "Revert fixture."
+  },
+  "issue_scope": {
+    "scope_hash": "delta-valid-scope",
+    "allowed_paths": [
+      "scripts/asgk.py",
+      "docs/control/TASK_PACKET_FORMAT.md"
+    ]
+  },
+  "scope_lock": {
+    "scope_hash": "delta-valid-scope"
+  },
+  "pr": {
+    "metadata_available": true,
+    "changed_paths": [
+      "scripts/asgk.py"
+    ],
+    "ci_status": "success",
+    "current_status_changed": false,
+    "current_status_impact": "not_applicable"
+  },
+  "agent_claims": {}
+}

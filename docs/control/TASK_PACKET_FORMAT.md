@@ -35,6 +35,19 @@ pull request in `durable_source_of_truth`.
 Task packets refine executable scope. They do not replace the GitHub issue or PR
 that authorizes file edits.
 
+## Delta-Only Compact Mode
+
+Compact governance may use a delta-only task packet only when a separate check
+compares it against the source issue's canonical scope:
+
+```bash
+python3 scripts/asgk.py compact-task-packet-check --issue <number> --file <task-packet>
+```
+
+In this mode, `allowed_paths` may narrow the issue scope but must not add any
+path outside the issue's `allowed_paths`. The packet remains a refinement and
+routing artifact; the GitHub issue or PR remains the durable authorization.
+
 Use this field when a task packet cannot point at a GitHub issue yet:
 
 ```yaml

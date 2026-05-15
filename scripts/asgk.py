@@ -293,6 +293,9 @@ COMPACT_PR_REPORT_NEGATIVE_FIXTURES = [
     "examples/negative/compact_governance/pr-report.claim-conflicts-with-tool-state.json",
     "examples/negative/compact_governance/pr-report.metadata-unavailable.json",
 ]
+COMPACT_TASK_PACKET_NEGATIVE_FIXTURES = [
+    "examples/negative/compact_governance/task-packet-delta-expands-scope.json",
+]
 TARGET_INSTALL_LICENSE_NOTICE_PATHS = [
     "LICENSE",
     "LICENSE.md",
@@ -1534,6 +1537,63 @@ def task_packet_schema_failures(packet: dict[str, object], source_text: str) -> 
     return failures
 
 
+def compact_task_packet_compare(
+    issue_payload: dict[str, object],
+    packet: dict[str, object],
+    packet_source_text: str,
+) -> tuple[str, dict[str, object]]:
+    findings: list[dict[str, str]] = []
+    for failure in task_packet_schema_failures(packet, packet_source_text):
+        findings.append({
+            "field": "task_packet",
+            "reason": failure,
+        })
+
+    scope_result, scope_output = canonical_issue_scope_from_payload(issue_payload)
+    if scope_result != "pass":
+        for finding in scope_output.get("findings", []):
+            if isinstance(finding, dict):
+                findings.append({
+                    "field": f"issue_scope.{finding.get('field') or 'unknown'}",
+                    "reason": str(finding.get("reason") or "canonical issue scope failed"),
+                })
+
+    issue_scope = scope_output.get("canonical_issue_scope")
+    issue_allowed_paths: list[str] = []
+    if isinstance(issue_scope, dict):
+        raw_allowed = issue_scope.get("allowed_paths")
+        if isinstance(raw_allowed, list):
+            issue_allowed_paths = [
+                normalize_repo_path(str(item))
+                for item in raw_allowed
+                if normalize_repo_path(str(item))
+            ]
+
+    packet_allowed_paths = task_packet_allowed_paths(packet)
+    for path in packet_allowed_paths:
+        if issue_allowed_paths and not any(path_matches_allowed(path, allowed) for allowed in issue_allowed_paths):
+            findings.append({
+                "field": "task_packet.allowed_paths",
+                "reason": f"task packet expands issue allowed_paths: {path}",
+            })
+
+    result = "fail" if findings else "pass"
+    return result, {
+        "result": result,
+        "low_risk_inferred": False,
+        "issue": scope_output.get("issue"),
+        "issue_scope": issue_scope,
+        "task_packet": {
+            "allowed_paths": packet_allowed_paths,
+            "may_narrow_issue_scope": True,
+            "must_not_expand_issue_scope": True,
+            "narrows_scope": bool(packet_allowed_paths)
+            and sorted(packet_allowed_paths) != sorted(issue_allowed_paths),
+        },
+        "findings": findings,
+    }
+
+
 def print_failures(failures: list[str]) -> int:
     if failures:
         for failure in failures:
@@ -2367,6 +2427,14 @@ def cmd_negative(args: argparse.Namespace) -> int:
             ]
             for fixture in COMPACT_PR_REPORT_NEGATIVE_FIXTURES
         ])
+    if args.case == "compact-task-packet":
+        return run_expected_failures([
+            [
+                "python3", "scripts/asgk.py", "compact-task-packet-check",
+                "--json-file", fixture,
+            ]
+            for fixture in COMPACT_TASK_PACKET_NEGATIVE_FIXTURES
+        ])
     if args.case == "all":
         changed = cmd_negative(argparse.Namespace(case="changed-paths"))
         textual = cmd_negative(argparse.Namespace(case="textual"))
@@ -2380,10 +2448,12 @@ def cmd_negative(args: argparse.Namespace) -> int:
         compact_issue_scope = cmd_negative(argparse.Namespace(case="compact-issue-scope"))
         compact_scope_lock = cmd_negative(argparse.Namespace(case="compact-scope-lock"))
         compact_pr_report = cmd_negative(argparse.Namespace(case="compact-pr-report"))
+        compact_task_packet = cmd_negative(argparse.Namespace(case="compact-task-packet"))
         return 1 if (
             changed or textual or policy_gate or pr_status or target_install
             or release_state or work_unit or workspace_state or compact_governance
             or compact_issue_scope or compact_scope_lock or compact_pr_report
+            or compact_task_packet
         ) else 0
     print(f"FAIL: unsupported negative case group: {args.case}")
     return 1
@@ -2786,6 +2856,54 @@ def cmd_task_packet_check(args: argparse.Namespace) -> int:
     return print_failures(task_packet_schema_failures(packet, source_text))
 
 
+def load_compact_task_packet_inputs(args: argparse.Namespace) -> tuple[dict[str, object], dict[str, object], str]:
+    if args.json_file:
+        if args.file or args.issue or args.issue_json_file:
+            raise ValueError("use either --json-file or --file with --issue/--issue-json-file")
+        payload = json.loads(read_text(args.json_file))
+        if not isinstance(payload, dict):
+            raise ValueError("compact task-packet fixture must be a JSON object")
+        issue_payload = payload.get("issue")
+        packet = payload.get("task_packet")
+        if not isinstance(issue_payload, dict):
+            raise ValueError("compact task-packet fixture must include issue object")
+        if not isinstance(packet, dict):
+            raise ValueError("compact task-packet fixture must include task_packet object")
+        return issue_payload, packet, json.dumps(packet, sort_keys=True)
+
+    if not args.file:
+        raise ValueError("provide --file with --issue or --issue-json-file")
+    if bool(args.issue) == bool(args.issue_json_file):
+        raise ValueError("provide exactly one of --issue or --issue-json-file")
+
+    packet, source_text = load_task_packet_payload(args.file)
+    if args.issue:
+        issue_payload = load_live_work_unit("issue", str(args.issue).lstrip("#"))
+    else:
+        issue_payload = json.loads(read_text(args.issue_json_file))
+    if not isinstance(issue_payload, dict):
+        raise ValueError("compact task-packet issue payload must be a JSON object")
+    return issue_payload, packet, source_text
+
+
+def cmd_compact_task_packet_check(args: argparse.Namespace) -> int:
+    try:
+        issue_payload, packet, source_text = load_compact_task_packet_inputs(args)
+    except (RuntimeError, ValueError, json.JSONDecodeError) as exc:
+        return print_failures([str(exc)])
+
+    result, output = compact_task_packet_compare(issue_payload, packet, source_text)
+    if args.json:
+        print(json.dumps(output, indent=2, sort_keys=True))
+    elif result == "pass":
+        print(f"Compact task packet check passed for issue #{output.get('issue')}.")
+    else:
+        for finding in output.get("findings", []):
+            print(f"FAIL: {finding['field']} - {finding['reason']}")
+        print("Compact task packet check failed. No low-risk status was inferred.")
+    return 0 if result == "pass" else 1
+
+
 def cmd_context_budget_measure(args: argparse.Namespace) -> int:
     try:
         packet, source_text = load_task_packet_payload(args.task_packet)
@@ -2919,7 +3037,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.set_defaults(func=cmd_hygiene)
 
     p = sub.add_parser("negative", help="Run opt-in negative checks.")
-    p.add_argument("case", nargs="?", default="changed-paths", choices=["changed-paths", "textual", "policy-gate", "pr-status", "target-install", "release-state", "work-unit", "workspace-state", "compact-governance", "compact-issue-scope", "compact-scope-lock", "compact-pr-report", "all"])
+    p.add_argument("case", nargs="?", default="changed-paths", choices=["changed-paths", "textual", "policy-gate", "pr-status", "target-install", "release-state", "work-unit", "workspace-state", "compact-governance", "compact-issue-scope", "compact-scope-lock", "compact-pr-report", "compact-task-packet", "all"])
     p.set_defaults(func=cmd_negative)
 
     p = sub.add_parser("compact-issue-scope", help="Emit a canonical compact-governance issue scope object.")
@@ -2940,6 +3058,14 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--json-file", help="Fixture or captured gh pr view JSON payload.")
     p.add_argument("--json", action="store_true", help="Emit machine-readable JSON output.")
     p.set_defaults(func=cmd_compact_pr_report)
+
+    p = sub.add_parser("compact-task-packet-check", help="Check a task packet only narrows canonical issue scope.")
+    p.add_argument("--file", help="Task packet YAML/JSON file.")
+    p.add_argument("--issue", help="GitHub issue number for live gh REST lookup.")
+    p.add_argument("--issue-json-file", help="Fixture or captured issue JSON payload.")
+    p.add_argument("--json-file", help="Fixture bundle with issue and task_packet objects.")
+    p.add_argument("--json", action="store_true", help="Emit machine-readable JSON output.")
+    p.set_defaults(func=cmd_compact_task_packet_check)
 
     p = sub.add_parser("policy-gate", help="Run PR-body policy gate checks.")
     p.add_argument("--pr-body", help="Path to a PR body markdown file.")
