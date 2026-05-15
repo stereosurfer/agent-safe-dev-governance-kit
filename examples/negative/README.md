@@ -46,12 +46,13 @@ python3 scripts/asgk.py negative compact-governance
 python3 scripts/asgk.py negative compact-issue-scope
 python3 scripts/asgk.py negative compact-scope-lock
 python3 scripts/asgk.py negative compact-pr-report
+python3 scripts/asgk.py negative compact-task-packet
 ```
 
 That command succeeds only when the positive fixture passes and every negative
 fixture produces its expected blocked, failed, fail-closed, or human-gated
-state. The compact issue-scope, scope-lock, and PR-report negative commands
-succeed only when malformed compact-governance inputs fail as expected.
+state. The compact issue-scope, scope-lock, PR-report, and task-packet negative
+commands succeed only when malformed compact-governance inputs fail as expected.
 
 ## Future CLI Usage
 
@@ -84,3 +85,4 @@ Until such tools exist, these fixtures are documentation-backed test targets for
 | NEG-042 | `compact_governance/scope-lock.stale-capture.json` | blocked |
 | NEG-043 | `compact_governance/pr-report.metadata-unavailable.json` | fail_closed |
 | NEG-044 | `compact_governance/pr-report.claim-conflicts-with-tool-state.json` | blocked |
+| NEG-045 | `compact_governance/task-packet-delta-expands-scope.json` | blocked |

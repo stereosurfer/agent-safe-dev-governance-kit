@@ -181,3 +181,18 @@ fields and optional fixture `agent_claims`. Those claims are evidence only. If a
 claim says the PR is merge-ready while the tool-derived report has blocking
 findings, the report fails with a claim-conflict finding instead of allowing PR
 prose to override live state.
+
+## Delta-Only Task Packet Primitive
+
+The delta task-packet check is opt-in:
+
+```bash
+python3 scripts/asgk.py compact-task-packet-check --issue <number> --file task_packet.yaml --json
+python3 scripts/asgk.py compact-task-packet-check --json-file examples/compact_governance/task_packet_delta.valid.json --json
+```
+
+The command runs the existing task-packet schema checks, derives the canonical
+issue scope, and compares packet `allowed_paths` to issue `allowed_paths`.
+Packets may narrow issue scope, but any packet path outside the issue scope
+fails. The packet remains a routing/execution artifact; it does not replace the
+GitHub issue as primary authorization and never infers low-risk status.
