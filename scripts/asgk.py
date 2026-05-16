@@ -51,7 +51,7 @@ from asgk_lib.text_fields import (
 )
 from asgk_lib.negative import (
     NEGATIVE_CASE_CHOICES,
-    changed_path_hygiene_commands,
+    run_changed_path_hygiene_checks,
     run_negative_case,
     run_textual_negative_checks,
 )
@@ -1727,10 +1727,10 @@ def cmd_doctor(_args: argparse.Namespace) -> int:
         ["git", "diff", "--check"],
         ["python3", "scripts/asgk.py", "status-check"],
     ]
-    commands.extend(changed_path_hygiene_commands())
     baseline = run_many(commands)
+    changed_paths = run_changed_path_hygiene_checks()
     textual = run_textual_negative_checks()
-    return 1 if baseline or textual else 0
+    return 1 if baseline or changed_paths or textual else 0
 
 
 def cmd_validate(_args: argparse.Namespace) -> int:

@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import contextlib
+import io
+import shlex
 import subprocess
 
 from asgk_lib.common import ROOT
@@ -170,47 +173,75 @@ NEGATIVE_CASE_CHOICES = [
 ]
 
 
-def run_command(args: list[str]) -> int:
-    print("+ " + " ".join(args))
-    return subprocess.run(args, cwd=ROOT).returncode
+def format_command(args: list[str]) -> str:
+    return shlex.join(args)
+
+
+def run_captured(command: list[str]) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        command,
+        cwd=ROOT,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+    )
+
+
+def print_captured_output(output: str) -> None:
+    if output.strip():
+        print(output.rstrip())
+
+
+def run_negative_case_capture(case: str) -> tuple[int, str]:
+    buffer = io.StringIO()
+    with contextlib.redirect_stdout(buffer):
+        result = run_negative_case(case)
+    return result, buffer.getvalue()
 
 
 def run_many(commands: list[list[str]]) -> int:
-    failures = 0
+    failures: list[tuple[list[str], str]] = []
     for command in commands:
-        if run_command(command) != 0:
-            failures += 1
+        result = run_captured(command)
+        if result.returncode != 0:
+            failures.append((command, result.stdout))
     if failures:
-        print(f"FAIL: {failures} command(s) failed.")
+        for command, output in failures:
+            print(f"FAIL: command failed: {format_command(command)}")
+            print_captured_output(output)
+        print(f"FAIL: {len(failures)} command(s) failed.")
         return 1
+    print(f"Checks passed: {len(commands)} command(s).")
     return 0
 
 
 def run_expected_failures(commands: list[list[str]]) -> int:
-    unexpected_passes = 0
+    unexpected_passes: list[tuple[list[str], str]] = []
     for command in commands:
-        print("+ expect failure: " + " ".join(command))
-        result = subprocess.run(command, cwd=ROOT)
+        result = run_captured(command)
         if result.returncode == 0:
-            print("FAIL: expected command to fail, but it passed.")
-            unexpected_passes += 1
+            unexpected_passes.append((command, result.stdout))
     if unexpected_passes:
-        print(f"FAIL: {unexpected_passes} expected-failure check(s) unexpectedly passed.")
+        for command, output in unexpected_passes:
+            print(f"FAIL: expected command to fail, but it passed: {format_command(command)}")
+            print_captured_output(output)
+        print(f"FAIL: {len(unexpected_passes)} expected-failure check(s) unexpectedly passed.")
         return 1
     print(f"Expected-failure checks passed: {len(commands)} command(s) failed as expected.")
     return 0
 
 
 def run_expected_successes(commands: list[list[str]]) -> int:
-    failures = 0
+    failures: list[tuple[list[str], str]] = []
     for command in commands:
-        print("+ expect success: " + " ".join(command))
-        result = subprocess.run(command, cwd=ROOT)
+        result = run_captured(command)
         if result.returncode != 0:
-            print("FAIL: expected command to pass, but it failed.")
-            failures += 1
+            failures.append((command, result.stdout))
     if failures:
-        print(f"FAIL: {failures} expected-success check(s) failed.")
+        for command, output in failures:
+            print(f"FAIL: expected command to pass, but it failed: {format_command(command)}")
+            print_captured_output(output)
+        print(f"FAIL: {len(failures)} expected-success check(s) failed.")
         return 1
     print(f"Expected-success checks passed: {len(commands)} command(s) passed as expected.")
     return 0
@@ -223,13 +254,17 @@ def changed_path_hygiene_commands() -> list[list[str]]:
     ]
 
 
+def run_changed_path_hygiene_checks() -> int:
+    return run_many(changed_path_hygiene_commands())
+
+
 def run_textual_negative_checks() -> int:
     return run_expected_failures(EXPECTED_FAILURE_CHECKS)
 
 
 def run_negative_case(case: str) -> int:
     if case == "changed-paths":
-        return run_many(changed_path_hygiene_commands())
+        return run_changed_path_hygiene_checks()
     if case == "textual":
         return run_textual_negative_checks()
     if case == "policy-gate":
@@ -337,7 +372,19 @@ def run_negative_case(case: str) -> int:
             for manifest in COMPACT_TARGET_UPGRADE_NEGATIVE_MANIFESTS
         ])
     if case == "all":
-        results = [run_negative_case(child) for child in NEGATIVE_CASE_CHOICES if child != "all"]
-        return 1 if any(results) else 0
+        children = [child for child in NEGATIVE_CASE_CHOICES if child != "all"]
+        failures: list[tuple[str, str]] = []
+        for child in children:
+            result, output = run_negative_case_capture(child)
+            if result != 0:
+                failures.append((child, output))
+        if failures:
+            for child, output in failures:
+                print(f"FAIL: negative case group failed: {child}")
+                print_captured_output(output)
+            print(f"FAIL: {len(failures)} negative case group(s) failed.")
+            return 1
+        print(f"Negative checks passed: {len(children)} group(s).")
+        return 0
     print(f"FAIL: unsupported negative case group: {case}")
     return 1
