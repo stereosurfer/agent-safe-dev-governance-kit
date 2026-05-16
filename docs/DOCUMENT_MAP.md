@@ -61,7 +61,7 @@ progressive_disclosure_surfaces:
     path: docs/SKILL_PACK.md
     purpose: optional ASGK skill-pack source and usage modes
     read_by_default: false
-  issue_closeout_reviews: {path: docs/handoff/ISSUE_CLOSEOUT_REVIEWS.md, purpose: mandatory issue-level closeout decision analysis ledger, read_by_default: false}
+  issue_closeout_review_rules: {path: docs/handoff/ISSUE_CLOSEOUT_REVIEW_RULES.md, purpose: writing rules for mandatory issue closeout decision analysis in GitHub issue comments, read_by_default: false}
 ```
 
 ## Default Startup Set

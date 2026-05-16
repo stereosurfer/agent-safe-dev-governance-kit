@@ -383,15 +383,15 @@ After merge:
 2. Close the issue as completed when authorized.
 3. Update docs/handoff/CURRENT_STATUS.md only if the repository recovery surface
    actually changed.
-4. Add one bounded decision-analysis entry to `docs/handoff/ISSUE_CLOSEOUT_REVIEWS.md`.
-   If that ledger is not in the current issue's allowed paths, open or use a
-   bounded closeout-review issue or PR before claiming full closeout.
+4. Add one bounded decision-analysis block to the GitHub issue closeout comment
+   using `docs/handoff/ISSUE_CLOSEOUT_REVIEW_RULES.md` as the writing guide.
+   Do not create repo-file repair work solely to store routine reviews.
 ```
 
 Routine closeout PRs should not be needed when `CURRENT_STATUS.md` was already
-post-merge-safe or unchanged. Issue Closeout Reviews are still required; keep
-routine entries bounded and evidence-dense instead of skipping them. Do not
-replace decision analysis with a short summary.
+post-merge-safe or unchanged. Issue Closeout Reviews are still required in
+issue closeout comments; keep routine entries bounded and evidence-dense
+instead of skipping them. Do not replace decision analysis with a short summary.
 
 ## Adopt In Another Repository
 

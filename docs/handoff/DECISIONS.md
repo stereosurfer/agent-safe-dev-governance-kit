@@ -9,9 +9,10 @@ Boundary:
 - Append concise decision entries only.
 - Each entry should state the decision, date, and durable source issue or PR.
 - Do not copy full discussions, PR bodies, or chronological work logs here.
-- Issue-level pitfalls, avoidable repeated errors, future-agent hints, and
-  promotion candidates belong in `docs/handoff/ISSUE_CLOSEOUT_REVIEWS.md`.
-- Detailed rationale belongs in issues, PRs, comments, and merge commits.
+- Issue closeout decision analysis uses
+  `docs/handoff/ISSUE_CLOSEOUT_REVIEW_RULES.md` as its writing guide.
+- Detailed rationale and routine closeout reviews belong in issues, PRs,
+  comments, and merge commits.
 
 ## 2026-05-04 - Complete Vertical Governance Completion As Thin Layer
 
