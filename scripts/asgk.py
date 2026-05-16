@@ -2032,6 +2032,20 @@ def cmd_closeout_check(args: argparse.Namespace) -> int:
             if re.search(pattern, next_safe_action, flags=re.IGNORECASE):
                 failures.append(f"next safe action appears to describe pre-merge closeout work: {pattern}")
 
+    review_path = rel(args.issue_closeout_reviews)
+    if args.completed_issue:
+        if not review_path.exists():
+            failures.append(f"missing issue closeout review ledger: {args.issue_closeout_reviews}")
+        else:
+            review_text = review_path.read_text(encoding="utf-8")
+            for issue in args.completed_issue:
+                issue_number = issue.strip().lstrip("#")
+                if not issue_number:
+                    continue
+                pattern = rf"(?m)^\s*issue:\s*[\"']?#?{re.escape(issue_number)}[\"']?\s*$"
+                if not re.search(pattern, review_text):
+                    failures.append(f"missing issue closeout review entry for completed issue: #{issue_number}")
+
     return print_failures(failures)
 
 
@@ -2468,11 +2482,12 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--max-lines", type=int, default=120)
     p.set_defaults(func=cmd_status_check)
 
-    p = sub.add_parser("closeout-check", help="Check local closeout status for stale active work markers.")
+    p = sub.add_parser("closeout-check", help="Check local closeout status and mandatory issue closeout review entries.")
     p.add_argument("--file", default="docs/handoff/CURRENT_STATUS.md")
     p.add_argument("--completed-issue", action="append", default=[])
     p.add_argument("--completed-pr", action="append", default=[])
     p.add_argument("--completed-branch", action="append", default=[])
+    p.add_argument("--issue-closeout-reviews", default="docs/handoff/ISSUE_CLOSEOUT_REVIEWS.md")
     p.set_defaults(func=cmd_closeout_check)
 
     p = sub.add_parser("current-status-impact-check", help="Check PR current-status impact is post-merge-safe.")
