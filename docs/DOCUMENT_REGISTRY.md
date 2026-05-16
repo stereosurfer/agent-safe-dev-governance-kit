@@ -135,7 +135,7 @@ rule:
 | `docs/control/HANDOFF_PACKET.md` | canonical | generic work-unit handoff packet fields, validation status values, recovery stop conditions | no | interruption, model switch, tool switch, handoff recovery, `asgk.py handoff-check` | `lane_00_controller` |
 | `docs/handoff/CURRENT_STATUS.md` | status | repo-level compact current state and next safe work | yes | all sessions and handoff updates | `lane_07_docs_handoff` |
 | `docs/handoff/DECISIONS.md` | status | durable architecture/governance decisions | no | decision lookup or update | `lane_07_docs_handoff` |
-| `docs/handoff/ISSUE_CLOSEOUT_REVIEWS.md` | status | advisory issue-level decisions, pitfalls, preventions, and promotion candidates | no | closeout review, governance health check, upgrade audit, or similar prior-work lookup | `lane_07_docs_handoff` |
+| `docs/handoff/ISSUE_CLOSEOUT_REVIEWS.md` | status | mandatory issue-level closeout decision analysis, pitfalls, preventions, and promotion candidates | no | closeout review, governance health check, upgrade audit, or similar prior-work lookup | `lane_07_docs_handoff` |
 | `docs/handoff/AGENT_LOG.md` | status | optional agent report log or links | no | handoff/reporting work | `lane_07_docs_handoff` |
 
 Canonical ownership rule for handoff work:

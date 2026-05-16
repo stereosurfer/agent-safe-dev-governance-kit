@@ -336,11 +336,14 @@ For local-only mechanical closeout checks, use:
 python3 scripts/asgk.py closeout-check \
   --completed-issue '#<issue>' \
   --completed-pr '#<pr>' \
-  --completed-branch '<branch>'
+  --completed-branch '<branch>' \
+  --issue-closeout-reviews docs/handoff/ISSUE_CLOSEOUT_REVIEWS.md
 ```
 
-The first version is deliberately local-only: it checks supplied markers against
-`CURRENT_STATUS.md` and does not query GitHub issue or PR state.
+The check is deliberately local-only: it checks supplied markers against
+`CURRENT_STATUS.md` and checks that the issue closeout review ledger contains an
+entry for each supplied completed issue. It does not query GitHub issue or PR
+state.
 
 ## Size And Compaction Rules
 

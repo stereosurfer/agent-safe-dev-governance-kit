@@ -36,6 +36,12 @@ EXPECTED_FAILURE_CHECKS = [
         "--completed-branch", "codex/positive-handoff-template-fixture",
     ],
     [
+        "python3", "scripts/asgk.py", "closeout-check",
+        "--file", "examples/negative/current_status.clean-closeout.md",
+        "--completed-issue", "#9999",
+        "--issue-closeout-reviews", "examples/negative/issue_closeout_reviews.missing-entry.md",
+    ],
+    [
         "python3", "scripts/asgk.py", "current-status-impact-check",
         "--pr-body", "examples/negative/current_status_impact/pr_body.updated-self-stale.md",
         "--changed-paths-file", "examples/negative/current_status_impact/changed_paths.current-status.txt",
