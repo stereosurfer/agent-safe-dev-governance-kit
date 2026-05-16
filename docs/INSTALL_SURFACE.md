@@ -41,8 +41,8 @@ Install the generic governance core, not the ASGK repository's internal state.
 
 Target repositories must own their own repo-local governance state after
 source adoption. They must not treat ASGK's internal `docs/DOCUMENT_MAP.md`,
-`docs/handoff/*`, stabilization plans, readiness audits, or compatibility-only
-agent rule keys as target-project truth.
+`docs/handoff/*`, historical ASGK evidence, internal audits, or
+compatibility-only agent rule keys as target-project truth.
 
 ## V1.x Source-Only Adoption Model
 
@@ -256,8 +256,8 @@ do_not_copy_as_is:
   - docs/DOCUMENT_REGISTRY.md
   - docs/handoff/AGENT_LOG.md
   - docs/handoff/DECISIONS.md
-  - docs/control/V1_1_STABILIZATION_PLAN.md
-  - docs/control/V1_READINESS_AUDIT.md
+  - docs/control/HISTORICAL_ASGK_STABILIZATION_EVIDENCE.md
+  - docs/control/HISTORICAL_ASGK_READINESS_EVIDENCE.md
   - docs/control/UNCONTROLLED_DOCUMENT_AUDIT.md
   - docs/EVOLUTION_MODEL.md
   - examples/negative/*
@@ -272,7 +272,7 @@ reasons:
   docs_DOCUMENT_MAP_md: "ASGK repo-local router; use templates/DOCUMENT_MAP.template.md instead."
   docs_DOCUMENT_REGISTRY_md: "ASGK repo-local registry; use templates/DOCUMENT_REGISTRY.template.md instead."
   handoff_logs_and_decisions: "ASGK repository history, not target project state."
-  stabilization_and_readiness_docs: "ASGK internal maturity state, not target project readiness."
+  historical_asgk_evidence: "Archived ASGK maturity evidence, not target project readiness."
   uncontrolled_document_audit: "ASGK internal audit result."
   negative_examples: "Validator expected-failure fixtures; copy only for validation work."
   profiles_and_adapters: "v2.0 deferred runtime-specific optimization surfaces."

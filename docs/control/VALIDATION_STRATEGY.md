@@ -491,11 +491,11 @@ negative_validation_targets:
     owner: target_install_check
     fixture: examples/negative/target_install/missing_required_files/
 
-  target_install_repo_local_readiness_surface:
-    bad_input: "target repository includes ASGK repo-local V1 readiness audit"
+  target_install_repo_local_historical_evidence_surface:
+    bad_input: "target repository includes archived ASGK repo-local readiness evidence"
     expected: blocked
     owner: target_install_check
-    fixture: examples/negative/target_install/repo_local_readiness_surface/
+    fixture: examples/negative/target_install/repo_local_historical_evidence_surface/
 
   missing_pr_required_heading:
     bad_input: "PR template missing required heading"

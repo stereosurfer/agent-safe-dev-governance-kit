@@ -40,10 +40,14 @@ TARGET_INSTALL_PREFERRED_AGENT_KEYS = [
     "worker_assignment_required_fields",
 ]
 TARGET_INSTALL_FORBIDDEN_BLOCKING_PATHS = [
-    "docs/control/V1_1_STABILIZATION_PLAN.md",
-    "docs/control/V1_READINESS_AUDIT.md",
+    "docs/control/HISTORICAL_ASGK_STABILIZATION_EVIDENCE.md",
+    "docs/control/HISTORICAL_ASGK_READINESS_EVIDENCE.md",
     "docs/control/UNCONTROLLED_DOCUMENT_AUDIT.md",
     "docs/EVOLUTION_MODEL.md",
+]
+TARGET_INSTALL_FORBIDDEN_LEGACY_BLOCKING_PATHS = [
+    "docs/control/V1_1_STABILIZATION_PLAN.md",
+    "docs/control/V1_READINESS_AUDIT.md",
 ]
 TARGET_INSTALL_FORBIDDEN_WARNING_PATHS = [
     "docs/handoff/AGENT_LOG.md",
@@ -231,6 +235,18 @@ def target_install_findings(root: Path) -> list[dict[str, str | bool]]:
                 forbidden,
                 "ASGK repo-local governance file is present in the target repository surface",
                 "Remove this file from target authority or document an explicit adaptation issue.",
+                blocking=True,
+            )
+
+    for forbidden in TARGET_INSTALL_FORBIDDEN_LEGACY_BLOCKING_PATHS:
+        if repo_path(root, forbidden).exists():
+            add_target_install_finding(
+                findings,
+                "FAIL",
+                "forbidden_repo_local_surfaces",
+                forbidden,
+                "legacy ASGK repo-local governance file is present in the target repository surface",
+                "Remove this legacy ASGK file from target authority or document an explicit adaptation issue.",
                 blocking=True,
             )
 

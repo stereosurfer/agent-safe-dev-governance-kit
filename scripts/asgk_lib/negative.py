@@ -78,7 +78,7 @@ PR_STATUS_NEGATIVE_FIXTURES = [
 ]
 TARGET_INSTALL_NEGATIVE_FIXTURES = [
     "examples/negative/target_install/missing_required_files",
-    "examples/negative/target_install/repo_local_readiness_surface",
+    "examples/negative/target_install/repo_local_historical_evidence_surface",
 ]
 RELEASE_STATE_NEGATIVE_FIXTURES = [
     "examples/negative/release_state/README.stale-v1-2-candidate.md",
