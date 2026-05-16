@@ -130,7 +130,7 @@ def read_changed_paths(path: str | Path) -> set[str]:
 
 
 def normalize_repo_path(path: str) -> str:
-    cleaned = path.strip().replace("\\", "/")
+    cleaned = path.strip().strip("`").strip('"').strip("'").replace("\\", "/")
     while cleaned.startswith("./"):
         cleaned = cleaned[2:]
     return cleaned

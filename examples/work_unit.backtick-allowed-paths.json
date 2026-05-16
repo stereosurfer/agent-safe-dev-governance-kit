@@ -1,0 +1,7 @@
+{
+  "kind": "issue",
+  "number": 263,
+  "state": "open",
+  "html_url": "https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/263",
+  "body": "## Required Task Fields\n\n```yaml\nlane: governance_tooling\nintelligence_level: frontier\nreason: \"Fixture proves Markdown inline-code formatting around allowed_paths is not treated as a literal path character.\"\ndurable_source_of_truth: \"GitHub issue #263\"\nobjective: \"Accept Markdown code ticks around path scope fields.\"\nallowed_paths:\n  - `scripts/asgk_lib/common.py`\n  - `examples/work_unit.backtick-allowed-paths.json`\n  - `examples/work_unit.backtick-allowed-paths.txt`\nexpected_output:\n  - one focused validation PR\nplan:\n  - normalize path formatting\nchecklist:\n  - work-unit check passes\nacceptance_sheet:\n  - backtick-wrapped allowed paths match changed paths\nnon_goals:\n  - no authorization semantics change\nstop_conditions:\n  - outside allowed path passes unexpectedly\nrollback_expectations:\n  - revert PR\n```\n"
+}
