@@ -173,19 +173,18 @@ human-gated trigger before it can be treated as low risk.
 
 ## Current Release State
 
-ASGK v1.5.3 is the latest completed source-only GitHub release under the
+ASGK v1.6.0 is the latest completed source-only GitHub release under the
 Apache-2.0 license.
 
-v1.5.3 is a validation-boundary hardening patch on the v1.5 line. It keeps the
-v1.5.0 context-boundary, v1.5.1 skill-output hygiene, and v1.5.2 issue-first
-authority scope, then makes the validation boundary explicit: ASGK governance
-checks prove workflow and merge evidence, not application semantics, security
-correctness, privacy safety, dependency health, or current third-party API usage.
-It also adds project-specific validation fields, PR context read-set reporting,
-and warning-only workspace-state hygiene. It remains a source-only GitHub
-release: no package, installer, runtime adapter, dependency, schema, workflow,
-repository visibility change, cloud/API/model lane, MCP change, or v2.0 work is
-included.
+v1.6.0 is the compact-governance release for the v1.x line. It keeps the v1.5
+validation boundary, then adds repo-checkable compact governance surfaces:
+canonical issue-scope blocks, scope-lock capture and comparison, live GitHub
+issue/PR metadata compilation into compact PR reports, compact PR body checks,
+delta-only compact task packets, compact handoff freshness checks, compact
+target-upgrade manifests, and red-team fixtures for agent-written human-gate and
+tool-state claims. It remains a source-only GitHub release: no package,
+installer, runtime adapter, dependency, schema, workflow, repository visibility
+change, cloud/API/model lane, MCP change, or v2.0 work is included.
 
 The v1.x line is the generic repo-governance product line. Later runtime-specific
 profiles or adapters are planned as optional optimization layers, not as the

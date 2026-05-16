@@ -532,6 +532,63 @@ v1_5_3_release_preparation:
     - installed/global client skill synchronization
 ```
 
+## v1.6.0 Release Preparation Record
+
+```yaml
+v1_6_0_release_preparation:
+  implementation_issue: "#229"
+  implementation_prs:
+    - "#226"
+    - "#228"
+    - "#231"
+    - "#233"
+    - "#235"
+    - "#237"
+    - "#239"
+    - "#241"
+    - "#243"
+    - "#245"
+    - "#247"
+  execution_issue: "#248"
+  status: executed_by_248
+  latest_completed_release: "ASGK v1.6.0"
+  release_title: "ASGK v1.6.0"
+  release_theme: "Compact governance based on canonical scope, scope locks, live GitHub metadata, and tool-derived state instead of agent-written claims."
+  released_scope:
+    - "canonical issue-scope block and scope-lock capture/comparison"
+    - "live GitHub issue/PR metadata compilation into compact PR reports"
+    - "compact PR body checks that require a passing compiled report with checkable derived state"
+    - "delta-only compact task packet checks"
+    - "compact handoff freshness rules"
+    - "compact target-upgrade manifest validation"
+    - "red-team fixtures for self-attested human-gate and tool-state claims"
+  execution_record:
+    issue: "#248"
+    target_commit: "6e3f0621349231870db95c4db4952a98e978af74"
+    tag_name: v1.6.0
+    release_url: https://github.com/stereosurfer/agent-safe-dev-governance-kit/releases/tag/v1.6.0
+    release_type: source_only_github_release
+    validation:
+      command: python3 scripts/asgk.py doctor
+      result: passed_before_release
+    closeout:
+      product_entry_and_handoff_docs:
+        - README.md
+        - docs/bootstrap/10_roadmap.md
+        - docs/handoff/CURRENT_STATUS.md
+        - docs/control/V1_RELEASE_PREPARATION_PLAN.md
+      required_validation:
+        - python3 scripts/asgk.py release-state-check --tag v1.6.0 --release-title "ASGK v1.6.0"
+        - python3 scripts/asgk.py doctor
+      installed_skill_sync: not_applicable
+      rollback_or_revoke_plan_recorded: true
+  not_performed:
+    - package publication
+    - repository visibility change
+    - runtime adapter, installer scaffold, dependency, workflow, schema, or v2.0 work
+    - installed/global client skill synchronization
+```
+
 ```yaml
 acceptance:
   - Apache-2.0 license decision is recorded
