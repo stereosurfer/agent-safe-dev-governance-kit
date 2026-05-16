@@ -2342,6 +2342,7 @@ def cmd_release_state_check(args: argparse.Namespace) -> int:
         readme_path=rel(args.readme),
         roadmap_path=rel(args.roadmap),
         current_status_path=rel(args.current_status),
+        release_policy_path=rel(args.release_policy),
     )
     return print_failures(failures)
 
@@ -2519,6 +2520,11 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--readme", default="README.md")
     p.add_argument("--roadmap", default="docs/bootstrap/10_roadmap.md")
     p.add_argument("--current-status", default="docs/handoff/CURRENT_STATUS.md")
+    p.add_argument(
+        "--release-policy",
+        default="docs/control/SOURCE_ONLY_RELEASE_POLICY.md",
+        help="Optional source-only release policy to scan for duplicated release ledgers when present.",
+    )
     p.set_defaults(func=cmd_release_state_check)
 
     return parser

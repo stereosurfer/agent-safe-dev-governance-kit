@@ -17,7 +17,7 @@ adapters, installer scaffold, and v2.0 work remain human-gated unless the
 release issue explicitly authorizes them.
 
 If this skill conflicts with `AGENTS.md`, the release issue, a PR, or
-`docs/control/V1_RELEASE_PREPARATION_PLAN.md`, stop and use the durable repo
+`docs/control/SOURCE_ONLY_RELEASE_POLICY.md`, stop and use the durable repo
 authority.
 
 ## Required Inputs
