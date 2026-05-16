@@ -60,6 +60,9 @@ expected. The compact handoff negative command succeeds only when stale
 current-status active work is blocked as expected. The compact target-upgrade
 negative command succeeds only when target-owned-state overwrite and default
 enablement manifests fail as expected.
+Requires-human compact report fixtures are expected failures for compact PR
+body and PR-report checks; a compact body cannot clear a protected boundary by
+referencing a report whose derived state still requires human review.
 
 ## Future CLI Usage
 
@@ -97,3 +100,5 @@ Until such tools exist, these fixtures are documentation-backed test targets for
 | NEG-047 | `compact_governance/handoff.compact.hides-stale-current-status.yaml` | blocked |
 | NEG-048 | `compact_governance/target_upgrade/manifest.overwrites-current-status.json` | blocked |
 | NEG-049 | `compact_governance/target_upgrade/manifest.default-enabled.json` | blocked |
+| NEG-050 | `compact_governance/pr-report.restricted-boundary-claimed-human-gate.json` | blocked |
+| NEG-051 | `compact_governance/pr_body.compact.requires-human-report.md` | blocked |

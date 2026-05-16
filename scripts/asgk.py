@@ -292,6 +292,7 @@ COMPACT_SCOPE_LOCK_NEGATIVE_CASES = [
 COMPACT_PR_REPORT_NEGATIVE_FIXTURES = [
     "examples/negative/compact_governance/pr-report.claim-conflicts-with-tool-state.json",
     "examples/negative/compact_governance/pr-report.metadata-unavailable.json",
+    "examples/negative/compact_governance/pr-report.restricted-boundary-claimed-human-gate.json",
 ]
 COMPACT_TASK_PACKET_NEGATIVE_FIXTURES = [
     "examples/negative/compact_governance/task-packet-delta-expands-scope.json",
@@ -300,6 +301,10 @@ COMPACT_PR_BODY_NEGATIVE_CASES = [
     (
         "examples/negative/compact_governance/pr_body.compact.failed-report.md",
         "examples/negative/compact_governance/pr-report.metadata-unavailable.json",
+    ),
+    (
+        "examples/negative/compact_governance/pr_body.compact.requires-human-report.md",
+        "examples/negative/compact_governance/reports/pr-report.requires-human-restricted-boundary.json",
     ),
 ]
 COMPACT_HANDOFF_NEGATIVE_CASES = [
@@ -984,7 +989,10 @@ def compact_pr_report_agent_claims(payload: dict[str, object], body: str) -> dic
         "validation_evidence_checked": normalized_field_value(merge_section, "validation_evidence_checked"),
     }
     merge_ready_claimed = pr_body_claims["merge_decision_result"] == "merge_allowed"
+    human_gate_claimed = pr_body_claims["human_gates_checked"] in TRUE_VALUES
     sources = ["pr_body.merge_decision.result"] if merge_ready_claimed else []
+    if human_gate_claimed:
+        sources.append("pr_body.human_gates_checked")
 
     fixture_claims: dict[str, object] = {}
     raw_fixture_claims = payload.get("agent_claims")
@@ -997,9 +1005,13 @@ def compact_pr_report_agent_claims(payload: dict[str, object], body: str) -> dic
         if fixture_claims.get("auto_merge_eligible") is True:
             merge_ready_claimed = True
             sources.append("agent_claims.auto_merge_eligible")
+        if fixture_claims.get("human_gates_checked") is True:
+            human_gate_claimed = True
+            sources.append("agent_claims.human_gates_checked")
 
     return {
         "merge_ready_claimed": merge_ready_claimed,
+        "human_gate_claimed": human_gate_claimed,
         "claim_sources": sorted(set(sources)),
         "pr_body": pr_body_claims,
         "fixture": fixture_claims,
@@ -1009,13 +1021,20 @@ def compact_pr_report_agent_claims(payload: dict[str, object], body: str) -> dic
 def compact_pr_report_claim_conflict_findings(
     agent_claims: dict[str, object],
     tool_findings: list[dict[str, str]],
+    human_gate_findings: list[dict[str, str]],
 ) -> list[dict[str, str]]:
-    if not tool_findings or agent_claims.get("merge_ready_claimed") is not True:
-        return []
-    return [{
-        "field": "agent_claims",
-        "reason": "merge-ready claim conflicts with tool-derived blocking state",
-    }]
+    findings: list[dict[str, str]] = []
+    if (tool_findings or human_gate_findings) and agent_claims.get("merge_ready_claimed") is True:
+        findings.append({
+            "field": "agent_claims",
+            "reason": "agent-authored merge-ready claim conflicts with tool-derived blocking state",
+        })
+    if human_gate_findings and agent_claims.get("human_gate_claimed") is True:
+        findings.append({
+            "field": "agent_claims",
+            "reason": "agent-authored human-gate claim conflicts with tool-derived restricted-boundary state",
+        })
+    return findings
 
 
 def compact_pr_report_from_payload(payload: dict[str, object]) -> tuple[str, dict[str, object]]:
@@ -1075,11 +1094,21 @@ def compact_pr_report_from_payload(payload: dict[str, object]) -> tuple[str, dic
             "reason": str(finding.get("reason") or "PR status check failed"),
         })
 
-    findings.extend(compact_pr_report_claim_conflict_findings(agent_claims, findings))
-
     restricted_boundaries = compact_pr_report_restricted_boundaries(changed_paths)
+    human_gate_findings = [
+        {
+            "field": "restricted_boundaries",
+            "reason": "restricted boundary requires human review: " + ", ".join(restricted_boundaries),
+        }
+    ] if restricted_boundaries else []
+    findings.extend(compact_pr_report_claim_conflict_findings(
+        agent_claims,
+        findings,
+        human_gate_findings,
+    ))
+
     derived_state = "fail" if findings else ("requires_human" if restricted_boundaries else "checkable_pass")
-    result = "fail" if findings else "pass"
+    result = "fail" if findings else ("requires_human" if restricted_boundaries else "pass")
     return result, {
         "result": result,
         "derived_state": derived_state,
@@ -1099,6 +1128,7 @@ def compact_pr_report_from_payload(payload: dict[str, object]) -> tuple[str, dic
         "issue_scope": issue_scope_output.get("canonical_issue_scope") if issue_scope_output else None,
         "scope_lock": scope_lock_output.get("scope_lock") if scope_lock_output else None,
         "restricted_boundaries": restricted_boundaries,
+        "human_gate_findings": human_gate_findings,
         "pr_status_result": pr_status_result,
         "findings": findings,
     }
@@ -1713,6 +1743,13 @@ def compact_pr_body_check(body_file: str | Path, report_file: str | Path) -> tup
             "reason": f"compiled report PR status result is not pass: {pr_status_result}",
         })
 
+    derived_state = str(report.get("derived_state") or "").lower()
+    if report and derived_state != "checkable_pass":
+        findings.append({
+            "field": "report.derived_state",
+            "reason": f"compiled report derived_state is not checkable_pass: {derived_state or 'missing'}",
+        })
+
     if report and report.get("low_risk_inferred") is not False:
         findings.append({
             "field": "report.low_risk_inferred",
@@ -1737,6 +1774,7 @@ def compact_pr_body_check(body_file: str | Path, report_file: str | Path) -> tup
             "derived_state": report.get("derived_state"),
             "pr_status_result": report.get("pr_status_result"),
             "low_risk_inferred": report.get("low_risk_inferred"),
+            "restricted_boundaries": report.get("restricted_boundaries"),
         },
         "findings": findings,
     }
@@ -3125,6 +3163,9 @@ def cmd_compact_pr_report(args: argparse.Namespace) -> int:
         print(json.dumps(output, indent=2, sort_keys=True))
     elif result == "pass":
         print(f"Compact PR report passed for PR #{output.get('pr', {}).get('number')}.")
+    elif result == "requires_human":
+        boundaries = ", ".join(output.get("restricted_boundaries", []))
+        print(f"Compact PR report requires human review for restricted boundary: {boundaries}")
     else:
         for finding in output.get("findings", []):
             print(f"FAIL: {finding['field']} - {finding['reason']}")

@@ -1,0 +1,42 @@
+{
+  "expected_result": "requires_human",
+  "result": "requires_human",
+  "derived_state": "requires_human",
+  "low_risk_inferred": false,
+  "pr_status_result": "pass",
+  "findings": [],
+  "human_gate_findings": [
+    {
+      "field": "restricted_boundaries",
+      "reason": "restricted boundary requires human review: docs/control/**"
+    }
+  ],
+  "pr": {
+    "number": 1005,
+    "url": "https://example.invalid/pr/1005",
+    "state": "OPEN",
+    "is_draft": false,
+    "merge_state": "CLEAN",
+    "review_decision": "",
+    "changed_paths": [
+      "docs/control/HUMAN_GATED_OPERATIONS.md"
+    ],
+    "status_checks": [
+      {
+        "name": "validate",
+        "status": "COMPLETED",
+        "conclusion": "SUCCESS",
+        "details_url": "https://example.invalid/actions/1005"
+      }
+    ],
+    "closing_issue": 1005
+  },
+  "restricted_boundaries": [
+    "docs/control/**"
+  ],
+  "agent_claims": {
+    "merge_ready_claimed": false,
+    "human_gate_claimed": false,
+    "claim_sources": []
+  }
+}
