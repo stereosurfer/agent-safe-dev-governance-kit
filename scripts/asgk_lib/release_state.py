@@ -41,6 +41,29 @@ def release_state_stale_patterns(tag: str) -> list[tuple[str, str]]:
     ]
 
 
+def release_ledger_patterns() -> dict[str, list[tuple[str, str]]]:
+    return {
+        "current status": [
+            (
+                r"Completed source-only releases are recorded in GitHub releases and release\s+issues:",
+                "CURRENT_STATUS.md duplicates a release-history ledger",
+            ),
+        ],
+        "roadmap": [
+            (
+                r"^\s*source_only_v\d+(?:_\d+)*_release_execution:",
+                "roadmap duplicates per-release execution records",
+            ),
+        ],
+        "release policy": [
+            (
+                r"^## v\d+\.\d+(?:\.\d+)? Release (?:Preparation|Execution) Record$",
+                "source-only release policy duplicates per-release execution records",
+            ),
+        ],
+    }
+
+
 def check_release_state_docs(
     *,
     tag: str,
@@ -48,6 +71,7 @@ def check_release_state_docs(
     readme_path: Path,
     roadmap_path: Path,
     current_status_path: Path,
+    release_policy_path: Path | None = None,
 ) -> list[str]:
     failures: list[str] = []
     if release_version_tuple(tag) is None:
@@ -58,6 +82,8 @@ def check_release_state_docs(
         ("roadmap", roadmap_path),
         ("current status", current_status_path),
     ]
+    if release_policy_path is not None and release_policy_path.exists():
+        docs.append(("release policy", release_policy_path))
     texts: dict[str, str] = {}
     for label, path in docs:
         if not path.exists():
@@ -83,6 +109,9 @@ def check_release_state_docs(
     for label, text in texts.items():
         for pattern, reason in release_state_stale_patterns(tag):
             if re.search(pattern, text, flags=re.IGNORECASE):
+                failures.append(f"{label}: {reason}")
+        for pattern, reason in release_ledger_patterns().get(label, []):
+            if re.search(pattern, text, flags=re.IGNORECASE | re.MULTILINE):
                 failures.append(f"{label}: {reason}")
 
     return failures

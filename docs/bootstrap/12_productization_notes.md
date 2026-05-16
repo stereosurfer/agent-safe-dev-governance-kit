@@ -6,7 +6,9 @@ Boundary:
 
 - Use this file for stable product-positioning notes and v1.x/v2.0 scope framing.
 - Do not use it as a release diary, roadmap queue, or status log.
-- Productization decisions and release-preparation history belong in GitHub issues, PRs, comments, merge commits, or a dedicated release-preparation document.
+- Productization decisions and release history belong in GitHub issues, PRs,
+  comments, releases, tags, and merge commits. Repo policy documents may define
+  release boundaries, but they must not become history ledgers.
 
 This kit is easier to productize as:
 

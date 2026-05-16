@@ -72,7 +72,9 @@ history belongs in issues, PRs, comments, and merge commits.
 
 This is a reference document for product positioning and boundary framing. It
 should not become a release diary, roadmap queue, or status log. Productization
-history belongs in issues and release-preparation records.
+history and release history belong in GitHub issues, PRs, comments, releases,
+tags, and merge commits. Repo policy documents may define boundaries, but they
+must not become history ledgers.
 
 ### `docs/EVOLUTION_MODEL.md`
 

@@ -4,7 +4,7 @@ This is the compact current-status surface for the repository. It is
 overwritten, not appended. Historical detail belongs in GitHub issues, PRs,
 comments, releases, and merge commits.
 
-Last updated: `2026-05-16T12:41:29Z`
+Last updated: `2026-05-16T15:17:16Z`
 
 ## Durable source of truth
 
@@ -27,13 +27,10 @@ tool-derived compact PR reports, compact PR body checks, delta task packets,
 compact handoff freshness checks, compact target-upgrade manifests, and
 red-team fixtures for human-gate and tool-state precedence.
 
-Completed source-only releases are recorded in GitHub releases and release
-issues: `v1.0.0` / `ASGK v1.0.0` under #130, `v1.1.0` / `ASGK v1.1.0` under
-#145, `v1.2.0` / `ASGK v1.2.0` under #169, `v1.3.0` / `ASGK v1.3.0` under
-#188, `v1.4.0` / `ASGK v1.4.0` under #194, `v1.5.0` / `ASGK v1.5.0` under
-#211, `v1.5.1` / `ASGK v1.5.1` under #215, `v1.5.2` / `ASGK v1.5.2` under
-#219, `v1.5.3` / `ASGK v1.5.3` under #223, and `v1.6.0` / `ASGK v1.6.0`
-under #248.
+Historical release detail is not duplicated here. GitHub releases, release
+issues, PRs, Merge Decision Records, issue comments, tags, and merge commits are
+the canonical release-history evidence. This file records only the current
+recovery state and latest completed release.
 
 Tag `v1.6.0` and GitHub release `ASGK v1.6.0` were created from target commit
 `6e3f0621349231870db95c4db4952a98e978af74`. v1.6.0 remains source-only: no

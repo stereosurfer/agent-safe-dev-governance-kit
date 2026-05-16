@@ -139,7 +139,7 @@ architecture_touchpoints:
       - asgk-post-merge-closeout
       - asgk-upgrade-audit
 
-  docs/control/V1_RELEASE_PREPARATION_PLAN.md:
+  docs/control/SOURCE_ONLY_RELEASE_POLICY.md:
     affected_skills:
       - asgk-release-prep
       - asgk-current-status-handoff

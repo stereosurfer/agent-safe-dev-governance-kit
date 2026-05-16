@@ -83,6 +83,9 @@ TARGET_INSTALL_NEGATIVE_FIXTURES = [
 RELEASE_STATE_NEGATIVE_FIXTURES = [
     "examples/negative/release_state/README.stale-v1-2-candidate.md",
 ]
+RELEASE_STATE_LEDGER_NEGATIVE_FIXTURES = [
+    "examples/negative/release_state/SOURCE_ONLY_RELEASE_POLICY.ledger.md",
+]
 WORK_UNIT_NEGATIVE_FIXTURES = [
     (
         "examples/negative/work_unit.merged-pr.json",
@@ -291,6 +294,14 @@ def run_negative_case(case: str) -> int:
                 "--readme", fixture,
             ]
             for fixture in RELEASE_STATE_NEGATIVE_FIXTURES
+        ] + [
+            [
+                "python3", "scripts/asgk.py", "release-state-check",
+                "--tag", "v1.6.0",
+                "--release-title", "ASGK v1.6.0",
+                "--release-policy", fixture,
+            ]
+            for fixture in RELEASE_STATE_LEDGER_NEGATIVE_FIXTURES
         ])
     if case == "work-unit":
         return run_expected_failures([
