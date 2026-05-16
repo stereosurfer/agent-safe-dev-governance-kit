@@ -146,6 +146,135 @@ issue_closeout_review:
 
 ## Reviews
 
+## 2026-05-17 - Issue #273 - Backfill Closeout Review Entry For Issue 269
+
+```yaml
+issue_closeout_review:
+  issue: "#273"
+  status: completed
+  scope_summary: "Backfill the missing mandatory closeout review entry for issue #269 and include this issue's self-entry."
+  prs_in_scope:
+    - pr: "#274"
+      role: "Adds bounded decision-analysis entries for issues #269 and #273 only."
+
+  decision_analysis:
+    decision_made: "Use one bounded follow-up issue to add the #269 entry and the #273 self-entry in the same ledger-only PR."
+    why_this_path: "Issue #269 closed before the mandatory-entry rule reached main, and adding only #269 would create a recursive missing-entry gap for #273."
+    rejected_paths:
+      - path: "Only add the #269 entry."
+        reason: "That would leave #273 without its own mandatory closeout review entry after merge."
+      - path: "Reopen or rewrite issue #269."
+        reason: "Issue #269 and PR #270 are already completed; the gap is closeout evidence, not implementation scope."
+      - path: "Start a broad historical closeout backfill."
+        reason: "Issue #271 explicitly did not authorize broad historical backfill."
+    reusable_signal:
+      applies_later: true
+      reason: "Closeout-review repair issues should include their own entry when the ledger is already in scope."
+
+  decisions:
+    - decision: "Treat closeout-review backfill as a ledger-only follow-up."
+      reason: "The implementation evidence already lives in issue #269 and PR #270; only the mandatory decision-analysis ledger was missing."
+      reusable_rule: "If a missing closeout review entry is discovered after merge, open a bounded issue that allows only the ledger path."
+      applies_when:
+        - "A completed issue lacks its mandatory Issue Closeout Review entry."
+        - "The missing entry can be repaired without changing the original implementation files."
+      does_not_apply_when:
+        - "The original implementation evidence is disputed or unavailable."
+        - "Repair requires changing policy, validators, or historical evidence files."
+      evidence:
+        - "#269"
+        - "#270"
+        - "#271"
+        - "#272"
+        - "#273"
+
+  avoidable_repeated_errors:
+    - error: "Creating a closeout-review repair issue that omits its own closeout review entry."
+      prevention: "When the ledger path is in scope, include the repair issue's self-entry before opening the PR."
+      evidence:
+        - "#273"
+
+  future_agent_hints:
+    - "For ledger repair issues, add both the repaired issue entry and the repair issue's self-entry when both are known."
+    - "Do not use this pattern to start broad historical backfill without an explicit issue."
+
+  promotion_candidates:
+    capability_constraints:
+      - none
+    control_policy_updates:
+      - none
+    validator_updates:
+      - none
+
+  known_limits:
+    - "This does not backfill older closed issues beyond #269."
+    - "This does not change the #269/#270 implementation, merge result, or historical evidence files."
+```
+
+## 2026-05-17 - Issue #269 - Archive Early V1 Readiness And Stabilization Surfaces
+
+```yaml
+issue_closeout_review:
+  issue: "#269"
+  status: completed
+  scope_summary: "Early v1 readiness and stabilization surfaces were archived as historical evidence instead of active policy."
+  prs_in_scope:
+    - pr: "#270"
+      role: "Renamed active-looking V1 readiness/stabilization documents into historical ASGK evidence records and updated routing/target-install references."
+
+  decision_analysis:
+    decision_made: "Replace active-looking early V1 planning/audit documents with clearly historical ASGK evidence records."
+    why_this_path: "The old filenames and active-state wording could mislead agents or target repos into treating pre-v1 readiness material as current policy after ASGK v1.6.0."
+    rejected_paths:
+      - path: "Keep the original V1 filenames and only edit wording."
+        reason: "The filenames themselves still looked like active pre-release planning surfaces."
+      - path: "Delete the historical evidence entirely."
+        reason: "The detailed source remains useful as GitHub history and audit evidence."
+      - path: "Invent a new archive system."
+        reason: "The issue only needed current-surface cleanup, not a new repository authority layer."
+    reusable_signal:
+      applies_later: true
+      reason: "Historical governance material should be retained as evidence without remaining in active routing or target-install authority."
+
+  decisions:
+    - decision: "Keep compact historical evidence files with fixed source links, blob SHAs, line counts, and checksums."
+      reason: "This preserves auditability while removing long stale planning text from the active repo surface."
+      reusable_rule: "When retiring stale governance history, preserve a recoverable evidence pointer instead of leaving old active-looking control files in place."
+      applies_when:
+        - "A repo-local governance document is historically useful but no longer current policy."
+        - "The full source remains available in GitHub history."
+      does_not_apply_when:
+        - "The file is still the current policy authority."
+        - "The historical source contains private or sensitive material that should not remain linked."
+      evidence:
+        - "#269"
+        - "#270"
+
+  avoidable_repeated_errors:
+    - error: "Letting old V1 planning filenames survive as current-looking target-install or release-policy guidance."
+      prevention: "Route historical ASGK evidence through explicit historical names and keep target-install checks blocking repo-local ASGK evidence in target authority."
+      evidence:
+        - "#269"
+        - "#270"
+
+  future_agent_hints:
+    - "Use current release policy for active authority; use HISTORICAL_ASGK_*_EVIDENCE only for audit or do-not-copy reasoning."
+    - "Do not copy ASGK repo-local historical evidence files into target repositories as current governance policy."
+
+  promotion_candidates:
+    capability_constraints:
+      - none
+    control_policy_updates:
+      - none
+    validator_updates:
+      - "Target-install validation continues blocking both legacy V1 readiness surfaces and renamed historical ASGK evidence surfaces in target authority."
+
+  known_limits:
+    - "This does not rewrite GitHub history or the original merged release evidence."
+    - "This does not prove all future historical documents are named safely."
+    - "This does not change the latest completed release identity."
+```
+
 ## 2026-05-17 - Issue #271 - Mandatory Closeout Review Entries
 
 ```yaml
