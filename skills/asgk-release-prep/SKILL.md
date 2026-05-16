@@ -100,8 +100,12 @@ python3 scripts/asgk.py release-state-check --tag <tag> --release-title "<title>
 python3 scripts/asgk.py doctor
 ```
 
-If `release-state-check` fails after release execution, do not weaken the
-checker. Open or use a bounded closeout issue for the stale docs.
+If `release-state-check` fails for the current release after release execution,
+do not weaken the checker. Open or use a bounded closeout issue only for docs
+required to make the current release state accurate. Historical release residue,
+old audit gaps, or optional cleanup may be reported, but must not become release
+repair work unless the release issue or a separate human-scoped issue explicitly
+authorizes that backfill.
 
 Use summary-first closeout evidence. Record release metadata, validation result,
 key evidence, and limits; keep full routine logs in PR, CI, release, or issue

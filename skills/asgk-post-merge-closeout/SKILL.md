@@ -35,15 +35,20 @@ This skill closes only work that is already satisfied by durable GitHub and repo
 8. Decide whether `docs/handoff/CURRENT_STATUS.md` needs refresh under the current-status policy.
 9. Recommend no status refresh when `CURRENT_STATUS.md` remains accurate for the next session.
 10. Recommend a status refresh only when stale repo-level recovery state would mislead the next session.
-11. Ensure `docs/handoff/ISSUE_CLOSEOUT_REVIEWS.md` has one bounded
-    decision-analysis entry for the issue being closed. Bounded means
+11. For the current issue being closed after PR #272 merged, ensure the GitHub
+    issue closeout comment includes one bounded decision-analysis block using
+    `docs/handoff/ISSUE_CLOSEOUT_REVIEW_RULES.md` as the writing guide. Bounded means
     scope-limited and evidence-dense, not abbreviated, lossy, simplified, or
     summary-only.
-12. If the ledger is not in the current issue's allowed paths, stop and open or
-    use a bounded closeout-review issue or PR. The issue is not fully closed out
-    until the ledger entry exists.
-13. If status refresh is required, open a bounded issue or PR for that refresh.
-14. Stop. Do not begin unrelated work.
+12. Do not scan historical closed issues for missing closeout review comments.
+    Pre-PR-#272 missing entries are legacy observations, not automatic repair
+    work.
+13. Do not open repo-file repair work solely to store routine closeout reviews.
+    If the issue comment cannot be written or the closeout evidence is unclear,
+    stop with a blocker instead of creating a ledger backfill issue.
+14. If status refresh is required, open a bounded issue or PR only when
+    repo-level recovery would otherwise mislead the next session.
+15. Stop. Do not begin unrelated work.
 
 ## Closeout Decision Test
 
@@ -63,7 +68,10 @@ status_refresh_not_required_when:
 
 ```yaml
 review_entry_required_when:
-  - every issue closeout
+  - current issue closeout performed after PR #272 merged
+review_entry_not_required_when:
+  - issue closed before PR #272 merged
+  - historical issue is observed during health check but is not the current closeout target
 review_entry_quality_floor:
   - preserve decision reasons
   - preserve rejected paths
@@ -71,7 +79,9 @@ review_entry_quality_floor:
   - preserve evidence links
   - preserve known limits
 review_entry_missing_result:
-  - closeout is blocked until the entry exists or a bounded closeout-review PR exists
+  - current post-#272 closeout is blocked until the GitHub issue closeout comment contains the required decision-analysis block
+legacy_gap_result:
+  - report as legacy_observation or watch; do not open repair work without explicit backfill scope
 ```
 
 Issue Closeout Reviews are mandatory closeout evidence, but they do not override
@@ -80,7 +90,7 @@ decisions, CURRENT_STATUS, or human gates.
 
 ## Stop States
 
-- `blocked`: PR not merged, issue not satisfied, closeout evidence is missing, or issue closeout review entry is missing.
+- `blocked`: PR not merged, issue not satisfied, closeout evidence is missing, or the required issue closeout decision-analysis comment is missing.
 - `no_status_refresh_needed`: issue and status surfaces are accurate.
 - `status_refresh_required`: repo-level recovery state would mislead the next session.
 - `closed_out`: issue and status surfaces are accurate.

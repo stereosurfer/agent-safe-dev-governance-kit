@@ -148,7 +148,7 @@ tag_release_process:
     - check git status and target commit
     - create tag only in release-execution issue
     - create GitHub release only if explicitly approved
-    - refresh docs/handoff/CURRENT_STATUS.md in the same authorized PR or create an immediate status-only closeout issue/PR
+    - refresh docs/handoff/CURRENT_STATUS.md in the same authorized PR or create an immediate status-only closeout issue/PR when current release recovery state would otherwise be unsafe
   forbidden_here:
     - git tag
     - gh release create
@@ -232,14 +232,14 @@ release_execution_boundary:
     - rollback or revoke plan
     - post-release CURRENT_STATUS closeout path
   status_closeout_requires:
-    - "If release execution is metadata-only, create an immediate bounded status-refresh issue/PR."
+    - "If release execution is metadata-only and current release recovery state would otherwise be unsafe, create an immediate bounded status-refresh issue/PR."
     - "If release execution authorizes file changes, update docs/handoff/CURRENT_STATUS.md only when the result is post-merge-safe."
     - "Record the status-refresh issue, PR, or completed status update in the release execution closeout comment."
   product_entry_closeout_requires:
     - "README.md must identify the released version as the latest completed source-only GitHub release."
     - "docs/bootstrap/10_roadmap.md must not describe the released version as an active candidate or pending release execution."
     - "Run `python3 scripts/asgk.py release-state-check --tag <tag> --release-title \"<title>\"` after release-state docs are updated."
-    - "If product-entry docs are intentionally deferred, record the bounded follow-up issue before claiming release closeout is complete."
+    - "If product-entry docs required for the current release are intentionally deferred, record the bounded follow-up issue before claiming release closeout is complete."
     - "Before v1.3 or later release execution begins, the release issue must name the exact product-entry and handoff docs that will be synchronized and the target `release-state-check` command."
     - "Use `skills/asgk-release-prep/SKILL.md` when planning, executing, or closing out source-only releases."
   release_execution_not_fully_closed_until:
@@ -258,6 +258,11 @@ closeout comments, tags, and merge commits.
 
 This file keeps only the durable release rules and closeout requirements needed
 for future source-only releases.
+
+Release closeout follow-up issues are for the current release's required state.
+Historical release residue, old audit gaps, or optional cleanup are observations
+unless a release issue or separate human-scoped issue explicitly authorizes
+backfill.
 
 ```yaml
 release_history_boundary:

@@ -152,8 +152,12 @@ status_refresh_decision:
     - issue result comment records closeout evidence
 ```
 
-If status refresh is required but cannot be made accurate inside the same PR,
-open a separate bounded status-refresh issue immediately after closeout.
+If status refresh is required for repo-level recovery safety but cannot be made
+accurate inside the same PR, open a separate bounded status-refresh issue
+immediately after closeout. Do not use this path for cosmetic cleanup,
+historical observations, or PR details that are already recoverable from the
+issue or PR; report those as observations unless a new session would otherwise
+take the wrong action.
 
 ## Release Execution Closeout Rule
 
@@ -334,16 +338,15 @@ For local-only mechanical closeout checks, use:
 
 ```bash
 python3 scripts/asgk.py closeout-check \
-  --completed-issue '#<issue>' \
   --completed-pr '#<pr>' \
-  --completed-branch '<branch>' \
-  --issue-closeout-reviews docs/handoff/ISSUE_CLOSEOUT_REVIEWS.md
+  --completed-branch '<branch>'
 ```
 
-The check is deliberately local-only: it checks supplied markers against
-`CURRENT_STATUS.md` and checks that the issue closeout review ledger contains an
-entry for each supplied completed issue. It does not query GitHub issue or PR
-state.
+The check is deliberately local-only: it checks supplied closeout markers
+against `CURRENT_STATUS.md`. It does not query GitHub issue or PR state, and it
+does not prove that the GitHub issue closeout comment contains the required
+decision-analysis block. Use `docs/handoff/ISSUE_CLOSEOUT_REVIEW_RULES.md` only as
+the writing guide for that comment, not as a repo-local history ledger.
 
 ## Size And Compaction Rules
 
