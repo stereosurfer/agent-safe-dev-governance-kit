@@ -7,6 +7,8 @@ import re
 from pathlib import Path
 from typing import Any
 
+from asgk_lib.common import field_value, markdown_headings, markdown_section as section
+
 MERGE_DECISION_REQUIRED_FIELDS = [
     "issue",
     "lane",
@@ -29,29 +31,6 @@ CURRENT_STATUS_ALLOWED_VALUES = {"updated", "not_applicable", "deferred"}
 MERGE_RESULT_ALLOWED_VALUES = {"merge_allowed", "merge_blocked"}
 TRUE_VALUES = {"true", "yes"}
 UNKNOWN_VALUES = {"", "pending", "unknown", "false", "no", "null", "none", "tbd", "todo"}
-
-
-def markdown_headings(text: str) -> set[str]:
-    return {
-        match.group(1).strip()
-        for match in re.finditer(r"^##\s+(.+?)\s*$", text, flags=re.MULTILINE)
-    }
-
-
-def section(text: str, heading: str) -> str:
-    match = re.search(
-        rf"^## {re.escape(heading)}\s*\n(.+?)(?:\n## |\Z)",
-        text,
-        flags=re.MULTILINE | re.DOTALL,
-    )
-    return match.group(1).strip() if match else ""
-
-
-def field_value(text: str, field: str) -> str | None:
-    match = re.search(rf"^[ \t]*{re.escape(field)}[ \t]*:[ \t]*(.*?)[ \t]*$", text, flags=re.MULTILINE)
-    if not match:
-        return None
-    return match.group(1).strip().strip('"').strip("'")
 
 
 def normalized_bool_text(value: str | None) -> str:
