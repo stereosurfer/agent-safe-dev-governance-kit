@@ -173,8 +173,8 @@ forbidden_as_target_authority:
   - ASGK docs/DOCUMENT_REGISTRY.md
   - ASGK docs/handoff/AGENT_LOG.md
   - ASGK docs/handoff/DECISIONS.md
-  - ASGK docs/control/V1_1_STABILIZATION_PLAN.md
-  - ASGK docs/control/V1_READINESS_AUDIT.md
+  - ASGK docs/control/HISTORICAL_ASGK_STABILIZATION_EVIDENCE.md
+  - ASGK docs/control/HISTORICAL_ASGK_READINESS_EVIDENCE.md
   - ASGK docs/control/UNCONTROLLED_DOCUMENT_AUDIT.md
   - ASGK docs/EVOLUTION_MODEL.md
   - ASGK examples/negative/*

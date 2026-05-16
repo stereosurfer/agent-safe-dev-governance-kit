@@ -3,14 +3,14 @@
 Status: active audit record.
 
 This audit classifies status-like, log-like, and reference documents that could
-otherwise drift into uncontrolled history logs. It implements the v1.1
-stabilization work item for uncontrolled-document growth risk.
+otherwise drift into uncontrolled history logs. It was opened from ASGK's
+historical stabilization evidence and remains a compact active audit record.
 
 ## Scope
 
 ```yaml
 audit_scope:
-  source: docs/control/V1_1_STABILIZATION_PLAN.md
+  source: docs/control/HISTORICAL_ASGK_STABILIZATION_EVIDENCE.md
   candidate_docs:
     - docs/handoff/AGENT_LOG.md
     - docs/handoff/DECISIONS.md

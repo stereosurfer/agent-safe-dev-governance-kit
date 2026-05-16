@@ -91,6 +91,7 @@ roles:
   template: Reusable starting point for work units or GitHub surfaces.
   status: Current handoff or state surface.
   script: Executable validation or hygiene behavior.
+  historical_evidence: Archived repo-local evidence; never current authority or target-project state.
   future_optional: Planned future capability, not part of current v1.x core.
 ```
 
@@ -130,6 +131,8 @@ target_project_rule:
   do_not_copy_as_is:
     - docs/DOCUMENT_MAP.md
     - docs/DOCUMENT_REGISTRY.md
+    - docs/control/HISTORICAL_ASGK_READINESS_EVIDENCE.md
+    - docs/control/HISTORICAL_ASGK_STABILIZATION_EVIDENCE.md
     - agent/agent_rules.yaml
 ```
 

@@ -503,20 +503,20 @@ promotion_or_output_readiness_task:
     - docs/bootstrap/17_readiness_audit_policy.md
     - relevant promotion/validation schemas
 
-readiness_audit_task:
+historical_readiness_evidence_task:
   read:
     - AGENTS.md
     - docs/handoff/CURRENT_STATUS.md
-    - docs/control/V1_READINESS_AUDIT.md
+    - docs/control/HISTORICAL_ASGK_READINESS_EVIDENCE.md
     - docs/EVOLUTION_MODEL.md
     - docs/DOCUMENT_MAP.md
 
-stabilization_planning_task:
+historical_stabilization_evidence_task:
   read:
     - AGENTS.md
     - docs/handoff/CURRENT_STATUS.md
-    - docs/control/V1_1_STABILIZATION_PLAN.md
-    - docs/control/V1_READINESS_AUDIT.md
+    - docs/control/HISTORICAL_ASGK_STABILIZATION_EVIDENCE.md
+    - docs/control/HISTORICAL_ASGK_READINESS_EVIDENCE.md
     - docs/DOCUMENT_MAP.md
 
 tooling_or_validation_task:

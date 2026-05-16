@@ -213,8 +213,8 @@ customize_required_checks:
       - "see chat"
     warn_if_contains:
       - "ASGK repository"
-      - "stabilization"
-      - "readiness audit"
+      - "ASGK historical evidence"
+      - "archived ASGK readiness"
   agent_task_packet_template_yaml:
     warn_if_contains:
       - "<lane>"
@@ -230,8 +230,8 @@ require explicit adaptation.
 ```yaml
 forbidden_surface_checks:
   block_if_present:
-    - docs/control/V1_1_STABILIZATION_PLAN.md
-    - docs/control/V1_READINESS_AUDIT.md
+    - docs/control/HISTORICAL_ASGK_STABILIZATION_EVIDENCE.md
+    - docs/control/HISTORICAL_ASGK_READINESS_EVIDENCE.md
     - docs/control/UNCONTROLLED_DOCUMENT_AUDIT.md
     - docs/EVOLUTION_MODEL.md
   warn_if_present:
@@ -385,7 +385,7 @@ implementation_sequence:
     examples:
       - target_map_is_full_registry
       - target_agent_rules_uses_legacy_subagent_keys
-      - target_contains_ASGK_readiness_docs
+      - target_contains_ASGK_historical_evidence
   4_add_ci_optional_job:
     behavior: opt-in target-install validation
   5_add_scaffold_script:
