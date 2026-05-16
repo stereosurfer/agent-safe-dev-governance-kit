@@ -9,7 +9,31 @@ import subprocess
 import tempfile
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
+from asgk_lib.common import (
+    ROOT,
+    field_block_lines,
+    field_block_text,
+    field_value,
+    has_see_chat,
+    has_unresolved_todo,
+    line_field_exists,
+    list_field_has_material_item,
+    markdown_headings,
+    markdown_section,
+    normalize_repo_path,
+    normalized_field_value,
+    read_changed_paths,
+    read_text,
+    rel,
+    same_repo_path,
+    yaml_dedent,
+    yaml_quote,
+)
+from asgk_lib.release_state import check_release_state_docs
+from asgk_lib.target_install import (
+    print_target_install_findings,
+    target_install_findings,
+)
 
 PR_REQUIRED_HEADINGS = [
     "Summary", "Task Reference", "Changed Files", "Validation",
@@ -341,68 +365,6 @@ COMPACT_TARGET_UPGRADE_NEVER_OVERWRITE_PATHS = [
     "docs/bootstrap/03_tech_stack.md",
     "LICENSE",
 ]
-TARGET_INSTALL_LICENSE_NOTICE_PATHS = [
-    "LICENSE",
-    "LICENSE.md",
-    "NOTICE",
-    "NOTICE.md",
-    "THIRD_PARTY_NOTICES.md",
-    "docs/LICENSE.md",
-    "docs/NOTICE.md",
-]
-TARGET_INSTALL_REQUIRED_FILES = [
-    "AGENTS.md",
-    "README.md",
-    "docs/DOCUMENT_MAP.md",
-    "docs/DOCUMENT_REGISTRY.md",
-    "docs/handoff/CURRENT_STATUS.md",
-    "docs/control/CONTEXT_BUDGET_POLICY.md",
-    "docs/control/AGENT_CAPABILITY_MATRIX.md",
-    "docs/control/LOW_RISK_AUTONOMOUS_MERGE_POLICY.md",
-    "docs/control/HUMAN_GATED_OPERATIONS.md",
-    "docs/control/MERGE_DECISION_RECORD.md",
-    "docs/control/TASK_PACKET_FORMAT.md",
-    "docs/control/AGENT_REPORT_FORMAT.md",
-    "agent/agent_rules.yaml",
-    ".github/PULL_REQUEST_TEMPLATE.md",
-    ".github/ISSUE_TEMPLATE/agent_task.yml",
-]
-TARGET_INSTALL_LEGACY_AGENT_KEYS = [
-    "require_subagent_intelligence_level",
-    "subagent_intelligence_levels",
-    "subagent_assignment_required_fields",
-]
-TARGET_INSTALL_PREFERRED_AGENT_KEYS = [
-    "require_assignment_intelligence_level",
-    "assignment_intelligence_levels",
-    "worker_assignment_required_fields",
-]
-TARGET_INSTALL_FORBIDDEN_BLOCKING_PATHS = [
-    "docs/control/V1_1_STABILIZATION_PLAN.md",
-    "docs/control/V1_READINESS_AUDIT.md",
-    "docs/control/UNCONTROLLED_DOCUMENT_AUDIT.md",
-    "docs/EVOLUTION_MODEL.md",
-]
-TARGET_INSTALL_FORBIDDEN_WARNING_PATHS = [
-    "docs/handoff/AGENT_LOG.md",
-    "docs/handoff/DECISIONS.md",
-    "examples/negative",
-    "profiles",
-    "docs/adapters",
-]
-TARGET_INSTALL_DEFERRED_V2_SURFACES = ["profiles/", "docs/adapters/"]
-
-
-def rel(path: str | Path) -> Path:
-    p = Path(path)
-    return p if p.is_absolute() else ROOT / p
-
-
-def yaml_quote(value: str) -> str:
-    escaped = value.replace("\\", "\\\\").replace('"', '\\"')
-    return f'"{escaped}"'
-
-
 def run_command(args: list[str], *, cwd: Path = ROOT) -> int:
     print("+ " + " ".join(args))
     return subprocess.run(args, cwd=cwd).returncode
@@ -477,85 +439,6 @@ def run_expected_successes(commands: list[list[str]]) -> int:
         return 1
     print(f"Expected-success checks passed: {len(commands)} command(s) passed as expected.")
     return 0
-
-
-def read_text(path: str | Path) -> str:
-    return rel(path).read_text(encoding="utf-8")
-
-
-def has_see_chat(text: str) -> bool:
-    return bool(re.search(r"\bsee\s+chat\b", text, flags=re.IGNORECASE))
-
-
-def has_unresolved_todo(text: str) -> bool:
-    return bool(re.search(r"\b(?:AI_TODO|TODO)\b", text))
-
-
-def markdown_headings(text: str) -> set[str]:
-    found: set[str] = set()
-    for line in text.splitlines():
-        match = re.match(r"^##\s+(.+?)\s*$", line)
-        if match:
-            found.add(match.group(1).strip())
-    return found
-
-
-def markdown_section(text: str, heading: str) -> str:
-    match = re.search(
-        rf"^## {re.escape(heading)}\s+(.+?)(?:\n## |\Z)",
-        text,
-        flags=re.MULTILINE | re.DOTALL,
-    )
-    return match.group(1).strip() if match else ""
-
-
-def line_field_exists(text: str, field: str) -> bool:
-    return bool(re.search(rf"^[ \t]*{re.escape(field)}[ \t]*:", text, flags=re.MULTILINE))
-
-
-def field_value(text: str, field: str) -> str | None:
-    """Return a same-line scalar value for a lightweight YAML-like field.
-
-    This deliberately avoids ``\\s`` around the colon because ``\\s`` can consume
-    newlines. A field like ``next_safe_action:`` followed by another field on the
-    next line must be treated as an empty value, not as if the next field were the
-    value.
-    """
-
-    match = re.search(
-        rf"^[ \t]*{re.escape(field)}[ \t]*:[ \t]*(.*?)[ \t]*$",
-        text,
-        flags=re.MULTILINE,
-    )
-    if not match:
-        return None
-    return match.group(1).strip().strip('"').strip("'")
-
-
-def normalized_field_value(text: str, field: str) -> str:
-    value = field_value(text, field)
-    if value is None:
-        return ""
-    return value.strip().strip('"').strip("'").lower()
-
-
-def read_changed_paths(path: str | Path) -> set[str]:
-    return {
-        line.strip()
-        for line in read_text(path).splitlines()
-        if line.strip() and not line.strip().startswith("#")
-    }
-
-
-def normalize_repo_path(path: str) -> str:
-    cleaned = path.strip().replace("\\", "/")
-    while cleaned.startswith("./"):
-        cleaned = cleaned[2:]
-    return cleaned
-
-
-def same_repo_path(left: str, right: str) -> bool:
-    return normalize_repo_path(left) == normalize_repo_path(right)
 
 
 def load_git_changed_paths(git_base: str, git_head: str) -> list[str]:
@@ -1263,59 +1146,6 @@ def print_work_unit_result(
     else:
         print("Work-unit check passed. No low-risk status was inferred.")
     return 1 if findings else 0
-
-
-def field_block_lines(text: str, field: str) -> list[str] | None:
-    """Return indented child lines for a lightweight YAML-like field block."""
-
-    lines = text.splitlines()
-    for index, line in enumerate(lines):
-        match = re.match(rf"^([ \t]*){re.escape(field)}[ \t]*:", line)
-        if not match:
-            continue
-        field_indent = len(match.group(1).replace("\t", "    "))
-        block: list[str] = []
-        for child in lines[index + 1:]:
-            stripped = child.strip()
-            if not stripped:
-                continue
-            child_indent = len(re.match(r"^[ \t]*", child).group(0).replace("\t", "    "))
-            if child_indent <= field_indent and re.match(r"^[A-Za-z0-9_\-]+[ \t]*:", stripped):
-                break
-            if child_indent > field_indent:
-                block.append(child)
-        return block
-    return None
-
-
-def list_field_has_material_item(text: str, field: str) -> bool:
-    value = field_value(text, field)
-    if value:
-        return True
-    block = field_block_lines(text, field)
-    if block is None:
-        return False
-    for line in block:
-        stripped = line.strip()
-        if not stripped or stripped.startswith("#"):
-            continue
-        item = re.match(r"^-\s*(.*?)\s*$", stripped)
-        if item and item.group(1).strip().strip('"').strip("'"):
-            return True
-    return False
-
-
-def field_block_text(text: str, field: str) -> str:
-    block = field_block_lines(text, field)
-    return "\n".join(block or [])
-
-
-def yaml_dedent(lines: list[str]) -> str:
-    material = [line for line in lines if line.strip()]
-    if not material:
-        return ""
-    min_indent = min(len(re.match(r"^[ \t]*", line).group(0).replace("\t", "    ")) for line in material)
-    return "\n".join(line[min_indent:] if len(line) >= min_indent else line for line in lines)
 
 
 def task_packet_yaml_source(text: str) -> str:
@@ -2558,331 +2388,6 @@ def print_workspace_state_result(
     return 0
 
 
-def add_target_install_finding(
-    findings: list[dict[str, str | bool]],
-    severity: str,
-    category: str,
-    path: str,
-    reason: str,
-    recommended_fix: str,
-    *,
-    blocking: bool,
-) -> None:
-    findings.append({
-        "severity": severity,
-        "category": category,
-        "file": path,
-        "reason": reason,
-        "recommended_fix": recommended_fix,
-        "blocking": blocking,
-    })
-
-
-def repo_path(root: Path, path: str) -> Path:
-    return root / path
-
-
-def read_repo_text(root: Path, path: str) -> str:
-    return repo_path(root, path).read_text(encoding="utf-8")
-
-
-def target_install_findings(root: Path) -> list[dict[str, str | bool]]:
-    findings: list[dict[str, str | bool]] = []
-
-    for required in TARGET_INSTALL_REQUIRED_FILES:
-        if not repo_path(root, required).exists():
-            add_target_install_finding(
-                findings,
-                "FAIL",
-                "required_files",
-                required,
-                "required target-install file is missing",
-                "Create the file from the ASGK install surface or explicitly document why it is not applicable.",
-                blocking=True,
-            )
-
-    if not any(repo_path(root, path).exists() for path in TARGET_INSTALL_LICENSE_NOTICE_PATHS):
-        add_target_install_finding(
-            findings,
-            "WARN",
-            "license_handling",
-            "LICENSE",
-            "no visible license or notice handling surface found",
-            "Add LICENSE/NOTICE handling or document how ASGK Apache-2.0 notices are preserved for copied or adapted ASGK-derived material.",
-            blocking=False,
-        )
-
-    document_map_path = repo_path(root, "docs/DOCUMENT_MAP.md")
-    if document_map_path.exists():
-        text = document_map_path.read_text(encoding="utf-8")
-        required_refs = ["docs/DOCUMENT_REGISTRY.md", "docs/control/CONTEXT_BUDGET_POLICY.md"]
-        for ref in required_refs:
-            if ref not in text:
-                add_target_install_finding(
-                    findings,
-                    "FAIL",
-                    "document_navigation_split",
-                    "docs/DOCUMENT_MAP.md",
-                    f"compact router does not reference {ref}",
-                    f"Update docs/DOCUMENT_MAP.md to route readers to {ref}.",
-                    blocking=True,
-                )
-        forbidden_markers = [
-            "| Document | Role | Canonical for | Read by default | Read when | Owned by lane |",
-            "## Task-type Reading Guide",
-        ]
-        for marker in forbidden_markers:
-            if marker in text:
-                add_target_install_finding(
-                    findings,
-                    "FAIL",
-                    "document_navigation_split",
-                    "docs/DOCUMENT_MAP.md",
-                    f"document map still contains non-router marker: {marker}",
-                    "Move full registry rows to docs/DOCUMENT_REGISTRY.md and task read sets to docs/control/CONTEXT_BUDGET_POLICY.md.",
-                    blocking=True,
-                )
-        template_markers = ["target-project navigation router template", "<lane>", "<path>", "<topic>"]
-        for marker in template_markers:
-            if marker in text:
-                add_target_install_finding(
-                    findings,
-                    "WARN",
-                    "template_derived_files",
-                    "docs/DOCUMENT_MAP.md",
-                    f"document map still contains template marker: {marker}",
-                    "Customize docs/DOCUMENT_MAP.md for the target repository.",
-                    blocking=False,
-                )
-
-    document_registry_path = repo_path(root, "docs/DOCUMENT_REGISTRY.md")
-    if document_registry_path.exists():
-        text = document_registry_path.read_text(encoding="utf-8")
-        for marker in ["# Document Registry", "DOCUMENT_REGISTRY.md is repo-local"]:
-            if marker not in text:
-                add_target_install_finding(
-                    findings,
-                    "FAIL",
-                    "document_navigation_split",
-                    "docs/DOCUMENT_REGISTRY.md",
-                    f"document registry missing marker: {marker}",
-                    "Create docs/DOCUMENT_REGISTRY.md from templates/DOCUMENT_REGISTRY.template.md and customize it.",
-                    blocking=True,
-                )
-        if "| Document | Role | Canonical for | Read by default | Read when | Owned by lane |" not in text:
-            add_target_install_finding(
-                findings,
-                "WARN",
-                "document_navigation_split",
-                "docs/DOCUMENT_REGISTRY.md",
-                "document registry does not appear to contain registry rows",
-                "Add target-repository document rows or document why the registry is intentionally minimal.",
-                blocking=False,
-            )
-        for marker in ["target-project template", "<lane>", "<path>", "<topic>"]:
-            if marker in text:
-                add_target_install_finding(
-                    findings,
-                    "WARN",
-                    "template_derived_files",
-                    "docs/DOCUMENT_REGISTRY.md",
-                    f"document registry still contains template marker: {marker}",
-                    "Customize docs/DOCUMENT_REGISTRY.md for the target repository.",
-                    blocking=False,
-                )
-
-    agent_rules_path = repo_path(root, "agent/agent_rules.yaml")
-    if agent_rules_path.exists():
-        text = agent_rules_path.read_text(encoding="utf-8")
-        has_migration_note = "target_legacy_key_migration" in text or "legacy_key_migration" in text
-        for key in TARGET_INSTALL_LEGACY_AGENT_KEYS:
-            if key in text and not has_migration_note:
-                add_target_install_finding(
-                    findings,
-                    "FAIL",
-                    "legacy_key_guard",
-                    "agent/agent_rules.yaml",
-                    f"target agent rules contain ASGK internal compatibility key: {key}",
-                    "Use templates/agent_rules.template.yaml or add a scoped target_legacy_key_migration note.",
-                    blocking=True,
-                )
-        if not any(key in text for key in TARGET_INSTALL_PREFERRED_AGENT_KEYS):
-            add_target_install_finding(
-                findings,
-                "WARN",
-                "legacy_key_guard",
-                "agent/agent_rules.yaml",
-                "target agent rules do not contain the preferred assignment/worker keys",
-                "Review templates/agent_rules.template.yaml and use assignment_intelligence_levels / worker_assignment_required_fields.",
-                blocking=False,
-            )
-        if "status: target-project-template" in text:
-            add_target_install_finding(
-                findings,
-                "FAIL",
-                "template_derived_files",
-                "agent/agent_rules.yaml",
-                "agent rules still look like an uncustomized target-project template",
-                "Customize roles, allowed paths, and stop conditions for the target repository.",
-                blocking=True,
-            )
-
-    for forbidden in TARGET_INSTALL_FORBIDDEN_BLOCKING_PATHS:
-        if repo_path(root, forbidden).exists():
-            add_target_install_finding(
-                findings,
-                "FAIL",
-                "forbidden_repo_local_surfaces",
-                forbidden,
-                "ASGK repo-local governance file is present in the target repository surface",
-                "Remove this file from target authority or document an explicit adaptation issue.",
-                blocking=True,
-            )
-
-    for forbidden in TARGET_INSTALL_FORBIDDEN_WARNING_PATHS:
-        if repo_path(root, forbidden).exists():
-            add_target_install_finding(
-                findings,
-                "WARN",
-                "forbidden_repo_local_surfaces",
-                forbidden,
-                "ASGK repo-local or deferred surface is present",
-                "Keep only if intentionally adapted; otherwise remove from the target install surface.",
-                blocking=False,
-            )
-
-    for startup_path in ["AGENTS.md", "docs/DOCUMENT_MAP.md"]:
-        path = repo_path(root, startup_path)
-        if not path.exists():
-            continue
-        text = path.read_text(encoding="utf-8")
-        for surface in TARGET_INSTALL_DEFERRED_V2_SURFACES:
-            if "default_startup_set" in text and surface in text:
-                add_target_install_finding(
-                    findings,
-                    "FAIL",
-                    "deferred_v2_guard",
-                    startup_path,
-                    f"default startup surface appears to reference deferred v2 path: {surface}",
-                    "Remove runtime-specific profiles/adapters from the v1.x default startup path.",
-                    blocking=True,
-                )
-
-    if not any(repo_path(root, candidate).exists() for candidate in ["scripts/asgk.py", ".github/workflows"]):
-        add_target_install_finding(
-            findings,
-            "WARN",
-            "validation_command_presence",
-            ".",
-            "no obvious validation command or workflow surface found",
-            "Document the target repository validation command before relying on ASGK governance.",
-            blocking=False,
-        )
-
-    return findings
-
-
-def print_target_install_findings(findings: list[dict[str, str | bool]], *, as_json: bool) -> int:
-    blocking_count = sum(1 for finding in findings if bool(finding["blocking"]))
-    warning_count = sum(1 for finding in findings if not bool(finding["blocking"]))
-    result = "fail" if blocking_count else ("warning" if warning_count else "pass")
-    if as_json:
-        print(json.dumps({"result": result, "findings": findings}, indent=2, sort_keys=True))
-    else:
-        if not findings:
-            print("Target install check passed.")
-        else:
-            for finding in findings:
-                print(
-                    f"{finding['severity']}: [{finding['category']}] {finding['file']} - "
-                    f"{finding['reason']} Fix: {finding['recommended_fix']}"
-                )
-            print(f"Target install check result: {result} ({blocking_count} blocking, {warning_count} warning).")
-    return 1 if blocking_count else 0
-
-
-def release_version_tuple(tag: str) -> tuple[int, int, int] | None:
-    match = re.fullmatch(r"v(\d+)\.(\d+)\.(\d+)", tag.strip())
-    if not match:
-        return None
-    return tuple(int(part) for part in match.groups())
-
-
-def find_latest_completed_readme_versions(text: str) -> list[str]:
-    return re.findall(
-        r"ASGK\s+(v\d+\.\d+\.\d+)\s+is\s+the\s+latest\s+completed\s+source-only\s+GitHub\s+release",
-        text,
-        flags=re.IGNORECASE,
-    )
-
-
-def release_state_stale_patterns(tag: str) -> list[tuple[str, str]]:
-    escaped = re.escape(tag)
-    return [
-        (rf"{escaped}[^\n.]*candidate", f"{tag} is still described as candidate"),
-        (rf"candidate[^\n.]*{escaped}", f"{tag} is still described as candidate"),
-        (rf"{escaped}[^\n.]*pending", f"{tag} is still described as pending"),
-        (rf"pending[^\n.]*{escaped}", f"{tag} is still described as pending"),
-        (
-            rf"{escaped}[^\n.]*requires[^\n.]*release execution",
-            f"{tag} still appears to require release execution",
-        ),
-        (
-            rf"{escaped}[^\n.]*tag or GitHub release requires",
-            f"{tag} still appears to require tag or GitHub release creation",
-        ),
-        (
-            rf"{escaped}[^\n.]*release execution[^\n.]*not_started",
-            f"{tag} release execution is still marked not_started",
-        ),
-    ]
-
-
-def check_release_state_docs(
-    *,
-    tag: str,
-    release_title: str,
-    readme_path: Path,
-    roadmap_path: Path,
-    current_status_path: Path,
-) -> list[str]:
-    failures: list[str] = []
-    if release_version_tuple(tag) is None:
-        failures.append(f"release tag must be semver-like vX.Y.Z: {tag}")
-
-    docs = [
-        ("README", readme_path),
-        ("roadmap", roadmap_path),
-        ("current status", current_status_path),
-    ]
-    texts: dict[str, str] = {}
-    for label, path in docs:
-        if not path.exists():
-            failures.append(f"missing {label} release-state file: {path}")
-            continue
-        texts[label] = path.read_text(encoding="utf-8")
-
-    readme = texts.get("README", "")
-    if readme:
-        latest_versions = find_latest_completed_readme_versions(readme)
-        if not latest_versions:
-            failures.append("README does not identify the latest completed source-only GitHub release")
-        for version in latest_versions:
-            if version != tag:
-                failures.append(f"README latest completed release is {version}, expected {tag}")
-        if tag not in readme:
-            failures.append(f"README does not mention released tag {tag}")
-
-    combined_text = "\n\n".join(texts.values())
-    if release_title and release_title not in combined_text:
-        failures.append(f"release title not found in release-state docs: {release_title}")
-
-    for label, text in texts.items():
-        for pattern, reason in release_state_stale_patterns(tag):
-            if re.search(pattern, text, flags=re.IGNORECASE):
-                failures.append(f"{label}: {reason}")
-
-    return failures
 
 
 def cmd_doctor(_args: argparse.Namespace) -> int:
