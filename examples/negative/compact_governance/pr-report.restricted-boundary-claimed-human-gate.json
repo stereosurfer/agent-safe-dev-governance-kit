@@ -1,0 +1,58 @@
+{
+  "expected_result": "fail",
+  "number": 1006,
+  "title": "Restricted boundary claimed human gate fixture",
+  "state": "OPEN",
+  "isDraft": false,
+  "mergeStateStatus": "CLEAN",
+  "reviewDecision": "",
+  "url": "https://example.invalid/pr/1006",
+  "statusCheckRollup": [
+    {
+      "name": "validate",
+      "status": "COMPLETED",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://example.invalid/actions/1006"
+    }
+  ],
+  "files": [
+    {
+      "path": "docs/control/HUMAN_GATED_OPERATIONS.md"
+    }
+  ],
+  "closingIssuesReferences": [
+    {
+      "number": 1006,
+      "body": "## Required Task Fields\n\n```yaml\nlane: validation_tooling\nintelligence_level: frontier\nreason: \"Fixture issue touches protected governance boundary.\"\ndurable_source_of_truth: \"GitHub issue #1006\"\nobjective: \"Reject self-attested human-gate claims for compact PR reports.\"\nallowed_paths:\n  - docs/control/HUMAN_GATED_OPERATIONS.md\nexpected_output:\n  - compact PR report rejects self-attested human-gate claim\nplan:\n  - add restricted-boundary fixture\nchecklist:\n  - compact-pr-report fails on self-attested human gate\nacceptance_sheet:\n  - report fails on protected-boundary claim conflict\nnon_goals:\n  - no compact PR body default\nstop_conditions:\n  - agent claim clears protected boundary\nrollback_expectations:\n  - revert fixture\n```"
+    }
+  ],
+  "body": "## Summary\n\nFixture claims the human gate is already checked while the tool-derived changed path still touches a restricted governance boundary.\n\nCloses #1006\n\n## Task Reference\n\n- GitHub issue: #1006\n\n## Context Read Set\n\n```yaml\ncontext_read_set:\n  selected: tooling_or_validation\n  files_read:\n    - docs/control/HUMAN_GATED_OPERATIONS.md\n  expansion_reason: none\n  limits: \"Fixture only.\"\n```\n\n## Changed Files\n\n- `docs/control/HUMAN_GATED_OPERATIONS.md`\n\n## Validation\n\n```yaml\nvalidation_evidence:\n  local_commands:\n    - command: \"fixture\"\n      status: passed\n      source: freshly_rerun\n      evidence: \"Fixture claim.\"\n      limits: \"Fixture only.\"\n  ci_checks:\n    - name: validate\n      status: passed\n      source: github_actions\n      evidence: \"Fixture CI passed.\"\n      limits: \"Fixture only.\"\n  inferred_or_prior_evidence: []\n  project_specific_tests:\n    - command: \"not_applicable\"\n      status: not_applicable\n      source: not_applicable\n      evidence: \"Fixture only.\"\n      limits: \"Fixture only.\"\n```\n\n## Evidence Of Completion\n\n- Fixture intentionally overclaims human-gate completion.\n\n## Scope Boundaries\n\n- Fixture only.\n\n## Current Status Impact\n\n```yaml\ncurrent_status_impact:\n  status: not_applicable\n  reason: \"Fixture does not change CURRENT_STATUS.md.\"\n  current_status_updated_in_this_pr: false\n  post_merge_safe: not_applicable\n  follow_up_issue: none\n```\n\n## Runtime Output Status\n\nNo runtime outputs.\n\n## Merge Decision\n\n```yaml\nmerge_decision:\n  issue: \"Closes #1006\"\n  lane: validation_tooling\n  intelligence_level: frontier\n  durable_source_of_truth: \"GitHub issue #1006 and this PR body\"\n  checks_passed: true\n  allowed_paths_checked: true\n  expected_output_checked: true\n  contracts_checked: true\n  schemas_checked: not_applicable\n  storage_boundary: not_applicable\n  runtime_artifact_boundary: true\n  safety_review: true\n  human_gates_checked: true\n  validation_evidence_checked: true\n  validation_claim_source:\n    local_doctor: freshly_rerun\n    ci: github_actions\n  result: merge_blocked\n  reason: \"Fixture intentionally self-attests a human gate.\"\n```\n\n## Known Gaps\n\n- Fixture only.\n\n## Handoff Report\n\nNo handoff action.\n",
+  "issue_scope": {
+    "scope_hash": "restricted-human-gate-claim",
+    "allowed_paths": [
+      "docs/control/HUMAN_GATED_OPERATIONS.md"
+    ]
+  },
+  "scope_lock": {
+    "scope_hash": "restricted-human-gate-claim"
+  },
+  "pr": {
+    "metadata_available": true,
+    "changed_paths": [
+      "docs/control/HUMAN_GATED_OPERATIONS.md"
+    ],
+    "ci_status": "success",
+    "current_status_changed": false,
+    "current_status_impact": "not_applicable",
+    "restricted_boundaries": [
+      "docs/control/**",
+      "human-gated operation policy"
+    ]
+  },
+  "task_packet": {
+    "allowed_paths": []
+  },
+  "agent_claims": {
+    "human_gates_checked": true
+  }
+}

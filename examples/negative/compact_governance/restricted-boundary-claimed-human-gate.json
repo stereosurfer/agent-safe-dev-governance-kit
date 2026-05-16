@@ -1,0 +1,35 @@
+{
+  "case_id": "compact-negative-restricted-boundary-claimed-human-gate",
+  "description": "Agent-authored human-gate claims cannot clear a protected governance boundary.",
+  "expected_result": "fail",
+  "issue_scope": {
+    "issue": 246,
+    "scope_hash": "restricted-human-gate-claim",
+    "allowed_paths": [
+      "docs/control/HUMAN_GATED_OPERATIONS.md"
+    ]
+  },
+  "scope_lock": {
+    "issue": 246,
+    "scope_hash": "restricted-human-gate-claim"
+  },
+  "pr": {
+    "metadata_available": true,
+    "changed_paths": [
+      "docs/control/HUMAN_GATED_OPERATIONS.md"
+    ],
+    "ci_status": "success",
+    "current_status_changed": false,
+    "current_status_impact": "not_applicable",
+    "restricted_boundaries": [
+      "docs/control/**",
+      "human-gated operation policy"
+    ]
+  },
+  "task_packet": {
+    "allowed_paths": []
+  },
+  "agent_claims": {
+    "human_gates_checked": true
+  }
+}
