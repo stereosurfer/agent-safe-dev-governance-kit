@@ -11,6 +11,13 @@ Use this skill immediately after a PR merges or when the user says a PR has merg
 
 This skill closes only work that is already satisfied by durable GitHub and repo evidence. It must not start the next work unit unless a separate durable issue already authorizes it.
 
+This skill is not a governance health check. Ordinary "PR merged" or "anything
+else?" closeout must stay limited to the current PR, the current issue,
+CURRENT_STATUS freshness, required closeout evidence, and required validators.
+Do not sample recent PRs, scan historical issues, or escalate into repository
+health-check work unless a separate durable issue/comment explicitly authorizes
+that wider check.
+
 ## Required Inputs
 
 - Merged PR number.
@@ -46,7 +53,8 @@ This skill closes only work that is already satisfied by durable GitHub and repo
     stop with a blocker.
 14. If status refresh is required, open a bounded issue or PR only when
     repo-level recovery would otherwise mislead the next session.
-15. Stop. Do not begin unrelated work.
+15. Stop. Do not begin unrelated work, optional backlog review, recent-PR
+    sampling, or governance health-check work.
 
 ## Closeout Decision Test
 

@@ -11,6 +11,13 @@ Use this skill weekly, before a milestone, after several merges, or before publi
 
 This skill reports drift. It does not fix issues unless a separate durable issue authorizes changes.
 
+This skill runs only when explicitly requested or scheduled as a periodic,
+milestone, public/customer handoff, release-readiness, or whole-repository
+health check. Routine post-merge prompts such as "the PR merged" or "anything
+else?" are closeout triggers, not health-check triggers. In those cases use
+`asgk-post-merge-closeout` and stop unless a separate durable issue/comment
+authorizes a wider health check.
+
 ## Procedure
 
 1. Check open PRs.
