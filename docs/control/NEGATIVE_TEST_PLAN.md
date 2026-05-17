@@ -131,7 +131,14 @@ changed to treat them as expected failures.
 ## Current Execution Surface
 
 Negative fixtures are active opt-in expected-failure inputs. The executable
-runner registry lives in `scripts/asgk_lib/negative.py`.
+runner surface is split across:
+
+```yaml
+negative_runner_surface:
+  facade: scripts/asgk_lib/negative.py
+  case_registry: scripts/asgk_lib/negative_cases.py
+  command_runner: scripts/asgk_lib/negative_runner.py
+```
 
 ```bash
 python3 scripts/asgk.py negative all
