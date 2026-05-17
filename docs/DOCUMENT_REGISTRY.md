@@ -320,15 +320,17 @@ disagree, stop and open a schema/contract alignment issue.
 
 | Path | Role | Canonical for | Read by default | Read when | Owned by lane |
 |---|---|---|---:|---|---|
-| `examples/*.json` | example | valid sample payloads | no | onboarding, validator examples, fixture design | `lane_07_docs_handoff` |
-| `examples/*.yaml` | example | valid sample task packets | no | onboarding, task packet examples | `lane_07_docs_handoff` |
-| `examples/*.md` | example | report or documentation examples | no | onboarding, report examples | `lane_07_docs_handoff` |
-| `examples/negative/*` | example | opt-in expected-failure fixtures | no | negative validation work, `asgk.py negative`, governance hygiene tests | `lane_02_schema_contracts` |
-| `examples/negative/policy_gate/*` | example | opt-in expected-failure PR-body policy-gate fixtures | no | policy-gate negative validation work | `lane_06_ci_github` |
-| `examples/negative/target_install/*` | example | opt-in expected-failure target-install checker fixtures | no | target-install negative validation work | `lane_06_ci_github` |
+| `examples/README.md` | summary | examples and fixture taxonomy, adoption boundary, and read boundary | no | onboarding, examples/fixture cleanup, target-adoption review | `lane_07_docs_handoff` |
+| `examples/*.json` | example/fixture | valid sample payloads or machine fixtures | no | onboarding, validator examples, fixture design | `lane_07_docs_handoff` |
+| `examples/*.yaml` | example/fixture | valid sample task packets or machine fixtures | no | onboarding, task packet examples, fixture design | `lane_07_docs_handoff` |
+| `examples/*.md` | example/fixture | report, PR-body, or documentation examples and fixtures | no | onboarding, report examples, parser fixture design | `lane_07_docs_handoff` |
+| `examples/negative/*` | fixture | opt-in expected-failure fixtures | no | negative validation work, `asgk.py negative`, governance hygiene tests | `lane_02_schema_contracts` |
+| `examples/negative/policy_gate/*` | fixture | opt-in expected-failure PR-body policy-gate fixtures | no | policy-gate negative validation work | `lane_06_ci_github` |
+| `examples/negative/target_install/*` | fixture | opt-in expected-failure target-install checker fixtures | no | target-install negative validation work | `lane_06_ci_github` |
 
-Examples are not policy. If an example conflicts with a canonical policy,
-contract, or schema, fix the example.
+Examples and fixtures are not policy authority. If an example or fixture
+conflicts with a canonical policy, contract, schema, validator, or current
+GitHub issue/PR, fix the example or the stale reference.
 
 ## Registry Rules
 

@@ -247,6 +247,10 @@ customization_requirements:
 These files are ASGK repo-local, historical, internal, or field-test state. They
 must not become target-project authority without a dedicated adaptation issue.
 
+`examples/` is not an adoption bundle. Copy only the specific positive example
+or validation fixture named by a target-repository issue; never copy negative or
+red-team fixtures as project authority.
+
 ```yaml
 do_not_copy_as_is:
   - docs/DOCUMENT_MAP.md

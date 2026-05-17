@@ -1,10 +1,10 @@
 # Negative Fixtures
 
-These files are opt-in expected-failure examples for governance validation.
+Status: opt-in expected-failure fixtures.
 
-They are not positive examples. Normal bootstrap validation must not treat these
-fixtures as valid repository state unless a validator is explicitly running a
-negative test mode.
+Files in this directory are intentionally bad inputs for governance validators.
+They are not positive examples, adoption templates, policy authority, or target
+repository starter content.
 
 ## Rules
 
@@ -16,89 +16,48 @@ negative_fixture_rule:
   must_record_expected_outcome: true
 ```
 
-## Current Opt-in Usage
+## Current Usage
 
-Changed-path negative fixtures can be checked directly with
-`governance_hygiene.py` in expected-blocked mode:
-
-```bash
-python3 scripts/governance_hygiene.py \
-  --paths-file examples/negative/changed_paths.runtime-artifact.txt \
-  --expect-blocked
-
-python3 scripts/governance_hygiene.py \
-  --paths-file examples/negative/changed_paths.protected.txt \
-  --expect-blocked
-
-python3 scripts/governance_hygiene.py \
-  --paths-file examples/negative/changed_paths.private-binary.txt \
-  --expect-blocked
-```
-
-Each command should return success because the file intentionally contains paths
-that must be blocked.
-
-Compact-governance red-team fixtures model reference-first / delta-only failure
-modes before compact governance becomes a default rule:
+Run all registered negative groups with:
 
 ```bash
-python3 scripts/asgk.py negative compact-governance
-python3 scripts/asgk.py negative compact-issue-scope
-python3 scripts/asgk.py negative compact-scope-lock
-python3 scripts/asgk.py negative compact-pr-report
-python3 scripts/asgk.py negative compact-task-packet
-python3 scripts/asgk.py negative compact-pr-body
-python3 scripts/asgk.py negative compact-handoff
-python3 scripts/asgk.py negative compact-target-upgrade
+python3 scripts/asgk.py negative all
 ```
 
-That command succeeds only when the positive fixture passes and every negative
-fixture produces its expected blocked, failed, fail-closed, or human-gated
-state. The compact issue-scope, scope-lock, PR-report, task-packet, and PR-body
-negative commands succeed only when malformed compact-governance inputs fail as
-expected. The compact handoff negative command succeeds only when stale
-current-status active work is blocked as expected. The compact target-upgrade
-negative command succeeds only when target-owned-state overwrite and default
-enablement manifests fail as expected.
-Requires-human compact report fixtures are expected failures for compact PR
-body and PR-report checks; a compact body cannot clear a protected boundary by
-referencing a report whose derived state still requires human review.
-
-## Future CLI Usage
-
-Future tools may run selected cases with commands such as:
+Run a focused group with:
 
 ```bash
-asgk negative --case NEG-001
-asgk negative --all
+python3 scripts/asgk.py negative <group>
 ```
 
-Until such tools exist, these fixtures are documentation-backed test targets for
-`docs/control/NEGATIVE_TEST_PLAN.md` and review guidance.
+Available groups are reported by:
 
-## Included Cases
+```bash
+python3 scripts/asgk.py negative --help
+```
 
-| Case | File | Expected outcome |
-|---|---|---|
-| NEG-001 | `task_packet.see-chat.yaml` | blocked |
-| NEG-004 | `pr_body.no-merge-decision.md` | blocked |
-| NEG-008 | `changed_paths.runtime-artifact.txt` | blocked |
-| NEG-009 | `changed_paths.protected.txt` | blocked |
-| NEG-010 | `changed_paths.private-binary.txt` | blocked |
-| NEG-013 | `storage_profile.same-root.json` | blocked |
-| NEG-014 | `storage_profile.drive-api.json` | blocked |
-| NEG-022 | `pr_body.external-call-no-gate.md` | human_gated |
-| NEG-029 | `task_packet.no-stop.yaml` | blocked |
-| NEG-032..NEG-039 | `compact_governance/*.json` | blocked / failed / fail_closed / human_gated |
-| NEG-040 | `compact_governance/scope-lock.missing-allowed-paths.json` | blocked |
-| NEG-041 | `compact_governance/issue-scope.missing-allowed-paths.json` | blocked |
-| NEG-042 | `compact_governance/scope-lock.stale-capture.json` | blocked |
-| NEG-043 | `compact_governance/pr-report.metadata-unavailable.json` | fail_closed |
-| NEG-044 | `compact_governance/pr-report.claim-conflicts-with-tool-state.json` | blocked |
-| NEG-045 | `compact_governance/task-packet-delta-expands-scope.json` | blocked |
-| NEG-046 | `compact_governance/pr_body.compact.failed-report.md` | blocked |
-| NEG-047 | `compact_governance/handoff.compact.hides-stale-current-status.yaml` | blocked |
-| NEG-048 | `compact_governance/target_upgrade/manifest.overwrites-current-status.json` | blocked |
-| NEG-049 | `compact_governance/target_upgrade/manifest.default-enabled.json` | blocked |
-| NEG-050 | `compact_governance/pr-report.restricted-boundary-claimed-human-gate.json` | blocked |
-| NEG-051 | `compact_governance/pr_body.compact.requires-human-report.md` | blocked |
+The executable runner registry lives in `scripts/asgk_lib/negative.py`. This
+README explains the boundary; it is not a second case registry.
+
+## Fixture Classes
+
+```yaml
+fixture_classes:
+  changed_paths:
+    purpose: protected path, runtime artifact, and private/binary path blocking
+  pr_body:
+    purpose: PR-body parser and merge-policy expected failures
+  policy_gate:
+    purpose: fail-closed policy-gate expected failures
+  task_packet:
+    purpose: task-packet authority, scope, and stop-condition expected failures
+  handoff:
+    purpose: handoff packet and current-status stale-state expected failures
+  compact_governance:
+    purpose: compact report, scope-lock, task-packet, handoff, and target-upgrade red-team inputs
+  target_install:
+    purpose: intentionally invalid target-repository structures
+```
+
+Do not add a negative fixture unless a validator, runner group, CI step, or
+scoped issue names the expected failure it protects.
