@@ -36,8 +36,9 @@ Available groups are reported by:
 python3 scripts/asgk.py negative --help
 ```
 
-The executable runner registry lives in `scripts/asgk_lib/negative.py`. This
-README explains the boundary; it is not a second case registry.
+The executable runner surface lives in `scripts/asgk_lib/negative.py`,
+`scripts/asgk_lib/negative_cases.py`, and `scripts/asgk_lib/negative_runner.py`.
+This README explains the boundary; it is not a second case registry.
 
 ## Fixture Classes
 
