@@ -54,7 +54,7 @@ body:
         - merge_decision
         - tooling_or_validation
         - promotion_or_output_readiness
-        - multi_agent_or_lane
+        - parallel_issue_or_pr
     validations:
       required: true
   - type: textarea

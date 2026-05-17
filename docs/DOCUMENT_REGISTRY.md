@@ -336,7 +336,8 @@ GitHub issue/PR, fix the example or the stale reference.
 
 1. Add new document rows here after the split is complete.
 2. Keep `docs/DOCUMENT_MAP.md` as a compact router.
-3. Do not add task-type read sets here; use `docs/control/CONTEXT_BUDGET_POLICY.md`.
+3. Do not add context read-set definitions here; use
+   `docs/control/CONTEXT_BUDGET_POLICY.md`.
 4. Do not add install-surface rules here; use `docs/INSTALL_SURFACE.md`.
 5. If this registry conflicts with a canonical document, fix the registry or the
    stale summary in a separate issue.

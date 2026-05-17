@@ -51,7 +51,7 @@ progressive_disclosure_surfaces:
     read_by_default: false
   read_sets:
     path: docs/control/CONTEXT_BUDGET_POLICY.md
-    purpose: context read sets, task-type reading guide, and expansion rules
+    purpose: context read sets, expansion rules, and context reporting
     read_by_default: false
   install_surface:
     path: docs/INSTALL_SURFACE.md
@@ -140,8 +140,8 @@ rules.
 ## Maintenance Rules
 
 1. Add full document rows to `docs/DOCUMENT_REGISTRY.md`, not this file.
-2. Add task-type read sets to `docs/control/CONTEXT_BUDGET_POLICY.md`, not this
-   file.
+2. Add context read-set definitions to `docs/control/CONTEXT_BUDGET_POLICY.md`,
+   not this file.
 3. Add install/copy/template boundaries to `docs/INSTALL_SURFACE.md`, not this
    file.
 4. Add skill-pack usage guidance to `docs/SKILL_PACK.md`, not this file.
