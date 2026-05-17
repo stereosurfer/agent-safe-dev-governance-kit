@@ -88,9 +88,9 @@ invariants that have been encoded into scripts, templates, fixtures, or CI.
 |---|---|---|
 | PR auto-validation | core complete | PRs run scaffold, bootstrap, whitespace, and changed-path negative checks. |
 | Framework logical self-consistency validation | partial | Required files/terms/templates/JSON/storage invariants are checked, but full semantic contradiction detection is not automated. |
-| Negative defense testing | partial | Changed-path negative cases are wired into CI; PR-body/task-packet/textual policy cases are planned but not automated. |
-| Runtime control | early | Scripts exist; no full `asgk` CLI wrapper yet. |
-| Productized install/upgrade flow | early | Quickstart and scaffold exist; package/installer/upgrade workflow not complete. |
+| Negative defense testing | partial | Changed-path, PR-body, task-packet, handoff, release-state, target-install, workspace-state, and compact-governance cases have opt-in or CI-backed checks; some matrix rows remain coverage backlog. |
+| Runtime control | active local CLI surface | `python3 scripts/asgk.py` is the current repo-local command surface; package/global executable distribution is not part of v1.x. |
+| Productized install/upgrade flow | early | Quickstart, read-only target-install check/plan, and compact target-upgrade manifest checks exist; package, installer, scaffold writes, and target-specific content checks are not implemented. |
 
 ## Stage Model
 
@@ -185,10 +185,9 @@ Known gaps:
 
 ```yaml
 stage_2_gaps:
-  - PR-body validation is not automated
-  - Merge Decision Record field validation is not automated for actual PRs
   - task-packet parser validation is not automated as full YAML/schema validation
-  - see-chat textual detection is not wired into CI
+  - some negative case matrix rows remain coverage backlog
+  - target-specific content checks are not implemented
   - human-gated operation detection is mostly review-policy based
   - full semantic contradiction detection between documents is not automated
 ```
@@ -216,7 +215,8 @@ produce durable reports.
 Current status:
 
 ```text
-early; scripts exist, but the first `asgk` CLI wrapper is not implemented.
+active repo-local CLI surface exists through `python3 scripts/asgk.py`; package,
+installer, or global `asgk` executable distribution is not part of v1.x.
 ```
 
 ### Stage 4 — Governance-as-product
@@ -318,7 +318,7 @@ context budget policy
 negative test suite
 merge decision record
 handoff discipline
-first CLI wrapper
+repo-local CLI command surface
 PR-body/task-packet validation
 ```
 
@@ -329,9 +329,9 @@ and only with vendor documentation plus observed behavior.
 
 ```yaml
 open_questions:
-  - Should PR-body validation be implemented before or after the first CLI wrapper?
   - Should task-packet parsing remain dependency-free or allow PyYAML later?
-  - Should negative tests be grouped into one CI job or split by category?
+  - Which remaining negative case matrix rows deserve fixtures before becoming default CI checks?
+  - Should target-specific content checks stay warning-only or become scoped validator checks?
   - Should handoff generation be a CLI command or template-first process?
-  - What is the minimum v1.0 release checklist?
+  - Should any packaged/global CLI wrapper wait until package distribution is explicitly approved?
 ```

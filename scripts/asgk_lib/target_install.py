@@ -246,12 +246,14 @@ def target_install_findings(root: Path) -> list[dict[str, str | bool]]:
     return findings
 
 
-def print_target_install_findings(findings: list[dict[str, str | bool]], *, as_json: bool) -> int:
+def print_target_install_findings(
+    findings: list[dict[str, str | bool]], *, as_json: bool, strict: bool = False
+) -> int:
     blocking_count = sum(1 for finding in findings if bool(finding["blocking"]))
     warning_count = sum(1 for finding in findings if not bool(finding["blocking"]))
-    result = "fail" if blocking_count else ("warning" if warning_count else "pass")
+    result = "fail" if blocking_count or (strict and warning_count) else ("warning" if warning_count else "pass")
     if as_json:
-        print(json.dumps({"result": result, "findings": findings}, indent=2, sort_keys=True))
+        print(json.dumps({"result": result, "findings": findings, "strict": strict}, indent=2, sort_keys=True))
     else:
         for finding in findings:
             print(
@@ -262,4 +264,4 @@ def print_target_install_findings(findings: list[dict[str, str | bool]], *, as_j
             print("Target install check passed.")
         else:
             print(f"Target install check result: {result} ({blocking_count} blocking, {warning_count} warning).")
-    return 1 if blocking_count else 0
+    return 1 if blocking_count or (strict and warning_count) else 0

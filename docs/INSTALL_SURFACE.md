@@ -178,8 +178,14 @@ copy_as_is:
   - .github/PULL_REQUEST_TEMPLATE.md
   - .github/ISSUE_TEMPLATE/agent_task.yml
   - scripts/asgk.py
+  - scripts/asgk_lib/
+  - scripts/check_project.py
+  - scripts/validate_bootstrap.py
+  - scripts/governance_hygiene.py
+  - scripts/compact_governance_red_team_check.py
   - scripts/policy_gate_check.py
   - scripts/pr_governance_preflight.py
+  - scripts/target_install_plan.py
   - skills/*
 ```
 
@@ -190,11 +196,13 @@ Notes:
 - `LICENSE` may be copied as the Apache-2.0 license file for ASGK-derived
   material, but a target repo with an existing license must make an explicit
   licensing decision instead of silently replacing its current license.
-- `scripts/asgk.py` may be copied only if its checked file expectations match
-  the target scaffold or are explicitly adapted later.
+- `scripts/asgk.py` must be copied with its support modules and helper scripts;
+  otherwise the current validation command surface is incomplete.
 - `scripts/pr_governance_preflight.py` is a thin helper around `scripts/asgk.py`
   and `scripts/policy_gate_check.py`; copy it only with those matching local
   validation scripts and the matching PR template.
+- `scripts/target_install_plan.py` remains a standalone compatibility entrypoint,
+  while `python3 scripts/asgk.py target-install-plan` is the canonical wrapper.
 - `skills/*` may be copied into an agent client skill directory or kept as
   repository-reference procedures. Skills sequence existing repo/GitHub gates;
   they do not replace target repository authority or add a separate compliance

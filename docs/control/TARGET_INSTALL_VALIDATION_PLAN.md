@@ -75,18 +75,18 @@ implemented:
   target_install_check:
     command: python3 scripts/asgk.py target-install-check --repo-root <target>
     json: python3 scripts/asgk.py target-install-check --repo-root <target> --json
+    strict: python3 scripts/asgk.py target-install-check --repo-root <target> --strict
     behavior: read_only
   target_install_plan:
-    command: python3 scripts/target_install_plan.py --repo-root <target>
-    json: python3 scripts/target_install_plan.py --repo-root <target> --json
+    command: python3 scripts/asgk.py target-install-plan --repo-root <target>
+    json: python3 scripts/asgk.py target-install-plan --repo-root <target> --json
+    standalone_compatibility: python3 scripts/target_install_plan.py --repo-root <target>
     behavior: read_only
   compact_target_upgrade_check:
     command: python3 scripts/asgk.py compact-target-upgrade-check --manifest <manifest.json>
     behavior: read_only_manifest_check
 
 not_implemented:
-  - python3 scripts/asgk.py target-install-check --strict
-  - python3 scripts/asgk.py target-install-plan
   - scaffold or installer file writes
   - target-install CI job by default
 ```
@@ -221,12 +221,6 @@ planned_or_future_optional:
   current_status_freshness:
     status: planned
     boundary: target-specific freshness review, not ASGK source-repo release state
-  target_install_plan_wrapper:
-    status: not_implemented
-    command: python3 scripts/asgk.py target-install-plan
-  strict_mode:
-    status: not_implemented
-    command: python3 scripts/asgk.py target-install-check --strict
   optional_ci_job:
     status: future_optional
     boundary: opt-in target-install validation only

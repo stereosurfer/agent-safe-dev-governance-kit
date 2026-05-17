@@ -21,8 +21,14 @@ COPY_AS_IS = [
     ".github/PULL_REQUEST_TEMPLATE.md",
     ".github/ISSUE_TEMPLATE/agent_task.yml",
     "scripts/asgk.py",
+    "scripts/asgk_lib",
+    "scripts/check_project.py",
+    "scripts/validate_bootstrap.py",
+    "scripts/governance_hygiene.py",
+    "scripts/compact_governance_red_team_check.py",
     "scripts/policy_gate_check.py",
     "scripts/pr_governance_preflight.py",
+    "scripts/target_install_plan.py",
 ]
 
 TEMPLATE_THEN_CUSTOMIZE = [
