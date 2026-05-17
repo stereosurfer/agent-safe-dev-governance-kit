@@ -36,7 +36,9 @@ merge_decision_record: docs/control/MERGE_DECISION_RECORD.md
 ```
 
 If this plan conflicts with `docs/control/VALIDATION_STRATEGY.md`, prefer the
-validation strategy and open a follow-up issue to align this plan.
+validation strategy for validator proof boundaries, fail-closed behavior, and
+fixture rules. Prefer this plan for case IDs, expected outcomes, fixture paths,
+and implementation status. Open a follow-up issue when the two surfaces drift.
 
 ## Outcome Types
 

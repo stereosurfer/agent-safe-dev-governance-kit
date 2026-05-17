@@ -2,848 +2,371 @@
 
 Status: active control policy.
 
-This document defines validation layers, validator responsibilities, negative
-validation targets, blocking behavior, and future CLI mapping for this repository.
-It exists to keep validation behavior explicit before more scripts, fixtures, or
-CLI commands are added.
+This document defines what ASGK validation is allowed to prove, what each
+validation layer owns, when findings block work, and what evidence is required
+when validator behavior changes.
 
-## Core Principle
+It is not a command manual, a full negative-fixture matrix, a PR review
+checklist, or a future implementation catalog.
+
+## Purpose
 
 ```text
 Policy becomes useful when it can be checked.
-Validation turns governance from advice into a repeatable gate.
+Validation turns governance from advice into repeatable gates.
 ```
 
-This strategy does not modify validator behavior by itself. It defines what each
-current and future validator is expected to own.
+This strategy exists so validators stay honest about their proof boundary. A
+validator may report only the state it mechanically checked. Missing, unknown,
+pending, ambiguous, or unverifiable merge gates stay blocked or human-gated.
 
-Low-risk status is never agent-declared. A PR is only low-risk eligible when
-existing low-risk and auto-merge policy gates pass. Validators may confirm only
-mechanically checkable gates. Missing, unknown, pending, ambiguous, or
-unverifiable gates keep the PR human-gated.
+Low-risk status is never agent-declared. A PR is low-risk eligible only when the
+current issue, low-risk policy, auto-merge policy, changed-path checks, PR-body
+checks, CI, and human-gate boundaries all permit it.
 
-Validation evidence must not be stretched beyond the layer that produced it.
-ASGK governance validation can show that repository control surfaces, PR bodies,
-allowed paths, handoff state, and negative fixtures are coherent. It does not
-prove application semantics, third-party API freshness, security correctness,
-privacy safety, dependency health, licensing correctness, or production
-readiness unless the current issue names project-specific or external checks for
-those claims.
+## Document Boundary
+
+```yaml
+this_document_owns:
+  - ASGK validation proof boundary
+  - validation layer responsibilities
+  - blocking versus warning classification principles
+  - negative-fixture ownership rules
+  - fail-closed policy-gate requirements
+  - validator change requirements
+
+this_document_does_not_own:
+  - complete CLI syntax
+  - exhaustive command behavior
+  - negative case matrix rows
+  - PR review sequence
+  - context read-set selection
+  - project-specific test requirements
+  - release or merge approval
+
+canonical_neighbors:
+  negative_case_matrix: docs/control/NEGATIVE_TEST_PLAN.md
+  PR_review_sequence: docs/control/PR_REVIEW_CHECKLIST.md
+  context_read_sets: docs/control/CONTEXT_BUDGET_POLICY.md
+  merge_decision_record: docs/control/MERGE_DECISION_RECORD.md
+  low_risk_merge_policy: docs/control/LOW_RISK_AUTONOMOUS_MERGE_POLICY.md
+  human_gates: docs/control/HUMAN_GATED_OPERATIONS.md
+  current_command_interface: python3 scripts/asgk.py --help
+```
 
 ## Validation Boundary
 
+Validation evidence must not be stretched beyond the layer that produced it.
+
 ```yaml
-validation_boundary:
-  asgk_governance_validation:
-    proves:
-      - repository scaffold and control-surface shape
-      - PR body and Merge Decision Record structure
-      - allowed-path and protected-path hygiene when supplied with changed paths
-      - runtime artifact path hygiene when supplied with changed paths
-      - known-bad governance fixtures are blocked
-    does_not_prove:
-      - generated code semantics
-      - third-party API freshness
-      - SQL injection or XSS absence
-      - private data never left the local runtime
-      - dependency or license safety
+asgk_governance_validation:
+  can_prove:
+    - required repository control surfaces are present
+    - PR bodies and Merge Decision Records have required structure
+    - changed paths stay within supplied issue or PR scope
+    - protected paths and runtime artifact paths are detected when supplied
+    - current-status and handoff surfaces avoid known stale states
+    - known-bad governance fixtures fail as expected
+    - compact reports preserve tool-derived blocking findings over prose claims
+  cannot_prove:
+    - generated code semantics
+    - third-party API freshness
+    - security correctness
+    - privacy safety
+    - dependency or license safety
+    - production readiness
+    - human approval when the approval source cannot be mechanically separated
 
-  project_specific_validation:
-    owner: current GitHub issue or PR
-    examples:
-      - unit tests
-      - integration tests
-      - type checks
-      - lint checks
-      - app-specific smoke tests
-    required_pr_evidence:
-      - command
-      - result
-      - concrete evidence
-      - coverage limits
+project_specific_validation:
+  owner: current GitHub issue or PR
+  examples:
+    - unit tests
+    - integration tests
+    - type checks
+    - lint checks
+    - app-specific smoke tests
+  required_pr_evidence:
+    - command
+    - result
+    - concrete evidence
+    - coverage limits
 
-  external_specialist_validation:
-    owner: project policy or human-gated issue
-    examples:
-      - security scanner
-      - dependency audit
-      - privacy or egress review
-      - current upstream documentation lookup
-      - legal or license review
-    rule: not provided by ASGK unless explicitly added by the adopting project
+external_specialist_validation:
+  owner: project policy or human-gated issue
+  examples:
+    - security scanner
+    - dependency audit
+    - privacy or egress review
+    - current upstream documentation lookup
+    - legal or license review
+  rule: ASGK does not provide these checks unless the adopting project adds them
 ```
 
 ## Validation Layers
 
-```yaml
-validation_layers:
-  scaffold_validation:
-    script: scripts/check_project.py
-    current_status: implemented
-    purpose: required repository directory scaffold exists
+The current CLI is the executable interface. Use `python3 scripts/asgk.py --help`
+and the command-specific help output for exact syntax. This strategy groups
+validators by responsibility instead of duplicating the full command catalog.
 
-  bootstrap_validation:
-    script: scripts/validate_bootstrap.py
-    current_status: implemented
-    purpose: required files, required terms, JSON validity, task packet fields, PR headings, issue template fields, storage profile invariants
-
-  path_hygiene:
-    script: scripts/governance_hygiene.py
-    current_status: implemented_with_pull_request_git_diff_ci
-    purpose: changed-path and protected-path checks from files or git diff ranges
-
-  policy_gate_check:
-    script: scripts/policy_gate_check.py
-    current_status: implemented_in_default_pull_request_ci
-    purpose: read-only fail-closed PR-body policy gate check without low-risk inference
-
-  pr_governance_preflight:
-    script: scripts/pr_governance_preflight.py
-    current_status: implemented_local_pr_create_edit_preflight
-    purpose: run PR body structure and policy checks before file-backed gh pr create/edit
-
-  work_unit_check:
-    command: python3 scripts/asgk.py work-unit-check --issue <number> --git-base origin/main --git-head WORKTREE
-    current_status: implemented_live_and_fixture_modes
-    purpose: fail closed when the selected issue/PR is stale, wrong-type, missing allowed_paths, or local changed paths exceed allowed_paths
-
-  workspace_state_check:
-    command: python3 scripts/asgk.py workspace-state-check
-    current_status: implemented_live_and_fixture_modes
-    purpose: report local checkout hygiene such as merged/stale work branches and untracked artifacts without inferring merge readiness
-
-  task_packet_schema_check:
-    command: python3 scripts/asgk.py task-packet-check --file <task_packet>
-    current_status: implemented_dependency_free_json_and_canonical_yaml_shape
-    purpose: validate canonical task-packet required fields, scalar/list shape, material values, intelligence level, chat-only authority, and issue-first authority for executable task packets
-
-  github_actions:
-    workflow: .github/workflows/bootstrap-validation.yml
-    current_status: implemented
-    purpose: run repository validation on push and pull request; run PR-body policy gate on pull_request events
-
-  negative_validation:
-    current_status: implemented_with_policy_gate_and_workspace_state_fixtures
-    purpose: prove that known-bad inputs are blocked
-
-  cli_wrapper:
-    current_status: implemented_policy_gate_pr_status_and_task_packet_schema_wrappers
-    purpose: expose validation through stable local commands
-```
-
-## `scripts/check_project.py`
-
-### Owns
+### Scaffold And Bootstrap
 
 ```yaml
-owns:
-  - required directory presence
-  - minimum scaffold shape
-  - dependency-light local execution
+owners:
+  - scripts/check_project.py
+  - scripts/validate_bootstrap.py
+  - python3 scripts/asgk.py doctor
+  - python3 scripts/asgk.py validate
+proves:
+  - required directory and file surfaces exist
+  - bootstrap documents contain required terms and sections
+  - schemas and positive examples are parseable where checked
+  - PR and issue templates keep required governance fields
+does_not_prove:
+  - semantic correctness
+  - live GitHub state
+  - low-risk merge eligibility
+  - external security, privacy, dependency, or license safety
+blocking_rule: failures block baseline repository validation
 ```
 
-### Does Not Own
+### PR Body And Merge Evidence
 
 ```yaml
-does_not_own:
-  - policy terms
-  - JSON validity
-  - PR template contents
-  - path hygiene
-  - semantic consistency
-  - GitHub API checks
-```
-
-### Blocking Behavior
-
-Failure blocks bootstrap validation and PR merge.
-
-### Expected Use
-
-```bash
-python3 scripts/check_project.py
-```
-
-## `scripts/validate_bootstrap.py`
-
-### Owns
-
-```yaml
-owns:
-  - required file presence
-  - required policy terms
-  - JSON parse validity for schemas and examples
-  - YAML-like required fields in task packets
-  - PR template required headings
-  - issue template required fields
-  - control document required sections
-  - storage profile invariants in examples
-```
-
-### Does Not Own
-
-```yaml
-does_not_own:
-  - full JSON Schema validation
-  - full YAML parsing
-  - GitHub PR status checks
-  - live issue or PR API checks
-  - runtime artifact discovery from git diff
-  - security review
-  - human approval decisions
-```
-
-### Blocking Behavior
-
-Failure blocks bootstrap validation and PR merge.
-
-### Expected Use
-
-```bash
-python3 scripts/validate_bootstrap.py
-```
-
-## `scripts/governance_hygiene.py`
-
-### Owns
-
-```yaml
-owns:
-  - changed-path inspection from a paths file
-  - changed-path inspection from a local git diff base/head range
-  - protected-path detection
-  - runtime artifact path detection
-  - private/binary source-like file detection outside fixture/example paths
-```
-
-### Does Not Own
-
-```yaml
-does_not_own:
-  - GitHub PR diff retrieval
-  - PR body validation
-  - semantic policy review
-  - human-gated operation detection beyond path patterns
-```
-
-### Current Limitation
-
-The script can derive paths from local `git diff --name-only`, but it does not
-call the GitHub API. CI must provide a checked-out repository with enough
-history for the requested diff range.
-
-### Blocking Behavior
-
-When run for a PR or local changed-path list, failures should block low-risk
-autonomous merge.
-
-### Expected Use
-
-```bash
-python3 scripts/governance_hygiene.py --paths-file changed-paths.txt
-python3 scripts/governance_hygiene.py --git-base origin/main --git-head HEAD
-python3 scripts/asgk.py hygiene --git-base origin/main --git-head HEAD
-```
-
-## `scripts/policy_gate_check.py`
-
-### Owns
-
-```yaml
-owns:
-  - PR-body Merge Decision Record presence
-  - required Merge Decision Record fields are present and non-empty
-  - checks_passed is exactly true when merge eligibility is claimed
-  - allowed_paths_checked is exactly true when merge eligibility is claimed
-  - expected_output_checked is exactly true when merge eligibility is claimed
-  - human_gates_checked is exactly true when merge eligibility is claimed
-  - result is merge_allowed or merge_blocked
-  - Current Status Impact section exists and uses updated not_applicable or deferred
-  - chat-only authority phrase detection
-```
-
-### Does Not Own
-
-```yaml
-does_not_own:
-  - inferring low-risk status
-  - deciding whether a PR may be auto-merged
-  - GitHub API or live CI status retrieval
-  - changed-path retrieval
-  - human approval decisions
-  - semantic review of whether prose risk claims are correct
-```
-
-### Blocking Behavior
-
-The checker is fail-closed for merge eligibility. Missing, unknown, pending,
-ambiguous, or unverifiable PR-body gates block merge eligibility and require
-human review.
-
-It does not certify low risk. It only reports whether declared PR-body policy
-gates are mechanically coherent.
-
-### Expected Use
-
-```bash
-python3 scripts/policy_gate_check.py --pr-body pr_body.md
-python3 scripts/policy_gate_check.py --pr-body pr_body.md --json
-python3 scripts/asgk.py policy-gate --pr-body pr_body.md
-python3 scripts/asgk.py policy-gate --github-event "$GITHUB_EVENT_PATH"
-```
-
-## `scripts/pr_governance_preflight.py`
-
-### Owns
-
-```yaml
-owns:
-  - file-backed PR body preflight before `gh pr create`
-  - file-backed PR body preflight before `gh pr edit`
-  - local sequencing of `asgk.py pr-body-check` and `policy_gate_check.py`
-  - rejection of inline PR body flags when using the wrapper
-```
-
-### Does Not Own
-
-```yaml
-does_not_own:
-  - GitHub merge approval
-  - low-risk inference
-  - semantic review of PR evidence claims
-  - replacing gh, GitHub Actions, or human-gated release policy
-```
-
-### Expected Use
-
-```bash
-python3 scripts/pr_governance_preflight.py check --body-file pr.md
-python3 scripts/pr_governance_preflight.py create --body-file pr.md -- <gh-pr-create-args>
-python3 scripts/pr_governance_preflight.py edit --body-file pr.md -- <gh-pr-edit-args>
-```
-
-## GitHub Actions
-
-### Owns
-
-```yaml
-owns:
-  - repeatable CI execution of scaffold validation
-  - repeatable CI execution of bootstrap validation
-  - whitespace/diff check
-  - pull_request changed-path hygiene from git diff
-  - pull_request PR-body policy gate execution from the GitHub event payload
-  - policy-gate negative fixture execution
-```
-
-### Does Not Own
-
-```yaml
-does_not_own:
-  - PR semantic review
-  - issue hygiene
+owners:
+  - scripts/policy_gate_check.py
+  - scripts/pr_governance_preflight.py
+  - python3 scripts/asgk.py pr-body-check
+  - python3 scripts/asgk.py policy-gate
+  - python3 scripts/asgk.py compact-pr-body-check
+proves:
+  - required PR body sections are present
+  - Merge Decision Record fields are present and mechanically coherent
+  - Current Status Impact is classified
+  - merge-ready claims do not conflict with checked PR-body gates
+does_not_prove:
+  - actual CI success unless supplied by a tool-derived report
   - human approval
-  - low-risk merge decision by itself
-  - external system checks
-  - final self-certification of the currently running workflow job
+  - low-risk status
+  - semantic truth of prose evidence
+blocking_rule: fail closed for missing, pending, unknown, or unverifiable merge gates
 ```
 
-### Blocking Behavior
+### Scope, Path, PR, And Workspace State
 
-A failing required workflow blocks low-risk autonomous merge.
-
-Current workflow:
-
-```text
-.github/workflows/bootstrap-validation.yml
+```yaml
+owners:
+  - scripts/governance_hygiene.py
+  - python3 scripts/asgk.py hygiene
+  - python3 scripts/asgk.py check-pr
+  - python3 scripts/asgk.py work-unit-check
+  - python3 scripts/asgk.py workspace-state-check
+proves:
+  - supplied changed paths are inside allowed paths
+  - protected paths and runtime artifact paths are detected
+  - live or fixture issue/PR metadata is internally usable
+  - stale or merged local branches are surfaced as workspace observations
+does_not_prove:
+  - final merge approval
+  - human-gated approval
+  - security or privacy safety beyond checked path patterns
+  - that warnings require automatic repair issues
+blocking_rule: path and authority failures block; workspace observations warn unless strict mode or policy says otherwise
 ```
 
-## Blocking vs Warning
+### Task, Context, And Target Adoption
 
-Use this classification until scripts become more granular.
+```yaml
+owners:
+  - python3 scripts/asgk.py task-packet-check
+  - python3 scripts/asgk.py context-budget-measure
+  - python3 scripts/asgk.py target-install-check
+proves:
+  - task packets contain required fields and material values
+  - executable task packets use GitHub issue or PR authority when GitHub is available
+  - files_to_inspect_first avoids overbroad whole-repo read requests
+  - context-budget estimates are derived from concrete named files
+  - target-install checks report copy, template, customize, and do-not-copy boundaries
+does_not_prove:
+  - that a target repository has adopted ASGK correctly after manual edits
+  - that a context estimate equals provider-billed tokens
+  - that a task packet expands issue authority
+blocking_rule: malformed authority or overbroad context requests block; target-install findings remain read-only until a target-owned issue authorizes changes
+```
+
+### Current Status, Handoff, And Release State
+
+```yaml
+owners:
+  - python3 scripts/asgk.py status-check
+  - python3 scripts/asgk.py closeout-check
+  - python3 scripts/asgk.py current-status-impact-check
+  - python3 scripts/asgk.py handoff-check
+  - python3 scripts/asgk.py compact-handoff-check
+  - python3 scripts/asgk.py release-state-check
+proves:
+  - handoff and current-status surfaces avoid known stale active-work patterns
+  - current-status impact values use the allowed vocabulary
+  - release-state closeout does not leave known candidate or pending residue
+does_not_prove:
+  - historical issue completeness
+  - that old pre-rule work needs repair
+  - that a release should be executed
+blocking_rule: current work closeout can block; legacy observations must not become automatic repair work
+```
+
+### Compact Governance Reports
+
+```yaml
+owners:
+  - python3 scripts/asgk.py compact-issue-scope
+  - python3 scripts/asgk.py compact-scope-lock
+  - python3 scripts/asgk.py compact-pr-report
+  - python3 scripts/asgk.py compact-task-packet-check
+  - python3 scripts/asgk.py compact-target-upgrade-check
+proves:
+  - issue scope can be normalized into a canonical object
+  - scope locks detect material scope drift
+  - task packets narrow rather than expand issue scope
+  - PR reports preserve tool-derived state and blocking findings
+  - target-upgrade manifests do not overwrite target-owned state by default
+does_not_prove:
+  - low-risk eligibility by itself
+  - adoption safety in a target repository without target-owned review
+  - human approval for restricted boundaries
+blocking_rule: unavailable metadata or prose/tool conflicts fail closed
+```
+
+### Negative Validation
+
+```yaml
+owner:
+  - python3 scripts/asgk.py negative
+  - scripts/asgk_lib/negative.py
+matrix_owner: docs/control/NEGATIVE_TEST_PLAN.md
+proves:
+  - registered known-bad fixtures fail as expected
+  - expected-failure fixtures are not treated as positive examples
+  - bad workflow claims stay blocked or human-gated where modeled
+does_not_prove:
+  - exhaustive coverage of all future agent mistakes
+  - correctness of unregistered fixtures
+  - project-specific security or privacy behavior
+blocking_rule: expected-failure mismatches block validation work
+```
+
+### GitHub Actions
+
+```yaml
+owner: .github/workflows/bootstrap-validation.yml
+proves:
+  - configured repository checks run repeatably on the event that triggered CI
+  - bootstrap validation and configured negative checks pass in CI
+  - PR-body policy gate runs on pull_request event payloads
+does_not_prove:
+  - final status of the currently running workflow before it completes
+  - semantic review
+  - human approval
+  - low-risk merge eligibility by itself
+blocking_rule: failing required checks block merge eligibility
+```
+
+## Blocking Versus Warning
+
+Use blocking for defects that make current authorization, validation, review, or
+merge state unsafe. Use warning or observation for drift that is real but does
+not invalidate the current work unit.
 
 | Finding | Classification | Reason |
 |---|---|---|
-| Required file missing | blocking | scaffold incomplete |
-| Required directory missing | blocking | scaffold incomplete |
-| Required term missing from canonical policy | blocking | policy may have been simplified |
-| Invalid JSON in schema/example | blocking | machine-readable contract broken |
-| Missing PR template required heading | blocking | merge/review surface degraded |
-| Missing issue template required field | blocking | task packet capture degraded |
-| Missing Merge Decision Record in PR body | blocking | merge gate cannot be reviewed |
-| Missing Current Status Impact in PR body | blocking | resume-state impact is unclassified |
-| `checks_passed` not true in Merge Decision Record | blocking | validation gate not mechanically confirmed |
-| `human_gates_checked` not true in Merge Decision Record | blocking | human-gate state is unresolved |
-| Artifact Root equals Local State Root | blocking | storage boundary broken |
-| Cache policy not `local_only` where required | blocking | storage/cache boundary broken |
-| `app_managed_drive_api` enabled in v0 profile | blocking | external API gate opened |
-| Protected path in changed-path list | blocking | safety boundary touched |
-| Runtime artifact path in changed-path list | blocking | runtime output leakage |
-| Summary doc stale against canonical doc | warning unless acceptance depends on it | requires targeted docs issue |
-| Example stale against schema | blocking when example is part of validation; otherwise warning | depends on validator coverage |
-| Missing optional doc | warning | not part of required scaffold |
-
-## Negative Validation Targets
-
-Negative tests should prove that known-bad inputs are blocked. Current policy-gate
-PR-body fixtures are opt-in expected failures under `examples/negative/policy_gate/`.
-They can be run without default CI wiring through:
-
-```bash
-python3 scripts/asgk.py negative policy-gate
-```
-
-Target-install fixtures are also opt-in expected failures under
-`examples/negative/target_install/`. They can be run without default CI wiring
-through:
-
-```bash
-python3 scripts/asgk.py negative target-install
-```
-
-Compact-governance red-team fixtures are opt-in modeled fixtures under
-`examples/compact_governance/` and `examples/negative/compact_governance/`.
-They can be run without changing default PR templates or merge policy through:
-
-```bash
-python3 scripts/asgk.py negative compact-governance
-```
-
-Compact handoff fixtures are opt-in freshness checks for the compact handoff
-profile and current-status stale active-work detection:
-
-```bash
-python3 scripts/asgk.py negative compact-handoff
-```
-
-Compact target-upgrade manifests are opt-in checks for upgrading ASGK-adopted
-repositories to compact governance without overwriting target-owned state:
-
-```bash
-python3 scripts/asgk.py negative compact-target-upgrade
-```
-
-```yaml
-negative_validation_targets:
-  see_chat_source_of_truth:
-    bad_input: "durable_source_of_truth: see chat"
-    expected: blocked
-    owner: task_packet_schema_check
-    fixture: examples/negative/task_packet.see-chat.yaml
-
-  missing_task_packet_stop_conditions:
-    bad_input: "task packet missing stop_conditions"
-    expected: blocked
-    owner: task_packet_schema_check
-    fixture: examples/negative/task_packet.no-stop.yaml
-
-  empty_task_packet_required_list:
-    bad_input: "task packet allowed_paths exists but has no material item"
-    expected: blocked
-    owner: task_packet_schema_check
-    fixture: examples/negative/task_packet.empty-list.yaml
-
-  overbroad_files_to_inspect_first:
-    bad_input: "task packet asks to inspect the whole repo or docs/**"
-    expected: blocked
-    owner: task_packet_schema_check
-    fixture: examples/negative/task_packet.overbroad-files-to-inspect.yaml
-
-  missing_work_unit_required_fields:
-    bad_input: "work unit issue body has allowed_paths but omits required task fields"
-    expected: blocked
-    owner: work_unit_check
-    fixture: examples/negative/work_unit.missing-task-fields.json
-
-  missing_merge_decision:
-    bad_input: "PR body without Merge Decision section"
-    expected: blocked
-    owner: validate_bootstrap_or_pr_validator
-    fixture: examples/negative/policy_gate/pr_body.missing-merge-decision.md
-
-  missing_current_status_impact:
-    bad_input: "PR body without Current Status Impact section"
-    expected: blocked
-    owner: policy_gate_check
-    fixture: examples/negative/policy_gate/pr_body.missing-current-status-impact.md
-
-  pending_or_unknown_merge_gate:
-    bad_input: "checks_passed: pending or unknown"
-    expected: blocked
-    owner: policy_gate_check
-    fixture: examples/negative/policy_gate/pr_body.checks-pending.md
-
-  human_gate_unresolved:
-    bad_input: "human_gates_checked: pending or false"
-    expected: blocked
-    owner: policy_gate_check
-    fixture: examples/negative/policy_gate/pr_body.human-gates-pending.md
-
-  chat_authority_in_pr_body:
-    bad_input: "PR body says see chat"
-    expected: blocked
-    owner: policy_gate_check
-    fixture: examples/negative/policy_gate/pr_body.see-chat-authority.md
-
-  missing_target_install_required_files:
-    bad_input: "target repository missing required ASGK governance files"
-    expected: blocked
-    owner: target_install_check
-    fixture: examples/negative/target_install/missing_required_files/
-
-  target_install_repo_local_historical_evidence_surface:
-    bad_input: "target repository includes archived ASGK repo-local readiness evidence"
-    expected: blocked
-    owner: target_install_check
-    fixture: examples/negative/target_install/repo_local_historical_evidence_surface/
-
-  missing_pr_required_heading:
-    bad_input: "PR template missing required heading"
-    expected: blocked
-    owner: validate_bootstrap
-
-  runtime_artifact_path:
-    bad_input: "runs/test-output.json"
-    expected: blocked
-    owner: governance_hygiene
-
-  protected_path:
-    bad_input: ".env"
-    expected: blocked
-    owner: governance_hygiene
-
-  private_binary_source_file:
-    bad_input: "source.pdf outside tests/fixtures or examples"
-    expected: blocked
-    owner: governance_hygiene
-
-  invalid_json_schema:
-    bad_input: "malformed JSON under schemas/"
-    expected: blocked
-    owner: validate_bootstrap
-
-  storage_roots_equal:
-    bad_input: "artifact_root == local_state_root"
-    expected: blocked
-    owner: validate_bootstrap
-
-  drive_api_enabled_by_default:
-    bad_input: "sync_policy.app_managed_drive_api: true"
-    expected: blocked
-    owner: validate_bootstrap
-
-  external_call_gate_without_approval:
-    bad_input: "policy or fixture enabling live API/cloud/MCP without human gate"
-    expected: blocked_or_human_gated
-    owner: future_validator_or_human_gate_review
-```
+| Required scaffold file or directory missing | blocking | repository control surface is incomplete |
+| Required term missing from canonical policy | blocking | policy may have been loosened or damaged |
+| Invalid JSON in checked schema or positive example | blocking | machine-readable contract is broken |
+| Required PR template or issue field missing | blocking | review or work-unit capture degraded |
+| Missing Merge Decision Record | blocking | merge gate cannot be reviewed |
+| Missing Current Status Impact | blocking | recovery-state impact is unclassified |
+| Merge-ready PR body has pending, unknown, or false gates | blocking | merge eligibility is not mechanically supported |
+| PR body relies on chat-only authority | blocking | chat is not durable source of truth |
+| Changed path outside allowed paths | blocking or split_required | work exceeds durable scope |
+| Protected path or runtime artifact path appears in changed paths | blocking or human_gated | safety boundary touched |
+| Human-gated operation lacks durable approval | human_gated | approval cannot be inferred |
+| Negative fixture unexpectedly passes | blocking | known-bad path is not stopped |
+| Negative fixture crashes for an unrelated reason | blocking for validation work | expected-failure evidence is untrustworthy |
+| Current issue closeout lacks required post-rule review evidence | blocking for current closeout | current closeout contract incomplete |
+| Pre-rule issue lacks newer closeout evidence | legacy_observation | old work is not retroactively missing work |
+| Workspace remains on a merged local branch | warning | local hygiene issue, not merge evidence |
+| Summary document is stale against canonical policy | warning unless acceptance depends on it | requires targeted docs issue |
+| Optional document missing | warning | not part of required scaffold |
 
 ## Negative Fixture Rules
 
-Negative fixtures must not break normal CI unless the validator is designed to
-read them as expected failures.
-
-Required pattern:
+Negative fixtures are safety tests, not examples for adoption.
 
 ```yaml
 negative_fixture_rule:
-  location: examples/negative/ or tests/fixtures/negative/
+  canonical_matrix: docs/control/NEGATIVE_TEST_PLAN.md
+  executable_registry: scripts/asgk_lib/negative.py
+  allowed_locations:
+    - examples/negative/
+    - tests/fixtures/negative/
   must_be_opt_in: true
   must_record_expected_failure: true
   must_not_be_loaded_by_positive_validation_as_valid_example: true
+  must_name_owner_or_validator: true
 ```
 
-Do not add malformed files into normal schema/example paths unless
-`validate_bootstrap.py` is updated to treat them as expected-failure fixtures.
+Do not add malformed files into normal schema, template, or positive example
+paths unless the relevant validator explicitly treats them as expected failures.
 
-## Future Validation Commands
+Do not duplicate the full negative case matrix here. This document owns the
+fixture rules and proof boundary; `docs/control/NEGATIVE_TEST_PLAN.md` owns the
+case IDs, expected outcomes, and implementation status.
 
-The future CLI should wrap existing scripts without changing their meaning.
+## Command Documentation Rule
+
+The executable command surface belongs to the CLI and scripts.
 
 ```yaml
-future_cli_mapping:
-  asgk doctor:
-    runs:
-      - python3 scripts/check_project.py
-      - python3 scripts/validate_bootstrap.py
-
-  asgk validate:
-    runs:
-      - python3 scripts/validate_bootstrap.py
-
-  asgk hygiene --paths changed-paths.txt:
-    runs:
-      - python3 scripts/governance_hygiene.py --paths-file changed-paths.txt
-
-  asgk hygiene --git-base <base> --git-head <head>:
-    current_behavior:
-      - run scripts/governance_hygiene.py with local git diff path collection
-      - block protected paths, runtime artifacts, and private/binary source-like files
-      - never call the GitHub API
-
-  asgk policy-gate --pr-body pr_body.md:
-    current_behavior:
-      - run scripts/policy_gate_check.py --pr-body pr_body.md
-      - report whether declared PR-body gates are mechanically coherent
-      - never infer low-risk status from prose
-
-  asgk policy-gate --github-event "$GITHUB_EVENT_PATH":
-    current_behavior:
-      - read pull_request.body from the GitHub Actions event payload
-      - run scripts/policy_gate_check.py on that PR body
-      - skip non-pull_request event payloads without failing push builds
-      - never call the GitHub API
-      - never infer low-risk status from prose
-
-  asgk negative policy-gate:
-    runs:
-      - python3 scripts/policy_gate_check.py --pr-body examples/negative/policy_gate/pr_body.missing-merge-decision.md
-      - python3 scripts/policy_gate_check.py --pr-body examples/negative/policy_gate/pr_body.missing-current-status-impact.md
-      - python3 scripts/policy_gate_check.py --pr-body examples/negative/policy_gate/pr_body.checks-pending.md
-      - python3 scripts/policy_gate_check.py --pr-body examples/negative/policy_gate/pr_body.human-gates-pending.md
-      - python3 scripts/policy_gate_check.py --pr-body examples/negative/policy_gate/pr_body.see-chat-authority.md
-    expected: all commands fail
-    default_ci: true
-
-  asgk check-pr <number>:
-    current_behavior:
-      - fetch PR metadata through gh pr view
-      - check draft state, merge state, review decision, and status check rollup
-      - run PR-body policy gate on the fetched body
-      - require the Merge Decision issue to appear in GitHub closing issue references
-      - run governance hygiene on fetched changed file paths
-      - compare PR changed files against closing issue allowed_paths
-      - report checkable gates and unresolved human-review gates
-      - never infer low-risk status
-
-  asgk check-pr --json-file pr_status.json:
-    current_behavior:
-      - run the same PR-status validator from a captured or fixture JSON payload
-      - support deterministic positive and negative tests without network access
-      - fail closed when fixture metadata contains only non-closing issue references
-
-  asgk work-unit-check --issue <number> --git-base <base> --git-head <head>:
-    current_behavior:
-      - fetch the issue through GitHub REST using gh api
-      - fail if the issue is closed or is actually a pull request
-      - fail if required agent task fields are missing or have no material value
-      - support required fields in YAML-like task blocks or GitHub issue-form heading sections
-      - parse allowed_paths from the issue body task fields
-      - compare local git diff changed paths against allowed_paths
-      - support WORKTREE as a git head alias for uncommitted and untracked local files
-      - run changed-path hygiene on the same changed paths
-      - never infer low-risk status
-
-  asgk work-unit-check --pr <number> --paths-file changed-paths.txt:
-    current_behavior:
-      - fetch the pull request through GitHub REST using gh api
-      - fail if the PR is closed or already merged
-      - parse allowed_paths from the PR body when PR follow-up work is the active work unit
-      - compare the supplied changed-path list against allowed_paths
-      - never treat a merged PR as authority for new writes
-
-  asgk work-unit-check --json-file work_unit.json --paths-file changed-paths.txt:
-    current_behavior:
-      - run the same work-unit validator from fixture or captured JSON
-      - support deterministic positive and negative tests without network access
-      - fail closed for merged PR fixtures, missing-task-field fixtures, and outside-allowed-path fixtures
-
-  asgk workspace-state-check:
-    current_behavior:
-      - inspect the local branch, upstream branch, merged-into-base state, and untracked paths
-      - warn when a session is still on a branch already merged into the base ref
-      - warn when unrelated untracked local artifacts are present
-      - return zero by default so local artifacts are surfaced without forcing deletion
-      - support --strict for callers that want warnings to fail
-      - support deterministic fixture checks with --json-file and --expect-warnings
-
-  asgk negative compact-governance:
-    current_behavior:
-      - run scripts/compact_governance_red_team_check.py
-      - evaluate positive and negative compact-governance fixtures without GitHub network access
-      - model issue scope, scope lock, PR state, task-packet narrowing, agent-authored claims, and human-gate boundaries
-      - fail closed when fixture metadata is unavailable
-      - verify that agent-authored claims cannot override tool-derived blocking state
-      - preserve current verbose PR body and merge-policy defaults
-    expected: all fixture outcomes match their expected_result fields
-    default_ci: false unless a future issue explicitly wires it into CI
-
-  asgk compact-issue-scope --issue <number>:
-    current_behavior:
-      - fetch the issue through GitHub REST using gh api
-      - extract the existing required work-unit fields from the issue body
-      - normalize allowed_paths
-      - emit an asgk.compact_issue_scope.v1 canonical_issue_scope object
-      - fail when material issue scope fields are missing
-      - never infer low-risk status
-
-  asgk compact-issue-scope --json-file issue.json:
-    current_behavior:
-      - run the same canonical issue scope extraction against a captured issue fixture
-      - support deterministic tests without network access
-      - fail closed for missing material allowed_paths
-
-  asgk negative compact-issue-scope:
-    current_behavior:
-      - run compact-issue-scope against missing-scope fixtures as expected failures
-    expected: all commands fail
-    default_ci: false unless a future issue explicitly wires it into CI
-
-  asgk compact-scope-lock --issue <number>:
-    current_behavior:
-      - fetch the issue through GitHub REST using gh api
-      - derive the lock from the canonical issue scope object
-      - emit a deterministic scope_hash, scope_lock JSON, and canonical_issue_scope JSON
-      - fail when material scope fields are missing
-      - never infer low-risk status
-      - with --compare-file, fail when the captured scope_hash does not match the current issue scope
-
-  asgk compact-scope-lock --json-file issue.json:
-    current_behavior:
-      - run the same canonical issue scope based lock extraction against a captured issue fixture
-      - support deterministic tests without network access
-      - fail closed for missing material allowed_paths
-
-  asgk negative compact-scope-lock:
-    current_behavior:
-      - run compact-scope-lock against missing-scope and stale-lock fixtures as expected failures
-    expected: all commands fail
-    default_ci: false unless a future issue explicitly wires it into CI
-
-  asgk compact-pr-report --pr <number>:
-    current_behavior:
-      - fetch PR metadata through gh pr view
-      - compile changed paths, status checks, review and mergeability state
-      - load the closing issue scope when available
-      - include canonical issue scope and scope lock output
-      - include PR body policy-gate and changed-path gate results
-      - detect restricted governance boundaries
-      - expose extracted PR-body and fixture merge-readiness claims as report evidence
-      - fail when merge-ready claims conflict with tool-derived blocking findings
-      - fail closed when required PR metadata is unavailable
-      - never infer low-risk status
-
-  asgk compact-pr-report --json-file pr.json:
-    current_behavior:
-      - run the same compact PR report compiler against captured PR metadata
-      - support deterministic tests without network access
-      - fail closed for unavailable metadata fixtures
-
-  asgk negative compact-pr-report:
-    current_behavior:
-      - run compact-pr-report against metadata-unavailable and claim-conflict fixtures as expected failures
-    expected: all commands fail
-    default_ci: false unless a future issue explicitly wires it into CI
-
-  asgk compact-task-packet-check --issue <number> --file task_packet.yaml:
-    current_behavior:
-      - run canonical task-packet schema validation
-      - derive canonical issue scope from the live GitHub issue
-      - compare task packet allowed_paths to issue allowed_paths
-      - pass when the packet narrows issue scope
-      - fail when the packet expands issue scope
-      - never infer low-risk status
-
-  asgk compact-task-packet-check --json-file bundle.json:
-    current_behavior:
-      - run the same delta-only task-packet comparison against fixture issue and task_packet objects
-      - support deterministic tests without network access
-
-  asgk negative compact-task-packet:
-    current_behavior:
-      - run compact-task-packet-check against scope-expansion fixtures as expected failures
-    expected: all commands fail
-    default_ci: false unless a future issue explicitly wires it into CI
-
-  asgk compact-pr-body-check --body-file body.md --report-json report.json:
-    current_behavior:
-      - run required PR body structure checks
-      - run PR body policy gate checks
-      - require a Compiled Report Reference section with report_source
-      - require compiled report result pass
-      - require compiled report pr_status_result pass when present
-      - require compiled report findings to be empty
-      - require compiled report low_risk_inferred false
-      - preserve Current Status Impact and Merge Decision gates
-
-  asgk negative compact-pr-body:
-    current_behavior:
-      - run compact-pr-body-check against failed-report fixtures as expected failures
-    expected: all commands fail
-    default_ci: false unless a future issue explicitly wires it into CI
-
-  asgk compact-handoff-check --file handoff.yaml --current-status docs/handoff/CURRENT_STATUS.md:
-    current_behavior:
-      - validate opt-in compact handoff scalar, list, validation_status, and current_status_impact fields
-      - run status-check against the supplied current-status file
-      - fail when completed issue, PR, or branch refs remain in current-status active work
-      - fail when current-status next safe action still describes pre-merge closeout work
-      - never infer low-risk status
-
-  asgk negative compact-handoff:
-    current_behavior:
-      - run compact-handoff-check against stale active-work fixtures as expected failures
-    expected: all commands fail
-    default_ci: false unless a future issue explicitly wires it into CI
-
-  asgk compact-target-upgrade-check --manifest manifest.json:
-    current_behavior:
-      - validate compact target-upgrade manifest version, mode, classification, and durable issue requirement
-      - require target_repository_writes_performed false
-      - require compact_governance.default_enabled false
-      - require ASGK Apache-2.0 notice preservation and no target license replacement
-      - block copying target-owned CURRENT_STATUS, document maps, registries, bootstrap docs, or LICENSE as-is
-      - require target validation commands and human gates
-      - never infer low-risk status
-
-  asgk negative compact-target-upgrade:
-    current_behavior:
-      - run compact-target-upgrade-check against default-enabled and overwrite fixtures as expected failures
-    expected: all commands fail
-    default_ci: false unless a future issue explicitly wires it into CI
-
-  asgk task-packet-check --file task_packet.yaml:
-    current_behavior:
-      - validate JSON task packets, canonical YAML-like task packets, and negative fixtures with bad_input
-      - require every field from docs/control/TASK_PACKET_FORMAT.md
-      - require scalar/list shape and material list items
-      - block overbroad files_to_inspect_first requests such as whole repo, all docs, docs/**, ., *, and directories
-      - block see chat authority
-      - block executable task packets that do not name a GitHub issue or PR when GitHub is available
-      - validate known intelligence level values
-      - avoid external YAML dependencies
-
-  asgk context-budget-measure --task-packet task_packet.yaml:
-    current_behavior:
-      - run task-packet validation before measuring
-      - read only concrete repo files named by files_to_inspect_first
-      - report pseudo references such as current GitHub issue or PR without pretending they are repo files
-      - report bytes, characters, and estimated_repo_context_tokens using a dependency-free characters / 4 heuristic
-      - label actual model tokens as unavailable unless a client/provider usage source is explicitly supplied elsewhere
-      - fail closed for missing files, unreadable text, or overbroad read requests
+command_documentation_rule:
+  exact_syntax: python3 scripts/asgk.py --help
+  command_specific_syntax: python3 scripts/asgk.py <command> --help
+  strategy_document_may_describe:
+    - responsibility groups
+    - proof boundaries
+    - blocking semantics
+    - required evidence for behavior changes
+  strategy_document_must_not_become:
+    - full command reference
+    - future CLI roadmap
+    - duplicated implementation comments
 ```
 
-CLI work must not add new dependencies in its first version unless a separate
-issue explicitly authorizes them.
+If command help and this strategy disagree on exact syntax, command help is the
+current executable interface and this strategy should be repaired in a scoped
+documentation issue.
 
 ## Validation Expansion Rules
 
-Validation may be expanded only when:
+Validation may expand only when the current durable issue or PR authorizes it.
 
 ```yaml
 validation_expansion_allowed_when:
   - current issue authorizes script or workflow changes
   - negative test plan identifies a gap
   - CI failure reveals missing required coverage
-  - document map identifies a canonical ownership mismatch
+  - document map or registry identifies canonical ownership drift
   - human or reviewer asks for stricter validation
-```
 
-Validation must not be loosened without explicit human approval.
+validation_expansion_must_not:
+  - add new dependencies without explicit approval
+  - make low-risk status agent-declared
+  - turn observations into automatic repair work
+  - make target repositories overwrite target-owned state
+  - loosen an existing gate without explicit human approval
+```
 
 ## Validator Change Requirements
 
-Any PR changing validation behavior must include:
+Any PR changing validation behavior must include explicit evidence.
 
 ```yaml
 validator_change_record:
@@ -856,26 +379,32 @@ validator_change_record:
   rollback_plan:
 ```
 
-For validation-script changes, the PR should include examples or test evidence
-that prove the new behavior.
+For validation-script changes, the PR should include fixture, unit, or command
+evidence that proves the new behavior. A docs-only clarification must say when
+validator behavior is unchanged.
+
+Loosening validation requires explicit human approval in the current durable
+issue or PR. Silent loosening is blocking or human-gated.
 
 ## Relationship To Context Budget
 
-Validation output should reduce token usage. Agents should prefer validator
-reports over manually rereading unrelated files.
-
-Expected pattern:
+Validation should reduce token use. Agents should prefer compact validator
+output over rereading unrelated files.
 
 ```text
 run validator -> read compact failure output -> inspect only files named by failure
 ```
 
-## Current Known Gaps
+Validators should not force `docs/control/**`, `examples/**`, or historical
+documents into the default startup read set. A validator may point to a specific
+file only when the failure or current work unit needs it.
+
+## Current Known Gap
 
 ```yaml
 known_gaps:
-  - PR status validator is not wired into default CI because a running workflow cannot certify its own final status
+  - PR status validation is not wired into default CI because a running workflow cannot certify its own final status
 ```
 
-These gaps are not blockers for docs-only governance work. They should become
-separate issues before tool implementation.
+Known gaps are not blockers for unrelated docs-only governance work. They should
+become separate issues before tool implementation.
