@@ -2,9 +2,9 @@
 
 Status: active control plan.
 
-This plan defines the known-bad cases that this governance kit should eventually
-block, request changes for, or human-gate. It does not add executable fixtures or
-change validator behavior by itself.
+This plan defines known-bad cases that this governance kit blocks, requests
+changes for, or human-gates through review guidance and implemented negative
+fixture runners. It does not change validator behavior by itself.
 
 ## Purpose
 
@@ -75,7 +75,7 @@ changed to treat them as expected failures.
 
 ## Negative Case Matrix
 
-| Case ID | Bad input or behavior | Expected outcome | Owner | Future fixture path | Notes |
+| Case ID | Bad input or behavior | Expected outcome | Owner | Fixture path or target | Notes |
 |---|---|---|---|---|---|
 | `NEG-001-see-chat-source` | `durable_source_of_truth: see chat` | blocked | task packet validator / PR review | `examples/negative/task_packet.see-chat.yaml` | Chat is not durable authority. |
 | `NEG-002-missing-durable-source` | issue or PR lacks durable source of truth | blocked | PR review / future PR validator | `examples/negative/pr_body.missing-source.md` | Must not start work. |
@@ -126,74 +126,26 @@ changed to treat them as expected failures.
 | `NEG-048-compact-target-upgrade-overwrites-target-state` | compact target-upgrade manifest copies target-owned current status as-is or marks it overwritten | blocked | compact target-upgrade command | `examples/negative/compact_governance/target_upgrade/manifest.overwrites-current-status.json` | Target-owned state must be preserved or manually merged. |
 | `NEG-049-compact-target-upgrade-default-enabled` | compact target-upgrade manifest enables compact governance by default | blocked | compact target-upgrade command | `examples/negative/compact_governance/target_upgrade/manifest.default-enabled.json` | Target upgrades must remain opt-in until the target issue explicitly enables a profile. |
 
-## Implementation Phases
+## Current Execution Surface
 
-### Phase 1 — Documentation-only plan
+Negative fixtures are active opt-in expected-failure inputs. The executable
+runner registry lives in `scripts/asgk_lib/negative.py`.
 
-Current phase.
-
-```yaml
-phase_1:
-  deliverable: docs/control/NEGATIVE_TEST_PLAN.md
-  executable_fixtures: false
-  validator_changes: false
+```bash
+python3 scripts/asgk.py negative all
+python3 scripts/asgk.py negative <group>
+python3 scripts/asgk.py negative --help
 ```
 
-### Phase 2 — Passive negative fixtures
+Positive validation must not load negative fixtures as valid repository state.
+Default startup must not read `examples/` unless the current issue, PR,
+validator, or documentation reference names a specific example or fixture.
 
-Add expected-failure fixtures that are not loaded by positive validation.
+## Rules For Negative Fixtures
 
-```yaml
-phase_2:
-  paths:
-    - examples/negative/
-    - tests/fixtures/negative/
-  validator_changes: optional
-  requirement: fixtures must include expected outcome metadata
-```
-
-### Phase 3 — Validator support
-
-Teach validators to run selected negative cases as expected failures.
-
-```yaml
-phase_3:
-  scripts:
-    - scripts/validate_bootstrap.py
-    - scripts/governance_hygiene.py
-  expected_behavior: bad inputs fail when tested as negative cases
-  ci_behavior: positive validation still passes
-```
-
-### Phase 4 — PR-body and task-packet validation
-
-Add future validation for PR bodies, task packets, and Merge Decision Records.
-
-```yaml
-phase_4:
-  future_checks:
-    - PR required heading detection
-    - Merge Decision Record field validation
-    - durable source of truth detection
-    - see chat detection
-```
-
-### Phase 5 — CLI wrapper
-
-Expose negative and positive validation through CLI.
-
-```yaml
-phase_5:
-  future_commands:
-    - asgk validate
-    - asgk hygiene --paths changed-paths.txt
-    - asgk negative --case NEG-001
-    - asgk check-pr <number>
-```
-
-## Rules For Future Negative Fixtures
-
-Each negative fixture should include a companion metadata file or front matter:
+Each negative fixture should either be registered in a runner group or be named
+by a scoped future validation issue. When practical, include metadata or front
+matter:
 
 ```yaml
 negative_case:
@@ -240,17 +192,15 @@ During PR review, use this plan to ask:
 3. Is the expected validator already implemented?
 4. If not implemented, should this become a future fixture/tooling issue?
 
-## Known Gaps
+## Remaining Gaps
 
 ```yaml
 known_gaps:
-  - negative fixtures are not yet added
-  - negative fixtures are not yet wired into CI
-  - PR-body validation is not yet implemented
-  - task-packet validation is not yet implemented as a full parser
-  - governance_hygiene.py still needs stronger changed-path workflows
-  - no CLI wrapper exists yet
+  - not every planned negative case has an implemented fixture
+  - some fixture classes are opt-in local checks rather than default CI checks
+  - fixture ownership is executable in runner groups, not yet mechanically checked for every file
+  - PR-body fixtures intentionally preserve markdown parser coverage and should not be converted wholesale to JSON
 ```
 
-These are planned follow-up issues, not blockers for this documentation-only
-plan.
+These are follow-up opportunities, not a reason to delete active regression
+fixtures without coverage evidence.
