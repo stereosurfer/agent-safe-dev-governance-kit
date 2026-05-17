@@ -1,97 +1,174 @@
 # Target Install Validation Plan
 
-Status: active validation policy with read-only check and plan layers.
+Status: active validation and planning contract.
 
-This document defines mechanical checks and planning surfaces for validating ASGK
-installation inside a target repository.
+This document defines the read-only target-install checker, the read-only
+target-install planner, and the compact target-upgrade manifest boundary.
 
-Implemented tooling is read-only. It is not an installer.
+It is not an installer, scaffold command, migration engine, or target repository
+approval record.
 
-## Scope
+## Purpose
 
-The tooling answers two questions:
+Target-install validation answers two questions:
 
 ```text
 1. Does this target repository look structurally safe to operate under ASGK governance?
-2. What explicit installation plan should a future scaffold command follow?
+2. What explicit read-only installation or upgrade plan should a future reviewed command follow?
 ```
 
-It must not install files, rewrite files, modify repository state, call external
-services, or infer project-specific policy beyond the installed governance files.
+The tooling must not write files, rewrite repository state, call external
+services, infer project-specific policy, or treat ASGK source-repo state as
+target-repo state.
 
-## Implemented Command Shapes
-
-Read-only checker:
-
-```bash
-python3 scripts/asgk.py target-install-check
-python3 scripts/asgk.py target-install-check --repo-root .
-python3 scripts/asgk.py target-install-check --json
-```
-
-Read-only planner:
-
-```bash
-python3 scripts/target_install_plan.py
-python3 scripts/target_install_plan.py --repo-root .
-python3 scripts/target_install_plan.py --json
-```
-
-Preferred future wrapper:
-
-```bash
-python3 scripts/asgk.py target-install-plan
-```
-
-Compact target-upgrade manifest check:
-
-```bash
-python3 scripts/asgk.py compact-target-upgrade-check --manifest compact-target-upgrade.json
-```
-
-Not yet implemented:
-
-```bash
-python3 scripts/asgk.py target-install-check --strict
-python3 scripts/asgk.py target-install-plan
-```
-
-## Validation Categories
+## Document Boundary
 
 ```yaml
-validation_categories:
-  required_files: blocking
-  license_handling: warning
-  template_derived_files: blocking_or_warning
-  customize_required_files: planned
-  forbidden_repo_local_surfaces: blocking_or_warning
-  deferred_v2_guard: warning_or_blocking
-  document_navigation_split: blocking
-  current_status_freshness: planned
-  validation_command_presence: warning
-  compact_target_upgrade_manifest: blocking
+this_document_owns:
+  - target-install checker behavior categories
+  - target-install planner output contract
+  - compact target-upgrade manifest check boundary
+  - implemented versus planned target-install check classification
+  - read-only and no-installer requirements
+
+this_document_does_not_own:
+  - human target-install checklist acceptance
+  - install-surface copy/template/customize policy
+  - script implementation details
+  - target repository license decisions
+  - future scaffold execution
+  - CI workflow wiring
+
+canonical_neighbors:
+  human_checklist: docs/control/TARGET_INSTALL_CHECKLIST.md
+  install_surface: docs/INSTALL_SURFACE.md
+  checker_implementation: scripts/asgk_lib/target_install.py
+  planner_implementation: scripts/target_install_plan.py
+  compact_upgrade_manifest: python3 scripts/asgk.py compact-target-upgrade-check --help
 ```
 
-## Compact Target-Upgrade Checks
+## Source Repo Versus Target Repo
 
-The compact target-upgrade checker validates a planning manifest for repositories
+The ASGK source repository is not expected to pass `target-install-check` when
+checked as if it were a target repository. The source repo intentionally contains
+ASGK repo-local evidence, negative fixtures, adapters, examples, and internal
+history that target repositories must not copy as authority.
+
+```yaml
+source_repo_self_check:
+  expected_result: may_fail
+  reason: ASGK source repo contains do-not-copy and repo-local surfaces
+  not_a_bug_when:
+    - docs/control/HISTORICAL_ASGK_* evidence is present
+    - examples/negative/ is present
+    - docs/adapters/ is present
+    - source repo-local maps and registries are present
+```
+
+Use target-install checks against target repositories or target-install fixtures,
+not as a release-readiness proof for the ASGK source repo.
+
+## Current Command Surface
+
+```yaml
+implemented:
+  target_install_check:
+    command: python3 scripts/asgk.py target-install-check --repo-root <target>
+    json: python3 scripts/asgk.py target-install-check --repo-root <target> --json
+    behavior: read_only
+  target_install_plan:
+    command: python3 scripts/target_install_plan.py --repo-root <target>
+    json: python3 scripts/target_install_plan.py --repo-root <target> --json
+    behavior: read_only
+  compact_target_upgrade_check:
+    command: python3 scripts/asgk.py compact-target-upgrade-check --manifest <manifest.json>
+    behavior: read_only_manifest_check
+
+not_implemented:
+  - python3 scripts/asgk.py target-install-check --strict
+  - python3 scripts/asgk.py target-install-plan
+  - scaffold or installer file writes
+  - target-install CI job by default
+```
+
+Use command help for exact syntax. This document owns behavior boundaries, not a
+complete CLI manual.
+
+## Checker Categories
+
+The checker emits findings with category, file/path, reason, recommended fix,
+severity, and blocking status. Blocking findings return a failing exit code;
+warnings return success with actionable findings.
+
+```yaml
+implemented_checker_categories:
+  required_files:
+    default: blocking
+    checks: required ASGK governance files exist in the target
+  license_handling:
+    default: warning
+    checks: visible license or notice handling surface exists
+  document_navigation_split:
+    default: blocking_or_warning
+    checks: DOCUMENT_MAP is a compact router and DOCUMENT_REGISTRY is a registry
+  template_derived_files:
+    default: warning
+    checks: router and registry no longer contain obvious template markers
+  forbidden_repo_local_surfaces:
+    default: blocking_or_warning
+    checks: ASGK source-only history, audits, examples, adapters, or profiles are not target authority
+  deferred_v2_guard:
+    default: blocking_when_default_startup_references_v2
+    checks: profiles and adapters are not part of v1.x default startup
+  validation_command_presence:
+    default: warning
+    checks: target has an obvious validation command or workflow surface
+```
+
+## Required And Forbidden Surfaces
+
+Target repositories should include the required governance surfaces listed in
+`docs/control/TARGET_INSTALL_CHECKLIST.md`. This plan does not duplicate that
+full checklist; it defines how the checker classifies the mechanical findings.
+
+```yaml
+must_not_be_target_authority:
+  blocking:
+    - docs/control/HISTORICAL_ASGK_STABILIZATION_EVIDENCE.md
+    - docs/control/HISTORICAL_ASGK_READINESS_EVIDENCE.md
+    - docs/control/UNCONTROLLED_DOCUMENT_AUDIT.md
+    - docs/EVOLUTION_MODEL.md
+    - legacy docs/control/V1_1_STABILIZATION_PLAN.md
+    - legacy docs/control/V1_READINESS_AUDIT.md
+  warning:
+    - docs/handoff/AGENT_LOG.md
+    - docs/handoff/DECISIONS.md
+    - examples/negative/
+    - profiles/
+    - docs/adapters/
+```
+
+A target project may keep one of these only through a scoped adaptation issue and
+documented reason. Keeping it must not make ASGK source-repo history target
+authority.
+
+## Compact Target-Upgrade Manifest Boundary
+
+The compact target-upgrade checker validates planning manifests for repositories
 that already adopted ASGK and want to upgrade to compact governance surfaces.
-It is not an installer and does not write target repositories.
+It does not write target repositories.
 
 ```yaml
-compact_target_upgrade_checks:
-  required_version: asgk.compact_target_upgrade.v1
-  required_mode: audit_and_plan
-  default_enablement:
-    compact_governance.default_enabled: false
-  target_writes:
+compact_target_upgrade_contract:
+  schema_version: asgk.compact_target_upgrade.v1
+  mode: audit_and_plan
+  required_defaults:
     target_repository_writes_performed: false
-  durable_authority:
+    compact_governance.default_enabled: false
     durable_upgrade_issue_required: true
-  license_notice:
+  license_boundary:
     asgk_apache_2_notice_preserved: true
     target_license_replaced: false
-    notice_surface: required
   never_overwrite:
     - docs/handoff/CURRENT_STATUS.md
     - docs/DOCUMENT_MAP.md
@@ -103,226 +180,85 @@ compact_target_upgrade_checks:
     - LICENSE
 ```
 
-## License Handling Checks
+## Planner Output Contract
 
-The validator warns when no visible license or notice handling surface exists.
-This is warning-only by default because target repositories may have their own
-repository-level license policy.
-
-```yaml
-license_handling_checks:
-  warn_if_missing_all:
-    - LICENSE
-    - LICENSE.md
-    - NOTICE
-    - NOTICE.md
-    - THIRD_PARTY_NOTICES.md
-    - docs/LICENSE.md
-    - docs/NOTICE.md
-  blocking_by_default: false
-  warning_reason: "No visible surface explains how ASGK Apache-2.0 notices are preserved for copied or adapted ASGK-derived material."
-  recommended_fix: "Add LICENSE/NOTICE handling or document ASGK Apache-2.0 attribution in the target repository's existing license or notice surface."
-  non_goal: "Do not require the target repository to adopt Apache-2.0 globally."
-```
-
-## Required-file Checks
-
-The validator checks that required target files exist.
-
-```yaml
-required_file_checks:
-  blocking_if_missing:
-    - AGENTS.md
-    - README.md
-    - docs/DOCUMENT_MAP.md
-    - docs/DOCUMENT_REGISTRY.md
-    - docs/handoff/CURRENT_STATUS.md
-    - docs/control/CONTEXT_BUDGET_POLICY.md
-    - docs/control/AGENT_CAPABILITY_MATRIX.md
-    - docs/control/LOW_RISK_AUTONOMOUS_MERGE_POLICY.md
-    - docs/control/HUMAN_GATED_OPERATIONS.md
-    - docs/control/MERGE_DECISION_RECORD.md
-    - docs/control/TASK_PACKET_FORMAT.md
-    - docs/control/AGENT_REPORT_FORMAT.md
-    - .github/PULL_REQUEST_TEMPLATE.md
-    - .github/ISSUE_TEMPLATE/agent_task.yml
-```
-
-## Document Navigation Split Checks
-
-The validator checks the router + registry split.
-
-```yaml
-document_navigation_split_checks:
-  docs_DOCUMENT_MAP_md:
-    must_exist: true
-    must_reference:
-      - docs/DOCUMENT_REGISTRY.md
-      - docs/control/CONTEXT_BUDGET_POLICY.md
-    must_not_contain:
-      - "| Document | Role | Canonical for | Read by default | Read when | Owned by lane |"
-      - "## Task-type Reading Guide"
-  docs_DOCUMENT_REGISTRY_md:
-    must_exist: true
-    must_contain:
-      - "# Document Registry"
-      - "DOCUMENT_REGISTRY.md is repo-local"
-    should_not_be_empty_registry: true
-```
-
-## Template-derived Checks
-
-The validator detects whether target files still look like unedited templates.
-
-```yaml
-template_derived_checks:
-  docs_DOCUMENT_MAP_md:
-    warn_if_contains:
-      - "target-project navigation router template"
-      - "<lane>"
-      - "<path>"
-      - "<topic>"
-  docs_DOCUMENT_REGISTRY_md:
-    warn_if_contains:
-      - "target-project template"
-      - "<lane>"
-      - "<path>"
-      - "<topic>"
-```
-
-## Customize-required Checks
-
-Planned but not implemented in the first checker.
-
-```yaml
-customize_required_checks:
-  docs_bootstrap_00_project_brief_md:
-    warn_if_contains:
-      - "ASGK"
-      - "Bootstrap Kit"
-      - "placeholder"
-  docs_handoff_CURRENT_STATUS_md:
-    block_if_contains:
-      - "see chat"
-    warn_if_contains:
-      - "ASGK repository"
-      - "ASGK historical evidence"
-      - "archived ASGK readiness"
-  templates_task_packet_template_yaml:
-    warn_if_contains:
-      - "<lane>"
-      - "<allowed_paths>"
-```
-
-## Forbidden Surface Checks
-
-The validator blocks target installations that include known ASGK repo-local
-surfaces as target authority and warns on optional/deferred surfaces that may
-require explicit adaptation.
-
-```yaml
-forbidden_surface_checks:
-  block_if_present:
-    - docs/control/HISTORICAL_ASGK_STABILIZATION_EVIDENCE.md
-    - docs/control/HISTORICAL_ASGK_READINESS_EVIDENCE.md
-    - docs/control/UNCONTROLLED_DOCUMENT_AUDIT.md
-    - docs/EVOLUTION_MODEL.md
-  warn_if_present:
-    - docs/handoff/AGENT_LOG.md
-    - docs/handoff/DECISIONS.md
-    - examples/negative/
-    - profiles/
-    - docs/adapters/
-```
-
-A target project may intentionally keep one of these only through a scoped
-adaptation issue and a documented reason.
-
-## Deferred-v2 Checks
-
-The validator warns when runtime-specific surfaces are present and blocks when
-default startup surfaces reference deferred v2 paths.
-
-```yaml
-deferred_v2_checks:
-  warn_if_present:
-    - profiles/codex-app/
-    - profiles/chatgpt-web-github-connector/
-    - profiles/claude-code/
-    - profiles/cursor/
-    - profiles/opengoat/
-    - docs/adapters/
-  block_if_default_startup_references:
-    - profiles/
-    - docs/adapters/
-```
-
-## Validation Command Checks
-
-The validator warns if the target repository has no obvious validation command or
-workflow surface.
-
-```yaml
-validation_command_checks:
-  warn_if_missing_all:
-    - scripts/asgk.py
-    - .github/workflows/
-    - documented_validation_command
-```
-
-## Target Install Plan Output
-
-The read-only planner emits a deterministic plan with these sections:
+The planner emits a deterministic read-only plan. It may report what should be
+copied, templated, customized, or avoided, but it must not perform those writes.
 
 ```yaml
 target_install_plan:
   schema: asgk.target_install_plan.v0
   mode: read_only_plan
   writes_files: false
-  copy_as_is:
-    - source
-    - target
-    - source_status
-    - target_status
-  template_then_customize:
-    - source
-    - target
-    - required_action
-    - source_status
-    - target_status
-  customize_required:
-    - path
-    - required_review
-    - target_status
-  do_not_copy:
-    - path
-    - reason
-    - target_status
-  license_handling:
-    - source_license
-    - license
-    - target_action
-    - not_implied
-  post_install_checks:
-    - command_or_action
+  sections:
+    copy_as_is:
+      fields: [source, target, source_status, target_status]
+    template_then_customize:
+      fields: [source, target, required_action, source_status, target_status]
+    customize_required:
+      fields: [path, required_review, target_status]
+    do_not_copy:
+      fields: [path, reason, target_status]
+    license_handling:
+      fields: [source_license, license, target_action, not_implied]
+    post_install_checks:
+      fields: [command_or_action]
 ```
 
-## Output Format
+## Planned But Not Current Behavior
 
-The checker emits actionable text by default and JSON when `--json` is used.
-The planner emits a readable plan by default and JSON when `--json` is used.
+These checks or commands may be implemented later only through a separate issue.
+They must not be treated as current validator guarantees.
 
 ```yaml
-output_requirements:
-  - result or schema
-  - category_or_section
-  - file_or_path
-  - reason_or_required_action
-  - recommended_fix_when_applicable
-  - blocking_when_applicable
+planned_or_future_optional:
+  customize_required_content_checks:
+    status: planned
+    examples:
+      - target project brief has target mission
+      - current status is target-specific and fresh
+      - task packet template examples match target repo lanes
+  current_status_freshness:
+    status: planned
+    boundary: target-specific freshness review, not ASGK source-repo release state
+  target_install_plan_wrapper:
+    status: not_implemented
+    command: python3 scripts/asgk.py target-install-plan
+  strict_mode:
+    status: not_implemented
+    command: python3 scripts/asgk.py target-install-check --strict
+  optional_ci_job:
+    status: future_optional
+    boundary: opt-in target-install validation only
+  scaffold_script:
+    status: future_optional
+    prerequisite: checker and planner are stable and a reviewed plan exists
 ```
 
-## Non-goals For Current Tooling
+## Output Requirements
+
+```yaml
+checker_output_requires:
+  - result
+  - category
+  - file_or_path
+  - reason
+  - recommended_fix
+  - blocking
+
+planner_output_requires:
+  - schema
+  - mode
+  - writes_files
+  - copy_as_is
+  - template_then_customize
+  - customize_required
+  - do_not_copy
+  - license_handling
+  - post_install_checks
+```
+
+## Non-goals
 
 ```yaml
 current_tooling_non_goals:
@@ -332,29 +268,14 @@ current_tooling_non_goals:
   - no schema migration
   - no runtime-adapter validation
   - no automatic PR creation
+  - no target repository approval
 ```
 
-## Implementation Sequence
+## Validation Expansion Rules
 
-Recommended future sequence:
+Target-install validation may expand only when a durable issue authorizes the
+new check, names expected positive and negative cases, and explains whether the
+new finding is blocking or warning.
 
-```yaml
-implementation_sequence:
-  1_add_static_checker:
-    status: implemented_initial_subset
-    command: scripts/asgk.py target-install-check
-    behavior: read-only
-  2_add_read_only_planner:
-    status: implemented_standalone_script
-    command: scripts/target_install_plan.py
-    behavior: read-only
-    future_wrapper: scripts/asgk.py target-install-plan
-  3_add_negative_fixtures:
-    examples:
-      - target_map_is_full_registry
-      - target_contains_ASGK_historical_evidence
-  4_add_ci_optional_job:
-    behavior: opt-in target-install validation
-  5_add_scaffold_script:
-    prerequisite: checker and planner stable
-```
+Loosening required-file, do-not-copy, license-boundary, or target-owned-state
+checks requires explicit human approval.
