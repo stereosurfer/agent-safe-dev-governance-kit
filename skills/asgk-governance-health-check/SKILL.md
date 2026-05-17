@@ -21,29 +21,16 @@ This skill reports drift. It does not fix issues unless a separate durable issue
 6. Check for release or closeout residue: merged PRs with open issues, stale
    active work, missing status refresh, or human-gated work without explicit
    approval.
-7. Classify each finding before recommending work:
-   - `current_blocker`: affects the current open PR/issue, current recovery
-     state, or current release closeout.
-   - `legacy_observation`: historical or pre-rule residue that does not mislead
-     the current recovery state.
-   - `optional_cleanup`: improvement that may reduce confusion but is not needed
-     for the current work unit.
+7. Apply `docs/control/ISSUE_HYGIENE_GATE.md` before recommending work from
+   observations.
 8. Produce a compact health report. Recommend bounded follow-up issues only for
-   `current_blocker` findings, or when a human explicitly requests a scoped
-   backfill/cleanup issue.
+   current blockers or explicit scoped backfill/cleanup.
 
 ## Health States
 
 - `healthy`: no active drift found.
-- `watch`: legacy observations, optional cleanup, or minor evidence gaps; no immediate blocker.
+- `watch`: observations or minor evidence gaps; no immediate blocker.
 - `blocked`: stale status, open satisfied issue, failed doctor, missing closing references, or unresolved human-gated residue.
-- `legacy_observation`: historical/pre-rule residue; report only unless a durable issue explicitly authorizes backfill.
-
-## Non-Generation Rule
-
-Health checks report observations. They do not create repair work from historical
-gaps. Missing closeout decision analysis for an issue closed before PR #272
-merged is `legacy_observation` or `watch`, not `blocked`.
 
 ## Exit Artifact
 

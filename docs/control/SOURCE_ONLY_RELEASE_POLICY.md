@@ -148,7 +148,7 @@ tag_release_process:
     - check git status and target commit
     - create tag only in release-execution issue
     - create GitHub release only if explicitly approved
-    - refresh docs/handoff/CURRENT_STATUS.md in the same authorized PR or create an immediate status-only closeout issue/PR when current release recovery state would otherwise be unsafe
+    - refresh docs/handoff/CURRENT_STATUS.md in the same authorized PR or create an immediate status-only closeout issue/PR only when current release recovery state would otherwise be unsafe
   forbidden_here:
     - git tag
     - gh release create
@@ -259,10 +259,8 @@ closeout comments, tags, and merge commits.
 This file keeps only the durable release rules and closeout requirements needed
 for future source-only releases.
 
-Release closeout follow-up issues are for the current release's required state.
-Historical release residue, old audit gaps, or optional cleanup are observations
-unless a release issue or separate human-scoped issue explicitly authorizes
-backfill.
+Release closeout follow-up issues are for current release state. Apply
+`docs/control/ISSUE_HYGIENE_GATE.md` before turning observations into work.
 
 ```yaml
 release_history_boundary:

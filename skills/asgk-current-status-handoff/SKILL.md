@@ -30,8 +30,7 @@ If the answer is no, do not update the file.
 3. Choose one:
    - `updated`: repo-level recovery state changed and the file will remain accurate after merge.
    - `not_applicable`: PR detail is already represented by issue/PR and next safe action is unchanged.
-   - `deferred`: status refresh is required for repo-level recovery safety but
-     cannot be safely done in the same PR.
+   - `deferred`: status refresh is required for repo-level recovery safety but cannot be safely done in the same PR.
 4. Use `updated` only when leaving the file unchanged would mislead the next session.
 5. If updating, make the content post-merge-safe; do not point active work at the PR that is about to merge.
 6. Keep active work out of `CURRENT_STATUS.md` unless it is repo-level recovery state.
@@ -56,16 +55,14 @@ deferred:
   - human gate must resolve before the next safe action can be written
 ```
 
-Do not use `deferred` for cosmetic cleanup, historical observations, or PR
-details that are already recoverable from the issue or PR. Those may be reported
-as observations, but they do not create a status-refresh follow-up unless the
-next session would otherwise take the wrong action.
+Apply `docs/control/ISSUE_HYGIENE_GATE.md` before creating status-refresh
+follow-up work from observations.
 
 ## Stop States
 
 - `blocked`: status would become self-stale after merge.
 - `not_applicable`: no status update is needed.
-- `deferred`: a bounded follow-up issue or PR is required because repo-level recovery would otherwise be unsafe.
+- `deferred`: repo-level recovery would otherwise be unsafe.
 - `post_merge_safe`: status remains accurate after merge.
 
 ## Exit Artifact
