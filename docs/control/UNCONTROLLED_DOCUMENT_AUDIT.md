@@ -14,7 +14,6 @@ audit_scope:
   candidate_docs:
     - docs/handoff/AGENT_LOG.md
     - docs/handoff/DECISIONS.md
-    - docs/control/LANE_STATUS.md
     - docs/bootstrap/12_productization_notes.md
     - docs/EVOLUTION_MODEL.md
   non_goals:
@@ -42,7 +41,6 @@ classifications:
 |---|---|---:|---|
 | `docs/handoff/AGENT_LOG.md` | `append_allowed` | medium | Add compact append boundary; prefer links to GitHub reports over copied reports. |
 | `docs/handoff/DECISIONS.md` | `durable_decision_log` | medium | Add decision-entry boundary; append concise durable decisions only. |
-| `docs/control/LANE_STATUS.md` | `current_snapshot` | high | Add overwrite-not-append boundary; keep one compact lane table. |
 | `docs/bootstrap/12_productization_notes.md` | `reference_only` | low | Add reference-only boundary; do not append roadmap/status history. |
 | `docs/EVOLUTION_MODEL.md` | `compact_policy_needed` | medium | Add maturity-snapshot boundary; update through bounded audit PRs only. |
 
@@ -61,12 +59,6 @@ This file is a durable decision log, so append is expected. The risk is not
 append itself; the risk is using it as a discussion transcript. Entries should be
 short, decision-oriented, and link to the issue or PR that contains the full
 rationale.
-
-### `docs/control/LANE_STATUS.md`
-
-This file is structurally a current snapshot. It should behave like a lane-level
-status board: overwrite rows, do not append historical lane movement. Lane
-history belongs in issues, PRs, comments, and merge commits.
 
 ### `docs/bootstrap/12_productization_notes.md`
 
@@ -93,7 +85,6 @@ progressive_disclosure:
     purpose: compact orientation
     examples:
       - docs/handoff/CURRENT_STATUS.md
-      - docs/control/LANE_STATUS.md
   second_layer:
     purpose: work-unit detail
     examples:

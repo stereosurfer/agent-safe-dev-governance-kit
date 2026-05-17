@@ -1,6 +1,6 @@
 # Failure Thresholds
 
-Stop autonomous work and notify the human when:
+Stop work and notify the human when:
 
 ```yaml
 failure_thresholds:
@@ -16,8 +16,8 @@ failure_thresholds:
 
 ## Notification conditions
 
-- lane blocked by missing context;
-- worker exceeds allowed paths;
+- current work unit is blocked by missing context;
+- changed files exceed allowed paths;
 - integration conflict requires policy decision;
 - validation cannot run;
 - issue and current status disagree;

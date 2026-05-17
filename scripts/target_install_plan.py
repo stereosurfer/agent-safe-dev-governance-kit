@@ -36,11 +36,6 @@ TEMPLATE_THEN_CUSTOMIZE = [
         "target": "docs/DOCUMENT_REGISTRY.md",
         "required_action": "Replace placeholders with target-repository document rows.",
     },
-    {
-        "source": "templates/agent_rules.template.yaml",
-        "target": "agent/agent_rules.yaml",
-        "required_action": "Review assignment levels, roles, allowed paths, and stop conditions for the target repo.",
-    },
 ]
 
 CUSTOMIZE_REQUIRED = [
@@ -65,7 +60,7 @@ CUSTOMIZE_REQUIRED = [
         "required_review": "Create a fresh target-project current snapshot; do not copy ASGK current status.",
     },
     {
-        "path": "agent/task_packet.template.yaml",
+        "path": "templates/task_packet.template.yaml",
         "required_review": "Ensure lanes, allowed paths, and validation commands match the target repo.",
     },
 ]

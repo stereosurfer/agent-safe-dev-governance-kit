@@ -19,9 +19,9 @@ writable_paths:
   - docs/
   - contracts/
   - schemas/
-  - agent/
   - scripts/
   - examples/
+  - templates/
   - .github/
 ```
 

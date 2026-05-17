@@ -66,7 +66,6 @@ storage_surfaces:
 | Agent report | GitHub comment preferred; compact repo log optional | durable or compact append | compact link only in `AGENT_LOG.md` | no | no | issue/PR number plus UTC timestamp |
 | Decision entry | `docs/handoff/DECISIONS.md` | compact append | allowed, compact only | no | no | date + decision id or issue/PR reference |
 | Current repo status | `docs/handoff/CURRENT_STATUS.md` | overwritten | allowed, compact only | no | no | single current status file |
-| Lane status | `docs/control/LANE_STATUS.md` | overwritten | allowed, compact only | no | no | single lane status table |
 | Small fixture | `examples/` or `tests/fixtures/` | version-controlled | allowed if sanitized and intentional | no | no | descriptive name, no private data |
 | Raw source capture | Artifact Root | durable if authorized | forbidden | allowed if source/input class permits | temporary copy only | `sources/<source_class>/<artifact_id>/` |
 | Prepared markdown / JSON | Artifact Root | durable if reviewed | forbidden unless fixture | allowed | temporary copy only | `prepared/<artifact_id>/` |
