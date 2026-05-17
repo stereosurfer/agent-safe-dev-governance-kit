@@ -88,7 +88,6 @@ when a changed-path list is available.
 Confirm:
 
 - [ ] Task type matches the agent level used.
-- [ ] Sub-agent use, if any, is allowed for this task type.
 - [ ] Task did not cross into a higher-risk category.
 - [ ] Any escalation or downscoping is recorded.
 
@@ -97,7 +96,6 @@ Use `docs/control/AGENT_CAPABILITY_MATRIX.md`.
 Block or request changes when:
 
 - [ ] A `fast_basic` or `standard` task performed advanced/security/policy work.
-- [ ] A sub-agent acted as final authority for a human-gated task.
 - [ ] The PR loosens policy without explicit approval.
 
 ## Step 4 — Context Budget Check

@@ -25,19 +25,8 @@ TARGET_INSTALL_REQUIRED_FILES = [
     "docs/control/MERGE_DECISION_RECORD.md",
     "docs/control/TASK_PACKET_FORMAT.md",
     "docs/control/AGENT_REPORT_FORMAT.md",
-    "agent/agent_rules.yaml",
     ".github/PULL_REQUEST_TEMPLATE.md",
     ".github/ISSUE_TEMPLATE/agent_task.yml",
-]
-TARGET_INSTALL_LEGACY_AGENT_KEYS = [
-    "require_subagent_intelligence_level",
-    "subagent_intelligence_levels",
-    "subagent_assignment_required_fields",
-]
-TARGET_INSTALL_PREFERRED_AGENT_KEYS = [
-    "require_assignment_intelligence_level",
-    "assignment_intelligence_levels",
-    "worker_assignment_required_fields",
 ]
 TARGET_INSTALL_FORBIDDEN_BLOCKING_PATHS = [
     "docs/control/HISTORICAL_ASGK_STABILIZATION_EVIDENCE.md",
@@ -189,42 +178,6 @@ def target_install_findings(root: Path) -> list[dict[str, str | bool]]:
                     "Customize docs/DOCUMENT_REGISTRY.md for the target repository.",
                     blocking=False,
                 )
-
-    agent_rules_path = repo_path(root, "agent/agent_rules.yaml")
-    if agent_rules_path.exists():
-        text = agent_rules_path.read_text(encoding="utf-8")
-        has_migration_note = "target_legacy_key_migration" in text or "legacy_key_migration" in text
-        for key in TARGET_INSTALL_LEGACY_AGENT_KEYS:
-            if key in text and not has_migration_note:
-                add_target_install_finding(
-                    findings,
-                    "FAIL",
-                    "legacy_key_guard",
-                    "agent/agent_rules.yaml",
-                    f"target agent rules contain ASGK internal compatibility key: {key}",
-                    "Use templates/agent_rules.template.yaml or add a scoped target_legacy_key_migration note.",
-                    blocking=True,
-                )
-        if not any(key in text for key in TARGET_INSTALL_PREFERRED_AGENT_KEYS):
-            add_target_install_finding(
-                findings,
-                "WARN",
-                "legacy_key_guard",
-                "agent/agent_rules.yaml",
-                "target agent rules do not contain the preferred assignment/worker keys",
-                "Review templates/agent_rules.template.yaml and use assignment_intelligence_levels / worker_assignment_required_fields.",
-                blocking=False,
-            )
-        if "status: target-project-template" in text:
-            add_target_install_finding(
-                findings,
-                "FAIL",
-                "template_derived_files",
-                "agent/agent_rules.yaml",
-                "agent rules still look like an uncustomized target-project template",
-                "Customize roles, allowed paths, and stop conditions for the target repository.",
-                blocking=True,
-            )
 
     for forbidden in TARGET_INSTALL_FORBIDDEN_BLOCKING_PATHS:
         if repo_path(root, forbidden).exists():

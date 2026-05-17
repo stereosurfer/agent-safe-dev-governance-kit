@@ -9,7 +9,7 @@ Every agent work unit must produce a report.
 
 ## Durable Source Of Truth
 
-## Architect Routing Decision
+## Task Scope
 
 ## Summary
 

@@ -152,32 +152,9 @@ A work unit is one of:
 
 - one existing PR that needs review-comment fixes;
 - one approved issue;
-- one smoke-test or validation instruction;
-- one controller/lane assignment packet.
+- one smoke-test or validation instruction.
 
 Do not start another issue after completing a PR unless a durable GitHub issue/comment explicitly instructs it.
-
-## Agent assignment and routing records
-
-Agent assignment and routing records are governance artifacts, not runtime profiles.
-
-When an issue, PR, or task packet requires an Architect Routing Decision, preserve it in durable project state:
-
-```yaml
-architect_routing_decision:
-  work_unit:
-  task_type:
-  selected_mode: solo | builder_plus_reviewer | full_cell
-  selected_roles:
-  intelligence_level: fast_basic | standard | advanced | frontier
-  reason:
-  durable_source_of_truth:
-  allowed_paths:
-  expected_output:
-  stop_condition:
-```
-
-Use the smallest capable mode and intelligence level. Do not use routing as a reason to expand scope, select a runtime-specific profile, or bypass the Generic Operating Profile.
 
 ## Required task fields
 

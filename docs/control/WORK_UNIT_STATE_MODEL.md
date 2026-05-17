@@ -4,10 +4,10 @@
 states:
   idea:
     meaning: raw concept, not executable
-  task_packet_ready:
+  scoped:
     meaning: objective, scope, paths, checks, and acceptance exist
-  agent_working:
-    meaning: assigned agent is executing the packet
+  in_progress:
+    meaning: the authorized issue or PR is being worked
   pr_open:
     meaning: repository change exists in pull request
   needs_review:
@@ -25,7 +25,7 @@ states:
 ## Transition rules
 
 - `idea` cannot go directly to `pr_open` or `merged`.
-- `task_packet_ready` requires a GitHub issue or PR for executable work when
+- `scoped` requires a GitHub issue or PR for executable work when
   GitHub is available. A task packet may refine the scope, but it cannot be the
   primary authorization for file edits.
 - `accepted` requires validation evidence.

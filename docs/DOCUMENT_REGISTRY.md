@@ -88,7 +88,6 @@ roles:
 |---|---|---|---:|---|---|
 | `templates/DOCUMENT_MAP.template.md` | template | target-project document-map router starter structure | no | adopting ASGK into another repository, target-repo document-map creation | `lane_07_docs_handoff` |
 | `templates/DOCUMENT_REGISTRY.template.md` | template | target-project document-registry starter structure | no | adopting ASGK into another repository, target-repo document-registry creation | `lane_07_docs_handoff` |
-| `templates/agent_rules.template.yaml` | template | target-project clean assignment/worker rules starter structure | no | adopting ASGK into another repository, target-repo agent-rules creation | `lane_07_docs_handoff` |
 | `templates/decision_packet.template.yaml` | template | reusable vertical-governance decision packet starting point | no | creating a decision packet for a major decision point | `lane_07_docs_handoff` |
 
 ## Source-Distributed Skills
@@ -116,14 +115,10 @@ template_scope:
   target_project_registry_template: templates/DOCUMENT_REGISTRY.template.md
   target_project_finished_router: target_repo/docs/DOCUMENT_MAP.md
   target_project_finished_registry: target_repo/docs/DOCUMENT_REGISTRY.md
-  asgk_internal_agent_rules: agent/agent_rules.yaml
-  target_project_agent_rules_template: templates/agent_rules.template.yaml
-  target_project_finished_agent_rules: target_repo/agent/agent_rules.yaml
   decision_packet_template: templates/decision_packet.template.yaml
 rule:
   - do not copy ASGK's repo-local router or registry unchanged into a target project
-  - do not copy ASGK's internal agent_rules.yaml as the target default
-  - target repositories must customize their own router, registry, and agent rules
+  - target repositories must customize their own router and registry
   - decision packets are used for major decision points and must reference durable sources of truth
 ```
 
@@ -172,12 +167,10 @@ usage. They are optimization layers, not the governance core.
 |---|---|---|---:|---|---|
 | `docs/control/CONTROL_LAYER_V0.md` | canonical | durable control plane, work-unit states, operating loop, anti-drift rules | no | control-layer changes, onboarding, governance review | `lane_00_controller` |
 | `docs/control/WORK_UNIT_STATE_MODEL.md` | canonical | valid work-unit states and transitions | no | issue/PR state changes, workflow design | `lane_00_controller` |
-| `docs/control/AUTONOMOUS_RUNBOOK.md` | canonical | controller/worker duties, lane integration loop | no | multi-agent or multi-lane runs | `lane_00_controller` |
-| `docs/control/LANE_STATUS.md` | status | lane queue, owner, blocker, next action | no | multi-lane coordination | `lane_00_controller` |
 | `docs/control/ISSUE_HYGIENE_GATE.md` | canonical | stale issue detection and issue-start gate | no | before selecting or closing issues | `lane_00_controller` |
-| `docs/control/FAILURE_THRESHOLDS.md` | canonical | stop thresholds and notification conditions | no | repeated failures, autonomous run blockers | `lane_00_controller` |
+| `docs/control/FAILURE_THRESHOLDS.md` | canonical | stop thresholds and notification conditions | no | repeated failures, blockers | `lane_00_controller` |
 | `docs/control/CONTEXT_BUDGET_POLICY.md` | canonical | context read sets, handoff recovery read set, context expansion rules | no | context selection, handoff recovery, token-budget review | `lane_00_controller` |
-| `docs/control/AGENT_CAPABILITY_MATRIX.md` | canonical | task risk classification, minimum assignment intelligence level, worker-assignment eligibility, low-risk merge compatibility, human-gate requirement, escalation/downscope decisions, context read-set binding | no | task risk review, agent assignment, escalation, downscoping, merge eligibility review | `lane_00_controller` |
+| `docs/control/AGENT_CAPABILITY_MATRIX.md` | canonical | task risk classification, minimum intelligence level, low-risk merge compatibility, human-gate requirement, escalation/downscope decisions, context read-set binding | no | task risk review, escalation, downscoping, merge eligibility review | `lane_00_controller` |
 | `docs/control/VALIDATION_STRATEGY.md` | canonical | validation layer responsibilities, blocking vs warning, negative test targets, fail-closed policy-gate validation | no | validation/tooling work, policy-gate checker review | `lane_06_ci_github` |
 | `docs/control/PR_REVIEW_CHECKLIST.md` | canonical | repeatable PR review sequence, current-status freshness review, and outcomes | no | PR review, current-status impact review, merge readiness | `lane_00_controller` |
 | `docs/control/NEGATIVE_TEST_PLAN.md` | canonical | negative test matrix, expected outcomes, implementation phases | no | negative fixture or validator work | `lane_00_controller` |
@@ -195,8 +188,7 @@ Capability matrix boundary rule:
 ```yaml
 agent_capability_matrix_binding_for:
   - task risk classification
-  - minimum assignment intelligence level
-  - worker-assignment eligibility
+  - minimum intelligence level
   - low-risk merge compatibility
   - human-gate requirement
   - escalation and downscope decisions
@@ -276,32 +268,27 @@ storage_specialized_policies:
 | `docs/bootstrap/16_downstream_promotion_matrix.md` | optional module | downstream artifact eligibility | no | artifact promotion or output eligibility work | `lane_02_schema_contracts` |
 | `docs/bootstrap/17_readiness_audit_policy.md` | canonical | readiness audit before output, API, import, publication, or external calls | no | API/model/provider/output readiness changes | `lane_05_security` |
 
-## Task Packet, Agent, And Template Documents
+## Task Packet And Report Documents
 
 | Document | Role | Canonical for | Read by default | Read when | Owned by lane |
 |---|---|---|---:|---|---|
 | `docs/control/TASK_PACKET_FORMAT.md` | canonical | human-readable task packet requirements | no | creating or validating task packets | `lane_00_controller` |
 | `schemas/task_packet.schema.json` | schema | machine-readable task packet structure | no | task packet validation changes | `lane_02_schema_contracts` |
-| `agent/task_packet.template.yaml` | template | reusable task packet starting point | no | creating repo task packets, `asgk.py task-packet-check` | `lane_00_controller` |
+| `templates/task_packet.template.yaml` | template | reusable task packet starting point | no | creating repo task packets, `asgk.py task-packet-check` | `lane_00_controller` |
 | `.github/ISSUE_TEMPLATE/agent_task.yml` | template | GitHub issue capture form | no | issue-template changes | `lane_06_ci_github` |
 | `examples/task_packet.example.yaml` | example | sample task packet | no | onboarding, task packet examples | `lane_07_docs_handoff` |
 | `docs/control/AGENT_REPORT_FORMAT.md` | canonical | required agent report sections | no | PR handoff/reporting work | `lane_00_controller` |
 | `schemas/agent_report.schema.json` | schema | machine-readable report fields | no | report validation work | `lane_02_schema_contracts` |
 | `examples/agent_report.example.md` | example | sample report | no | onboarding, report examples | `lane_07_docs_handoff` |
-| `agent/agent_rules.yaml` | canonical | ASGK internal compatibility roles, intelligence levels, legacy compatibility keys, stop conditions | no | ASGK internal agent-rule compatibility work only; target projects should use `templates/agent_rules.template.yaml` | `lane_00_controller` |
-| `agent/workflow.yaml` | canonical | workflow gate sequence | no | workflow automation changes | `lane_00_controller` |
-| `agent/task_packets/*.yaml` | template/status | lane-specific assignment packets | no | lane work or autonomous runs | specific lane |
 
-Canonical ownership rule for task packets and agent rules:
+Canonical ownership rule for task packets:
 
 ```yaml
 task_packet_canonical_human_spec: docs/control/TASK_PACKET_FORMAT.md
 task_packet_canonical_schema: schemas/task_packet.schema.json
-task_packet_machine_template: agent/task_packet.template.yaml
+task_packet_machine_template: templates/task_packet.template.yaml
 task_packet_github_surface: .github/ISSUE_TEMPLATE/agent_task.yml
 task_packet_example: examples/task_packet.example.yaml
-asgk_internal_agent_rules: agent/agent_rules.yaml
-target_project_agent_rules_template: templates/agent_rules.template.yaml
 decision_packet_template: templates/decision_packet.template.yaml
 ```
 

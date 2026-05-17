@@ -47,7 +47,6 @@ required_target_files:
   - docs/control/MERGE_DECISION_RECORD.md
   - docs/control/TASK_PACKET_FORMAT.md
   - docs/control/AGENT_REPORT_FORMAT.md
-  - agent/agent_rules.yaml
   - .github/PULL_REQUEST_TEMPLATE.md
   - .github/ISSUE_TEMPLATE/agent_task.yml
 ```
@@ -111,12 +110,6 @@ template_derived_files:
       - full target repository registry
       - placeholder rows removed
       - only target repository documents listed
-  - target: agent/agent_rules.yaml
-    source_template: templates/agent_rules.template.yaml
-    required_properties:
-      - clean assignment and worker terminology
-      - target repository roles and allowed paths reviewed
-      - target repository stop conditions reviewed
 ```
 
 ## Customize-required Files
@@ -131,7 +124,7 @@ customize_required_files:
   - docs/bootstrap/02_storage_roots.md
   - docs/bootstrap/03_tech_stack.md
   - docs/handoff/CURRENT_STATUS.md
-  - agent/task_packet.template.yaml
+  - templates/task_packet.template.yaml
 ```
 
 Required checks:
@@ -180,28 +173,7 @@ forbidden_as_target_authority:
   - ASGK examples/negative/*
   - ASGK profiles/*
   - ASGK docs/adapters/*
-  - ASGK internal agent/agent_rules.yaml compatibility keys as target defaults
 ```
-
-## Legacy-key Guard
-
-Target repositories should not use ASGK internal compatibility key names as their
-default agent-rule vocabulary.
-
-```yaml
-forbidden_as_target_defaults:
-  - require_subagent_intelligence_level
-  - subagent_intelligence_levels
-  - subagent_assignment_required_fields
-
-preferred_target_keys:
-  - require_assignment_intelligence_level
-  - assignment_intelligence_levels
-  - worker_assignment_required_fields
-```
-
-Exception: a target repository may preserve legacy keys only through a dedicated
-migration issue that records why compatibility is required.
 
 ## Deferred-v2 Guard
 
@@ -228,7 +200,6 @@ target_install_acceptance:
   - license or notice handling for ASGK-derived material is visible or explicitly documented
   - docs/DOCUMENT_MAP.md is a compact router
   - docs/DOCUMENT_REGISTRY.md is target-specific
-  - agent/agent_rules.yaml uses clean target terminology
   - customize-required files are target-specific
   - forbidden ASGK repo-local files are not target authority
   - deferred-v2 surfaces are not installed by default

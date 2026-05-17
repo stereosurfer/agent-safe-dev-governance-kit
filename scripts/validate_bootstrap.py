@@ -14,18 +14,18 @@ REQUIRED_FILES = [
  'README.md','AGENTS.md',
  'docs/bootstrap/00_project_brief.md','docs/bootstrap/01_physical_boundaries.md','docs/bootstrap/02_storage_roots.md','docs/bootstrap/03_tech_stack.md','docs/bootstrap/04_file_structure.md','docs/bootstrap/05_context_budget.md','docs/bootstrap/06_naming_versioning.md','docs/bootstrap/07_contract_first.md','docs/bootstrap/08_acceptance_criteria.md','docs/bootstrap/09_safety_checks.md','docs/bootstrap/10_roadmap.md','docs/bootstrap/11_auto_merge_policy.md','docs/bootstrap/12_productization_notes.md','docs/bootstrap/13_artifact_promotion_policy.md','docs/bootstrap/14_execution_lanes.md','docs/bootstrap/15_source_or_input_class_matrix.md','docs/bootstrap/16_downstream_promotion_matrix.md','docs/bootstrap/17_readiness_audit_policy.md',
  'docs/architecture/BOUNDARY_SPLIT.md','docs/architecture/EXTERNALIZED_RESPONSIBILITY_BOUNDARY.md','docs/architecture/STORAGE_PROFILE.md','docs/architecture/WORKSPACE_LOCK_POLICY.md','docs/architecture/CACHE_AND_STATE_POLICY.md','docs/architecture/RUNTIME_ARTIFACT_POLICY.md',
- 'docs/control/CONTROL_LAYER_V0.md','docs/control/WORK_UNIT_STATE_MODEL.md','docs/control/AUTONOMOUS_RUNBOOK.md','docs/control/LANE_STATUS.md','docs/control/LOW_RISK_AUTONOMOUS_MERGE_POLICY.md','docs/control/HUMAN_GATED_OPERATIONS.md','docs/control/ISSUE_HYGIENE_GATE.md','docs/control/TASK_PACKET_FORMAT.md','docs/control/AGENT_REPORT_FORMAT.md','docs/control/MERGE_DECISION_RECORD.md','docs/control/FAILURE_THRESHOLDS.md','docs/control/PHASE_0_ACCEPTANCE_CHECKLIST.md',
+ 'docs/control/CONTROL_LAYER_V0.md','docs/control/WORK_UNIT_STATE_MODEL.md','docs/control/LOW_RISK_AUTONOMOUS_MERGE_POLICY.md','docs/control/HUMAN_GATED_OPERATIONS.md','docs/control/ISSUE_HYGIENE_GATE.md','docs/control/TASK_PACKET_FORMAT.md','docs/control/AGENT_REPORT_FORMAT.md','docs/control/MERGE_DECISION_RECORD.md','docs/control/FAILURE_THRESHOLDS.md','docs/control/PHASE_0_ACCEPTANCE_CHECKLIST.md',
  'docs/handoff/CURRENT_STATUS.md','docs/handoff/DECISIONS.md','docs/handoff/AGENT_LOG.md',
- 'agent/agent_rules.yaml','agent/workflow.yaml','agent/task_packet.template.yaml',
+ 'templates/task_packet.template.yaml',
  'contracts/storage_profile.contract.yaml','contracts/artifact_contract.yaml','contracts/validation_result.contract.yaml','contracts/promotion_gate.contract.yaml','contracts/execution_lane.contract.yaml',
- 'schemas/validation_result.schema.json','schemas/storage_profile.schema.json','schemas/task_packet.schema.json','schemas/merge_decision.schema.json','schemas/promotion_gate.schema.json','schemas/execution_lane.schema.json','schemas/agent_assignment.schema.json','schemas/agent_report.schema.json',
+ 'schemas/validation_result.schema.json','schemas/storage_profile.schema.json','schemas/task_packet.schema.json','schemas/merge_decision.schema.json','schemas/promotion_gate.schema.json','schemas/execution_lane.schema.json','schemas/agent_report.schema.json',
  'scripts/check_project.py','scripts/validate_bootstrap.py','scripts/governance_hygiene.py',
  '.github/ISSUE_TEMPLATE/agent_task.yml','.github/ISSUE_TEMPLATE/workbench_task.md','.github/PULL_REQUEST_TEMPLATE.md','.github/workflows/bootstrap-validation.yml',
  'examples/storage_profile.local.json','examples/task_packet.example.yaml','examples/merge_decision.example.json','examples/promotion_gate.example.json','examples/execution_lane.example.json','examples/agent_report.example.md'
 ]
 
 REQUIRED_TERMS = {
- 'AGENTS.md':['see chat','Issue Hygiene Gate','Architect Routing Decision','Stop conditions','Low-risk merge boundary'],
+ 'AGENTS.md':['see chat','Issue Hygiene Gate','Stop conditions','Low-risk merge boundary'],
  'docs/bootstrap/01_physical_boundaries.md':['writable_paths','protected_paths','forbidden_actions','Artifact Root','Local State Root'],
  'docs/bootstrap/02_storage_roots.md':['code_repo','artifact_root','local_state_root','app_managed_drive_api','local_only'],
  'docs/bootstrap/11_auto_merge_policy.md':['auto_merge_allowed_when','auto_merge_forbidden_when','Merge Decision Record','durable source of truth'],
@@ -34,7 +34,6 @@ REQUIRED_TERMS = {
  'docs/control/CONTROL_LAYER_V0.md':['Durable Control Surfaces','Work Unit State Model','Task Packet Format','Agent Report Format','Anti-drift Rules','Human Gates','Definition of Done'],
  'docs/control/LOW_RISK_AUTONOMOUS_MERGE_POLICY.md':['Necessary operations allowed','Prohibited without human approval','Low-risk merge gates','After merge'],
  'docs/architecture/EXTERNALIZED_RESPONSIBILITY_BOUNDARY.md':['External Preparation App','Closed gates','raw PDF ingestion','OCR','prepared input'],
- 'agent/agent_rules.yaml':['fast_basic','standard','advanced','frontier','require_durable_source_of_truth','require_plan_checklist_acceptance_sheet'],
 }
 
 CONTROL_REQUIRED_SECTIONS = ['Purpose','Durable Control Surfaces','Work Unit State Model','Task Packet Format','Agent Report Format','Operating Loop','Anti-drift Rules','Human Gates','Definition of Done']
@@ -64,15 +63,10 @@ def check_json(root):
             fail(f'{p.relative_to(root)} invalid JSON: {e}')
 
 def check_yaml_like_fields(root):
-    packet = read(root,'agent/task_packet.template.yaml')
+    packet = read(root,'templates/task_packet.template.yaml')
     for field in TASK_PACKET_FIELDS:
         if not re.search(rf'^{re.escape(field)}\s*:', packet, re.M):
-            fail(f'agent/task_packet.template.yaml missing field: {field}')
-    for p in (root/'agent/task_packets').glob('*.yaml'):
-        text = p.read_text(encoding='utf-8')
-        for field in ['lane','intelligence_level','durable_source_of_truth','objective','allowed_paths','expected_output','acceptance_sheet','stop_conditions']:
-            if not re.search(rf'^{re.escape(field)}\s*:', text, re.M):
-                fail(f'{p.relative_to(root)} missing field: {field}')
+            fail(f'templates/task_packet.template.yaml missing field: {field}')
 
 def check_templates(root):
     pr = read(root,'.github/PULL_REQUEST_TEMPLATE.md')

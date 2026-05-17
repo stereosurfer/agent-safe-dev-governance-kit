@@ -65,7 +65,6 @@ validation_categories:
   template_derived_files: blocking_or_warning
   customize_required_files: planned
   forbidden_repo_local_surfaces: blocking_or_warning
-  legacy_key_guard: blocking_or_warning
   deferred_v2_guard: warning_or_blocking
   document_navigation_split: blocking
   current_status_freshness: planned
@@ -145,7 +144,6 @@ required_file_checks:
     - docs/control/MERGE_DECISION_RECORD.md
     - docs/control/TASK_PACKET_FORMAT.md
     - docs/control/AGENT_REPORT_FORMAT.md
-    - agent/agent_rules.yaml
     - .github/PULL_REQUEST_TEMPLATE.md
     - .github/ISSUE_TEMPLATE/agent_task.yml
 ```
@@ -190,11 +188,6 @@ template_derived_checks:
       - "<lane>"
       - "<path>"
       - "<topic>"
-  agent_agent_rules_yaml:
-    block_if_contains:
-      - "status: target-project-template"
-    warn_if_contains:
-      - "Customize roles, allowed paths, and stop conditions"
 ```
 
 ## Customize-required Checks
@@ -215,7 +208,7 @@ customize_required_checks:
       - "ASGK repository"
       - "ASGK historical evidence"
       - "archived ASGK readiness"
-  agent_task_packet_template_yaml:
+  templates_task_packet_template_yaml:
     warn_if_contains:
       - "<lane>"
       - "<allowed_paths>"
@@ -244,31 +237,6 @@ forbidden_surface_checks:
 
 A target project may intentionally keep one of these only through a scoped
 adaptation issue and a documented reason.
-
-## Legacy-key Guard Checks
-
-The validator detects ASGK internal compatibility keys in target agent rules.
-
-```yaml
-legacy_key_checks:
-  agent_agent_rules_yaml:
-    block_if_contains_without_migration_note:
-      - require_subagent_intelligence_level
-      - subagent_intelligence_levels
-      - subagent_assignment_required_fields
-    accept_if_contains:
-      - require_assignment_intelligence_level
-      - assignment_intelligence_levels
-      - worker_assignment_required_fields
-```
-
-Accepted migration-note markers for intentional compatibility:
-
-```yaml
-accepted_migration_note_markers:
-  - target_legacy_key_migration
-  - legacy_key_migration
-```
 
 ## Deferred-v2 Checks
 
@@ -384,7 +352,6 @@ implementation_sequence:
   3_add_negative_fixtures:
     examples:
       - target_map_is_full_registry
-      - target_agent_rules_uses_legacy_subagent_keys
       - target_contains_ASGK_historical_evidence
   4_add_ci_optional_job:
     behavior: opt-in target-install validation

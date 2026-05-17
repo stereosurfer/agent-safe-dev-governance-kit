@@ -77,7 +77,6 @@ default_startup_context:
     - all schemas/*
     - all contracts/*
     - all examples/*
-    - all agent/task_packets/*
     - docs/DOCUMENT_REGISTRY.md
     - docs/INSTALL_SURFACE.md
     - profiles/*
@@ -338,28 +337,27 @@ merge_decision:
     - unresolved_review_comments
 ```
 
-### `multi_agent_or_lane`
+### `parallel_issue_or_pr`
 
-Use for controller/worker coordination, lane packets, autonomous batches, or
-parallel work.
+Use only when coordinating multiple already-scoped GitHub issues or PRs. This
+read set is for dependency awareness, not task assignment.
 
 ```yaml
-multi_agent_or_lane:
+parallel_issue_or_pr:
   read:
     - AGENTS.md
-    - docs/control/AUTONOMOUS_RUNBOOK.md
-    - docs/control/LANE_STATUS.md
     - current GitHub issue or PR
-    - relevant agent/task_packets/*.yaml
+    - related issue or PR metadata when there is a declared dependency
   optional_read:
     - docs/control/FAILURE_THRESHOLDS.md
     - docs/control/WORK_UNIT_STATE_MODEL.md
-  max_initial_documents: 8
+    - changed file list for related open PRs
+  max_initial_documents: 5 plus related metadata
   stop_if:
-    - lane_write_scope_overlap
-    - durable_packet_missing
+    - issue_or_pr_dependency_unclear
+    - allowed_path_overlap_without_authorization
     - failure_threshold_reached
-    - controller_state_unclear
+    - current_work_unit_unclear
 ```
 
 ### `promotion_or_output_readiness`
@@ -451,7 +449,7 @@ install_surface_task:
     - docs/INSTALL_SURFACE.md
     - docs/QUICKSTART.md
     - templates/DOCUMENT_MAP.template.md
-    - templates/agent_rules.template.yaml
+    - templates/task_packet.template.yaml
     - docs/DOCUMENT_MAP.md
 
 decision_point_task:
@@ -488,12 +486,11 @@ merge_decision_task:
     - docs/control/HUMAN_GATED_OPERATIONS.md
     - docs/control/MERGE_DECISION_RECORD.md
 
-multi_agent_or_lane_task:
+parallel_issue_or_pr_task:
   read:
     - AGENTS.md
-    - docs/control/AUTONOMOUS_RUNBOOK.md
-    - docs/control/LANE_STATUS.md
-    - relevant agent/task_packets/*.yaml
+    - current issue or PR
+    - related issue or PR metadata when there is a declared dependency
 
 promotion_or_output_readiness_task:
   read:

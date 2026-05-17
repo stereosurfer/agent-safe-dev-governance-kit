@@ -108,7 +108,6 @@ never_overwrite:
   - docs/bootstrap/01_physical_boundaries.md
   - docs/bootstrap/02_storage_roots.md
   - docs/bootstrap/03_tech_stack.md
-  - agent/agent_rules.yaml unless created from target template in a dedicated issue
   - target repository LICENSE without explicit license decision
 ```
 

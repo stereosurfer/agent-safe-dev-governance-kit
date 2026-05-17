@@ -127,13 +127,11 @@ usage. They are optimization layers, not the governance core.
 target_project_rule:
   router_template: templates/DOCUMENT_MAP.template.md
   registry_template: templates/DOCUMENT_REGISTRY.template.md
-  agent_rules_template: templates/agent_rules.template.yaml
   do_not_copy_as_is:
     - docs/DOCUMENT_MAP.md
     - docs/DOCUMENT_REGISTRY.md
     - docs/control/HISTORICAL_ASGK_READINESS_EVIDENCE.md
     - docs/control/HISTORICAL_ASGK_STABILIZATION_EVIDENCE.md
-    - agent/agent_rules.yaml
 ```
 
 Use `docs/INSTALL_SURFACE.md` for the complete copy/template/customize/do-not-copy

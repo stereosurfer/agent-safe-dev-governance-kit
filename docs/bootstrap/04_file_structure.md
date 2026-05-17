@@ -8,13 +8,12 @@ docs/
   architecture/
   control/
   handoff/
-agent/
-  task_packets/
 contracts/
 schemas/
 scripts/
 tests/
 examples/
+templates/
 .github/
 ```
 

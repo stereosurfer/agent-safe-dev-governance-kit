@@ -4,7 +4,7 @@ import sys
 
 REQUIRED_DIRS = [
     'docs/bootstrap','docs/architecture','docs/control','docs/handoff',
-    'agent','agent/task_packets','contracts','schemas','scripts','examples','.github'
+    'contracts','schemas','scripts','examples','templates','.github'
 ]
 
 def main():

@@ -213,9 +213,6 @@ template_then_customize:
   - source: templates/DOCUMENT_REGISTRY.template.md
     target: docs/DOCUMENT_REGISTRY.md
     required_action: "Replace placeholders with target-repository document rows."
-  - source: templates/agent_rules.template.yaml
-    target: agent/agent_rules.yaml
-    required_action: "Review assignment levels, roles, allowed paths, and stop conditions for the target repo."
 ```
 
 ## Customize Required
@@ -230,7 +227,7 @@ customize_required:
   - docs/bootstrap/02_storage_roots.md
   - docs/bootstrap/03_tech_stack.md
   - docs/handoff/CURRENT_STATUS.md
-  - agent/task_packet.template.yaml
+  - templates/task_packet.template.yaml
 ```
 
 Required customization:
@@ -278,26 +275,6 @@ reasons:
   profiles_and_adapters: "v2.0 deferred runtime-specific optimization surfaces."
 ```
 
-## Internal Compatibility Files
-
-ASGK's internal `agent/agent_rules.yaml` contains compatibility keys such as
-`subagent_intelligence_levels`. These keys are retained in the ASGK repository to
-avoid breaking existing validation and examples.
-
-Do not use those legacy key names as the target-project default. Use
-`templates/agent_rules.template.yaml` instead.
-
-```yaml
-legacy_internal_keys:
-  - require_subagent_intelligence_level
-  - subagent_intelligence_levels
-  - subagent_assignment_required_fields
-preferred_target_template_keys:
-  - require_assignment_intelligence_level
-  - assignment_intelligence_levels
-  - worker_assignment_required_fields
-```
-
 ## Deferred V2 Surfaces
 
 Runtime-specific adapters and profiles are not part of the v1.x target-project
@@ -328,7 +305,6 @@ target_adoption_checklist_summary:
   - AGENTS.md exists and points to target repo state, not chat memory.
   - docs/DOCUMENT_MAP.md was generated from templates/DOCUMENT_MAP.template.md and kept as a compact router.
   - docs/DOCUMENT_REGISTRY.md was generated from templates/DOCUMENT_REGISTRY.template.md and customized.
-  - agent/agent_rules.yaml was generated from templates/agent_rules.template.yaml or reviewed for clean assignment terminology.
   - docs/handoff/CURRENT_STATUS.md is a fresh target snapshot.
   - allowed paths and protected paths match the target repo.
   - PR and issue templates exist.

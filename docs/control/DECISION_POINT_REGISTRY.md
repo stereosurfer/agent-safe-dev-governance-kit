@@ -129,7 +129,7 @@ common_fields:
 ```yaml
 relationships:
   agent_capability_matrix:
-    role: supplies minimum level, worker eligibility, low-risk merge compatibility, and human-gate relationship
+    role: supplies minimum level, low-risk merge compatibility, and human-gate relationship
   context_budget_policy:
     role: supplies read set and context expansion rules for decision-point work
   document_registry:

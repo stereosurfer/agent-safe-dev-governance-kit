@@ -4,10 +4,10 @@
 TASK-000
 
 ## Durable Source Of Truth
-agent/task_packet.template.yaml
+GitHub issue #000
 
-## Architect Routing Decision
-solo / frontier / governance
+## Task Scope
+Issue-backed governance update inside allowed paths.
 
 ## Summary
 Updated governance scaffold.
