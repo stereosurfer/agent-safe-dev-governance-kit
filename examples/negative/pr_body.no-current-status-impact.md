@@ -9,7 +9,7 @@ negative_case:
 
 ## Summary
 
-This PR body intentionally omits the required `## Current Status Impact` section.
+Expected failure: missing `## Current Status Impact`.
 
 ## Task Reference
 
@@ -21,19 +21,19 @@ Refs #000
 
 ## Validation
 
-Not relevant for this negative fixture.
+Expected failure fixture.
 
 ## Evidence Of Completion
 
-This is a bad example.
+Expected failure fixture.
 
 ## Scope Boundaries
 
-This is a bad example.
+Expected failure fixture.
 
 ## Runtime Output Status
 
-This is a bad example.
+No runtime outputs.
 
 ## Merge Decision
 
@@ -58,8 +58,8 @@ merge_decision:
 
 ## Known Gaps
 
-Missing Current Status Impact should block local PR-body preflight.
+Missing Current Status Impact should block PR-body preflight.
 
 ## Handoff Report
 
-This is a bad example.
+Expected failure fixture.

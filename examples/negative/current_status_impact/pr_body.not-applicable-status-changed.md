@@ -1,7 +1,3 @@
-## Summary
-
-Negative fixture for a current-status update marked not applicable.
-
 ## Current Status Impact
 
 ```yaml

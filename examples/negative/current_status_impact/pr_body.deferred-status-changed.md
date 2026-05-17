@@ -1,7 +1,3 @@
-## Summary
-
-Negative fixture for a deferred current-status decision that still changes the file.
-
 ## Current Status Impact
 
 ```yaml

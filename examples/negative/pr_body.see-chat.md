@@ -9,13 +9,11 @@ negative_case:
 
 ## Summary
 
-This PR body intentionally uses forbidden chat-only authority language.
+Expected failure: PR body uses forbidden chat-only authority.
 
 ## Task Reference
 
-Refs #000
-
-Durable source of truth: see chat
+Durable source of truth: see chat.
 
 ## Changed Files
 
@@ -23,15 +21,26 @@ Durable source of truth: see chat
 
 ## Validation
 
-Not relevant for this negative fixture.
+Expected failure fixture.
 
 ## Evidence Of Completion
 
-This is a bad example.
+Expected failure fixture.
 
 ## Scope Boundaries
 
-This is a bad example.
+Expected failure fixture.
+
+## Current Status Impact
+
+```yaml
+current_status_impact:
+  status: not_applicable
+  reason: "negative fixture"
+  current_status_updated_in_this_pr: false
+  post_merge_safe: not_applicable
+  follow_up_issue: none
+```
 
 ## Runtime Output Status
 
@@ -60,8 +69,8 @@ merge_decision:
 
 ## Known Gaps
 
-This should be blocked.
+Chat-only authority should block PR-body preflight.
 
 ## Handoff Report
 
-This should be blocked.
+Expected failure fixture.

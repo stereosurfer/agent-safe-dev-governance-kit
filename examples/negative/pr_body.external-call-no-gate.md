@@ -9,32 +9,26 @@ negative_case:
 
 ## Summary
 
-This bad PR example claims to enable a live API provider lane without a durable
-human-gate approval record.
+Expected human gate: live API/provider lane without approval evidence.
 
 ## Task Reference
 
 Refs #000
 
-## Changed Files
-
-- docs/control/EXTERNAL_CALL_POLICY.md
-
-## Validation
-
-Not relevant for this negative fixture.
-
-## Evidence Of Completion
-
-This is a bad example.
-
 ## Scope Boundaries
 
 This PR opens a live API lane but does not include a human approval record.
 
-## Runtime Output Status
+## Current Status Impact
 
-No runtime artifacts.
+```yaml
+current_status_impact:
+  status: not_applicable
+  reason: "negative fixture"
+  current_status_updated_in_this_pr: false
+  post_merge_safe: not_applicable
+  follow_up_issue: none
+```
 
 ## Merge Decision
 
@@ -56,10 +50,6 @@ merge_decision:
   result: merge_allowed
   reason: "bad example: should be human_gated, not merge_allowed"
 ```
-
-## Known Gaps
-
-Missing human gate.
 
 ## Handoff Report
 

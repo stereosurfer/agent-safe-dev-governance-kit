@@ -1,30 +1,10 @@
-## Summary
-
-Negative fixture: missing Current Status Impact section.
-
 ## Task Reference
 
 Issue #000.
 
-## Changed Files
-
-- docs/example.md
-
-## Validation
-
-Not relevant; this is an expected-failure fixture.
-
-## Evidence Of Completion
-
-- Fixture intentionally omits Current Status Impact.
-
 ## Scope Boundaries
 
-Allowed-path test surface only.
-
-## Runtime Output Status
-
-No runtime outputs.
+Expected failure: missing Current Status Impact.
 
 ## Merge Decision
 
@@ -47,16 +27,6 @@ merge_decision:
   reason: "Expected failure fixture."
 ```
 
-## Known Gaps
-
-This fixture is intentionally invalid.
-
 ## Handoff Report
 
-```yaml
-handoff:
-  branch: test
-  issue: "#000"
-  validation_status: expected_failure
-  next_safe_action: "Run policy_gate_check.py and expect failure."
-```
+Expected failure fixture.
