@@ -1,27 +1,3 @@
-## Summary
-
-Negative fixture for a self-staling current-status update.
-
-## Task Reference
-
-Refs #132.
-
-## Changed Files
-
-- `docs/handoff/CURRENT_STATUS.md`
-
-## Validation
-
-Expected failure fixture.
-
-## Evidence Of Completion
-
-Expected failure fixture.
-
-## Scope Boundaries
-
-Expected failure fixture.
-
 ## Current Status Impact
 
 ```yaml
@@ -64,4 +40,4 @@ Expected failure fixture.
 
 ## Handoff Report
 
-Expected failure fixture.
+Expected failure: updated current status is not post-merge safe.

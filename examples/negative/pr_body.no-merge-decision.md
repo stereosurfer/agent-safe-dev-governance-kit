@@ -9,7 +9,7 @@ negative_case:
 
 ## Summary
 
-This PR body intentionally omits the required `## Merge Decision` section.
+Expected failure: missing `## Merge Decision`.
 
 ## Task Reference
 
@@ -21,24 +21,35 @@ Refs #000
 
 ## Validation
 
-Not relevant for this negative fixture.
+Expected failure fixture.
 
 ## Evidence Of Completion
 
-This is a bad example.
+Expected failure fixture.
 
 ## Scope Boundaries
 
-This is a bad example.
+Expected failure fixture.
+
+## Current Status Impact
+
+```yaml
+current_status_impact:
+  status: not_applicable
+  reason: "negative fixture"
+  current_status_updated_in_this_pr: false
+  post_merge_safe: not_applicable
+  follow_up_issue: none
+```
 
 ## Runtime Output Status
 
-This is a bad example.
+No runtime outputs.
 
 ## Known Gaps
 
-Missing Merge Decision Record should block merge.
+Missing Merge Decision Record should block PR-body preflight.
 
 ## Handoff Report
 
-This is a bad example.
+Expected failure fixture.

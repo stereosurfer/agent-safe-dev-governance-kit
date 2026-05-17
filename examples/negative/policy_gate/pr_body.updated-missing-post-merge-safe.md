@@ -4,7 +4,7 @@ Refs #132.
 
 ## Scope Boundaries
 
-Current-status-only negative fixture.
+Expected failure: `status: updated` omits `post_merge_safe`.
 
 ## Current Status Impact
 
