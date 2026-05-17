@@ -1,6 +1,0 @@
-{
-  "pull_request": {
-    "number": 150,
-    "body": "## Task Reference\nissue: #150\n\n## Scope Boundaries\nallowed_paths_checked: true\n\n## Current Status Impact\nstatus: not_applicable\nreason: fixture proves policy-gate event extraction only.\ncurrent_status_updated_in_this_pr: false\npost_merge_safe: not_applicable\nfollow_up_issue: none\n\n## Merge Decision\nissue: #150\nlane: validation_tooling\nintelligence_level: advanced\ndurable_source_of_truth: issue #150\nchecks_passed: true\nallowed_paths_checked: true\nexpected_output_checked: true\ncontracts_checked: not_applicable\nschemas_checked: not_applicable\nstorage_boundary: clean\nruntime_artifact_boundary: clean\nsafety_review: complete\nhuman_gates_checked: true\nresult: merge_allowed\nreason: fixture includes complete mechanically checkable fields.\n\n## Handoff Report\nnext_safe_action: none; fixture only.\n"
-  }
-}
