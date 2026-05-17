@@ -26,7 +26,7 @@ progressive_disclosure_model:
     purpose: complete repo-local document registry and canonical ownership table
   read_sets:
     path: docs/control/CONTEXT_BUDGET_POLICY.md
-    purpose: context read sets, task-type reading guide, and expansion rules
+    purpose: context read sets, expansion rules, and context reporting
   install_surface:
     path: docs/INSTALL_SURFACE.md
     purpose: target-project install copy/template/customize/do-not-copy boundary
@@ -59,7 +59,7 @@ It must not contain:
 ```yaml
 document_map_must_not_contain:
   - full document registry tables
-  - complete task-type reading guide
+  - complete context read-set catalog
   - install-surface checklist details
   - historical audit records
   - detailed readiness or stabilization plans
@@ -147,7 +147,7 @@ Target repositories must not copy ASGK's internal `docs/DOCUMENT_MAP.md` or
 
 1. Add new document rows to `docs/DOCUMENT_REGISTRY.md`, not the router, unless
    the row is part of the default startup set.
-2. Add new task-type read sets to `docs/control/CONTEXT_BUDGET_POLICY.md`.
+2. Add new context read-set definitions to `docs/control/CONTEXT_BUDGET_POLICY.md`.
 3. Add new install/copy/template boundaries to `docs/INSTALL_SURFACE.md`.
 4. Keep `docs/DOCUMENT_MAP.md` small enough to read as a routing document.
 5. If a summary document repeats canonical policy text, replace the repeated text
@@ -163,6 +163,6 @@ Target repositories must not copy ASGK's internal `docs/DOCUMENT_MAP.md` or
 ```yaml
 migration_status:
   registry_tables_moved_to_DOCUMENT_REGISTRY: true
-  task_type_reading_guide_moved_to_CONTEXT_BUDGET_POLICY: true
+  context_read_sets_live_in_CONTEXT_BUDGET_POLICY: true
   DOCUMENT_MAP_is_compact_router: true
 ```
