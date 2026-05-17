@@ -10,6 +10,13 @@ Before starting an issue:
 6. If follow-up work is needed, create or request a new issue.
 7. Do not infer missing work from stale issues when handoff says complete.
 
+## Observation-To-Work Boundary
+
+A finding creates work only when it affects current authorized work, current
+recovery state, or current release closeout. Historical or pre-rule residue,
+optional cleanup, and evidence already recoverable from GitHub are observations
+unless a durable issue explicitly scopes backfill or cleanup.
+
 ## Completion comment format
 
 ```md

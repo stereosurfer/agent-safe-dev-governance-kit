@@ -154,10 +154,8 @@ status_refresh_decision:
 
 If status refresh is required for repo-level recovery safety but cannot be made
 accurate inside the same PR, open a separate bounded status-refresh issue
-immediately after closeout. Do not use this path for cosmetic cleanup,
-historical observations, or PR details that are already recoverable from the
-issue or PR; report those as observations unless a new session would otherwise
-take the wrong action.
+immediately after closeout. Apply `docs/control/ISSUE_HYGIENE_GATE.md` before
+turning observations into follow-up work.
 
 ## Release Execution Closeout Rule
 

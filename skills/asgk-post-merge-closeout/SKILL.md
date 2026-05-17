@@ -40,12 +40,10 @@ This skill closes only work that is already satisfied by durable GitHub and repo
     `docs/handoff/ISSUE_CLOSEOUT_REVIEW_RULES.md` as the writing guide. Bounded means
     scope-limited and evidence-dense, not abbreviated, lossy, simplified, or
     summary-only.
-12. Do not scan historical closed issues for missing closeout review comments.
-    Pre-PR-#272 missing entries are legacy observations, not automatic repair
-    work.
-13. Do not open repo-file repair work solely to store routine closeout reviews.
-    If the issue comment cannot be written or the closeout evidence is unclear,
-    stop with a blocker instead of creating a ledger backfill issue.
+12. Apply `docs/control/ISSUE_HYGIENE_GATE.md`: do not scan historical issues or
+    create repo-file repair work solely to store routine closeout reviews.
+13. If the issue comment cannot be written or closeout evidence is unclear,
+    stop with a blocker.
 14. If status refresh is required, open a bounded issue or PR only when
     repo-level recovery would otherwise mislead the next session.
 15. Stop. Do not begin unrelated work.
@@ -81,7 +79,7 @@ review_entry_quality_floor:
 review_entry_missing_result:
   - current post-#272 closeout is blocked until the GitHub issue closeout comment contains the required decision-analysis block
 legacy_gap_result:
-  - report as legacy_observation or watch; do not open repair work without explicit backfill scope
+  - apply docs/control/ISSUE_HYGIENE_GATE.md
 ```
 
 Issue Closeout Reviews are mandatory closeout evidence, but they do not override
