@@ -31,18 +31,12 @@ milestone:
 
 ```yaml
 active_milestone:
-  name: ASGK v1.7.0 source-only release preparation
-  milestone_status: release_prep_ready_for_execution_issue
-  release_prep_issue: "#307"
-  release_execution_issue: pending_human_gated_issue
-  planned_tag: v1.7.0
-  planned_title: "ASGK v1.7.0"
-  planned_target_commit: "94d2f1032f2ef4246bdd6327fc633f969af34253"
-  release_execution_status: separate_human_gated_issue_required
-  latest_completed_release: "ASGK v1.6.0"
-  latest_release_issue: "#248"
-  latest_release_url: https://github.com/stereosurfer/agent-safe-dev-governance-kit/releases/tag/v1.6.0
-  note: "v1.7.0 preparation is recorded under #307, but the release is not completed until a separate human-gated release execution issue approves and creates the tag and GitHub release. Release history is canonical in GitHub releases, release issues, PRs, MDRs, comments, tags, and merge commits."
+  name: none
+  milestone_status: no_active_milestone
+  latest_completed_release: "ASGK v1.7.0"
+  latest_release_issue: "#309"
+  latest_release_url: https://github.com/stereosurfer/agent-safe-dev-governance-kit/releases/tag/v1.7.0
+  note: "Release history is canonical in GitHub releases, release issues, PRs, MDRs, comments, tags, and merge commits. This roadmap keeps current direction only."
 ```
 
 ## Completed Recent Milestones / Gates
@@ -77,8 +71,8 @@ completed_recent:
   license_and_distribution_path:
     result: "Issue #124 records Apache-2.0 as the approved v1.0 license and source-only GitHub release as the selected distribution path."
   source_only_release_line:
-    latest_completed_release: "ASGK v1.6.0"
-    latest_release_issue: "#248"
+    latest_completed_release: "ASGK v1.7.0"
+    latest_release_issue: "#309"
     evidence_boundary: "Historical release execution details live in GitHub releases, release issues, PRs, MDRs, comments, tags, and merge commits."
     release_index: https://github.com/stereosurfer/agent-safe-dev-governance-kit/releases
   post_merge_safe_current_status:
@@ -102,9 +96,9 @@ likely_next_directions:
     status: human_gated
     note: "Changing the existing repository to public exposes the full git history, issues, PRs, releases, and GitHub Actions logs."
   future_v1_x_release:
-    durable_source: "future human-gated release execution issue"
+    durable_source: "future human-gated release issue"
     status: human_gated
-    note: "v1.7.0 release execution requires a separate issue with explicit approval naming the exact tag, title, target commit, source-only distribution, final validation, product-entry/handoff closeout plan, and rollback or revoke plan."
+    note: "Any release after v1.7.0 must start from a separate durable issue with exact tag, title, target commit, final validation, product-entry/handoff closeout plan, and rollback or revoke plan."
     non_goal: "Do not move existing tags or rewrite completed release history."
   v2_runtime_adapters:
     durable_source: "future v2.0 adapter/profile issues"

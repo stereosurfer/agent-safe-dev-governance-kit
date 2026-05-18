@@ -173,29 +173,17 @@ human-gated trigger before it can be treated as low risk.
 
 ## Current Release State
 
-ASGK v1.6.0 is the latest completed source-only GitHub release under the
+ASGK v1.7.0 is the latest completed source-only GitHub release under the
 Apache-2.0 license.
 
-v1.6.0 is the compact-governance release for the v1.x line. It keeps the v1.5
-validation boundary, then adds repo-checkable compact governance surfaces:
-canonical issue-scope blocks, scope-lock capture and comparison, live GitHub
-issue/PR metadata compilation into compact PR reports, compact PR body checks,
-delta-only compact task packets, compact handoff freshness checks, compact
-target-upgrade manifests, and red-team fixtures for agent-written human-gate and
-tool-state claims. It remains a source-only GitHub release: no package,
-installer, runtime adapter, dependency, schema, workflow, repository visibility
-change, cloud/API/model lane, MCP change, or v2.0 work is included.
-
-ASGK v1.7.0 release preparation is recorded under issue #307. The planned
-release target is `v1.7.0` / `ASGK v1.7.0` at commit
-`94d2f1032f2ef4246bdd6327fc633f969af34253`, still as a source-only GitHub
-release. Until the tag and GitHub release are explicitly approved and created,
-v1.7.0 must not be described as the latest completed release. The planned
-v1.7.0 focus is v1.x cleanup and product shaping: validator/helper
-modularization, negative-runner and fixture cleanup, long-doc compaction,
-closeout/health-check boundary hardening, target-install planner/strict support,
-and skill-pack consistency. Release execution still requires a separate
-human-gated issue.
+v1.7.0 is the v1.x cleanup and product-shaping release. It keeps the v1.6
+compact-governance boundary, then reduces governance bloat and stale historical
+wording through validator/helper modularization, negative-runner and fixture
+cleanup, long-doc compaction, closeout/health-check boundary hardening,
+target-install planner/strict support, and skill-pack consistency. It remains a
+source-only GitHub release: no package, installer, runtime adapter, dependency,
+schema, workflow, repository visibility change, cloud/API/model lane, MCP
+change, or v2.0 work is included.
 
 The v1.x line is the generic repo-governance product line. Later runtime-specific
 profiles or adapters are planned as optional optimization layers, not as the
