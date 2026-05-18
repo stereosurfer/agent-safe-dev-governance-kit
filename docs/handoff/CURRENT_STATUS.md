@@ -4,7 +4,7 @@ This is the compact current-status surface for the repository. It is
 overwritten, not appended. Historical detail belongs in GitHub issues, PRs,
 comments, releases, and merge commits.
 
-Last updated: `2026-05-16T15:17:16Z`
+Last updated: `2026-05-18T09:13:09Z`
 
 ## Durable source of truth
 
@@ -20,12 +20,12 @@ Apache-2.0 license. The default operating profile remains generic; runtime
 profiles, adapters, installers, packages, external distribution, and repository
 visibility changes remain human-gated or deferred.
 
-ASGK v1.6.0 is the latest completed source-only GitHub release. It was executed
-under issue #248 after final doctor validation and explicit human approval. The
-release is the compact-governance release: canonical issue scope, scope locks,
-tool-derived compact PR reports, compact PR body checks, delta task packets,
-compact handoff freshness checks, compact target-upgrade manifests, and
-red-team fixtures for human-gate and tool-state precedence.
+ASGK v1.6.0 is the latest completed source-only GitHub release. ASGK v1.7.0
+release preparation is recorded under issue #307, targeting tag `v1.7.0`, title
+`ASGK v1.7.0`, and commit `94d2f1032f2ef4246bdd6327fc633f969af34253`.
+v1.7.0 remains source-only and must not be described as completed until a
+separate human-gated release execution issue explicitly approves and creates the
+tag and GitHub release.
 
 Historical release detail is not duplicated here. GitHub releases, release
 issues, PRs, Merge Decision Records, issue comments, tags, and merge commits are
@@ -44,7 +44,8 @@ performed.
 issue: none
 pr: none
 branch: main
-state: no_active_work
+state: release_prep_ready_for_execution_issue
+next_safe_action: "Create a separate human-gated v1.7.0 release execution issue before tag/GitHub release creation."
 ```
 
 ## Current validation entrypoint
@@ -95,5 +96,8 @@ model cache, or external preparation outputs are currently authorized.
 
 ## Next safe action
 
-No active release-state follow-up is required after the v1.6.0 closeout PR
-merges. Future gated work must start from a separate durable issue.
+After the #307 release-prep PR merges, create a separate human-gated release
+execution issue before tag `v1.7.0` or GitHub release `ASGK v1.7.0` is created.
+That issue must approve the exact tag, title, target commit, source-only
+distribution, final validation, product-entry/handoff closeout plan, and
+rollback or revoke plan.

@@ -186,6 +186,17 @@ tool-state claims. It remains a source-only GitHub release: no package,
 installer, runtime adapter, dependency, schema, workflow, repository visibility
 change, cloud/API/model lane, MCP change, or v2.0 work is included.
 
+ASGK v1.7.0 release preparation is recorded under issue #307. The planned
+release target is `v1.7.0` / `ASGK v1.7.0` at commit
+`94d2f1032f2ef4246bdd6327fc633f969af34253`, still as a source-only GitHub
+release. Until the tag and GitHub release are explicitly approved and created,
+v1.7.0 must not be described as the latest completed release. The planned
+v1.7.0 focus is v1.x cleanup and product shaping: validator/helper
+modularization, negative-runner and fixture cleanup, long-doc compaction,
+closeout/health-check boundary hardening, target-install planner/strict support,
+and skill-pack consistency. Release execution still requires a separate
+human-gated issue.
+
 The v1.x line is the generic repo-governance product line. Later runtime-specific
 profiles or adapters are planned as optional optimization layers, not as the
 default governance model.
