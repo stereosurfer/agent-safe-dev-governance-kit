@@ -22,15 +22,16 @@ The target repository must own its own governance state. Do not copy ASGK repo-l
 
 1. Identify target repo root and existing governance files.
 2. Run `python3 scripts/asgk.py target-install-check --repo-root <target>` when available.
-3. Classify files as:
+3. Run `python3 scripts/asgk.py target-install-plan --repo-root <target>` when available to inspect the read-only copy/template/customize/do-not-copy plan. Treat planner output as adoption evidence, not approval authority.
+4. Classify files as:
    - copy as-is
    - template then customize
    - customize required
    - do not copy as-is
    - deferred v2
-4. Check Apache-2.0 notice handling for copied or adapted ASGK material.
-5. Flag ASGK repo-local files copied into target authority.
-6. Produce an adoption readiness report and, if asked, a bounded adoption issue plan.
+5. Check Apache-2.0 notice handling for copied or adapted ASGK material.
+6. Flag ASGK repo-local files copied into target authority.
+7. Produce an adoption readiness report and, if asked, a bounded adoption issue plan.
 
 ## Stop States
 
