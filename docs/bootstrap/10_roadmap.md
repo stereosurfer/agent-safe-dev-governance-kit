@@ -31,12 +31,18 @@ milestone:
 
 ```yaml
 active_milestone:
-  name: none
-  milestone_status: no_active_milestone
+  name: ASGK v1.7.0 source-only release preparation
+  milestone_status: release_prep_ready_for_execution_issue
+  release_prep_issue: "#307"
+  release_execution_issue: pending_human_gated_issue
+  planned_tag: v1.7.0
+  planned_title: "ASGK v1.7.0"
+  planned_target_commit: "94d2f1032f2ef4246bdd6327fc633f969af34253"
+  release_execution_status: separate_human_gated_issue_required
   latest_completed_release: "ASGK v1.6.0"
   latest_release_issue: "#248"
   latest_release_url: https://github.com/stereosurfer/agent-safe-dev-governance-kit/releases/tag/v1.6.0
-  note: "Release history is canonical in GitHub releases, release issues, PRs, MDRs, comments, tags, and merge commits. This roadmap keeps current direction only."
+  note: "v1.7.0 preparation is recorded under #307, but the release is not completed until a separate human-gated release execution issue approves and creates the tag and GitHub release. Release history is canonical in GitHub releases, release issues, PRs, MDRs, comments, tags, and merge commits."
 ```
 
 ## Completed Recent Milestones / Gates
@@ -46,7 +52,7 @@ completed_recent:
   document_navigation_split:
     result: "DOCUMENT_MAP.md is compact router; DOCUMENT_REGISTRY.md owns full registry; CONTEXT_BUDGET_POLICY.md owns task read sets."
   target_install_checklist_and_plan:
-    result: "INSTALL_SURFACE, TARGET_INSTALL_CHECKLIST, TARGET_INSTALL_VALIDATION_PLAN, target-install-check, and standalone target-install-plan are in place."
+    result: "INSTALL_SURFACE, TARGET_INSTALL_CHECKLIST, TARGET_INSTALL_VALIDATION_PLAN, target-install-check, and the canonical `python3 scripts/asgk.py target-install-plan` wrapper are in place; standalone `scripts/target_install_plan.py` remains compatibility entrypoint."
   vertical_governance_initial_layer:
     result: "PR #89 added the decision-point registry, decision packet template, registry links, and decision-point read set. This is the initial layer, not full milestone completion."
   vertical_governance_completion:
@@ -96,9 +102,9 @@ likely_next_directions:
     status: human_gated
     note: "Changing the existing repository to public exposes the full git history, issues, PRs, releases, and GitHub Actions logs."
   future_v1_x_release:
-    durable_source: "future human-gated release issue"
+    durable_source: "future human-gated release execution issue"
     status: human_gated
-    note: "Any release after v1.6.0 must start from a separate durable issue with exact tag, title, target commit, final validation, product-entry/handoff closeout plan, and rollback or revoke plan."
+    note: "v1.7.0 release execution requires a separate issue with explicit approval naming the exact tag, title, target commit, source-only distribution, final validation, product-entry/handoff closeout plan, and rollback or revoke plan."
     non_goal: "Do not move existing tags or rewrite completed release history."
   v2_runtime_adapters:
     durable_source: "future v2.0 adapter/profile issues"
