@@ -150,13 +150,12 @@ handoff_canonical_sources:
 |---|---|---|---:|---|---|
 | `docs/adapters/README.md` | canonical | v1.x generic adapter mechanism and v2.0 adapter boundary | no | adapter mechanism planning, v2.0 prep, handoff tool switch discussion | `lane_01_architecture` |
 | `docs/adapters/ADAPTER_TEMPLATE.md` | template | future v2.0 runtime adapter structure | no | creating v2.0 adapter specs after vendor docs and observed tests exist | `lane_01_architecture` |
-| `profiles/PROFILE_SPEC.md` | future_optional | v2.0 runtime profile schema and required fields | no | v2.0 profile work only | `lane_01_architecture` |
-| `profiles/generic-repo-agent/` | future_optional | optional packaging of generic v1.x profile | no | v2.0 profile packaging work only | `lane_01_architecture` |
-| `profiles/codex-app/` | future_optional | Codex-specific execution optimization | no | v2.0 runtime profile work after vendor docs and observed tests | `lane_01_architecture` |
-| `profiles/chatgpt-web-github-connector/` | future_optional | ChatGPT Web/GitHub connector execution optimization | no | v2.0 runtime profile work after vendor docs and observed tests | `lane_01_architecture` |
-| `profiles/opengoat/` | future_optional | OpenGoat-specific execution optimization | no | v2.0 runtime profile work after vendor docs and observed tests | `lane_01_architecture` |
-| `profiles/claude-code/` | future_optional | Claude Code-specific execution optimization | no | v2.0 runtime profile work after vendor docs and observed tests | `lane_01_architecture` |
-| `profiles/cursor/` | future_optional | Cursor-specific execution optimization | no | v2.0 runtime profile work after vendor docs and observed tests | `lane_01_architecture` |
+
+Future runtime profile names such as Codex App, ChatGPT Web/GitHub connector,
+OpenGoat, Claude Code, and Cursor are conceptual v2.0 planning surfaces only.
+They are not current repo paths and should not be added to this registry as
+document rows until a scoped v2.0 profile issue creates concrete files with
+vendor documentation and observed tests.
 
 Runtime profile or adapter docs must not be treated as prerequisites for v1.x
 usage. They are optimization layers, not the governance core.
@@ -310,7 +309,7 @@ disagree, stop and open a schema/contract alignment issue.
 | `scripts/validate_bootstrap.py` | script | bootstrap governance validation behavior | no | CI/tooling/debug validation | `lane_06_ci_github` |
 | `scripts/governance_hygiene.py` | script | changed-path and protected-path hygiene | no | path hygiene, negative changed-path checks, future CLI work | `lane_06_ci_github` |
 | `scripts/policy_gate_check.py` | script | read-only fail-closed PR-body policy gate check without low-risk inference | no | policy-gate validation, PR-body gate coherence review | `lane_06_ci_github` |
-| `scripts/asgk.py` | script | ASGK CLI wrapper for doctor/validate/hygiene/negative/status/closeout/pr-body/task-packet/handoff/target-install checks, including opt-in policy-gate and target-install expected failures | no | local validation, status-check, closeout-check, handoff-check, PR-body/task-packet checks, policy-gate negative checks, target-install negative checks, target-install-check | `lane_06_ci_github` |
+| `scripts/asgk.py` | script | ASGK CLI wrapper for doctor/validate/hygiene/negative/status/closeout/pr-body/task-packet/handoff/target-install checks and read-only target-install planning, including opt-in policy-gate and target-install expected failures | no | local validation, status-check, closeout-check, handoff-check, PR-body/task-packet checks, policy-gate negative checks, target-install negative checks, target-install-check, target-install-plan | `lane_06_ci_github` |
 | `scripts/pr_governance_preflight.py` | script | thin file-backed PR body preflight before `gh pr create` or `gh pr edit` | no | PR body create/edit, local preflight before GitHub Actions, target adoption of ASGK CLI tooling | `lane_06_ci_github` |
 | `scripts/target_install_plan.py` | script | standalone read-only target-install plan generation | no | target-install planning, scaffold preparation, install-plan review | `lane_06_ci_github` |
 | `.github/workflows/bootstrap-validation.yml` | template/script | GitHub Actions bootstrap validation workflow | no | CI/workflow changes | `lane_06_ci_github` |

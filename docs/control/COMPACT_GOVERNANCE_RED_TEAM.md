@@ -109,20 +109,25 @@ requires_human: "A restricted or human-gated boundary is detected."
 
 ## Migration Guardrails
 
-Before compact governance can become default, ASGK needs a later issue that
-turns these modeled states into live validators:
+The modeled states now have opt-in command surfaces:
 
 - canonical issue scope extraction;
 - scope lock capture and comparison;
-- changed-path comparison against issue `allowed_paths`;
+- PR compiled report generation from live or captured PR metadata;
 - task-packet narrowing check against issue scope;
-- PR compiled report generation from live PR/CI metadata;
-- fail-closed behavior when GitHub metadata is unavailable;
-- explicit `requires_human` state for restricted boundaries;
-- compact PR/handoff templates that reference the compiled report instead of
-  restating unchanged scope.
+- compact PR body checks against compiled reports;
+- compact handoff checks against current-status freshness;
+- compact target-upgrade manifest checks;
+- fail-closed behavior when required metadata is unavailable;
+- explicit `requires_human` state for restricted boundaries.
 
-Until those validators exist, verbose PR bodies remain the safer default.
+These commands do not make compact governance the default. Before compact
+governance can become the default PR or handoff profile, a separate issue-backed
+work unit must prove the default migration against real PR flow, target-upgrade
+flow, human-gated boundaries, and installed-skill behavior.
+
+Until default-profile migration is explicitly approved, verbose PR bodies remain
+the safer default.
 
 ## Canonical Issue Scope Primitive
 
