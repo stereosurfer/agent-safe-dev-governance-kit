@@ -29,11 +29,15 @@ This skill selects and sequences existing checks. It must not create new approva
    - `current-status-impact-check` when `docs/handoff/CURRENT_STATUS.md` changed
    - changed-path hygiene when local changed paths are available
 4. Identify human-gated triggers from changed paths and issue scope.
-5. Report only the narrow readiness state.
+5. Compare the PR's completion claim with the issue acceptance sheet. Named
+   checks passing means only those checks passed; it does not prove semantic
+   correctness, upgrade completeness, install completeness, or stale-reference
+   cleanup unless the issue required and the PR records that evidence.
+6. Report only the narrow readiness state.
 
 ## Stop States
 
-- `blocked`: validator or CI failure exists.
+- `blocked`: validator or CI failure exists, or issue-required completion evidence is missing.
 - `requires_human`: human-gated trigger exists or semantic review is required.
 - `eligible`: checkable gates pass and no human-gated trigger is detected; a human or policy still makes the merge decision.
 
