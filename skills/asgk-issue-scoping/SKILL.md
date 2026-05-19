@@ -16,17 +16,26 @@ The created issue becomes the work-unit authority only after it is written to Gi
 - User objective or observed repo problem.
 - Target repository.
 - Known allowed paths or enough repo context to propose conservative allowed paths.
+- For upgrade or adoption work, read-only discovered ASGK-derived surfaces before
+  allowed paths are finalized.
 - Validation command if known.
 
 ## Procedure
 
 1. Classify the task lane and risk level.
 2. Propose the smallest work unit that can produce a reviewable output.
-3. List allowed paths narrowly.
-4. Write explicit non-goals and stop conditions.
-5. Include rollback expectations.
-6. Include validation commands, defaulting to `python3 scripts/asgk.py doctor` for governance/scaffold work.
-7. Create or update a GitHub issue; do not start edits until the durable issue exists.
+3. For upgrade or adoption work, run a read-only discovery pass before setting
+   allowed paths. Include ASGK-derived docs, profiles, manifests, validators,
+   planner references, and target-owned files that must be preserved but still
+   inspected for stale references.
+4. List allowed paths narrowly from the discovered surfaces. Do not make the
+   issue narrow by guessing before discovery.
+5. Write explicit non-goals and stop conditions.
+6. Include rollback expectations.
+7. Include validation commands, defaulting to `python3 scripts/asgk.py doctor` for governance/scaffold work.
+8. For work that can claim completion, include the required completeness checks
+   and the evidence boundary for what validation does not prove.
+9. Create or update a GitHub issue; do not start edits until the durable issue exists.
 
 ## Required Issue Fields
 
@@ -47,6 +56,7 @@ The created issue becomes the work-unit authority only after it is written to Gi
 ## Stop States
 
 - `blocked`: allowed paths or validation are unclear.
+- `blocked`: upgrade or adoption paths were proposed before read-only discovery.
 - `requires_human`: protected paths, releases, visibility, dependencies, workflows, schemas, secrets, or other human-gated surfaces are involved.
 - `issue_created`: durable issue exists and can be used by an executor.
 

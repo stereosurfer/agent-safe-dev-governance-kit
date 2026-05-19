@@ -29,6 +29,10 @@ Target repositories own their own current status, document map, document
 registry, project brief, physical boundaries, storage roots, and project-specific
 rules. These must not be replaced with ASGK source-repository state.
 
+Safety is not completion. Preserving target-owned state is required, but an
+upgrade is not complete until ASGK-derived target surfaces have also been checked
+for source-delta coverage, stale references, and target path validity.
+
 ## Required Inputs
 
 - Target repository name or local checkout.
@@ -66,6 +70,9 @@ detect:
 ```
 
 Do not assume the target repository is current because one ASGK file exists.
+Before proposing allowed paths, do a read-only discovery pass over ASGK-derived
+target surfaces named by the startup set, document map, installer surface,
+validator scripts, profiles, manifests, and existing ASGK control docs.
 
 ### 2. Classify
 
@@ -111,7 +118,40 @@ never_overwrite:
   - target repository LICENSE without explicit license decision
 ```
 
-### 4. Check Compatibility
+Do not treat `never_overwrite` as `out_of_scope_for_audit`. Target-owned files
+must not be replaced, but ASGK-derived references inside or pointing to them must
+still be classified as preserved, manually adapted, stale, intentionally absent,
+or deferred with reason.
+
+### 4. Check Completeness
+
+Before calling an upgrade complete, record a compact completeness matrix covering
+each in-scope source-version delta and each discovered ASGK-derived target
+surface:
+
+```yaml
+completeness_matrix:
+  adopted:
+  manually_adapted:
+  intentionally_not_adopted:
+  stale_reference_removed:
+  deferred_with_reason:
+```
+
+Also record:
+
+- `stale_reference_scan`: old ASGK versions, source-only document names,
+  deleted or renamed source files, and donor paths that differ from target paths.
+- `path_existence_validation`: manifest, planner, never-overwrite, read-set, and
+  files-to-inspect paths exist or are marked `intentionally_absent` with reason.
+- `completion_label`: `full_target_upgrade_alignment`,
+  `tooling_subset_only`, or `partial_followup_required`.
+
+Passing `doctor`, fixtures, strict checks, or CI is evidence for those named
+checks only; it is not upgrade completeness unless this matrix and the path
+checks are recorded.
+
+### 5. Check Compatibility
 
 Before proposing a patch, check whether the target validator and templates are
 compatible.
@@ -128,7 +168,7 @@ compatibility_questions:
 If validator, workflow, schema, or required field compatibility is unclear, split
 the upgrade into a tooling issue before changing templates or skills.
 
-### 5. Produce A Bounded Upgrade Issue
+### 6. Produce A Bounded Upgrade Issue
 
 Draft a target-repository issue instead of editing files directly unless the user
 has already supplied a durable issue.
@@ -141,10 +181,12 @@ upgrade_issue_fields:
   durable_source_of_truth:
   source_asgk_version_or_commit:
   detected_target_state:
+  discovered_asgk_derived_surfaces:
   allowed_paths:
   expected_output:
   non_goals:
   validation:
+  required_completeness_checks:
   stop_conditions:
   rollback_expectations:
 ```
@@ -163,18 +205,22 @@ asgk_upgrade_audit:
   safe_update_candidates:
   manual_merge_required:
   never_overwrite:
+  completeness_matrix:
+  stale_reference_scan:
+  path_existence_validation:
   validator_compatibility:
   recommended_issue:
     title:
     allowed_paths:
     validation:
     stop_conditions:
+  completion_label: full_target_upgrade_alignment | tooling_subset_only | partial_followup_required
   result: blocked | issue_ready | requires_human | target_install_audit_recommended
 ```
 
 ## Stop States
 
-- `blocked`: target state is unavailable, validator compatibility is unclear, or required authority is missing.
+- `blocked`: target state, validator compatibility, authority, or required stale-reference/path-existence evidence is missing.
 - `requires_human`: license, release, package publication, public visibility, dependency, workflow, schema, or protected-path changes are involved.
 - `target_install_audit_recommended`: target is partial or non-ASGK and should be audited for adoption before upgrade.
 - `issue_ready`: a bounded upgrade issue can be created.
@@ -230,4 +276,8 @@ refresh issue first if stale status would mislead the next session.
 
 ## Exit Artifact
 
-A concise audit report plus a bounded GitHub issue draft, including `safe_update_candidates`, `manual_merge_required`, and `never_overwrite`. Do not perform file updates unless the target repository already has a durable issue authorizing the specific allowed paths.
+A concise audit report plus a bounded GitHub issue draft, including
+`safe_update_candidates`, `manual_merge_required`, `never_overwrite`,
+completeness matrix, stale-reference scan, path-existence validation, and a
+completion label. Do not perform file updates unless the target repository
+already has a durable issue authorizing the specific allowed paths.
