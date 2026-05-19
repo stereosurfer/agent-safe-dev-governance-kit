@@ -33,9 +33,9 @@ milestone:
 active_milestone:
   name: none
   milestone_status: no_active_milestone
-  latest_completed_release: "ASGK v1.7.0"
-  latest_release_issue: "#309"
-  latest_release_url: https://github.com/stereosurfer/agent-safe-dev-governance-kit/releases/tag/v1.7.0
+  latest_completed_release: "ASGK v1.7.1"
+  latest_release_issue: "#313"
+  latest_release_url: https://github.com/stereosurfer/agent-safe-dev-governance-kit/releases/tag/v1.7.1
   note: "Release history is canonical in GitHub releases, release issues, PRs, MDRs, comments, tags, and merge commits. This roadmap keeps current direction only."
 ```
 
@@ -71,10 +71,12 @@ completed_recent:
   license_and_distribution_path:
     result: "Issue #124 records Apache-2.0 as the approved v1.0 license and source-only GitHub release as the selected distribution path."
   source_only_release_line:
-    latest_completed_release: "ASGK v1.7.0"
-    latest_release_issue: "#309"
+    latest_completed_release: "ASGK v1.7.1"
+    latest_release_issue: "#313"
     evidence_boundary: "Historical release execution details live in GitHub releases, release issues, PRs, MDRs, comments, tags, and merge commits."
     release_index: https://github.com/stereosurfer/agent-safe-dev-governance-kit/releases
+  skill_completion_hardening:
+    result: "Issue #311 / PR #312 hardened ASGK Skills so safety boundaries, validator passes, and work-unit completeness are recorded separately; issue #313 published the source-only v1.7.1 patch release."
   post_merge_safe_current_status:
     result: "Issue #135 / PR #136 made CURRENT_STATUS.md post-merge-safe by default, added the post_merge_safe PR field, and added a local current-status-impact check for self-staling status updates."
   product_entry_docs:
@@ -98,7 +100,7 @@ likely_next_directions:
   future_v1_x_release:
     durable_source: "future human-gated release issue"
     status: human_gated
-    note: "Any release after v1.7.0 must start from a separate durable issue with exact tag, title, target commit, final validation, product-entry/handoff closeout plan, and rollback or revoke plan."
+    note: "Any release after v1.7.1 must start from a separate durable issue with exact tag, title, target commit, final validation, product-entry/handoff closeout plan, and rollback or revoke plan."
     non_goal: "Do not move existing tags or rewrite completed release history."
   v2_runtime_adapters:
     durable_source: "future v2.0 adapter/profile issues"
