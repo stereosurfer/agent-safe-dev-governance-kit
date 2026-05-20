@@ -32,7 +32,11 @@ The created issue becomes the work-unit authority only after it is written to Gi
    issue narrow by guessing before discovery.
 5. Write explicit non-goals and stop conditions.
 6. Include rollback expectations.
-7. Include validation commands, defaulting to `python3 scripts/asgk.py doctor` for governance/scaffold work.
+7. Include validation commands, defaulting to the repository-local validation
+   entrypoint for governance/scaffold work. In this ASGK source repository,
+   that entrypoint is usually `python3 scripts/asgk.py doctor`; in target
+   repositories, do not treat source-repo `doctor` as a universal completion
+   gate.
 8. For work that can claim completion, include the required completeness checks
    and the evidence boundary for what validation does not prove.
 9. Create or update a GitHub issue; do not start edits until the durable issue exists.

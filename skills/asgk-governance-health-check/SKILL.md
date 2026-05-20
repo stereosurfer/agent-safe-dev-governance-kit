@@ -23,7 +23,10 @@ authorizes a wider health check.
 1. Check open PRs.
 2. Check open issues.
 3. Compare `docs/handoff/CURRENT_STATUS.md` with live GitHub state.
-4. Run `python3 scripts/asgk.py doctor`.
+4. Run the repository-local validation entrypoint. In this ASGK source
+   repository, that is usually `python3 scripts/asgk.py doctor`; in target
+   repositories, use their local validation command instead of source-repo
+   parity checks.
 5. Sample recent PRs for Merge Decision, Current Status Impact, closing references, and validation evidence.
 6. Check for release or closeout residue: merged PRs with open issues, stale
    active work, missing status refresh, or human-gated work without explicit
@@ -37,7 +40,8 @@ authorizes a wider health check.
 
 - `healthy`: no active drift found.
 - `watch`: observations or minor evidence gaps; no immediate blocker.
-- `blocked`: stale status, open satisfied issue, failed doctor, missing closing references, or unresolved human-gated residue.
+- `blocked`: stale status, open satisfied issue, failed local validation,
+  missing closing references, or unresolved human-gated residue.
 
 ## Exit Artifact
 

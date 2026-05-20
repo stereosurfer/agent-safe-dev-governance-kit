@@ -42,11 +42,11 @@ that wider check.
 8. Decide whether `docs/handoff/CURRENT_STATUS.md` needs refresh under the current-status policy.
 9. Recommend no status refresh when `CURRENT_STATUS.md` remains accurate for the next session.
 10. Recommend a status refresh only when stale repo-level recovery state would mislead the next session.
-11. For the current issue being closed after PR #272 merged, ensure the GitHub
-    issue closeout comment includes one bounded decision-analysis block using
-    `docs/handoff/ISSUE_CLOSEOUT_REVIEW_RULES.md` as the writing guide. Bounded means
-    scope-limited and evidence-dense, not abbreviated, lossy, simplified, or
-    summary-only.
+11. If the repository explicitly requires issue closeout review blocks, ensure
+    the GitHub issue closeout comment includes the required bounded
+    decision-analysis block using the repository's closeout-review guide.
+    Bounded means scope-limited and evidence-dense, not abbreviated, lossy,
+    simplified, or summary-only.
 12. Apply `docs/control/ISSUE_HYGIENE_GATE.md`: do not scan historical issues or
     create repo-file repair work solely to store routine closeout reviews.
 13. If the issue comment cannot be written or closeout evidence is unclear,
@@ -74,9 +74,9 @@ status_refresh_not_required_when:
 
 ```yaml
 review_entry_required_when:
-  - current issue closeout performed after PR #272 merged
+  - repository rules explicitly require an issue closeout review for the current closeout target
 review_entry_not_required_when:
-  - issue closed before PR #272 merged
+  - repository rules do not require an issue closeout review
   - historical issue is observed during health check but is not the current closeout target
 review_entry_quality_floor:
   - preserve decision reasons
@@ -85,7 +85,7 @@ review_entry_quality_floor:
   - preserve evidence links
   - preserve known limits
 review_entry_missing_result:
-  - current post-#272 closeout is blocked until the GitHub issue closeout comment contains the required decision-analysis block
+  - closeout is blocked until the GitHub issue closeout comment contains the explicitly required decision-analysis block
 legacy_gap_result:
   - apply docs/control/ISSUE_HYGIENE_GATE.md
 ```
