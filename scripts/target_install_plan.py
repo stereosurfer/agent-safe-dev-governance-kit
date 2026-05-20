@@ -89,7 +89,8 @@ DO_NOT_COPY = [
 
 POST_INSTALL_CHECKS = [
     "python3 scripts/asgk.py target-install-check --repo-root .",
-    "python3 scripts/asgk.py doctor",
+    "Run the target repository's local validation entrypoint.",
+    "If the target copied ASGK CLI checks, python3 scripts/asgk.py doctor may be that entrypoint only when it validates target-local governance rather than ASGK source-repo parity.",
     "Create first governance smoke-test issue.",
 ]
 

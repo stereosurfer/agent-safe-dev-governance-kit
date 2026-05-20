@@ -187,7 +187,7 @@ def target_install_findings(root: Path) -> list[dict[str, str | bool]]:
                 "forbidden_repo_local_surfaces",
                 forbidden,
                 "ASGK repo-local governance file is present in the target repository surface",
-                "Remove this file from target authority or document an explicit adaptation issue.",
+                "Remove this source-repo file from target authority or document an explicit adaptation issue; do not copy ASGK internal history or evidence just to satisfy a source-shaped check.",
                 blocking=True,
             )
 
@@ -199,7 +199,7 @@ def target_install_findings(root: Path) -> list[dict[str, str | bool]]:
                 "forbidden_repo_local_surfaces",
                 forbidden,
                 "legacy ASGK repo-local governance file is present in the target repository surface",
-                "Remove this legacy ASGK file from target authority or document an explicit adaptation issue.",
+                "Remove this legacy source-repo file from target authority or document an explicit adaptation issue; do not preserve ASGK historical state as target completion evidence.",
                 blocking=True,
             )
 
@@ -211,7 +211,7 @@ def target_install_findings(root: Path) -> list[dict[str, str | bool]]:
                 "forbidden_repo_local_surfaces",
                 forbidden,
                 "ASGK repo-local or deferred surface is present",
-                "Keep only if intentionally adapted; otherwise remove from the target install surface.",
+                "Keep only if intentionally adapted; otherwise remove from the target install surface. Do not add source-only fixtures, profiles, or adapters to make target validation look like ASGK source-repo validation.",
                 blocking=False,
             )
 
