@@ -15,6 +15,11 @@ Install safety is not install completeness. A plan that avoids copying protected
 state is still incomplete if copied, templated, or customized references point to
 missing target paths or source-only ASGK files.
 
+A source-repo `doctor` failure is not evidence that a target repository must
+copy source-only ASGK fixtures, adapters, profiles, history, or release state.
+Target completion depends on target-install readiness plus the target
+repository's own validation entrypoint.
+
 ## Minimum Reads
 
 - `docs/INSTALL_SURFACE.md`
