@@ -38,7 +38,13 @@ Each evidence item needs a limit or non-proof.
 
 1. Fill Summary, Task Reference, Changed Files, Validation, Evidence Of Completion, Scope Boundaries, Runtime Output Status, Merge Decision, Known Gaps, and Handoff Report.
 2. Use `Closes #N` when the PR is expected to close the work-unit issue.
-3. Mark `result: merge_blocked` while draft, CI pending, live `check-pr` failing, or human gates remain.
+3. Mark `result: merge_blocked` while draft, CI pending, repository-local PR
+   readiness checks are failing, or human gates remain. In this ASGK source
+   repository, the live PR readiness check is usually `python3 scripts/asgk.py
+   check-pr --pr <number>`. In target repositories without `check-pr`, record
+   that command as unavailable or not run with limits, then cite the available
+   repo-local PR body checks, GitHub CI/status, closing issue references,
+   changed paths, and issue acceptance evidence instead.
 4. Mark `checks_passed: true` only when validation evidence supports it. This
    means the named checks passed; it is not a claim of semantic correctness,
    upgrade completeness, install completeness, or stale-reference cleanup unless
@@ -69,4 +75,6 @@ Each evidence item needs a limit or non-proof.
 
 ## Exit Artifact
 
-Updated PR body and, when useful, an issue comment summarizing local validation, CI, live `check-pr`, and remaining blockers.
+Updated PR body and, when useful, an issue comment summarizing local validation,
+CI, repository-local PR readiness evidence, unavailable checks with limits, and
+remaining blockers.
