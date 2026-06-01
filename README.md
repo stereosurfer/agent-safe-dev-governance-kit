@@ -173,15 +173,16 @@ human-gated trigger before it can be treated as low risk.
 
 ## Current Release State
 
-ASGK v1.7.2 is the latest completed source-only GitHub release under the
+ASGK v1.7.3 is the latest completed source-only GitHub release under the
 Apache-2.0 license.
 
-v1.7.2 is a v1.x source-local boundary patch release. It keeps the v1.7.1
-skill-hardening baseline and tightens target-install and Skill wording so ASGK
-source-repo validation or history is not mistaken for target-repo completion
-authority. It remains a source-only GitHub release: no package, installer,
-runtime adapter, dependency, schema, workflow, repository visibility change,
-cloud/API/model lane, MCP change, or v2.0 work is included.
+v1.7.3 is a v1.x PR-readiness fallback patch release. It keeps the v1.7.2
+source-local boundary baseline and tightens ASGK Skills so target repositories
+without the source-repo `check-pr` command can record that command as
+unavailable and use repository-local PR evidence instead. It remains a
+source-only GitHub release: no package, installer, runtime adapter, dependency,
+schema, workflow, repository visibility change, cloud/API/model lane, MCP
+change, or v2.0 work is included.
 
 The v1.x line is the generic repo-governance product line. Later runtime-specific
 profiles or adapters are planned as optional optimization layers, not as the
