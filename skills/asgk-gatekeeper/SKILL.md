@@ -24,7 +24,12 @@ This skill selects and sequences existing checks. It must not create new approva
 2. Confirm the PR is not draft when merge readiness is being assessed.
 3. Run or inspect:
    - `python3 scripts/asgk.py doctor`
-   - `python3 scripts/asgk.py check-pr --pr <number>`
+   - repository-local PR readiness checks when available. In this ASGK source
+     repository, that is usually `python3 scripts/asgk.py check-pr --pr
+     <number>`. In target repositories that do not implement `check-pr`, record
+     it as unavailable and use the target's local PR body checks, GitHub CI and
+     status, closing issue references, changed paths, and issue acceptance
+     evidence instead.
    - PR CI status
    - `current-status-impact-check` when `docs/handoff/CURRENT_STATUS.md` changed
    - changed-path hygiene when local changed paths are available
