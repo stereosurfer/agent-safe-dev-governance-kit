@@ -1,8 +1,8 @@
 decision_packet:
   version: 0.1.0
 
-  decision_type: "AI_TODO: merge_decision | low_risk_auto_merge_decision | human_gated_operation_decision | dependency_addition_decision | schema_breaking_change_decision | target_install_scaffold_decision | runtime_adapter_profile_decision | external_api_or_mcp_enablement_decision | release_or_publication_decision | storage_boundary_change_decision"
-  lifecycle_position: "AI_TODO: pre_issue | issue_scoping | implementation | pre_merge | post_merge | release | target_install | roadmap | v2_0"
+  decision_type: "AI_TODO: merge_decision | low_risk_auto_merge_decision | human_gated_operation_decision | dependency_addition_decision | schema_breaking_change_decision | external_api_or_mcp_enablement_decision | release_or_publication_decision | storage_boundary_change_decision"
+  lifecycle_position: "AI_TODO: pre_issue | issue_scoping | implementation | pre_merge | post_merge | release"
 
   durable_source_of_truth:
     issue: "AI_TODO: GitHub issue number or durable source"

@@ -22,8 +22,9 @@ machine_fixtures:
     - examples/pr_status.valid.json
     - examples/work_unit.valid-issue.json
 negative_expected_failures:
-  purpose: known-bad inputs that must fail under opt-in negative checks
+  purpose: inputs expected to trigger current opt-in mechanical checks
   authority: regression fixture only
+  proof_limit: not every mechanical failure establishes a semantic repository defect
   location: examples/negative/
 compact_red_team_fixtures:
   purpose: compact-governance tool-state and claim-conflict test inputs
@@ -37,8 +38,9 @@ compact_red_team_fixtures:
 
 - Examples and fixtures are not policy authority.
 - Target repositories must not copy this directory as an adoption bundle.
-- Negative fixtures are intentionally invalid and must not be used as positive
-  examples.
+- Negative fixtures must not be used as positive examples. Interpret each only
+  at its documented proof boundary; some preserve legacy checker behavior
+  without establishing a semantic repository defect.
 - Historical issue, PR, CI, and release evidence belongs in GitHub, not as
   copied narrative inside this directory.
 - Agents should not read this directory during default startup; read only the

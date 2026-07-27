@@ -6,9 +6,14 @@ Agents must not depend on prior chat history. A new session must be able to cont
 
 ## Product boundary
 
-ASGK v1.x uses a generic repo-agent governance core.
+ASGK uses a generic repo-agent governance core.
 
-Runtime-specific adapters, runtime-specific profiles, custom-agent tuning, subagent orchestration, goal workflows, vendor-specific instructions, and platform-specific optimizations are not part of the default v1.x operating profile. They are future or optional optimization layers and must not bypass the generic repository governance flow.
+Runtime-specific adapters, runtime-specific profiles, custom-agent tuning,
+subagent orchestration, goal workflows, vendor-specific instructions, and
+platform-specific optimizations are not part of the default operating profile.
+Superseded roadmap material gives them no current product authority. Any such
+specialized work requires explicit durable scope and must not bypass the generic
+repository governance flow.
 
 ## Default startup set
 
@@ -94,7 +99,9 @@ The Generic Operating Profile contains only repository-wide safety workflow.
 
 Do not add runtime-specific, platform-specific, vendor-specific, domain-specific, subagent-specific, goal-workflow-specific, or optimization-specific behavior to the generic profile.
 
-Specialized material may exist only as non-default reference, future optional policy, or explicitly scoped work. It must not be read by default and must not change the generic governance flow.
+Specialized material may exist only as an explicitly scoped non-default
+reference or policy. It must not be read by default and must not change the
+generic governance flow.
 
 ## Escalation triggers
 

@@ -9,7 +9,8 @@ reasoning, but they do not become a new authority layer.
 ```yaml
 skill_pack_rule:
   skills_do_not_add_new_gates: true
-  skills_select_and_sequence_existing_gates: true
+  skills_guide_reasoning_and_existing_boundaries: true
+  skills_do_not_predetermine_assessment_outcomes: true
   final_authority:
     - GitHub issues
     - GitHub pull requests
@@ -17,6 +18,36 @@ skill_pack_rule:
     - ASGK validators
     - human gates where required
 ```
+
+## Frontier-Guided Assessment Contract
+
+Introducing ASGK into another repository, or materially upgrading an existing
+adoption, is a read-only, context-sensitive assessment normally performed by a
+human-selected frontier-capability model. ASGK does not choose, route,
+schedule, switch, price-tier, or orchestrate that evaluator.
+
+For these assessments, the Skill guides:
+
+- bounded target discovery and evidence gathering;
+- comparison of target responsibilities with relevant ASGK capabilities;
+- universal safety invariants and existing high-risk boundaries;
+- alternatives, tradeoffs, confidence, unknowns, and stop behavior;
+- recording the recommendation in existing issue, PR, or handoff lineage.
+
+The evaluator uses target evidence and its reasoning to judge fit, appropriate
+governance depth, minimum sufficient adaptation, and whether any change should
+be recommended. A Skill must not replace that judgment with a universal file
+shape, fixed install bundle, module picker, adopter configuration, adoption
+declaration, predetermined recommendation, or new approval layer.
+
+Deterministic tools may collect observations, check universal invariants, and
+test concrete mechanically verifiable claims. They must state what was checked
+and what remains unproved. A command result does not decide target
+architecture, adoption fit, or semantic completeness.
+
+The read-only assessment adds no human gate. Existing human gates apply only
+when a proposed implementation touches a concrete operation already defined as
+human-gated.
 
 ## Usage Modes
 
@@ -95,13 +126,19 @@ weekly_or_milestone_review:
 
 ## Design Constraints
 
-- A skill may draft or route work, but durable scope must live in GitHub or repo
+- A skill may guide or draft work, but durable scope must live in GitHub or repo
   files.
-- A skill must stop when required inputs, allowed paths, validation, or human
-  approval are missing.
-- A skill should call existing validators instead of creating parallel checks.
-- A skill should output `blocked`, `eligible`, or `requires_human`, not
-  `approved`.
+- A read-only assessment does not need implementation allowed paths or a new
+  approval. Any later write still needs target-owned issue or PR authority,
+  allowed paths, validation, and applicable existing human approval.
+- A skill must stop when the authority, evidence, validation, or exact existing
+  human gate required for its current action is missing.
+- A skill may call existing validators only at their documented proof boundary.
+- Assessment skills should output `assessment_complete` or `blocked`, never
+  `approved`. Record an exact existing gate separately as `next_action_gate`;
+  semantic judgment alone does not trigger it.
+- Assessment skills must expose evidence limits, confidence, and material
+  unknowns.
 - If a skill conflicts with `AGENTS.md`, a GitHub issue or PR, or a control
   document, the skill loses.
 
@@ -168,6 +205,11 @@ architecture_touchpoints:
       - asgk-issue-scoping
 
   docs/control/TARGET_INSTALL_CHECKLIST.md:
+    affected_skills:
+      - asgk-target-install-audit
+      - asgk-upgrade-audit
+
+  docs/control/AGENT_CAPABILITY_MATRIX.md:
     affected_skills:
       - asgk-target-install-audit
       - asgk-upgrade-audit
@@ -264,18 +306,18 @@ Use this sequence for adoption testing:
 
 ```text
 target_install_audit
-  -> adoption readiness report
-  -> bounded adoption issue
-  -> adoption PR plan
+  -> read-only target discovery and frontier judgment
+  -> evidence-backed assessment in existing target issue, PR, or handoff lineage
+  -> bounded target-owned implementation issue or PR only if change is recommended
 ```
 
 Use this sequence for existing ASGK adoption upgrades:
 
 ```text
 upgrade_audit
-  -> upgrade audit report
-  -> bounded upgrade issue
-  -> manual merge or safe reusable-surface update plan
+  -> read-only source-delta and target-state comparison
+  -> frontier judgment in existing target issue, PR, or handoff lineage
+  -> bounded target-owned implementation issue or PR only if change is recommended
 ```
 
 Use this sequence for source-only release work:

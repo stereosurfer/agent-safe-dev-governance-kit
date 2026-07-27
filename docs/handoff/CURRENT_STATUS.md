@@ -4,47 +4,47 @@ This is the compact current-status surface for the repository. It is
 overwritten, not appended. Historical detail belongs in GitHub issues, PRs,
 comments, releases, and merge commits.
 
-Last updated: `2026-06-01T00:45:44Z`
+Last updated: `2026-07-27T02:29:30Z`
 
 ## Durable source of truth
 
 - GitHub issues, PRs, comments, releases, and repository files are authoritative.
-- Chat memory is not authoritative.
+- Chat memory and superseded roadmap documents are not current authority.
 - New agent sessions should read `AGENTS.md`, `README.md`, this file, and the
-  active issue/PR if one exists.
+  active issue or PR.
 
 ## Current snapshot
 
-ASGK v1.x is a source-only generic repo-governance product line under the
-Apache-2.0 license. The default operating profile remains generic; runtime
-profiles, adapters, installers, packages, external distribution, and repository
-visibility changes remain human-gated or deferred.
+ASGK v1.7.3 remains the latest completed source-only GitHub release under the
+Apache-2.0 license.
 
-ASGK v1.7.3 is the latest completed source-only GitHub release. It was executed
-under issue #321 after final doctor validation and explicit human approval. The
-release is a v1.x PR-readiness fallback patch: ASGK Skills now distinguish
-source-repo `check-pr` availability from target-repo PR readiness evidence more
-explicitly.
+ASGK 2.0 is an active docs-driven evolution under issue #323. Its current
+product facts center on safe, smooth human-AI handoff; work that stays
+understandable, resumable, and traceable; and freedom from dependence on a
+specific model, provider, Agent, or prior conversation.
 
-Historical release detail is not duplicated here. GitHub releases, release
-issues, PRs, Merge Decision Records, issue comments, tags, and merge commits are
-the canonical release-history evidence. This file records only the current
-recovery state and latest completed release.
+Issue #325 establishes that introducing or materially upgrading ASGK is a
+read-only, target-specific assessment by a human-selected frontier-capability
+model. The Skill guides evidence, boundaries, uncertainty, and stopping; the
+model judges fit, governance depth, minimum sufficient adaptation, or no change.
+The assessment creates no extra human gate.
 
-Tag `v1.7.3` and GitHub release `ASGK v1.7.3` were created from target commit
-`c032620eba571ce96e6c97c47110bbbe5fb72065`. v1.7.3 remains source-only: no
-package, installer, runtime adapter, dependency, schema, workflow, repository
-visibility change, cloud/API/model lane, MCP change, or v2.0 work was
-performed. Installed Codex Skill sync was not performed for this release because
-it was not explicitly requested.
+Current target-install scripts still retain legacy fixed-shape assumptions.
+Their output is bounded mechanical evidence, not target-fit, architecture,
+readiness, or approval authority. Tooling correction remains separate work
+under the #323 program.
+
+The old runtime-adapter/profile roadmap, fixed module selection, adoption
+declaration, and historical planning documents are superseded and must not
+drive new work.
 
 ## Active work
 
 ```yaml
-issue: none
+issue: "#323 ASGK 2.0 program"
 pr: none
 branch: main
-state: no_active_work
+state: active_program
 ```
 
 ## Current validation entrypoint
@@ -55,45 +55,38 @@ python3 scripts/asgk.py doctor
 
 Additional focused checks:
 
-- PR body create/edit: `python3 scripts/pr_governance_preflight.py check --body-file <body-file>`
+- PR body: `python3 scripts/pr_governance_preflight.py check --body-file <body-file>`
 - PR readiness: `python3 scripts/asgk.py check-pr --pr <number>`
-- Release state: `python3 scripts/asgk.py release-state-check --tag <tag> --release-title "<title>"`
-- Task packets: `python3 scripts/asgk.py task-packet-check --file <path>`
+- Work-unit scope: `python3 scripts/asgk.py work-unit-check --issue <number> --git-base origin/main --git-head WORKTREE`
 
 ## Closed gates
 
-- runtime-specific profiles/adapters before v2.0
-- cloud egress by default
-- API/model calls by default
-- MCP write capability
-- schema breaking changes
-- new dependencies
-- package publication without explicit human-gated issue
-- repository visibility change without explicit human approval
-- automatic handoff final-judgment generation
-- installer scaffold before checker/planner and decision governance are stable
-- low-risk status by agent declaration
-- v2.0 follow-up work without a new durable issue
+- superseded roadmap or historical plan as current task authority
+- automatic model selection, routing, switching, or price-tier dispatch
+- fixed target file shape, module picker, or adoption declaration as fit proof
+- legacy checker output as semantic readiness or architecture authority
+- cloud egress, API/model calls, MCP writes, dependencies, schema changes,
+  publication, or repository visibility changes without their existing gates
+- low-risk or merge approval by Agent declaration
 
 ## Last completed
 
 ```yaml
-issue: "#321 Publish ASGK v1.7.3 source-only patch release"
-state: "v1.7.3 source-only release executed and release-state docs synchronized"
+issue: "#325 Restore frontier-guided adoption assessment in canonical docs and Skills"
+state: "post-merge canonical adoption and material-upgrade responsibility boundary"
 latest_completed_release: "ASGK v1.7.3"
 latest_completed_tag: v1.7.3
-target_commit: "c032620eba571ce96e6c97c47110bbbe5fb72065"
-release_url: "https://github.com/stereosurfer/agent-safe-dev-governance-kit/releases/tag/v1.7.3"
-validation: "python3 scripts/asgk.py doctor passed before release execution; release-state-check and doctor passed during release-state closeout"
-note: "Installed Codex Skill sync was not performed because it was not explicitly requested. No package, installer, runtime adapter, dependency, schema, workflow, repository visibility, cloud/API/model lane, MCP change, or v2.0 work was performed."
+validation: "doctor, work-unit scope, wording/reference scans, and Skill validation"
+proof_limit: "documentation and Skills changed; legacy target-install scripts and compact-upgrade implementation did not"
 ```
 
 ## Runtime artifact status
 
 No runtime artifacts, private source material, SQLite live DB, cache files,
-model cache, or external preparation outputs are currently authorized.
+model cache, or external preparation outputs are authorized by this status.
 
 ## Next safe action
 
-No active release-state follow-up is required after the v1.7.3 closeout PR
-merges. Future gated work must start from a separate durable issue.
+Use the corrected binding facts in issue #323 to authorize one bounded next work
+unit. Do not resume work from an old roadmap, historical plan, or deleted
+module-selection interpretation.

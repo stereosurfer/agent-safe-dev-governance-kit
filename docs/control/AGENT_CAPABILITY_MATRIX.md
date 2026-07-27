@@ -3,8 +3,10 @@
 Status: active control policy.
 
 This document classifies task risk and the minimum reasoning depth needed for
-work under the generic ASGK governance flow. It does not assign agents or
-authorize platform-native subagents.
+work under the generic ASGK governance flow. It does not assign agents, choose a
+provider or model, route work, authorize platform-native subagents, or create a
+human approval gate. A human selects the evaluator; the selected model and
+client remain external to ASGK.
 
 ## Purpose
 
@@ -17,6 +19,12 @@ Use this matrix to decide:
 
 `lane` and `intelligence_level` are task metadata. They do not create a second
 source of authority and do not bypass GitHub issue-first work.
+
+For an infrequent, high-impact ASGK adoption or material-upgrade assessment,
+selecting frontier capability protects the evaluator's ability to reason from
+the target repository's actual state. The relevant Skill guides attention,
+evidence, boundaries, uncertainty, and stop behavior; it does not prescribe the
+target architecture or recommendation.
 
 ## Related Sources
 
@@ -36,7 +44,7 @@ If these sources conflict, stop and report the conflict.
 | `fast_basic` | mechanical search, inventory, formatting checks, typo fixes | code changes, policy interpretation, security review |
 | `standard` | narrow implementation, focused tests, bounded docs updates | cross-module design, dependency changes, security-boundary changes |
 | `advanced` | multi-file implementation, tricky debugging, nontrivial tests, UX workflows | final policy authority, final security gate, high-risk merge authority |
-| `frontier` | architecture review, security-sensitive analysis, merge-risk review, ambiguous tradeoffs | routine mechanical work when lower levels suffice |
+| `frontier` | architecture review, target adoption or material-upgrade assessment, security-sensitive analysis, merge-risk review, ambiguous tradeoffs | treating its judgment as implementation approval, mechanical proof, or authority to overwrite target state |
 
 ## Capability Matrix
 
@@ -52,6 +60,7 @@ If these sources conflict, stop and report the conflict.
 | issue or PR template wording update | `standard` | maybe | maybe | `tooling_or_validation` | Required-field or merge-field changes escalate. |
 | report format update | `standard` | maybe | no if clarifying | `control_policy` | Removing required evidence escalates. |
 | validation docs or negative-test plan | `standard` | yes if docs-only | no | `tooling_or_validation` | Executable fixtures are separate validation work. |
+| target ASGK adoption or material-upgrade assessment | `frontier` | not applicable; assessment is read-only | no for assessment; only for an exact existing gate triggered by proposed implementation | `control_policy` | Skill guides the assessment; the evaluator judges fit, depth, minimum change, or no change from target evidence. |
 | validator or governance script change | `advanced` | maybe | maybe | `tooling_or_validation` | Must include test evidence. |
 | GitHub Actions workflow change | `advanced` | maybe | maybe | `tooling_or_validation` | Permission or external action expansion is gated. |
 | schema or contract clarification | `advanced` | maybe | no if non-semantic | `schema_or_contract` | Align examples and checks. |
@@ -60,6 +69,25 @@ If these sources conflict, stop and report the conflict.
 | protected path, human-gate, or merge-policy change | `frontier` | no | yes | `merge_decision` | Never solo auto-merge. |
 | dependency, cloud/API, MCP, or model-call enablement | `frontier` | no | yes | `promotion_or_output_readiness` | Requires explicit gate and rollback. |
 | release/publication decision | `frontier` | no | yes | `promotion_or_output_readiness` | Human-gated. |
+
+## Frontier-Guided Adoption And Upgrade Assessment
+
+For target adoption and material upgrade work:
+
+- ASGK does not select, route, schedule, switch, price-tier, or orchestrate the
+  evaluator.
+- The assessment is read-only. Its recommendation is not implementation,
+  approval, merge, or release authority.
+- The Skill guides target discovery, evidence comparison, universal safety
+  boundaries, alternatives, confidence, unknowns, and safe-stop behavior.
+- The evaluator judges target fit, governance depth, minimum sufficient
+  adaptation, and whether retaining the current target state is preferable.
+- Deterministic tools provide bounded observations and invariant or concrete
+  claim checks. They do not decide semantic completeness or target shape.
+- Results belong in the target's existing issue, PR, or handoff lineage. Any
+  later write requires a separately authorized target-owned work unit.
+- Human approval is required only when the proposed implementation crosses a
+  concrete existing human-gated operation.
 
 ## Escalation Rules
 
@@ -70,7 +98,13 @@ Escalate or stop when the actual work:
   boundaries, schema semantics, dependencies, external actions, or runtime
   capabilities;
 - needs context outside the issue or PR allowed scope;
-- has ambiguous tradeoffs or missing rollback expectations.
+- has missing rollback expectations for a proposed implementation.
+
+Ambiguous tradeoffs in a read-only frontier assessment do not by themselves
+create a human gate. Record alternatives, confidence, unknowns, and the evidence
+that could change the recommendation. Stop only when the evaluator cannot make
+a responsible recommendation or the next action crosses a concrete existing
+gate.
 
 Downscope instead when the risky portion is separable, and list deferred work in
 the PR `Known Gaps`.
@@ -84,3 +118,7 @@ Before completion, verify:
 3. The required context read set was used or an override was recorded.
 4. Human-gated operations are not being merged without approval.
 5. Low-risk merge is allowed by this matrix and the merge policies.
+6. Adoption or material-upgrade assessments preserve model judgment and do not
+   turn a Skill or deterministic result into target architecture authority.
+7. Any `next_action_gate` names a concrete existing gate and the exact action
+   that must wait without blocking completion of the read-only assessment.

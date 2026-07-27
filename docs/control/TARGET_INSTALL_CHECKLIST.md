@@ -1,219 +1,151 @@
-# Target Install Checklist
+# Target Install Assessment Checklist
 
-Status: active target-install specification.
+Status: active frontier-assessment question and evidence guide.
 
-This checklist defines what must be true before a target repository treats ASGK
-as active governance.
+This checklist helps a frontier-capability evaluator perform a read-only,
+target-specific ASGK adoption or material-upgrade assessment.
 
-It is a human- and agent-readable checklist. It is not an installer and not a
-validator implementation.
+It is not a required-file checklist, target architecture, module menu,
+configuration form, adoption declaration, approval record, or deterministic
+validator contract.
 
 ## Core Rule
 
 ```text
-A target repository must own its governance state.
+Judge fit and depth from target evidence. Do not infer correctness from source-shape similarity.
 ```
 
-Do not install ASGK by copying ASGK repo-local state into the target repository.
-Use target templates, then customize the result for the target repository.
+The relevant ASGK Skill guides the assessment procedure. This checklist defines
+questions that should be answered or explicitly marked unresolved. It does not
+predetermine the answer.
 
-For existing ASGK-adopted repositories upgrading to compact governance, use an
-upgrade manifest and keep it audit-and-plan until the target repository has its
-own issue or PR:
+## 1. Target Context And Authority
 
-```bash
-python3 scripts/asgk.py compact-target-upgrade-check --manifest compact-target-upgrade.json
-```
+- What repository or checkout is being assessed?
+- What issue, PR, repository rule, or user request defines the read-only scope?
+- Which target files and GitHub surfaces currently own work authorization,
+  boundaries, validation, decisions, closeout, and handoff?
+- Is current state recoverable without prior chat?
+- Are authority conflicts or stale status already visible?
+- Which evidence was inspected, and which expected evidence was unavailable?
 
-The manifest must preserve target-owned `CURRENT_STATUS.md`, document maps,
-registries, bootstrap docs, and license surfaces.
+## 2. Current Work And Handoff Risk
 
-## Required Target Files
+- How do humans and Agents currently determine the active work unit?
+- Can a different provider, lower-cost Agent, or human resume safely?
+- Are allowed paths, non-goals, stop conditions, validation, and next actions
+  durable and discoverable?
+- Where can a later maintainer trace material decisions and evidence?
+- Which failures would cause the largest reconstruction or blast-radius cost?
 
-The target repository should contain these governance surfaces before ASGK is
-considered active:
+## 3. Existing Governance And Actual Gaps
 
-```yaml
-required_target_files:
-  - AGENTS.md
-  - README.md
-  - docs/DOCUMENT_MAP.md
-  - docs/DOCUMENT_REGISTRY.md
-  - docs/handoff/CURRENT_STATUS.md
-  - docs/control/CONTEXT_BUDGET_POLICY.md
-  - docs/control/AGENT_CAPABILITY_MATRIX.md
-  - docs/control/LOW_RISK_AUTONOMOUS_MERGE_POLICY.md
-  - docs/control/HUMAN_GATED_OPERATIONS.md
-  - docs/control/MERGE_DECISION_RECORD.md
-  - docs/control/TASK_PACKET_FORMAT.md
-  - docs/control/AGENT_REPORT_FORMAT.md
-  - .github/PULL_REQUEST_TEMPLATE.md
-  - .github/ISSUE_TEMPLATE/agent_task.yml
-```
+- Which useful governance behaviors already exist, regardless of filename?
+- Which observed failures are process gaps, tooling gaps, stale-state problems,
+  or merely documentation differences?
+- Does the target already have equivalent controls under target-owned names?
+- Would importing an ASGK source surface duplicate or conflict with those
+  controls?
+- Which gaps are material enough to justify adaptation?
+- Which apparent gaps are unsupported assumptions and require more context?
 
-Optional when the target repo uses ASGK CLI checks:
+## 4. Fit And Minimum Sufficient Depth
 
-```yaml
-optional_tooling_files:
-  - scripts/asgk.py
-  - scripts/asgk_lib/
-  - scripts/check_project.py
-  - scripts/validate_bootstrap.py
-  - scripts/governance_hygiene.py
-  - scripts/compact_governance_red_team_check.py
-  - scripts/policy_gate_check.py
-  - scripts/pr_governance_preflight.py
-  - scripts/target_install_plan.py
-```
+The evaluator should explain:
 
-## License Handling
+- whether ASGK adaptation is useful for this target;
+- which observed risks the recommendation addresses;
+- the minimum sufficient governance depth for those risks;
+- why a lighter approach would be insufficient;
+- why a heavier approach would add unnecessary cost or duplication;
+- which source capabilities are relevant as implementation input;
+- which source capabilities are irrelevant, excessive, or incompatible;
+- what alternative approaches were considered.
 
-ASGK v1.x is released under Apache-2.0. A target repository that copies or
-adapts ASGK-derived files must preserve the applicable license and notice
-handling for that material.
+Do not answer this section by matching the target against a universal ASGK file
+list.
 
-This does not mean the target repository must adopt Apache-2.0 as its global
-license. The target owner must decide and record the target repository's own
-license policy.
+## 5. Target Ownership And Source-State Safety
 
-```yaml
-license_handling_checks:
-  visible_surface:
-    examples:
-      - LICENSE
-      - LICENSE.md
-      - NOTICE
-      - NOTICE.md
-      - THIRD_PARTY_NOTICES.md
-      - docs/LICENSE.md
-      - docs/NOTICE.md
-  warning_if_missing: true
-  blocking_by_default: false
-  must_preserve:
-    - ASGK Apache-2.0 notice for copied or adapted ASGK-derived material
-    - applicable copyright notices
-    - modification notices where Apache-2.0 requires them
-  must_not_imply:
-    - copying ASGK LICENSE automatically relicenses the whole target repository
-```
+- Which target-owned status, policies, paths, history, templates, and license
+  surfaces must remain untouched?
+- Does any proposed source material contain donor-repository state, ASGK
+  history, stale paths, or source-only validation assumptions?
+- Could a copied surface silently become competing authority?
+- Is the proposed adaptation compatible with target terminology and workflow?
+- Are source-derived and target-authored portions distinguishable where that
+  distinction matters?
 
-## Template-derived Target Files
+## 6. Evidence And Validation
 
-These files must be created from target-project templates and then customized.
+For every material recommendation:
 
-```yaml
-template_derived_files:
-  - target: docs/DOCUMENT_MAP.md
-    source_template: templates/DOCUMENT_MAP.template.md
-    required_properties:
-      - compact router only
-      - points to docs/DOCUMENT_REGISTRY.md
-      - does not contain full registry tables
-      - does not contain ASGK repo-local registry rows
-  - target: docs/DOCUMENT_REGISTRY.md
-    source_template: templates/DOCUMENT_REGISTRY.template.md
-    required_properties:
-      - full target repository registry
-      - placeholder rows removed
-      - only target repository documents listed
-```
+- identify the target evidence supporting it;
+- distinguish observed fact from evaluator judgment;
+- name any deterministic output used;
+- state exactly what the output proves;
+- state what was not checked;
+- record confidence and unresolved questions;
+- avoid claiming security, semantic correctness, privacy, API freshness, or
+  completion unless separately evidenced.
 
-## Customize-required Files
+A current `target-install-check`, `target-install-plan`, compact-upgrade check,
+or source `doctor` result is supporting evidence only at its documented
+boundary.
 
-These files may be copied from ASGK starter material only if reviewed and adapted
-for the target repository.
+## 7. License And External Boundaries
 
-```yaml
-customize_required_files:
-  - docs/bootstrap/00_project_brief.md
-  - docs/bootstrap/01_physical_boundaries.md
-  - docs/bootstrap/02_storage_roots.md
-  - docs/bootstrap/03_tech_stack.md
-  - docs/handoff/CURRENT_STATUS.md
-  - templates/task_packet.template.yaml
-```
+- Would proposed implementation copy or adapt Apache-2.0 ASGK material?
+- Where could applicable notice handling live without replacing target-owned
+  license policy?
+- Does implementation touch dependencies, workflows, external services,
+  credentials, visibility, publication, private material, or runtime adapters?
+- Which existing human gates would those concrete actions trigger?
 
-Required checks:
+The assessment itself does not create a new human gate.
 
-```yaml
-customization_checks:
-  project_brief:
-    - target mission is present
-    - target non-goals are present
-    - no ASGK repository mission is treated as target mission
-  physical_boundaries:
-    - target writable paths are listed
-    - target protected paths are listed
-    - forbidden operations are listed
-  storage_roots:
-    - target Code Repo is identified
-    - target Artifact Root policy is identified if used
-    - target Local State Root policy is identified if used
-  tech_stack:
-    - target language/runtime/toolchain is declared
-    - dependency policy is declared
-  current_status:
-    - target current state is fresh
-    - next safe action is target-specific
-    - no ASGK handoff state is present
-  task_packet_template:
-    - lanes match target repo
-    - allowed path examples match target repo
-    - validation commands match target repo
-```
+## 8. Recommendation And Next Safe Work
 
-## Forbidden Target Authority
+The durable assessment result should state:
 
-These ASGK repo-local or internal files must not become target-project authority.
+- the fit/depth conclusion and rationale;
+- target evidence and comparison;
+- target-owned state to preserve;
+- relevant ASGK source inputs, if any;
+- alternatives considered;
+- confidence, unknowns, and proof limits;
+- the smallest coherent next implementation work unit;
+- paths or actions that must remain excluded;
+- existing human gates triggered by that proposed work, if any;
+- or a clear conclusion that no implementation is currently justified.
 
-```yaml
-forbidden_as_target_authority:
-  - ASGK docs/DOCUMENT_MAP.md
-  - ASGK docs/DOCUMENT_REGISTRY.md
-  - ASGK docs/handoff/AGENT_LOG.md
-  - ASGK docs/handoff/DECISIONS.md
-  - ASGK docs/control/HISTORICAL_ASGK_STABILIZATION_EVIDENCE.md
-  - ASGK docs/control/HISTORICAL_ASGK_READINESS_EVIDENCE.md
-  - ASGK docs/control/UNCONTROLLED_DOCUMENT_AUDIT.md
-  - ASGK docs/EVOLUTION_MODEL.md
-  - ASGK examples/negative/*
-  - ASGK profiles/*
-  - ASGK docs/adapters/*
-```
+Use an existing issue, PR, or handoff surface. Do not create a separate adoption
+declaration or manifest.
 
-## Deferred-v2 Guard
+## Completion Quality
 
-Runtime-specific adapter/profile material is not part of the v1.x target install
-surface.
+An assessment is sufficiently complete when a later human or Agent can:
 
-```yaml
-deferred_v2_not_installed_by_default:
-  - profiles/codex-app/
-  - profiles/chatgpt-web-github-connector/
-  - profiles/claude-code/
-  - profiles/cursor/
-  - profiles/opengoat/
-  - docs/adapters/
-```
+- understand what was inspected;
+- reproduce the evidence trail;
+- distinguish fact, tool result, evaluator judgment, and unknowns;
+- understand why the recommended depth fits this target;
+- continue with a bounded work unit without relying on the evaluator's chat;
+- see what the assessment does not prove.
 
-These surfaces require a scoped v2.0 adapter/profile issue.
+There is no required target file count or universal completion shape.
 
-## Final Acceptance Checklist
+## Stop Conditions
 
-```yaml
-target_install_acceptance:
-  - required target files exist or explicitly documented as not applicable
-  - license or notice handling for ASGK-derived material is visible or explicitly documented
-  - docs/DOCUMENT_MAP.md is a compact router
-  - docs/DOCUMENT_REGISTRY.md is target-specific
-  - customize-required files are target-specific
-  - forbidden ASGK repo-local files are not target authority
-  - deferred-v2 surfaces are not installed by default
-  - target validation command is known
-  - first governance smoke-test issue can be created
-```
+Use `blocked` only if:
 
-## Next Step
+- target evidence is too thin for a defensible fit/depth judgment;
+- scope or authority is unclear;
+- private or protected context is required but unavailable;
+- source and target rules conflict;
+- the evaluator would otherwise need to guess.
 
-After this checklist is accepted, a later tooling issue may implement a mechanical
-install-surface validator against `docs/control/TARGET_INSTALL_VALIDATION_PLAN.md`.
+A legacy tool conflict is a proof-limit finding, not an assessment blocker when
+a responsible recommendation remains possible. A protected next action is
+recorded under its exact existing gate; it does not block the read-only
+assessment.
