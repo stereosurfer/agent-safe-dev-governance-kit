@@ -38,7 +38,6 @@ def preflight(body_file: str) -> int:
 
     checks = [
         ["python3", "scripts/asgk.py", "pr-body-check", "--file", str(body_path)],
-        ["python3", "scripts/policy_gate_check.py", "--pr-body", str(body_path)],
     ]
     for check in checks:
         result = run(check)

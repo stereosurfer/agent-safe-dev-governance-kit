@@ -94,6 +94,36 @@ WORK_UNIT_COMMANDS = (
     (*ASGK, "work-unit-check", "--json-file", "examples/negative/work_unit.missing-task-fields.json", "--paths-file", "examples/negative/work_unit.missing-task-fields.paths.txt"),
 )
 
+MERGE_ALLOWED_INCOMPLETE_GATE_FIXTURES = (
+    "examples/negative/policy_gate/pr_body.checks-pending.md",
+    "examples/negative/policy_gate/pr_body.human-gates-pending.md",
+    "examples/negative/policy_gate/pr_body.checks-false.md",
+    "examples/negative/policy_gate/pr_body.human-gates-false.md",
+)
+
+POLICY_GATE_EXPECTED_FAILURES = (
+    *_commands(
+        ("python3", "scripts/policy_gate_check.py", "--pr-body"),
+        (
+            "examples/negative/policy_gate/pr_body.missing-merge-decision.md",
+            "examples/negative/policy_gate/pr_body.missing-current-status-impact.md",
+            "examples/negative/policy_gate/pr_body.updated-missing-post-merge-safe.md",
+            *MERGE_ALLOWED_INCOMPLETE_GATE_FIXTURES,
+            "examples/negative/policy_gate/pr_body.see-chat-authority.md",
+            "examples/pr_body.merge-blocked-draft.valid.md",
+        ),
+    ),
+    *_commands_with_suffix(
+        ("python3", "scripts/policy_gate_check.py", "--pr-body"),
+        MERGE_ALLOWED_INCOMPLETE_GATE_FIXTURES,
+        ("--mode", "body-coherence"),
+    ),
+    *_commands(
+        (*ASGK, "pr-body-check", "--file"),
+        MERGE_ALLOWED_INCOMPLETE_GATE_FIXTURES,
+    ),
+)
+
 COMPACT_SCOPE_LOCK_CASES = (
     ("--json-file", "examples/negative/compact_governance/scope-lock.missing-allowed-paths.json"),
     ("--json-file", "examples/compact_governance/scope_lock.valid-issue.json", "--compare-file", "examples/negative/compact_governance/scope-lock.stale-capture.json"),
@@ -125,23 +155,14 @@ NEGATIVE_CASE_GROUPS = {
         ("--expect-blocked",),
     )),
     "textual": NegativeCaseGroup(EXPECTED_FAILURE, TEXTUAL_EXPECTED_FAILURES),
-    "policy-gate": NegativeCaseGroup(EXPECTED_FAILURE, _commands(
-        ("python3", "scripts/policy_gate_check.py", "--pr-body"),
-        (
-            "examples/negative/policy_gate/pr_body.missing-merge-decision.md",
-            "examples/negative/policy_gate/pr_body.missing-current-status-impact.md",
-            "examples/negative/policy_gate/pr_body.updated-missing-post-merge-safe.md",
-            "examples/negative/policy_gate/pr_body.checks-pending.md",
-            "examples/negative/policy_gate/pr_body.human-gates-pending.md",
-            "examples/negative/policy_gate/pr_body.see-chat-authority.md",
-        ),
-    )),
+    "policy-gate": NegativeCaseGroup(EXPECTED_FAILURE, POLICY_GATE_EXPECTED_FAILURES),
     "pr-status": NegativeCaseGroup(EXPECTED_FAILURE, _commands(
         (*ASGK, "check-pr", "--json-file"),
         (
             "examples/negative/pr_status.draft-failing.json",
             "examples/negative/pr_status.missing-closing-reference.json",
             "examples/negative/pr_status.changed-path-outside-allowed.json",
+            "examples/negative/pr_status.merge-blocked-all-clean.json",
         ),
     )),
     "target-install": NegativeCaseGroup(EXPECTED_FAILURE, _commands(

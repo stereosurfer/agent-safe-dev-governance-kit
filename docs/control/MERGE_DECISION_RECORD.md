@@ -1,6 +1,6 @@
 # Merge Decision Record
 
-Each merge-eligible PR must include a Merge Decision Record.
+Each PR body, including a blocked draft, must include a Merge Decision Record.
 
 ```yaml
 merge_decision:
@@ -8,7 +8,7 @@ merge_decision:
   lane:
   intelligence_level:
   durable_source_of_truth:
-  checks_passed:
+  checks_passed: true | pending | false
   allowed_paths_checked:
   expected_output_checked:
   contracts_checked:
@@ -16,7 +16,7 @@ merge_decision:
   storage_boundary:
   runtime_artifact_boundary:
   safety_review:
-  human_gates_checked:
+  human_gates_checked: true | pending | false
   validation_evidence_checked:
   validation_claim_source:
     local_doctor: freshly_rerun | recorded_in_pr_body | existing_durable_record | not_run | not_applicable
@@ -24,6 +24,35 @@ merge_decision:
   result: merge_allowed | merge_blocked
   reason:
 ```
+
+## Body Coherence Versus Merge Eligibility
+
+The record answers two different questions:
+
+| Question | Accepted `result` | Gate-state rule | What success means |
+|---|---|---|---|
+| body coherence | `merge_allowed` or `merge_blocked` | a blocked body may truthfully use `pending` or `false` for checks and human gates | the body is complete and internally coherent enough to submit |
+| merge eligibility | `merge_allowed` only | `checks_passed` and `human_gates_checked` must be `true` | the body-level merge claim is coherent; full PR readiness still needs live checks |
+
+`allowed_paths_checked` and `expected_output_checked` must be `true` before
+either PR submission or merge review. Blank or `unknown` required gate state is
+invalid in both modes.
+
+Use the following meanings:
+
+- `checks_passed: pending`: at least one required check has not completed.
+- `checks_passed: false`: at least one required check has failed.
+- `human_gates_checked: pending`: gate applicability or required human review
+  has not completed.
+- `human_gates_checked: false`: at least one known required human gate remains
+  unsatisfied.
+- `human_gates_checked: true`: applicability was checked and no required human
+  gate remains unsatisfied. It is not Agent self-approval.
+
+A body-coherence pass for `result: merge_blocked` authorizes only PR body
+submission or update. It does not make the PR merge-eligible, low-risk,
+approved, or human-reviewed. Strict merge validation must reject every
+`result: merge_blocked` record, even when its other fields are `true`.
 
 A missing or blocked Merge Decision Record blocks autonomous merge.
 A Merge Decision Record is also incomplete when structured fields replace

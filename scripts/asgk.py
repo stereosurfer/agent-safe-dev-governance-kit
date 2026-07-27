@@ -66,13 +66,10 @@ PR_REQUIRED_HEADINGS = [
     "Evidence Of Completion", "Scope Boundaries", "Current Status Impact",
     "Runtime Output Status", "Merge Decision", "Known Gaps", "Handoff Report",
 ]
-MERGE_DECISION_REQUIRED_FIELDS = [
-    "issue", "lane", "intelligence_level", "durable_source_of_truth",
-    "checks_passed", "allowed_paths_checked", "expected_output_checked",
-    "contracts_checked", "schemas_checked", "storage_boundary",
-    "runtime_artifact_boundary", "safety_review", "human_gates_checked",
-    "result", "reason",
-]
+BODY_COHERENCE_MODE = "body-coherence"
+MERGE_ELIGIBILITY_MODE = "merge-eligibility"
+POLICY_GATE_AUTO_MODE = "auto"
+MERGE_DECISION_TRUE_VALUES = {"true"}
 TASK_PACKET_REQUIRED_FIELDS = [
     "task_id",
     "lane",
@@ -230,16 +227,39 @@ def run_many(commands: list[list[str]]) -> int:
     return 0
 
 
-def run_policy_gate(pr_body: str | Path, *, as_json: bool = False) -> int:
-    command = ["python3", "scripts/policy_gate_check.py", "--pr-body", str(pr_body)]
+def run_policy_gate(
+    pr_body: str | Path,
+    *,
+    mode: str = MERGE_ELIGIBILITY_MODE,
+    as_json: bool = False,
+) -> int:
+    command = [
+        "python3",
+        "scripts/policy_gate_check.py",
+        "--pr-body",
+        str(pr_body),
+        "--mode",
+        mode,
+    ]
     if as_json:
         command.append("--json")
     return subprocess.run(command, cwd=ROOT).returncode
 
 
-def run_policy_gate_capture(pr_body: str | Path) -> subprocess.CompletedProcess[str]:
+def run_policy_gate_capture(
+    pr_body: str | Path,
+    *,
+    mode: str = MERGE_ELIGIBILITY_MODE,
+) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
-        ["python3", "scripts/policy_gate_check.py", "--pr-body", str(pr_body)],
+        [
+            "python3",
+            "scripts/policy_gate_check.py",
+            "--pr-body",
+            str(pr_body),
+            "--mode",
+            mode,
+        ],
         cwd=ROOT,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
@@ -585,7 +605,7 @@ def compact_pr_report_agent_claims(payload: dict[str, object], body: str) -> dic
         "validation_evidence_checked": normalized_field_value(merge_section, "validation_evidence_checked"),
     }
     merge_ready_claimed = pr_body_claims["merge_decision_result"] == "merge_allowed"
-    human_gate_claimed = pr_body_claims["human_gates_checked"] in TRUE_VALUES
+    human_gate_claimed = pr_body_claims["human_gates_checked"] in MERGE_DECISION_TRUE_VALUES
     sources = ["pr_body.merge_decision.result"] if merge_ready_claimed else []
     if human_gate_claimed:
         sources.append("pr_body.human_gates_checked")
@@ -1505,15 +1525,34 @@ def check_pr_status_payload(payload: dict[str, object]) -> tuple[str, list[dict[
     if body is None:
         body = ""
     body_text = str(body)
+    merge_section = markdown_section(body_text, "Merge Decision")
+    declared_merge_result = normalized_field_value(merge_section, "result")
+    if declared_merge_result != "merge_allowed":
+        add_pr_status_finding(
+            findings,
+            "merge_decision.result",
+            f"Strict PR readiness requires result: merge_allowed; found {declared_merge_result or 'missing'}.",
+            "Keep the PR blocked until every required gate is complete, then update the durable Merge Decision.",
+        )
     with tempfile.TemporaryDirectory() as tmpdir:
         body_path = Path(tmpdir) / "pull_request_body.md"
         body_path.write_text(body_text, encoding="utf-8")
-        policy_gate = run_policy_gate_capture(body_path)
-        if policy_gate.returncode != 0:
+        strict_policy_gate = run_policy_gate_capture(
+            body_path,
+            mode=MERGE_ELIGIBILITY_MODE,
+        )
+        if strict_policy_gate.returncode != 0:
+            body_coherence = run_policy_gate_capture(
+                body_path,
+                mode=BODY_COHERENCE_MODE,
+            )
+        else:
+            body_coherence = strict_policy_gate
+        if body_coherence.returncode != 0:
             add_pr_status_finding(
                 findings,
                 "body",
-                "PR body policy gate failed.",
+                "PR body coherence check failed.",
                 "Fix Current Status Impact, Merge Decision, source-of-truth, or PR structure fields.",
             )
 
@@ -1602,7 +1641,8 @@ def cmd_policy_gate(args: argparse.Namespace) -> int:
         return print_failures(["provide exactly one of --pr-body or --github-event"])
 
     if args.pr_body:
-        return run_policy_gate(rel(args.pr_body), as_json=args.json)
+        mode = MERGE_ELIGIBILITY_MODE if args.mode == POLICY_GATE_AUTO_MODE else args.mode
+        return run_policy_gate(rel(args.pr_body), mode=mode, as_json=args.json)
 
     event = json.loads(rel(args.github_event).read_text(encoding="utf-8"))
     pull_request = event.get("pull_request")
@@ -1621,11 +1661,14 @@ def cmd_policy_gate(args: argparse.Namespace) -> int:
     body = pull_request.get("body")
     if body is None:
         body = ""
+    mode = args.mode
+    if mode == POLICY_GATE_AUTO_MODE:
+        mode = BODY_COHERENCE_MODE if pull_request.get("draft") is True else MERGE_ELIGIBILITY_MODE
 
     with tempfile.TemporaryDirectory() as tmpdir:
         body_path = Path(tmpdir) / "pull_request_body.md"
         body_path.write_text(str(body), encoding="utf-8")
-        return run_policy_gate(body_path, as_json=args.json)
+        return run_policy_gate(body_path, mode=mode, as_json=args.json)
 
 
 def cmd_check_pr(args: argparse.Namespace) -> int:
@@ -1974,19 +2017,9 @@ def cmd_pr_body_check(args: argparse.Namespace) -> int:
         for field in CURRENT_STATUS_IMPACT_REQUIRED_FIELDS:
             if not line_field_exists(current_status_section, field):
                 failures.append(f"missing Current Status Impact field: {field}")
-    if "Merge Decision" not in headings:
-        failures.append("missing Merge Decision section")
-    else:
-        for field in MERGE_DECISION_REQUIRED_FIELDS:
-            if not line_field_exists(text, field):
-                failures.append(f"missing Merge Decision field: {field}")
-    result = field_value(text, "result")
-    if result and "|" not in result and result not in {"merge_allowed", "merge_blocked"}:
-        failures.append("Merge Decision field result must be merge_allowed or merge_blocked")
-    checks_passed = field_value(text, "checks_passed")
-    if checks_passed and checks_passed.lower() in {"pending", "unknown", "pending github actions"}:
-        failures.append("checks_passed is pending or unknown")
-    return print_failures(failures)
+    if failures:
+        return print_failures(failures)
+    return run_policy_gate(rel(args.file), mode=BODY_COHERENCE_MODE)
 
 
 def cmd_task_packet_check(args: argparse.Namespace) -> int:
@@ -2290,6 +2323,15 @@ def build_parser() -> argparse.ArgumentParser:
     p = sub.add_parser("policy-gate", help="Run PR-body policy gate checks.")
     p.add_argument("--pr-body", help="Path to a PR body markdown file.")
     p.add_argument("--github-event", help="Path to a GitHub Actions event payload JSON file.")
+    p.add_argument(
+        "--mode",
+        choices=[POLICY_GATE_AUTO_MODE, BODY_COHERENCE_MODE, MERGE_ELIGIBILITY_MODE],
+        default=POLICY_GATE_AUTO_MODE,
+        help=(
+            "auto uses body coherence for draft PR events and strict merge eligibility otherwise; "
+            "a standalone PR body defaults to strict merge eligibility"
+        ),
+    )
     p.add_argument("--json", action="store_true", help="Emit machine-readable JSON output.")
     p.set_defaults(func=cmd_policy_gate)
 
@@ -2339,7 +2381,10 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--this-branch", default="")
     p.set_defaults(func=cmd_current_status_impact_check)
 
-    p = sub.add_parser("pr-body-check", help="Check PR body and Merge Decision Record.")
+    p = sub.add_parser(
+        "pr-body-check",
+        help="Check complete PR body structure and body-coherent Merge Decision state.",
+    )
     p.add_argument("--file", required=True)
     p.set_defaults(func=cmd_pr_body_check)
 

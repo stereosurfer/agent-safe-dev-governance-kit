@@ -29,8 +29,14 @@ MERGE_DECISION_REQUIRED_FIELDS = [
 
 CURRENT_STATUS_ALLOWED_VALUES = {"updated", "not_applicable", "deferred"}
 MERGE_RESULT_ALLOWED_VALUES = {"merge_allowed", "merge_blocked"}
-TRUE_VALUES = {"true", "yes"}
+TRUE_VALUES = {"true"}
 UNKNOWN_VALUES = {"", "pending", "unknown", "false", "no", "null", "none", "tbd", "todo"}
+BODY_COHERENCE_MODE = "body-coherence"
+MERGE_ELIGIBILITY_MODE = "merge-eligibility"
+POLICY_GATE_MODES = {BODY_COHERENCE_MODE, MERGE_ELIGIBILITY_MODE}
+RESULT_SENSITIVE_GATE_FIELDS = {"checks_passed", "human_gates_checked"}
+EXACT_TRUE_GATE_FIELDS = {"allowed_paths_checked", "expected_output_checked"}
+BLOCKED_BODY_GATE_VALUES = {*TRUE_VALUES, "pending", "false"}
 
 
 def normalized_bool_text(value: str | None) -> str:
@@ -61,7 +67,12 @@ def add_finding(
     )
 
 
-def check_merge_decision(text: str, findings: list[dict[str, Any]]) -> None:
+def check_merge_decision(
+    text: str,
+    findings: list[dict[str, Any]],
+    *,
+    mode: str,
+) -> None:
     merge_section = section(text, "Merge Decision")
     if not merge_section:
         add_finding(
@@ -74,6 +85,9 @@ def check_merge_decision(text: str, findings: list[dict[str, Any]]) -> None:
         )
         return
 
+    result = normalized_bool_text(field_value(merge_section, "result"))
+    blocked_body_coherence = mode == BODY_COHERENCE_MODE and result == "merge_blocked"
+
     for field in MERGE_DECISION_REQUIRED_FIELDS:
         value = field_value(merge_section, field)
         if value is None:
@@ -85,7 +99,36 @@ def check_merge_decision(text: str, findings: list[dict[str, Any]]) -> None:
                 "Required Merge Decision field is missing.",
                 f"Add `{field}` to the Merge Decision Record.",
             )
-        elif normalized_bool_text(value) in UNKNOWN_VALUES:
+            continue
+
+        normalized = normalized_bool_text(value)
+        if field in RESULT_SENSITIVE_GATE_FIELDS:
+            allowed_values = BLOCKED_BODY_GATE_VALUES if blocked_body_coherence else TRUE_VALUES
+            if normalized not in allowed_values:
+                allowed_description = (
+                    "`true`, `pending`, or `false`"
+                    if blocked_body_coherence
+                    else "`true`"
+                )
+                add_finding(
+                    findings,
+                    "FAIL",
+                    "policy_gate",
+                    field,
+                    f"`{field}` is not valid for `{result or 'missing result'}` in {mode} mode.",
+                    f"Use {allowed_description}; blank or `unknown` is never valid.",
+                )
+        elif field in EXACT_TRUE_GATE_FIELDS:
+            if normalized not in TRUE_VALUES:
+                add_finding(
+                    findings,
+                    "FAIL",
+                    "policy_gate",
+                    field,
+                    f"`{field}` is not mechanically confirmed true.",
+                    f"Set `{field}: true` before PR submission.",
+                )
+        elif normalized in UNKNOWN_VALUES:
             add_finding(
                 findings,
                 "FAIL",
@@ -95,31 +138,6 @@ def check_merge_decision(text: str, findings: list[dict[str, Any]]) -> None:
                 f"Set `{field}` to a concrete policy-supported value or keep the PR human-gated.",
             )
 
-    exact_true_fields = ["checks_passed", "allowed_paths_checked", "expected_output_checked"]
-    for field in exact_true_fields:
-        value = normalized_bool_text(field_value(merge_section, field))
-        if value not in TRUE_VALUES:
-            add_finding(
-                findings,
-                "FAIL",
-                "policy_gate",
-                field,
-                f"`{field}` is not mechanically confirmed true.",
-                f"Set `{field}: true` only when the gate is verified; otherwise keep the PR merge_blocked and human-gated.",
-            )
-
-    human_gates_checked = normalized_bool_text(field_value(merge_section, "human_gates_checked"))
-    if human_gates_checked not in TRUE_VALUES:
-        add_finding(
-            findings,
-            "FAIL",
-            "policy_gate",
-            "human_gates_checked",
-            "Human-gate status is not mechanically confirmed true.",
-            "Set `human_gates_checked: true` only when human-gate review is complete; otherwise keep the PR human-gated.",
-        )
-
-    result = normalized_bool_text(field_value(merge_section, "result"))
     if result not in MERGE_RESULT_ALLOWED_VALUES:
         add_finding(
             findings,
@@ -128,6 +146,15 @@ def check_merge_decision(text: str, findings: list[dict[str, Any]]) -> None:
             "result",
             "Merge Decision result is not one of the allowed values.",
             "Use `merge_allowed` or `merge_blocked`.",
+        )
+    elif mode == MERGE_ELIGIBILITY_MODE and result != "merge_allowed":
+        add_finding(
+            findings,
+            "FAIL",
+            "policy_gate",
+            "result",
+            "Strict merge-eligibility mode requires `result: merge_allowed`.",
+            "Keep the PR blocked until every required check and human gate is complete, then update the durable Merge Decision.",
         )
 
 
@@ -212,7 +239,7 @@ def check_chat_authority(text: str, findings: list[dict[str, Any]]) -> None:
         )
 
 
-def check_pr_body(text: str) -> list[dict[str, Any]]:
+def check_pr_body(text: str, *, mode: str) -> list[dict[str, Any]]:
     findings: list[dict[str, Any]] = []
     headings = markdown_headings(text)
     for required in ["Task Reference", "Scope Boundaries", "Current Status Impact", "Merge Decision", "Handoff Report"]:
@@ -227,38 +254,85 @@ def check_pr_body(text: str) -> list[dict[str, Any]]:
             )
     check_chat_authority(text, findings)
     check_current_status_impact(text, findings)
-    check_merge_decision(text, findings)
+    check_merge_decision(text, findings, mode=mode)
     return findings
 
 
-def output_findings(findings: list[dict[str, Any]], *, as_json: bool) -> int:
+def output_findings(
+    findings: list[dict[str, Any]],
+    *,
+    as_json: bool,
+    mode: str,
+    declared_result: str,
+) -> int:
     blocking = [finding for finding in findings if finding["blocks_merge_eligibility"]]
     result = "fail" if blocking else "pass"
-    payload = {"result": result, "low_risk_inferred": False, "findings": findings}
+    payload = {
+        "result": result,
+        "mode": mode,
+        "declared_merge_decision": declared_result,
+        "merge_eligibility_inferred": False,
+        "low_risk_inferred": False,
+        "findings": findings,
+    }
     if as_json:
         print(json.dumps(payload, indent=2, sort_keys=True))
     else:
         if not findings:
-            print("Policy gate check passed. No low-risk status was inferred.")
+            if mode == BODY_COHERENCE_MODE and declared_result == "merge_blocked":
+                print(
+                    "PR body coherence check passed for submission. "
+                    "The declared Merge Decision remains merge_blocked; "
+                    "no merge eligibility or low-risk status was inferred."
+                )
+            else:
+                print(
+                    f"Policy gate check passed in {mode} mode. "
+                    "Full PR merge eligibility and low-risk status were not inferred."
+                )
         else:
             for finding in findings:
                 print(
                     f"{finding['severity']}: [{finding['category']}] {finding['field']} - "
                     f"{finding['reason']} Fix: {finding['recommended_fix']}"
                 )
-            print(f"Policy gate check result: {result}. No low-risk status was inferred.")
+            print(
+                f"Policy gate check result: {result} in {mode} mode. "
+                "No merge eligibility or low-risk status was inferred."
+            )
     return 1 if blocking else 0
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Read-only fail-closed ASGK policy gate checker for PR bodies.")
+    parser = argparse.ArgumentParser(
+        description=(
+            "Read-only ASGK PR body checker with strict merge eligibility by default "
+            "and an explicit body-coherence mode for truthful blocked drafts."
+        )
+    )
     parser.add_argument("--pr-body", required=True, help="Path to a PR body markdown file.")
+    parser.add_argument(
+        "--mode",
+        choices=sorted(POLICY_GATE_MODES),
+        default=MERGE_ELIGIBILITY_MODE,
+        help=(
+            "Use body-coherence only for truthful PR submission checks. "
+            "The default merge-eligibility mode stays strict."
+        ),
+    )
     parser.add_argument("--json", action="store_true", help="Emit JSON output.")
     args = parser.parse_args()
 
     text = Path(args.pr_body).read_text(encoding="utf-8")
-    findings = check_pr_body(text)
-    return output_findings(findings, as_json=args.json)
+    findings = check_pr_body(text, mode=args.mode)
+    merge_section = section(text, "Merge Decision")
+    declared_result = normalized_bool_text(field_value(merge_section, "result"))
+    return output_findings(
+        findings,
+        as_json=args.json,
+        mode=args.mode,
+        declared_result=declared_result,
+    )
 
 
 if __name__ == "__main__":

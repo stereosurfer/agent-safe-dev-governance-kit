@@ -1,0 +1,30 @@
+{
+  "number": 326,
+  "title": "Merge-blocked PR with otherwise clean metadata",
+  "state": "OPEN",
+  "isDraft": false,
+  "mergeStateStatus": "CLEAN",
+  "reviewDecision": "APPROVED",
+  "url": "https://github.com/example/repo/pull/326",
+  "statusCheckRollup": [
+    {
+      "__typename": "CheckRun",
+      "name": "validate",
+      "status": "COMPLETED",
+      "conclusion": "SUCCESS"
+    }
+  ],
+  "files": [
+    {
+      "path": "scripts/policy_gate_check.py"
+    }
+  ],
+  "closingIssuesReferences": [
+    {
+      "number": 326,
+      "url": "https://github.com/example/repo/issues/326",
+      "body": "## Required Task Fields\n\n```yaml\nlane: lane_06_ci_github\nintelligence_level: frontier\ndurable_source_of_truth: \"GitHub issue #326\"\nobjective: \"Prove merge_blocked cannot become merge eligible.\"\nallowed_paths:\n  - scripts/policy_gate_check.py\nexpected_output:\n  - one validator regression fixture\nplan:\n  - run check-pr\nchecklist:\n  - blocked result is rejected\nacceptance_sheet:\n  - check-pr fails only on Merge Decision result\nnon_goals:\n  - runtime changes\nstop_conditions:\n  - strict merge eligibility is weakened\nrollback_expectations:\n  - revert fixture\n```\n"
+    }
+  ],
+  "body": "## Summary\n\nClean PR metadata with a deliberately blocked Merge Decision.\n\n## Task Reference\n\nIssue #326.\n\n## Changed Files\n\n- scripts/policy_gate_check.py\n\n## Validation\n\nFixture checks passed.\n\n## Evidence Of Completion\n\nFixture only.\n\n## Scope Boundaries\n\nAllowed paths checked.\n\n## Current Status Impact\n\n```yaml\ncurrent_status_impact:\n  status: not_applicable\n  reason: fixture does not change repository recovery state\n  current_status_updated_in_this_pr: false\n  post_merge_safe: not_applicable\n  follow_up_issue: none\n```\n\n## Runtime Output Status\n\nNone.\n\n## Merge Decision\n\n```yaml\nmerge_decision:\n  issue: \"#326\"\n  lane: lane_06_ci_github\n  intelligence_level: frontier\n  durable_source_of_truth: \"GitHub issue #326\"\n  checks_passed: true\n  allowed_paths_checked: true\n  expected_output_checked: true\n  contracts_checked: not_applicable\n  schemas_checked: not_applicable\n  storage_boundary: clean\n  runtime_artifact_boundary: clean\n  safety_review: complete\n  human_gates_checked: true\n  result: merge_blocked\n  reason: fixture must remain ineligible because its durable result is blocked\n```\n\n## Known Gaps\n\nFixture only.\n\n## Handoff Report\n\nDo not merge while the result is blocked.\n"
+}

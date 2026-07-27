@@ -231,7 +231,7 @@ merge_decision:
   lane:
   intelligence_level:
   durable_source_of_truth:
-  checks_passed:
+  checks_passed: true | pending | false
   allowed_paths_checked:
   expected_output_checked:
   contracts_checked:
@@ -239,16 +239,22 @@ merge_decision:
   storage_boundary:
   runtime_artifact_boundary:
   safety_review:
-  human_gates_checked:
+  human_gates_checked: true | pending | false
   result: merge_allowed | merge_blocked
   reason:
 ```
 
-Block when:
+For body submission, a complete `result: merge_blocked` record may truthfully
+use `pending` or `false` for `checks_passed` and `human_gates_checked`. That
+record is reviewable, but it is not merge-eligible.
+
+Block approval or merge eligibility when:
 
 - [ ] Merge Decision Record is missing.
+- [ ] `result` is `merge_blocked`.
 - [ ] `checks_passed` is pending, unknown, or false.
-- [ ] `result` is `merge_allowed` but a human gate applies.
+- [ ] `human_gates_checked` is pending, unknown, or false.
+- [ ] `result` is `merge_allowed` but a human gate still applies.
 - [ ] Reason does not match the actual risk.
 
 Use `docs/control/MERGE_DECISION_RECORD.md`.

@@ -80,13 +80,19 @@ Use `docs/control/CURRENT_STATUS_POLICY.md`.
 
 ## Merge Decision
 
+For a truthful blocked draft, use `result: merge_blocked`; `checks_passed` and
+`human_gates_checked` may be `pending` or `false`. Before submission,
+`allowed_paths_checked` and `expected_output_checked` must already be `true`.
+A blocked-draft body-coherence pass does not imply merge eligibility, low-risk
+status, approval, or completed human review.
+
 ```yaml
 merge_decision:
   issue:
   lane:
   intelligence_level:
   durable_source_of_truth:
-  checks_passed:
+  checks_passed: true | pending | false
   allowed_paths_checked:
   expected_output_checked:
   contracts_checked:
@@ -94,7 +100,7 @@ merge_decision:
   storage_boundary:
   runtime_artifact_boundary:
   safety_review:
-  human_gates_checked:
+  human_gates_checked: true | pending | false
   validation_evidence_checked:
   validation_claim_source:
     local_doctor: freshly_rerun | recorded_in_pr_body | existing_durable_record | not_run | not_applicable

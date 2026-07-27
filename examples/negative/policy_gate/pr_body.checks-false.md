@@ -4,7 +4,7 @@ Issue #000.
 
 ## Scope Boundaries
 
-Expected failure: `result: merge_allowed` while `checks_passed` is pending.
+Expected failure: `result: merge_allowed` while `checks_passed` is false.
 
 ## Current Status Impact
 
@@ -25,7 +25,7 @@ merge_decision:
   lane: lane_07_docs_handoff
   intelligence_level: standard
   durable_source_of_truth: "negative fixture"
-  checks_passed: pending
+  checks_passed: false
   allowed_paths_checked: true
   expected_output_checked: true
   contracts_checked: not_applicable
@@ -35,7 +35,7 @@ merge_decision:
   safety_review: negative_fixture
   human_gates_checked: true
   result: merge_allowed
-  reason: "Expected failure because a merge-ready claim conflicts with pending checks."
+  reason: "Expected failure because a merge-ready claim conflicts with failed checks."
 ```
 
 ## Handoff Report

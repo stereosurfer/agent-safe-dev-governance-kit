@@ -142,13 +142,21 @@ proves:
   - required PR body sections are present
   - Merge Decision Record fields are present and mechanically coherent
   - Current Status Impact is classified
+  - body-coherence mode permits a truthful declared blocked state for PR submission
+  - strict mode rejects every declared blocked state and incomplete merge-ready claim
   - merge-ready claims do not conflict with checked PR-body gates
 does_not_prove:
   - actual CI success unless supplied by a tool-derived report
   - human approval
   - low-risk status
   - semantic truth of prose evidence
-blocking_rule: fail closed for missing, pending, unknown, or unverifiable merge gates
+blocking_rule:
+  body_coherence: >-
+    missing or unknown required state blocks submission; pending or false checks
+    and human gates are accepted only when result is merge_blocked
+  merge_eligibility: >-
+    result must be merge_allowed and required checks and human gates must be
+    true; pending, false, blank, unknown, or merge_blocked fails closed
 ```
 
 ### Scope, Path, PR, And Workspace State
@@ -261,7 +269,9 @@ owner: .github/workflows/bootstrap-validation.yml
 proves:
   - configured repository checks run repeatably on the event that triggered CI
   - bootstrap validation and configured negative checks pass in CI
-  - PR-body policy gate runs on pull_request event payloads
+  - draft PR events run body-coherence validation
+  - non-draft PR events run strict merge-eligibility body validation
+  - body edits and ready/draft transitions trigger a fresh validation run
 does_not_prove:
   - final status of the currently running workflow before it completes
   - semantic review
@@ -284,7 +294,9 @@ not invalidate the current work unit.
 | Required PR template or issue field missing | blocking | review or work-unit capture degraded |
 | Missing Merge Decision Record | blocking | merge gate cannot be reviewed |
 | Missing Current Status Impact | blocking | recovery-state impact is unclassified |
+| Complete blocked-draft body has pending or false checks or human gates | submission_valid, merge_blocking | body can be reviewed without making a merge-ready claim |
 | Merge-ready PR body has pending, unknown, or false gates | blocking | merge eligibility is not mechanically supported |
+| Strict body gate sees `result: merge_blocked` | blocking | declared blocked state cannot be merge-eligible |
 | PR body relies on chat-only authority | blocking | chat is not durable source of truth |
 | Changed path outside allowed paths | blocking or split_required | work exceeds durable scope |
 | Protected path or runtime artifact path appears in changed paths | blocking or human_gated | safety boundary touched |

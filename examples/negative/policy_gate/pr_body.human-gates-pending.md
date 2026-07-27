@@ -4,7 +4,7 @@ Issue #000.
 
 ## Scope Boundaries
 
-Expected failure: `human_gates_checked` is pending.
+Expected failure: `result: merge_allowed` while `human_gates_checked` is pending.
 
 ## Current Status Impact
 
@@ -34,8 +34,8 @@ merge_decision:
   runtime_artifact_boundary: no_runtime_artifacts_added
   safety_review: negative_fixture
   human_gates_checked: pending
-  result: merge_blocked
-  reason: "Expected failure fixture."
+  result: merge_allowed
+  reason: "Expected failure because a merge-ready claim conflicts with pending human review."
 ```
 
 ## Handoff Report
