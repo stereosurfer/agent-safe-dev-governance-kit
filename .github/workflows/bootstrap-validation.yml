@@ -1,6 +1,13 @@
 name: Bootstrap validation
 on:
   pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - edited
+      - ready_for_review
+      - converted_to_draft
   push:
     branches: [ main ]
 permissions:
@@ -25,6 +32,19 @@ jobs:
         run: python3 scripts/asgk.py hygiene --git-base "${{ github.event.pull_request.base.sha }}" --git-head HEAD
       - name: Negative policy gate fixtures
         run: python3 scripts/asgk.py negative policy-gate
+      - name: Negative PR status fixtures
+        run: python3 scripts/asgk.py negative pr-status
+      - name: Positive blocked-draft PR body preflight
+        run: python3 scripts/pr_governance_preflight.py check --body-file examples/pr_body.merge-blocked-draft.valid.md
+      - name: Positive GitHub PR lifecycle routing fixtures
+        run: |
+          python3 scripts/asgk.py policy-gate --github-event examples/github_events/pr.draft-blocked.json
+          python3 scripts/asgk.py policy-gate --github-event examples/github_events/pr.ready-blocked.json
+          python3 scripts/asgk.py policy-gate --github-event examples/github_events/pr.ready-allowed.json
+      - name: Positive PR status fixtures
+        run: |
+          python3 scripts/asgk.py check-pr --json-file examples/pr_status.valid.json
+          python3 scripts/asgk.py check-pr --json-file examples/pr_status.duplicate-check-latest-success.json
       - name: Positive handoff fixture
         run: python3 scripts/asgk.py handoff-check --file examples/handoff_packet.valid.yaml --fail-on-todo
       - name: Negative check PR body missing merge decision

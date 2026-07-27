@@ -1,0 +1,9 @@
+{
+  "action": "edited",
+  "number": 326,
+  "pull_request": {
+    "number": 326,
+    "draft": false,
+    "body": "## Summary\n\nGitHub PR lifecycle routing fixture.\n\n## Task Reference\n\nGitHub issue #326.\n\n## Changed Files\n\n- Fixture only.\n\n## Validation\n\nThe declared decision selects the expected body proof layer.\n\n## Evidence Of Completion\n\nAll unrelated PR body sections are complete.\n\n## Scope Boundaries\n\nNegative event fixture with no durable result for automatic routing.\n\n## Current Status Impact\n\n```yaml\ncurrent_status_impact:\n  status: not_applicable\n  reason: \"Negative fixture does not change repository recovery state.\"\n  current_status_updated_in_this_pr: false\n  post_merge_safe: not_applicable\n  follow_up_issue: none\n```\n\n## Runtime Output Status\n\nNo runtime output.\n\n## Merge Decision\n\n```yaml\nmerge_decision:\n  issue: \"#326\"\n  lane: lane_06_ci_github\n  intelligence_level: frontier\n  durable_source_of_truth: \"GitHub issue #326\"\n  checks_passed: true\n  allowed_paths_checked: true\n  expected_output_checked: true\n  contracts_checked: not_applicable\n  schemas_checked: true\n  storage_boundary: no_runtime_or_storage_boundary_change\n  runtime_artifact_boundary: no_runtime_artifacts_added\n  safety_review: negative_fixture\n  human_gates_checked: true\n  validation_evidence_checked: true\n  validation_claim_source:\n    local_doctor: freshly_rerun\n    ci: github_actions\n  reason: \"Expected fail-closed routing because merge_decision.result is missing.\"\n```\n\n## Known Gaps\n\nEvent routing does not prove live merge eligibility or human approval.\n\n## Handoff Report\n\nExpected failure fixture; no validation mode may be inferred from draft status.\n"
+  }
+}

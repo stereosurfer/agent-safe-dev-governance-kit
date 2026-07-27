@@ -24,6 +24,18 @@ Low-risk status is never agent-declared. A PR is low-risk eligible only when the
 current issue, low-risk policy, auto-merge policy, changed-path checks, PR-body
 checks, CI, and human-gate boundaries all permit it.
 
+ASGK separates three proof layers:
+
+```yaml
+proof_layers:
+  body_coherence: PR body is complete and internally coherent with its declared decision
+  merge_decision: merge_allowed is mechanically supported by the body fields
+  check_pr: live PR state, current checks, issue scope, paths, body decision, and hygiene are composed
+```
+
+Passing one layer does not imply the next. None of these layers independently
+proves low-risk status, human approval, or permission to merge.
+
 ## Document Boundary
 
 ```yaml
@@ -34,6 +46,7 @@ this_document_owns:
   - negative-fixture ownership rules
   - fail-closed policy-gate requirements
   - validator change requirements
+  - body-coherence, merge-decision, and check-pr proof boundaries
 
 this_document_does_not_own:
   - complete CLI syntax
@@ -142,13 +155,64 @@ proves:
   - required PR body sections are present
   - Merge Decision Record fields are present and mechanically coherent
   - Current Status Impact is classified
-  - merge-ready claims do not conflict with checked PR-body gates
+  - a blocked body is internally consistent about unresolved gates
+  - a merge_allowed claim does not conflict with checked PR-body gates
 does_not_prove:
   - actual CI success unless supplied by a tool-derived report
   - human approval
   - low-risk status
   - semantic truth of prose evidence
-blocking_rule: fail closed for missing, pending, unknown, or unverifiable merge gates
+blocking_rule: fail closed for missing, blank, unknown, unsupported, or decision-incoherent states
+```
+
+Governance structure is parsed from visible Markdown. HTML comments cannot
+supply headings or fields. A heading inside a fenced block is not a section
+heading, while visible YAML fields inside the intended fenced record remain
+machine-checkable. Exact decision tokens are unquoted; quoted `"true"` is not
+the boolean `true`.
+
+For GitHub PR events, the durable `merge_decision.result` selects the
+body-level validation mode. File-backed preflight explicitly selects
+`body-coherence`; direct CLI and `check-pr` explicitly select strict
+`merge-decision`. Event callers must not override result-based routing, and
+routing must not depend on draft status alone.
+
+```yaml
+body_validation_modes:
+  body-coherence:
+    selected_when:
+      - file-backed create/edit preflight explicitly invokes it
+      - a GitHub event body declares merge_blocked
+    merge_blocked_values:
+      checks_passed: [true, pending, false]
+      human_gates_checked: [true, pending, false]
+    merge_allowed_requirement:
+      checks_passed: true
+      human_gates_checked: true
+    always_exact_true:
+      - allowed_paths_checked
+      - expected_output_checked
+      - validation_evidence_checked
+    fails_on:
+      - blank required state
+      - missing required state
+      - unknown required state
+      - unsupported required state
+    proof_limit: body submission is coherent; no merge eligibility, low-risk status, or human approval is inferred
+
+  merge-decision:
+    direct_cli_default: true
+    selected_when:
+      - a GitHub event body declares merge_allowed
+      - check-pr validates the body
+    requires:
+      - result is merge_allowed
+      - checks_passed, allowed_paths_checked, expected_output_checked, human_gates_checked, and validation_evidence_checked are exactly true
+      - attribution and boundary fields are complete and concrete
+    proof_limit: Merge Decision Record is mechanically clear; full live PR eligibility is not proved
+
+  invalid_or_missing_result:
+    outcome: fail_closed
 ```
 
 ### Scope, Path, PR, And Workspace State
@@ -164,13 +228,19 @@ proves:
   - supplied changed paths are inside allowed paths
   - protected paths and runtime artifact paths are detected
   - live or fixture issue/PR metadata is internally usable
+  - check-pr rejects drafts and every merge_blocked result
+  - repeated check identities use the latest reliably ordered run for the current head
+  - repeated CheckRun identity includes name plus workflow/app/provider; missing provider identity fails closed
+  - duplicate runs use one common startedAt or createdAt field instead of comparing different timestamp meanings
+  - isDraft, reviewDecision, file-list shape, and check identity/provider types are positively validated
+  - fixture or captured metadata is labeled separately from live GitHub evidence
   - stale or merged local branches are surfaced as workspace observations
 does_not_prove:
   - final merge approval
   - human-gated approval
   - security or privacy safety beyond checked path patterns
   - that warnings require automatic repair issues
-blocking_rule: path and authority failures block; workspace observations warn unless strict mode or policy says otherwise
+blocking_rule: path, authority, strict Merge Decision, live PR state, latest-check failure or pending, and ambiguous check ordering block; workspace observations warn unless strict mode or policy says otherwise
 ```
 
 ### Task, Context, And Target Adoption
@@ -261,7 +331,7 @@ owner: .github/workflows/bootstrap-validation.yml
 proves:
   - configured repository checks run repeatably on the event that triggered CI
   - bootstrap validation and configured negative checks pass in CI
-  - PR-body policy gate runs on pull_request event payloads
+  - PR-body validation mode is selected from the declared durable result
 does_not_prove:
   - final status of the currently running workflow before it completes
   - semantic review
@@ -269,6 +339,23 @@ does_not_prove:
   - low-risk merge eligibility by itself
 blocking_rule: failing required checks block merge eligibility
 ```
+
+PR lifecycle coverage requires these `pull_request` activity types:
+
+```text
+opened, synchronize, reopened, edited, ready_for_review, converted_to_draft
+```
+
+Event routing is:
+
+```text
+declared result: merge_blocked -> body-coherence
+declared result: merge_allowed -> merge-decision
+missing or invalid result       -> fail closed
+```
+
+Marking ready for review does not select strict validation and does not imply
+merge eligibility.
 
 ## Blocking Versus Warning
 
@@ -284,11 +371,17 @@ not invalidate the current work unit.
 | Required PR template or issue field missing | blocking | review or work-unit capture degraded |
 | Missing Merge Decision Record | blocking | merge gate cannot be reviewed |
 | Missing Current Status Impact | blocking | recovery-state impact is unclassified |
-| Merge-ready PR body has pending, unknown, or false gates | blocking | merge eligibility is not mechanically supported |
+| Coherent merge_blocked PR body has pending or false checks/human gates | allowed for body-coherence; merge remains blocked | body explicitly preserves unresolved state |
+| PR body has blank, missing, unknown, or unsupported required state | blocking | neither body coherence nor merge decision is mechanically supported |
+| merge_allowed PR body has pending or false required gates | blocking | strict Merge Decision is not mechanically supported |
+| check-pr receives result merge_blocked | blocking | full live eligibility requires a strict merge_allowed decision |
+| Latest reliably ordered run for a required check is failed or pending | blocking | superseded older runs cannot establish current eligibility |
+| Duplicate check identity cannot be ordered reliably | blocking | current check state is ambiguous and must fail closed |
 | PR body relies on chat-only authority | blocking | chat is not durable source of truth |
 | Changed path outside allowed paths | blocking or split_required | work exceeds durable scope |
 | Protected path or runtime artifact path appears in changed paths | blocking or human_gated | safety boundary touched |
-| Human-gated operation lacks durable approval | human_gated | approval cannot be inferred |
+| Human-gated operation lacks a durable current-head `decision: approved` record | human_gated | approval cannot be inferred |
+| human_gates_checked is true without either the applicable approved record or a durable no-gate risk/path determination | blocking or human_gated | a boolean cannot self-certify human judgment or a no-gate conclusion |
 | Negative fixture unexpectedly passes | blocking | known-bad path is not stopped |
 | Negative fixture crashes for an unrelated reason | blocking for validation work | expected-failure evidence is untrustworthy |
 | Current issue closeout lacks required post-rule review evidence | blocking for current closeout | current closeout contract incomplete |
@@ -296,6 +389,21 @@ not invalidate the current work unit.
 | Workspace remains on a merged local branch | warning | local hygiene issue, not merge evidence |
 | Summary document is stale against canonical policy | warning unless acceptance depends on it | requires targeted docs issue |
 | Optional document missing | warning | not part of required scaffold |
+
+## Evidence Staleness And Recovery
+
+- A validation failure or stale evidence returns the durable result to
+  `merge_blocked` before more work.
+- A code commit after human review makes that review stale unless the human
+  reaffirms it for the new head or diff.
+- Older check runs remain evidence but are superseded by the latest reliably
+  timestamped run of the same identity on the same head.
+- If the approach is wrong, record the abandonment reason and return the durable
+  result to `merge_blocked` before closing the PR unmerged. Preserve its branch,
+  commits, CI, comments, and decision record, then restart authorized work from
+  current `main` on a fresh branch.
+- A closed-unmerged attempt does not require reverting `main`. Reverting merged
+  work requires separate authorization and must preserve history.
 
 ## Negative Fixture Rules
 

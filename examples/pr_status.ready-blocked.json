@@ -1,0 +1,34 @@
+{
+  "number": 156,
+  "title": "Reviewable PR that remains blocked",
+  "state": "OPEN",
+  "isDraft": false,
+  "mergeStateStatus": "CLEAN",
+  "reviewDecision": "",
+  "url": "https://github.com/example/repo/pull/156",
+  "statusCheckRollup": [
+    {
+      "__typename": "CheckRun",
+      "workflowName": "Bootstrap validation",
+      "name": "validate",
+      "status": "COMPLETED",
+      "conclusion": "SUCCESS",
+      "startedAt": "2026-07-27T10:00:00Z",
+      "completedAt": "2026-07-27T10:01:00Z",
+      "detailsUrl": "https://github.com/example/repo/actions/runs/156/jobs/1"
+    }
+  ],
+  "files": [
+    {
+      "path": "README.md"
+    }
+  ],
+  "closingIssuesReferences": [
+    {
+      "number": 156,
+      "url": "https://github.com/example/repo/issues/156",
+      "body": "## Required Task Fields\n\n```yaml\nlane: lane_06_ci_github\nintelligence_level: frontier\nreason: \"Fixture isolates the named lifecycle behavior.\"\ndurable_source_of_truth: \"GitHub issue #156\"\nobjective: \"Fixture for a reviewable but blocked PR.\"\nallowed_paths:\n  - README.md\nexpected_output:\n  - one blocked fixture PR\nplan:\n  - request review while blocked\nchecklist:\n  - body remains truthful\nacceptance_sheet:\n  - check-pr blocks\nnon_goals:\n  - merge approval\nstop_conditions:\n  - result becomes allowed before review\nrollback_expectations:\n  - convert to draft or close without merge\n```\n"
+    }
+  ],
+  "body": "## Summary\n\nReviewable PR status fixture that remains blocked.\n\n## Task Reference\n\nCloses #156.\n\n## Changed Files\n\n- README.md\n\n## Validation\n\nBody-coherence CI passed; human review remains incomplete.\n\n## Evidence Of Completion\n\nThe PR is ready to receive review, not ready to merge.\n\n## Scope Boundaries\n\nOnly README.md is authorized.\n\n## Current Status Impact\n\n```yaml\ncurrent_status_impact:\n  status: not_applicable\n  reason: \"Fixture does not change repository recovery state.\"\n  current_status_updated_in_this_pr: false\n  post_merge_safe: not_applicable\n  follow_up_issue: none\n```\n\n## Runtime Output Status\n\nNo runtime outputs.\n\n## Merge Decision\n\n```yaml\nmerge_decision:\n  issue: \"#156\"\n  lane: lane_06_ci_github\n  intelligence_level: frontier\n  durable_source_of_truth: \"GitHub issue #156\"\n  checks_passed: true\n  allowed_paths_checked: true\n  expected_output_checked: true\n  contracts_checked: not_applicable\n  schemas_checked: not_applicable\n  storage_boundary: clean\n  runtime_artifact_boundary: clean\n  safety_review: complete\n  human_gates_checked: false\n  validation_evidence_checked: true\n  validation_claim_source:\n    local_doctor: freshly_rerun\n    ci: github_actions\n  result: merge_blocked\n  reason: \"The current diff has not received durable human review; ready-for-review is not merge permission.\"\n```\n\n## Known Gaps\n\nDurable human review is intentionally absent.\n\n## Handoff Report\n\nNext safe action: obtain review of the current head before updating the Merge Decision.\n"
+}

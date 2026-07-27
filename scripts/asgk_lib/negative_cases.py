@@ -30,6 +30,23 @@ def _commands_with_suffix(
 def _case_commands(prefix: tuple[str, ...], cases: tuple[tuple[str, ...], ...]) -> tuple[tuple[str, ...], ...]:
     return tuple((*prefix, *case) for case in cases)
 
+def _policy_gate_mode_commands(
+    fixtures: tuple[str, ...],
+    modes: tuple[str, ...],
+) -> tuple[tuple[str, ...], ...]:
+    return tuple(
+        (
+            "python3",
+            "scripts/policy_gate_check.py",
+            "--pr-body",
+            fixture,
+            "--mode",
+            mode,
+        )
+        for fixture in fixtures
+        for mode in modes
+    )
+
 
 TEXTUAL_EXPECTED_FAILURES = (
     (*ASGK, "pr-body-check", "--file", "examples/negative/pr_body.no-merge-decision.md"),
@@ -114,6 +131,51 @@ COMPACT_HANDOFF_CASES = (
     ),
 )
 
+POLICY_GATE_BASE_FAILURES = (
+    "examples/negative/policy_gate/pr_body.missing-merge-decision.md",
+    "examples/negative/policy_gate/pr_body.missing-current-status-impact.md",
+    "examples/negative/policy_gate/pr_body.updated-missing-post-merge-safe.md",
+    "examples/negative/policy_gate/pr_body.see-chat-authority.md",
+)
+
+POLICY_GATE_DUAL_MODE_FAILURES = (
+    "examples/negative/policy_gate/pr_body.checks-pending.md",
+    "examples/negative/policy_gate/pr_body.human-gates-pending.md",
+    "examples/negative/policy_gate/pr_body.checks-false.md",
+    "examples/negative/policy_gate/pr_body.human-gates-false.md",
+    "examples/negative/policy_gate/pr_body.blank-state.md",
+    "examples/negative/policy_gate/pr_body.unknown-state.md",
+    "examples/negative/policy_gate/pr_body.generic-reason.md",
+    "examples/negative/policy_gate/pr_body.duplicate-state.md",
+    "examples/negative/policy_gate/pr_body.invalid-validation-source-shape.md",
+)
+
+POLICY_GATE_FAILURE_COMMANDS = (
+    *_policy_gate_mode_commands(POLICY_GATE_BASE_FAILURES, ("merge-decision",)),
+    *_policy_gate_mode_commands(
+        POLICY_GATE_DUAL_MODE_FAILURES,
+        ("body-coherence", "merge-decision"),
+    ),
+    (
+        "python3",
+        "scripts/policy_gate_check.py",
+        "--pr-body",
+        "examples/pr_body.merge-blocked-draft.valid.md",
+    ),
+    (
+        *ASGK,
+        "policy-gate",
+        "--github-event",
+        "examples/negative/github_events/pr.missing-result.json",
+    ),
+    (
+        *ASGK,
+        "policy-gate",
+        "--github-event",
+        "examples/negative/github_events/pr.missing-pull-request.json",
+    ),
+)
+
 NEGATIVE_CASE_GROUPS = {
     "changed-paths": NegativeCaseGroup(COMMANDS_PASS, _commands_with_suffix(
         ("python3", "scripts/governance_hygiene.py", "--paths-file"),
@@ -125,23 +187,19 @@ NEGATIVE_CASE_GROUPS = {
         ("--expect-blocked",),
     )),
     "textual": NegativeCaseGroup(EXPECTED_FAILURE, TEXTUAL_EXPECTED_FAILURES),
-    "policy-gate": NegativeCaseGroup(EXPECTED_FAILURE, _commands(
-        ("python3", "scripts/policy_gate_check.py", "--pr-body"),
-        (
-            "examples/negative/policy_gate/pr_body.missing-merge-decision.md",
-            "examples/negative/policy_gate/pr_body.missing-current-status-impact.md",
-            "examples/negative/policy_gate/pr_body.updated-missing-post-merge-safe.md",
-            "examples/negative/policy_gate/pr_body.checks-pending.md",
-            "examples/negative/policy_gate/pr_body.human-gates-pending.md",
-            "examples/negative/policy_gate/pr_body.see-chat-authority.md",
-        ),
-    )),
+    "policy-gate": NegativeCaseGroup(EXPECTED_FAILURE, POLICY_GATE_FAILURE_COMMANDS),
     "pr-status": NegativeCaseGroup(EXPECTED_FAILURE, _commands(
         (*ASGK, "check-pr", "--json-file"),
         (
             "examples/negative/pr_status.draft-failing.json",
             "examples/negative/pr_status.missing-closing-reference.json",
             "examples/negative/pr_status.changed-path-outside-allowed.json",
+            "examples/pr_status.ready-blocked.json",
+            "examples/negative/pr_status.merge-blocked-all-clean.json",
+            "examples/negative/pr_status.duplicate-check-latest-failure.json",
+            "examples/negative/pr_status.duplicate-check-ambiguous.json",
+            "examples/negative/pr_status.missing-check-identity.json",
+            "examples/negative/pr_status.duplicate-check-missing-provider.json",
         ),
     )),
     "target-install": NegativeCaseGroup(EXPECTED_FAILURE, _commands(

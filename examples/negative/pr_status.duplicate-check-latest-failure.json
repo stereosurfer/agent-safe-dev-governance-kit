@@ -1,0 +1,64 @@
+{
+  "number": 159,
+  "title": "Latest repeated checks fail or remain pending",
+  "state": "OPEN",
+  "isDraft": false,
+  "mergeStateStatus": "CLEAN",
+  "reviewDecision": "APPROVED",
+  "url": "https://github.com/example/repo/pull/159",
+  "statusCheckRollup": [
+    {
+      "__typename": "CheckRun",
+      "workflowName": "Bootstrap validation",
+      "name": "validate",
+      "status": "COMPLETED",
+      "conclusion": "SUCCESS",
+      "startedAt": "2026-07-27T10:00:00Z",
+      "completedAt": "2026-07-27T10:01:00Z",
+      "detailsUrl": "https://github.com/example/repo/actions/runs/159/jobs/1"
+    },
+    {
+      "__typename": "CheckRun",
+      "workflowName": "Bootstrap validation",
+      "name": "validate",
+      "status": "COMPLETED",
+      "conclusion": "FAILURE",
+      "startedAt": "2026-07-27T10:05:00Z",
+      "completedAt": "2026-07-27T10:06:00Z",
+      "detailsUrl": "https://github.com/example/repo/actions/runs/159/jobs/2"
+    },
+    {
+      "__typename": "CheckRun",
+      "workflowName": "Lifecycle audit",
+      "name": "audit",
+      "status": "COMPLETED",
+      "conclusion": "SUCCESS",
+      "startedAt": "2026-07-27T10:00:00Z",
+      "completedAt": "2026-07-27T10:02:00Z",
+      "detailsUrl": "https://github.com/example/repo/actions/runs/159/jobs/3"
+    },
+    {
+      "__typename": "CheckRun",
+      "workflowName": "Lifecycle audit",
+      "name": "audit",
+      "status": "IN_PROGRESS",
+      "conclusion": null,
+      "startedAt": "2026-07-27T10:07:00Z",
+      "completedAt": null,
+      "detailsUrl": "https://github.com/example/repo/actions/runs/159/jobs/4"
+    }
+  ],
+  "files": [
+    {
+      "path": "README.md"
+    }
+  ],
+  "closingIssuesReferences": [
+    {
+      "number": 159,
+      "url": "https://github.com/example/repo/issues/159",
+      "body": "## Required Task Fields\n\n```yaml\nlane: lane_06_ci_github\nintelligence_level: frontier\nreason: \"Fixture isolates the named lifecycle behavior.\"\ndurable_source_of_truth: \"GitHub issue #159\"\nobjective: \"Prove that current failed and pending checks block.\"\nallowed_paths:\n  - README.md\nexpected_output:\n  - one latest-failure fixture\nplan:\n  - evaluate each latest identity\nchecklist:\n  - failure blocks\n  - pending blocks\nacceptance_sheet:\n  - check-pr fails\nnon_goals:\n  - discard old evidence\nstop_conditions:\n  - latest non-passing check is ignored\nrollback_expectations:\n  - close without merge\n```\n"
+    }
+  ],
+  "body": "## Summary\n\nNegative repeated-check fixture with a reliably newer failure and a reliably newer pending run.\n\n## Task Reference\n\nCloses #159.\n\n## Changed Files\n\n- README.md\n\n## Validation\n\nThe body claim is intentionally contradicted by current GitHub check evidence.\n\n## Evidence Of Completion\n\nUnique timestamps identify the latest run for each check identity.\n\n## Scope Boundaries\n\nOnly README.md is authorized.\n\n## Current Status Impact\n\n```yaml\ncurrent_status_impact:\n  status: not_applicable\n  reason: \"Negative fixture does not change repository recovery state.\"\n  current_status_updated_in_this_pr: false\n  post_merge_safe: not_applicable\n  follow_up_issue: none\n```\n\n## Runtime Output Status\n\nNo runtime outputs.\n\n## Merge Decision\n\n```yaml\nmerge_decision:\n  issue: \"#159\"\n  lane: lane_06_ci_github\n  intelligence_level: frontier\n  durable_source_of_truth: \"GitHub issue #159\"\n  checks_passed: true\n  allowed_paths_checked: true\n  expected_output_checked: true\n  contracts_checked: not_applicable\n  schemas_checked: not_applicable\n  storage_boundary: clean\n  runtime_artifact_boundary: clean\n  safety_review: complete\n  human_gates_checked: true\n  validation_evidence_checked: true\n  validation_claim_source:\n    local_doctor: recorded_in_pr_body\n    ci: github_actions\n  result: merge_allowed\n  reason: \"Expected failure because the latest validate run failed and the latest audit run is pending despite this stale allowed claim.\"\n```\n\n## Known Gaps\n\nCurrent tool evidence must override the stale prose claim.\n\n## Handoff Report\n\nNext safe action: return the durable result to merge_blocked before additional work.\n"
+}

@@ -84,7 +84,7 @@ changed to treat them as expected failures.
 | `NEG-003-stale-issue` | issue appears satisfied by current `main` but is reused for new work | blocked or request_changes | issue hygiene gate | `planned_unimplemented: stale issue fixture` | Requires comment and stop. |
 | `NEG-004-missing-merge-decision` | PR body lacks `## Merge Decision` | blocked | PR review / future PR validator | `examples/negative/pr_body.no-merge-decision.md` | Merge evidence missing. |
 | `NEG-005-incomplete-merge-decision` | Merge Decision Record missing required fields | blocked | PR review / future PR validator | `planned_unimplemented: incomplete Merge Decision fixture` | Use canonical schema later. |
-| `NEG-006-pending-checks-merge` | PR says `merge_allowed` while checks are pending or unknown | blocked | PR review | `examples/negative/policy_gate/pr_body.checks-pending.md` | Cannot merge with unknown checks. |
+| `NEG-006-pending-checks-merge` | PR says `merge_allowed` while checks are pending | blocked | policy gate / PR review | `examples/negative/policy_gate/pr_body.checks-pending.md` | Must fail in body-coherence and merge-decision. |
 | `NEG-007-changed-file-outside-allowed-paths` | changed file outside issue allowed paths | blocked or split_required | PR review / governance hygiene | `examples/negative/pr_status.changed-path-outside-allowed.json` | Requires new issue or scope update. |
 | `NEG-008-runtime-artifact-path` | changed path under `runs/`, `corpus/`, or `artifacts/` | blocked | governance_hygiene.py | `examples/negative/changed_paths.runtime-artifact.txt` | Runtime output leakage. |
 | `NEG-009-protected-path` | changed path `.env`, `secrets/`, `.git/`, private keys | blocked | governance_hygiene.py | `examples/negative/changed_paths.protected.txt` | Protected path violation. |
@@ -127,6 +127,29 @@ changed to treat them as expected failures.
 | `NEG-047-compact-handoff-hides-stale-current-status` | compact handoff marks current status `not_applicable` while completed work remains in active work | blocked | compact handoff command | `examples/negative/compact_governance/handoff.compact.hides-stale-current-status.yaml` | Compact handoff cannot hide stale active issue, PR, or branch references. |
 | `NEG-048-compact-target-upgrade-overwrites-target-state` | compact target-upgrade manifest copies target-owned current status as-is or marks it overwritten | blocked | compact target-upgrade command | `examples/negative/compact_governance/target_upgrade/manifest.overwrites-current-status.json` | Target-owned state must be preserved or manually merged. |
 | `NEG-049-compact-target-upgrade-default-enabled` | compact target-upgrade manifest enables compact governance by default | blocked | compact target-upgrade command | `examples/negative/compact_governance/target_upgrade/manifest.default-enabled.json` | Target upgrades must remain opt-in until the target issue explicitly enables a profile. |
+| `NEG-050-pending-human-gate-merge` | PR says `merge_allowed` while human gates are pending | blocked | policy gate / PR review | `examples/negative/policy_gate/pr_body.human-gates-pending.md` | Must fail in body-coherence and merge-decision. |
+| `NEG-051-false-checks-merge` | PR says `merge_allowed` while checks are false | blocked | policy gate / PR review | `examples/negative/policy_gate/pr_body.checks-false.md` | False required gates cannot support merge_allowed. |
+| `NEG-052-false-human-gate-merge` | PR says `merge_allowed` while human gates are false | blocked | policy gate / PR review | `examples/negative/policy_gate/pr_body.human-gates-false.md` | A boolean cannot bypass unresolved human review. |
+| `NEG-053-blocked-result-live-eligibility` | otherwise-clean non-draft PR still declares `merge_blocked` | blocked | check-pr | `examples/negative/pr_status.merge-blocked-all-clean.json` | Must fail only on the durable Merge Decision result. |
+| `NEG-054-event-missing-result` | pull_request event body has missing or invalid Merge Decision result | fail_closed | GitHub event policy routing | `examples/negative/github_events/pr.missing-result.json` | Draft status must not select a fallback mode. |
+| `NEG-055-latest-duplicate-check-fails` | older success is followed by a newer failure or pending run with the same identity | blocked | check-pr | `examples/negative/pr_status.duplicate-check-latest-failure.json` | Latest reliably ordered run controls current eligibility; older run remains superseded evidence. |
+| `NEG-056-duplicate-check-order-ambiguous` | duplicate check identity cannot be reliably ordered on one head | fail_closed | check-pr | `examples/negative/pr_status.duplicate-check-ambiguous.json` | Ambiguous current check state must not be guessed. |
+| `NEG-057-blank-decision-state` | required decision state is blank | fail_closed | policy gate / PR review | `examples/negative/policy_gate/pr_body.blank-state.md` | Blank state must fail in body-coherence and merge-decision. |
+| `NEG-058-unknown-decision-state` | required decision state is `unknown` | fail_closed | policy gate / PR review | `examples/negative/policy_gate/pr_body.unknown-state.md` | Unknown state must fail in body-coherence and merge-decision. |
+| `NEG-059-generic-merge-reason` | Merge Decision reason repeats generic decision text | blocked | policy gate / PR review | `examples/negative/policy_gate/pr_body.generic-reason.md` | Structured fields cannot replace evidence, limits, and judgment. |
+| `NEG-060-duplicate-decision-state` | Merge Decision contains duplicate conflicting result fields | fail_closed | policy gate / PR review | `examples/negative/policy_gate/pr_body.duplicate-state.md` | Validators must not use first-value or last-value wins. |
+| `NEG-061-invalid-validation-source-shape` | validation claim source combines a scalar with nested keys | fail_closed | policy gate / schema | `examples/negative/policy_gate/pr_body.invalid-validation-source-shape.md` | Validation source must be exactly one nested object. |
+| `NEG-062-event-missing-pr-object` | routed event lacks the pull_request object | fail_closed | GitHub event policy routing | `examples/negative/github_events/pr.missing-pull-request.json` | Missing PR metadata is not a successful skip. |
+| `NEG-063-status-check-missing-identity` | passing check has no usable name or context | fail_closed | check-pr | `examples/negative/pr_status.missing-check-identity.json` | A synthetic unnamed identity must not establish current status. |
+| `NEG-064-duplicate-check-missing-provider` | repeated same-name CheckRuns have no workflow/provider identity | fail_closed | check-pr | `examples/negative/pr_status.duplicate-check-missing-provider.json` | Timestamp order cannot prove two providers are one rerun series. |
+| `NEG-065-hidden-markdown-governance` | required heading exists only inside a fence, or a required field exists only in an HTML comment outside the visible YAML record | fail_closed | policy gate / check-pr | `scripts/validate_bootstrap.py` mutation projection | Fenced pseudo-headings and comment-hidden fields must not satisfy visible governance structure. |
+| `NEG-066-noncanonical-exact-token` | exact-true gate or event result is quoted or uses noncanonical case | fail_closed | policy gate / event routing | `scripts/validate_bootstrap.py` mutation projection | Only literal unquoted lowercase decision tokens are accepted. |
+| `NEG-067-unknown-pr-state-shape` | isDraft or reviewDecision is missing, mistyped, or unknown | fail_closed | check-pr | `scripts/validate_bootstrap.py` mutation projection | Non-blocking PR state must be positively established. |
+| `NEG-068-invalid-files-shape` | files is not a list or an entry lacks a string path | fail_closed | check-pr | `scripts/validate_bootstrap.py` mutation projection | Missing path evidence cannot skip allowlist or hygiene checks. |
+| `NEG-069-invalid-check-identity-type` | name or provider identity is non-string, or repeated named runs omit type/provider evidence | fail_closed | check-pr | `scripts/validate_bootstrap.py` mutation projection | String coercion cannot manufacture check identity. |
+| `NEG-070-mixed-check-timestamps` | repeated runs can be ordered only by comparing different timestamp meanings | fail_closed | check-pr | `scripts/validate_bootstrap.py` mutation projection | One common start/creation field is required for the identity group. |
+| `NEG-071-empty-status-rollup` | check-pr receives an empty current-check list | blocked | check-pr | `scripts/validate_bootstrap.py` mutation projection | Absence of checks cannot establish passing status. |
+| `NEG-072-negative-runner-crash` | expected-failure command exits nonzero because the validator crashed | blocked | negative runner | `scripts/validate_bootstrap.py` crash sentinel projection | Interpreter failure is not expected governance rejection evidence. |
 
 ## Current Execution Surface
 
@@ -149,6 +172,17 @@ python3 scripts/asgk.py negative --help
 Positive validation must not load negative fixtures as valid repository state.
 Default startup must not read `examples/` unless the current issue, PR,
 validator, or documentation reference names a specific example or fixture.
+
+Positive lifecycle coverage must separately prove:
+
+```yaml
+positive_pr_lifecycle:
+  - draft merge_blocked passes file-backed body-coherence preflight
+  - ready-for-review merge_blocked event passes body-coherence but remains blocked in check-pr
+  - non-draft merge_allowed event passes strict merge-decision
+  - clean live or fixture check-pr passes without inferring low-risk or approval
+  - older failed duplicate check followed by newer success records the older run as superseded
+```
 
 ## Rules For Negative Fixtures
 
@@ -176,6 +210,11 @@ Do not add a negative fixture without an expected outcome.
 `human_gated` means the work may be valid only with explicit durable human
 approval. Human-gated work should not be hidden inside low-risk PRs.
 
+`human_gates_checked: true` is not approval evidence by itself. When a human
+gate applies, the durable record must identify the reviewed current head or
+diff. Review from an older head or closed-unmerged PR is stale unless explicitly
+reaffirmed.
+
 Examples:
 
 ```yaml
@@ -200,6 +239,11 @@ During PR review, use this plan to ask:
 2. Is the outcome block, request changes, human-gate, or split required?
 3. Is the expected validator already implemented?
 4. If not implemented, should this become a future fixture/tooling issue?
+
+For a wrong approach, close the PR unmerged and preserve its branch, commits,
+CI, comments, and decision record before restarting from current `main`. Do not
+delete failed-attempt evidence or treat a closed-unmerged PR as a change to
+`main`.
 
 ## Remaining Gaps
 

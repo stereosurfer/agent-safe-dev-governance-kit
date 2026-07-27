@@ -80,22 +80,39 @@ Use `docs/control/CURRENT_STATUS_POLICY.md`.
 
 ## Merge Decision
 
+`result` is durable body-level decision state. `merge_blocked` is valid while a
+draft or reviewable PR still has unresolved checks or human gates;
+`merge_allowed` is valid only after the named mechanical gates are complete.
+Neither value replaces live `check-pr`, human judgment, or merge authority.
+
+Use the literal unquoted tokens `true`, `pending`, or `false` for `checks_passed` and
+`human_gates_checked`. `merge_blocked` may record any of those three states.
+`merge_allowed` requires both fields to be exactly `true`.
+`allowed_paths_checked`, `expected_output_checked`, and
+`validation_evidence_checked` must always be exactly `true`.
+
+When `human_gates_checked: true`, cite either a durable determination that no
+human gate applies or, when one applies, a current-head record with
+`decision: approved`. `changes_requested` and `rejected` require
+`human_gates_checked: false` and `result: merge_blocked`. A boolean is not
+approval evidence.
+
 ```yaml
 merge_decision:
   issue:
   lane:
   intelligence_level:
   durable_source_of_truth:
-  checks_passed:
-  allowed_paths_checked:
-  expected_output_checked:
+  checks_passed: true | pending | false
+  allowed_paths_checked: true
+  expected_output_checked: true
   contracts_checked:
   schemas_checked:
   storage_boundary:
   runtime_artifact_boundary:
   safety_review:
-  human_gates_checked:
-  validation_evidence_checked:
+  human_gates_checked: true | pending | false
+  validation_evidence_checked: true
   validation_claim_source:
     local_doctor: freshly_rerun | recorded_in_pr_body | existing_durable_record | not_run | not_applicable
     ci: github_actions | external_ci | not_run | not_applicable

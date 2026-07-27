@@ -1,8 +1,169 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "concrete_string": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "\\S",
+      "not": {
+        "pattern": "^\\s*(?:[Pp][Ee][Nn][Dd][Ii][Nn][Gg]|[Ff][Aa][Ll][Ss][Ee]|[Nn][Oo]|[Uu][Nn][Kk][Nn][Oo][Ww][Nn]|[Nn][Uu][Ll][Ll]|[Nn][Oo][Nn][Ee]|[Tt][Bb][Dd]|[Tt][Oo][Dd][Oo])\\s*$"
+      }
+    },
+    "reason_string": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/concrete_string"
+        },
+        {
+          "not": {
+            "pattern": "^\\s*(?:[Pp][Aa][Ss][Ss](?:[Ee][Dd])?|[Nn]\\s*[/\\\\]?\\s*[Aa]|[Aa][Ll][Ll]\\s+[Gg][Oo][Oo][Dd]|[Mm][Ee][Rr][Gg][Ee]_[Aa][Ll][Ll][Oo][Ww][Ee][Dd]|[Mm][Ee][Rr][Gg][Ee]_[Bb][Ll][Oo][Cc][Kk][Ee][Dd])\\s*$"
+          }
+        }
+      ]
+    },
+    "declared_gate_state": {
+      "enum": [
+        true,
+        false,
+        "pending"
+      ]
+    },
+    "concrete_boundary_value": {
+      "oneOf": [
+        {
+          "const": true
+        },
+        {
+          "$ref": "#/$defs/concrete_string"
+        }
+      ]
+    }
+  },
   "type": "object",
-  "required": ["issue", "lane", "intelligence_level", "durable_source_of_truth", "checks_passed", "allowed_paths_checked", "expected_output_checked", "storage_boundary", "runtime_artifact_boundary", "safety_review", "result", "reason"],
+  "required": [
+    "issue",
+    "lane",
+    "intelligence_level",
+    "durable_source_of_truth",
+    "checks_passed",
+    "allowed_paths_checked",
+    "expected_output_checked",
+    "contracts_checked",
+    "schemas_checked",
+    "storage_boundary",
+    "runtime_artifact_boundary",
+    "safety_review",
+    "human_gates_checked",
+    "validation_evidence_checked",
+    "validation_claim_source",
+    "result",
+    "reason"
+  ],
   "properties": {
-    "result": {"enum": ["merge_allowed", "merge_blocked"]}
-  }
+    "issue": {
+      "$ref": "#/$defs/concrete_string"
+    },
+    "lane": {
+      "$ref": "#/$defs/concrete_string"
+    },
+    "intelligence_level": {
+      "$ref": "#/$defs/concrete_string"
+    },
+    "durable_source_of_truth": {
+      "$ref": "#/$defs/concrete_string"
+    },
+    "checks_passed": {
+      "$ref": "#/$defs/declared_gate_state"
+    },
+    "allowed_paths_checked": {
+      "const": true
+    },
+    "expected_output_checked": {
+      "const": true
+    },
+    "contracts_checked": {
+      "$ref": "#/$defs/concrete_boundary_value"
+    },
+    "schemas_checked": {
+      "$ref": "#/$defs/concrete_boundary_value"
+    },
+    "storage_boundary": {
+      "$ref": "#/$defs/concrete_boundary_value"
+    },
+    "runtime_artifact_boundary": {
+      "$ref": "#/$defs/concrete_boundary_value"
+    },
+    "safety_review": {
+      "$ref": "#/$defs/concrete_boundary_value"
+    },
+    "human_gates_checked": {
+      "$ref": "#/$defs/declared_gate_state"
+    },
+    "validation_evidence_checked": {
+      "const": true
+    },
+    "validation_claim_source": {
+      "type": "object",
+      "required": [
+        "local_doctor",
+        "ci"
+      ],
+      "properties": {
+        "local_doctor": {
+          "enum": [
+            "freshly_rerun",
+            "recorded_in_pr_body",
+            "existing_durable_record",
+            "not_run",
+            "not_applicable"
+          ]
+        },
+        "ci": {
+          "enum": [
+            "github_actions",
+            "external_ci",
+            "not_run",
+            "not_applicable"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "result": {
+      "enum": [
+        "merge_allowed",
+        "merge_blocked"
+      ]
+    },
+    "reason": {
+      "$ref": "#/$defs/reason_string"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "result": {
+            "const": "merge_allowed"
+          }
+        },
+        "required": [
+          "result"
+        ]
+      },
+      "then": {
+        "properties": {
+          "checks_passed": {
+            "const": true
+          },
+          "human_gates_checked": {
+            "const": true
+          },
+          "validation_evidence_checked": {
+            "const": true
+          }
+        }
+      }
+    }
+  ]
 }

@@ -7,7 +7,29 @@ import re
 from pathlib import Path
 from typing import Any
 
-from asgk_lib.common import field_value, markdown_headings, markdown_section as section
+from asgk_lib.common import (
+    field_block_lines,
+    field_value,
+    markdown_heading_occurrences,
+    markdown_section as section,
+    raw_field_value,
+    strip_html_comments,
+)
+from asgk_lib.status_policy import CURRENT_STATUS_IMPACT_REQUIRED_FIELDS
+
+PR_REQUIRED_HEADINGS = [
+    "Summary",
+    "Task Reference",
+    "Changed Files",
+    "Validation",
+    "Evidence Of Completion",
+    "Scope Boundaries",
+    "Current Status Impact",
+    "Runtime Output Status",
+    "Merge Decision",
+    "Known Gaps",
+    "Handoff Report",
+]
 
 MERGE_DECISION_REQUIRED_FIELDS = [
     "issue",
@@ -23,14 +45,51 @@ MERGE_DECISION_REQUIRED_FIELDS = [
     "runtime_artifact_boundary",
     "safety_review",
     "human_gates_checked",
+    "validation_evidence_checked",
+    "validation_claim_source",
     "result",
     "reason",
 ]
 
 CURRENT_STATUS_ALLOWED_VALUES = {"updated", "not_applicable", "deferred"}
 MERGE_RESULT_ALLOWED_VALUES = {"merge_allowed", "merge_blocked"}
-TRUE_VALUES = {"true", "yes"}
-UNKNOWN_VALUES = {"", "pending", "unknown", "false", "no", "null", "none", "tbd", "todo"}
+VALIDATION_MODES = {"body-coherence", "merge-decision"}
+TRUE_VALUES = {"true"}
+BLOCKED_COHERENCE_GATE_VALUES = {"true", "pending", "false"}
+UNKNOWN_STATE_VALUES = {"", "unknown", "null", "none", "tbd", "todo"}
+NON_SPECIFIC_REQUIRED_VALUES = UNKNOWN_STATE_VALUES | {"pending", "false", "no"}
+INVALID_REASON_VALUES = NON_SPECIFIC_REQUIRED_VALUES | {
+    "passed",
+    "pass",
+    "n/a",
+    "na",
+    "all good",
+    "merge_allowed",
+    "merge_blocked",
+}
+VALIDATION_CLAIM_SOURCE_VALUES = {
+    "local_doctor": {
+        "freshly_rerun",
+        "recorded_in_pr_body",
+        "existing_durable_record",
+        "not_run",
+        "not_applicable",
+    },
+    "ci": {
+        "github_actions",
+        "external_ci",
+        "not_run",
+        "not_applicable",
+    },
+}
+DECISION_STATE_FIELDS = {
+    "checks_passed",
+    "allowed_paths_checked",
+    "expected_output_checked",
+    "human_gates_checked",
+    "validation_evidence_checked",
+    "result",
+}
 
 
 def normalized_bool_text(value: str | None) -> str:
@@ -61,31 +120,136 @@ def add_finding(
     )
 
 
-def check_merge_decision(text: str, findings: list[dict[str, Any]]) -> None:
-    merge_section = section(text, "Merge Decision")
-    if not merge_section:
+def line_field_count(text: str, field: str) -> int:
+    return len(
+        re.findall(
+            rf"^[ \t]*{re.escape(field)}[ \t]*:",
+            text,
+            flags=re.MULTILINE,
+        )
+    )
+
+
+def required_field_shape(
+    text: str,
+    fields: list[str],
+    findings: list[dict[str, Any]],
+    *,
+    category: str,
+    record_name: str,
+) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for field in fields:
+        count = line_field_count(text, field)
+        counts[field] = count
+        if count == 0:
+            add_finding(
+                findings,
+                "FAIL",
+                category,
+                field,
+                f"Required {record_name} field is missing.",
+                f"Add `{field}` exactly once to the {record_name}.",
+            )
+        elif count > 1:
+            add_finding(
+                findings,
+                "FAIL",
+                category,
+                field,
+                f"Required {record_name} field appears more than once.",
+                (
+                    f"Keep exactly one `{field}` value; duplicate governance "
+                    "state is ambiguous and fails closed."
+                ),
+            )
+    return counts
+
+
+def check_exact_true_gate(
+    merge_section: str,
+    findings: list[dict[str, Any]],
+    field: str,
+) -> None:
+    value = raw_field_value(merge_section, field)
+    if value is None:
+        return
+    if value.strip() not in TRUE_VALUES:
         add_finding(
             findings,
             "FAIL",
-            "merge_decision_record",
-            "Merge Decision",
-            "Merge Decision section is missing.",
-            "Add a Merge Decision section using docs/control/MERGE_DECISION_RECORD.md.",
+            "policy_gate",
+            field,
+            f"`{field}` is not exactly true.",
+            f"Set `{field}: true` only when that gate is verified.",
         )
+
+
+def check_declared_gate_state(
+    merge_section: str,
+    findings: list[dict[str, Any]],
+    field: str,
+    allowed_values: set[str],
+    *,
+    reason: str,
+    recommended_fix: str,
+) -> None:
+    value = raw_field_value(merge_section, field)
+    if value is None:
+        return
+    if value.strip() not in allowed_values:
+        add_finding(
+            findings,
+            "FAIL",
+            "policy_gate",
+            field,
+            reason,
+            recommended_fix,
+        )
+
+
+def check_merge_decision(
+    text: str,
+    findings: list[dict[str, Any]],
+    *,
+    mode: str,
+) -> None:
+    merge_section = section(text, "Merge Decision")
+    if not merge_section:
         return
 
+    field_counts = required_field_shape(
+        merge_section,
+        MERGE_DECISION_REQUIRED_FIELDS,
+        findings,
+        category="merge_decision_record",
+        record_name="Merge Decision",
+    )
     for field in MERGE_DECISION_REQUIRED_FIELDS:
-        value = field_value(merge_section, field)
-        if value is None:
+        if field_counts[field] != 1 or field == "validation_claim_source":
+            continue
+        normalized = (
+            (raw_field_value(merge_section, field) or "").strip()
+            if field in DECISION_STATE_FIELDS
+            else normalized_bool_text(field_value(merge_section, field))
+        )
+        if field == "reason" and normalized in INVALID_REASON_VALUES:
             add_finding(
                 findings,
                 "FAIL",
                 "merge_decision_record",
                 field,
-                "Required Merge Decision field is missing.",
-                f"Add `{field}` to the Merge Decision Record.",
+                "Merge Decision reason is generic decision-state text, not judgment.",
+                (
+                    "Name the relevant evidence, limits, and unresolved risk; "
+                    "do not use values such as `passed`, `all good`, or "
+                    "`merge_allowed` as the reason."
+                ),
             )
-        elif normalized_bool_text(value) in UNKNOWN_VALUES:
+        elif (
+            field not in DECISION_STATE_FIELDS
+            and normalized in NON_SPECIFIC_REQUIRED_VALUES
+        ):
             add_finding(
                 findings,
                 "FAIL",
@@ -95,57 +259,162 @@ def check_merge_decision(text: str, findings: list[dict[str, Any]]) -> None:
                 f"Set `{field}` to a concrete policy-supported value or keep the PR human-gated.",
             )
 
-    exact_true_fields = ["checks_passed", "allowed_paths_checked", "expected_output_checked"]
-    for field in exact_true_fields:
-        value = normalized_bool_text(field_value(merge_section, field))
-        if value not in TRUE_VALUES:
+    if field_counts["validation_claim_source"] == 1:
+        parent_value = field_value(merge_section, "validation_claim_source")
+        if normalized_bool_text(parent_value):
+            add_finding(
+                findings,
+                "FAIL",
+                "merge_decision_record",
+                "validation_claim_source",
+                "Validation claim source must be a nested object, not a scalar.",
+                (
+                    "Leave `validation_claim_source:` empty on its own line and "
+                    "provide exactly the nested `local_doctor` and `ci` fields."
+                ),
+            )
+
+        block_lines = field_block_lines(
+            merge_section,
+            "validation_claim_source",
+        ) or []
+        material_lines = [
+            line
+            for line in block_lines
+            if line.strip() and not line.lstrip().startswith("#")
+        ]
+        child_indents = {
+            len(re.match(r"^[ \t]*", line).group(0).replace("\t", "    "))
+            for line in material_lines
+        }
+        if len(material_lines) != 2 or len(child_indents) != 1:
+            add_finding(
+                findings,
+                "FAIL",
+                "merge_decision_record",
+                "validation_claim_source",
+                "Validation claim source nested object has an invalid shape.",
+                (
+                    "Provide exactly two direct child fields at the same "
+                    "indentation: `local_doctor` and `ci`."
+                ),
+            )
+        validation_claim_source = "\n".join(block_lines)
+        for field in ("local_doctor", "ci"):
+            count = line_field_count(validation_claim_source, field)
+            if count != 1:
+                add_finding(
+                    findings,
+                    "FAIL",
+                    "merge_decision_record",
+                    f"validation_claim_source.{field}",
+                    (
+                        "Validation claim source field is missing."
+                        if count == 0
+                        else "Validation claim source field appears more than once."
+                    ),
+                    (
+                        f"Keep exactly one `validation_claim_source.{field}` "
+                        "using a canonical value."
+                    ),
+                )
+                continue
+            value = field_value(validation_claim_source, field)
+            normalized = normalized_bool_text(value)
+            if normalized not in VALIDATION_CLAIM_SOURCE_VALUES[field]:
+                add_finding(
+                    findings,
+                    "FAIL",
+                    "merge_decision_record",
+                    f"validation_claim_source.{field}",
+                    "Validation claim source is missing or unsupported.",
+                    (
+                        f"Use one of the canonical `validation_claim_source.{field}` "
+                        f"values: {', '.join(sorted(VALIDATION_CLAIM_SOURCE_VALUES[field]))}."
+                    ),
+                )
+
+    result_value = (
+        raw_field_value(merge_section, "result")
+        if field_counts["result"] == 1
+        else None
+    )
+    result = result_value.strip() if result_value is not None else ""
+    if result not in MERGE_RESULT_ALLOWED_VALUES:
+        if field_counts["result"] == 1:
+            add_finding(
+                findings,
+                "FAIL",
+                "merge_decision_record",
+                "result",
+                "Merge Decision result is not one of the allowed values.",
+                "Use `merge_allowed` or `merge_blocked`.",
+            )
+        result = ""
+
+    for field in [
+        "allowed_paths_checked",
+        "expected_output_checked",
+        "validation_evidence_checked",
+    ]:
+        check_exact_true_gate(merge_section, findings, field)
+
+    if mode == "merge-decision":
+        if result and result != "merge_allowed":
             add_finding(
                 findings,
                 "FAIL",
                 "policy_gate",
-                field,
-                f"`{field}` is not mechanically confirmed true.",
-                f"Set `{field}: true` only when the gate is verified; otherwise keep the PR merge_blocked and human-gated.",
+                "result",
+                "Strict Merge Decision validation requires `result: merge_allowed`.",
+                "Keep the record `merge_blocked` until every required decision gate is complete.",
             )
+        for field in ["checks_passed", "human_gates_checked"]:
+            check_exact_true_gate(merge_section, findings, field)
+        return
 
-    human_gates_checked = normalized_bool_text(field_value(merge_section, "human_gates_checked"))
-    if human_gates_checked not in TRUE_VALUES:
-        add_finding(
-            findings,
-            "FAIL",
-            "policy_gate",
-            "human_gates_checked",
-            "Human-gate status is not mechanically confirmed true.",
-            "Set `human_gates_checked: true` only when human-gate review is complete; otherwise keep the PR human-gated.",
-        )
+    if result == "merge_allowed":
+        for field in ["checks_passed", "human_gates_checked"]:
+            check_exact_true_gate(merge_section, findings, field)
+        return
 
-    result = normalized_bool_text(field_value(merge_section, "result"))
-    if result not in MERGE_RESULT_ALLOWED_VALUES:
-        add_finding(
-            findings,
-            "FAIL",
-            "merge_decision_record",
-            "result",
-            "Merge Decision result is not one of the allowed values.",
-            "Use `merge_allowed` or `merge_blocked`.",
-        )
+    if result == "merge_blocked":
+        for field in ["checks_passed", "human_gates_checked"]:
+            check_declared_gate_state(
+                merge_section,
+                findings,
+                field,
+                BLOCKED_COHERENCE_GATE_VALUES,
+                reason=(
+                    f"`{field}` is not a supported state for a coherent "
+                    "`merge_blocked` record."
+                ),
+                recommended_fix=(
+                    f"Use `{field}: true`, `{field}: pending`, or "
+                    f"`{field}: false`; blank and unknown states are invalid."
+                ),
+            )
 
 
 def check_current_status_impact(text: str, findings: list[dict[str, Any]]) -> None:
     current_status_section = section(text, "Current Status Impact")
     if not current_status_section:
-        add_finding(
-            findings,
-            "FAIL",
-            "current_status_impact",
-            "Current Status Impact",
-            "Current Status Impact section is missing.",
-            "Add Current Status Impact and classify it as updated, not_applicable, or deferred.",
-        )
         return
 
-    status = normalized_bool_text(field_value(current_status_section, "status"))
-    if status not in CURRENT_STATUS_ALLOWED_VALUES:
+    field_counts = required_field_shape(
+        current_status_section,
+        CURRENT_STATUS_IMPACT_REQUIRED_FIELDS,
+        findings,
+        category="current_status_impact",
+        record_name="Current Status Impact",
+    )
+
+    status = (
+        normalized_bool_text(field_value(current_status_section, "status"))
+        if field_counts["status"] == 1
+        else ""
+    )
+    if field_counts["status"] == 1 and status not in CURRENT_STATUS_ALLOWED_VALUES:
         add_finding(
             findings,
             "FAIL",
@@ -155,8 +424,15 @@ def check_current_status_impact(text: str, findings: list[dict[str, Any]]) -> No
             "Use exactly one of: updated, not_applicable, deferred.",
         )
 
-    reason = field_value(current_status_section, "reason")
-    if reason is None or normalized_bool_text(reason) in UNKNOWN_VALUES:
+    reason = (
+        field_value(current_status_section, "reason")
+        if field_counts["reason"] == 1
+        else None
+    )
+    if (
+        field_counts["reason"] == 1
+        and normalized_bool_text(reason) in NON_SPECIFIC_REQUIRED_VALUES
+    ):
         add_finding(
             findings,
             "FAIL",
@@ -166,8 +442,18 @@ def check_current_status_impact(text: str, findings: list[dict[str, Any]]) -> No
             "Explain why CURRENT_STATUS.md was updated, not applicable, or deferred.",
         )
 
-    updated = normalized_bool_text(field_value(current_status_section, "current_status_updated_in_this_pr"))
-    if status == "updated" and updated not in TRUE_VALUES:
+    updated = (
+        normalized_bool_text(
+            field_value(current_status_section, "current_status_updated_in_this_pr")
+        )
+        if field_counts["current_status_updated_in_this_pr"] == 1
+        else ""
+    )
+    if (
+        status == "updated"
+        and field_counts["current_status_updated_in_this_pr"] == 1
+        and updated not in TRUE_VALUES
+    ):
         add_finding(
             findings,
             "FAIL",
@@ -177,8 +463,16 @@ def check_current_status_impact(text: str, findings: list[dict[str, Any]]) -> No
             "Set current_status_updated_in_this_pr: true only if docs/handoff/CURRENT_STATUS.md changed in this PR.",
         )
 
-    post_merge_safe = normalized_bool_text(field_value(current_status_section, "post_merge_safe"))
-    if status == "updated" and post_merge_safe not in TRUE_VALUES:
+    post_merge_safe = (
+        normalized_bool_text(field_value(current_status_section, "post_merge_safe"))
+        if field_counts["post_merge_safe"] == 1
+        else ""
+    )
+    if (
+        status == "updated"
+        and field_counts["post_merge_safe"] == 1
+        and post_merge_safe not in TRUE_VALUES
+    ):
         add_finding(
             findings,
             "FAIL",
@@ -188,8 +482,16 @@ def check_current_status_impact(text: str, findings: list[dict[str, Any]]) -> No
             "Set `post_merge_safe: true` only when CURRENT_STATUS.md remains accurate after this PR merges.",
         )
 
-    follow_up = field_value(current_status_section, "follow_up_issue")
-    if status == "deferred" and (follow_up is None or normalized_bool_text(follow_up) in {"", "none", "null", "tbd", "todo"}):
+    follow_up = (
+        field_value(current_status_section, "follow_up_issue")
+        if field_counts["follow_up_issue"] == 1
+        else None
+    )
+    if (
+        status == "deferred"
+        and field_counts["follow_up_issue"] == 1
+        and normalized_bool_text(follow_up) in {"", "none", "null", "tbd", "todo"}
+    ):
         add_finding(
             findings,
             "FAIL",
@@ -212,11 +514,12 @@ def check_chat_authority(text: str, findings: list[dict[str, Any]]) -> None:
         )
 
 
-def check_pr_body(text: str) -> list[dict[str, Any]]:
+def check_pr_body(text: str, *, mode: str) -> list[dict[str, Any]]:
     findings: list[dict[str, Any]] = []
-    headings = markdown_headings(text)
-    for required in ["Task Reference", "Scope Boundaries", "Current Status Impact", "Merge Decision", "Handoff Report"]:
-        if required not in headings:
+    visible_headings = markdown_heading_occurrences(text)
+    for required in PR_REQUIRED_HEADINGS:
+        count = visible_headings.count(required)
+        if count == 0:
             add_finding(
                 findings,
                 "FAIL",
@@ -225,40 +528,108 @@ def check_pr_body(text: str) -> list[dict[str, Any]]:
                 f"Required PR section `{required}` is missing.",
                 f"Add `## {required}` to the PR body.",
             )
-    check_chat_authority(text, findings)
+        elif count > 1:
+            add_finding(
+                findings,
+                "FAIL",
+                "pr_structure",
+                required,
+                f"Required PR section `{required}` appears more than once.",
+                (
+                    f"Keep exactly one `## {required}` section; duplicate "
+                    "governance sections are ambiguous and fail closed."
+                ),
+            )
+    check_chat_authority(strip_html_comments(text), findings)
     check_current_status_impact(text, findings)
-    check_merge_decision(text, findings)
+    check_merge_decision(text, findings, mode=mode)
     return findings
 
 
-def output_findings(findings: list[dict[str, Any]], *, as_json: bool) -> int:
+def proof_boundary(mode: str) -> str:
+    if mode == "body-coherence":
+        return (
+            "A body-coherence pass proves only that the PR body is complete and "
+            "mechanically coherent for its declared Merge Decision."
+        )
+    return (
+        "A merge-decision pass proves only that the Merge Decision Record's "
+        "merge_allowed claim is mechanically supported by the checked body "
+        "fields."
+    )
+
+
+def output_findings(
+    findings: list[dict[str, Any]],
+    *,
+    mode: str,
+    declared_result: str,
+    as_json: bool,
+) -> int:
     blocking = [finding for finding in findings if finding["blocks_merge_eligibility"]]
     result = "fail" if blocking else "pass"
-    payload = {"result": result, "low_risk_inferred": False, "findings": findings}
+    boundary = proof_boundary(mode)
+    payload = {
+        "result": result,
+        "mode": mode,
+        "declared_merge_decision": declared_result,
+        "proof_boundary": boundary,
+        "merge_eligibility_inferred": False,
+        "low_risk_inferred": False,
+        "human_approval_inferred": False,
+        "findings": findings,
+    }
     if as_json:
         print(json.dumps(payload, indent=2, sort_keys=True))
     else:
         if not findings:
-            print("Policy gate check passed. No low-risk status was inferred.")
+            print(f"Policy gate {mode} passed. {boundary}")
+            if mode == "body-coherence" and declared_result == "merge_blocked":
+                print("The declared Merge Decision remains merge_blocked.")
         else:
             for finding in findings:
                 print(
                     f"{finding['severity']}: [{finding['category']}] {finding['field']} - "
                     f"{finding['reason']} Fix: {finding['recommended_fix']}"
                 )
-            print(f"Policy gate check result: {result}. No low-risk status was inferred.")
+            print(f"Policy gate {mode} result: {result}. {boundary}")
+        print(
+            "Full PR merge eligibility, low-risk status, and human approval "
+            "were not inferred."
+        )
     return 1 if blocking else 0
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Read-only fail-closed ASGK policy gate checker for PR bodies.")
+    parser = argparse.ArgumentParser(
+        description=(
+            "Read-only fail-closed ASGK PR-body checker with explicit body "
+            "coherence and Merge Decision proof boundaries."
+        )
+    )
     parser.add_argument("--pr-body", required=True, help="Path to a PR body markdown file.")
+    parser.add_argument(
+        "--mode",
+        choices=sorted(VALIDATION_MODES),
+        default="merge-decision",
+        help=(
+            "Validation proof layer. Direct CLI calls default to strict "
+            "merge-decision."
+        ),
+    )
     parser.add_argument("--json", action="store_true", help="Emit JSON output.")
     args = parser.parse_args()
 
     text = Path(args.pr_body).read_text(encoding="utf-8")
-    findings = check_pr_body(text)
-    return output_findings(findings, as_json=args.json)
+    findings = check_pr_body(text, mode=args.mode)
+    merge_section = section(text, "Merge Decision")
+    declared_result = (raw_field_value(merge_section, "result") or "").strip()
+    return output_findings(
+        findings,
+        mode=args.mode,
+        declared_result=declared_result,
+        as_json=args.json,
+    )
 
 
 if __name__ == "__main__":

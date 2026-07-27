@@ -138,7 +138,13 @@ Request changes when:
 
 Confirm:
 
-- [ ] GitHub Actions completed successfully.
+- [ ] Reviewer distinguishes `body-coherence`, strict `merge-decision`, and live
+      `check-pr` evidence.
+- [ ] GitHub PR event auto-routing used the declared
+      `merge_decision.result`, not draft status alone. File-backed preflight
+      explicitly used `body-coherence`; direct CLI and `check-pr` used strict
+      `merge-decision`.
+- [ ] For merge readiness, GitHub Actions completed successfully.
 - [ ] PR records validation commands and results.
 - [ ] Validation not run has a valid reason.
 - [ ] Docs-only PRs still pass bootstrap validation.
@@ -152,13 +158,29 @@ python3 scripts/validate_bootstrap.py
 git diff --check
 ```
 
-Block when:
+Block merge readiness when:
 
 - [ ] Required checks are failing, pending, missing, or unknown.
+- [ ] `merge_allowed` passed without every exact-true gate set to true or
+      without concrete attribution and boundary fields.
+- [ ] Blank, missing, unknown, or unsupported required decision state was accepted.
+- [ ] A quoted state token, HTML-commented field, or fenced pseudo-heading was
+      accepted as real governance structure.
+- [ ] Duplicate current-head check runs cannot be reliably ordered, or the latest
+      run is failing or pending.
+- [ ] Repeated same-name CheckRuns lack workflow/app/provider identity and could
+      belong to different providers.
+- [ ] `check-pr` accepted an unknown draft/review state, malformed files list,
+      non-string check identity, or mixed timestamp semantics.
 - [ ] Validation script behavior changed but no test/fixture evidence is provided.
 - [ ] CI failure is unexplained.
 
 Use `docs/control/VALIDATION_STRATEGY.md` for validator responsibilities.
+
+A coherent `merge_blocked` body may truthfully contain pending or false
+checks/human gates and pass `body-coherence`. That is valid review state, not
+merge eligibility. Before merge readiness, require strict `merge-decision` and
+live `check-pr`.
 
 ## Step 7 — Storage And Runtime Boundary Check
 
@@ -203,8 +225,9 @@ Confirm whether the PR touches any human-gated operation:
 - [ ] milestone closure
 - [ ] merge policy authority change
 
-If yes, the PR is not low-risk merge eligible unless a durable human approval
-record exists.
+If yes, the PR is not low-risk merge eligible. A durable approval record may
+authorize the human-gated path, but it does not convert the work into low-risk
+autonomous merge.
 
 Required approval record:
 
@@ -215,11 +238,27 @@ human_gate:
   risks:
   rollback_plan:
   approval_source:
-  approved_by:
-  approved_at:
+  reviewed_head:
+  reviewed_diff:
+  decision: approved | changes_requested | rejected
+  decided_by:
+  decided_at:
+  reaffirmed_after_head_change: true | false | not_applicable
 ```
 
 Use `docs/control/HUMAN_GATED_OPERATIONS.md`.
+
+`human_gates_checked: true` is a claim, not evidence by itself. When a human
+gate applies, confirm the current-head durable record says
+`decision: approved`. `changes_requested` or `rejected` requires
+`human_gates_checked: false` and `result: merge_blocked`. When no gate applies,
+confirm the durable no-gate risk/path determination. New code commits
+invalidate review of an older head unless the human reaffirms it. Do not reuse
+review from a prior or closed-unmerged PR.
+
+Even with a durable approval record, the Agent reports `requires_human` for a
+human-gated merge unless canonical policy and the current issue explicitly
+authorize that escalated merge path.
 
 ## Step 9 — Merge Decision Record Check
 
@@ -240,35 +279,119 @@ merge_decision:
   runtime_artifact_boundary:
   safety_review:
   human_gates_checked:
+  validation_evidence_checked:
+  validation_claim_source:
+    local_doctor:
+    ci:
   result: merge_allowed | merge_blocked
   reason:
 ```
 
-Block when:
+For GitHub PR event auto-routing, route body validation from the durable result:
+
+```text
+merge_blocked -> body-coherence
+merge_allowed -> merge-decision
+missing/invalid result -> fail closed
+```
+
+File-backed create/edit preflight explicitly selects `body-coherence`; direct
+CLI and `check-pr` explicitly select strict `merge-decision`.
+
+For `body-coherence`, confirm:
+
+- [ ] `allowed_paths_checked`, `expected_output_checked`, and
+      `validation_evidence_checked` are exactly true.
+- [ ] `merge_blocked` uses only true, pending, or false for
+      `checks_passed` and `human_gates_checked`.
+- [ ] Blank, missing, unknown, and unsupported required states fail.
+- [ ] Passing output states that merge eligibility, low-risk status, and human
+      approval were not inferred.
+
+For strict `merge-decision`, confirm:
+
+- [ ] `result` is `merge_allowed`.
+- [ ] Every exact-true gate is true and attribution/boundary fields are
+      complete and concrete.
+- [ ] The result is described as body-level decision clarity, not full live PR
+      eligibility.
+
+Block merge readiness when:
 
 - [ ] Merge Decision Record is missing.
-- [ ] `checks_passed` is pending, unknown, or false.
-- [ ] `result` is `merge_allowed` but a human gate applies.
+- [ ] `result` is `merge_blocked`, even when the body is coherent and ready for review.
+- [ ] Any strict required gate is pending, unknown, false, blank, or missing.
+- [ ] `result` is `merge_allowed` but an applicable human gate lacks a durable
+      current-head `decision: approved` record.
 - [ ] Reason does not match the actual risk.
 
 Use `docs/control/MERGE_DECISION_RECORD.md`.
 
+After strict `merge-decision`, run live `check-pr`. It independently requires an
+open, non-draft, mergeable PR, non-blocking review state, current passing
+checks, closing issue authority, allowed paths, and hygiene. It must reject
+every `merge_blocked` result and report `low_risk_inferred: false`.
+
 ## Step 10 — Review Outcome
 
-Choose exactly one outcome.
+Choose exactly one outcome. When more than one description appears relevant,
+apply the first matching outcome in this precedence order:
 
-### `approve_or_merge_eligible`
+```text
+block
+  -> split_required
+  -> request_changes
+  -> requires_human
+  -> reviewable_merge_blocked
+  -> check_pr_clear
+```
+
+Higher-precedence findings may be listed as evidence, but do not report a
+second outcome.
+
+### `reviewable_merge_blocked`
+
+Use when:
+
+- [ ] `body-coherence` passes for `merge_blocked`.
+- [ ] The PR is ready to receive review or preserve a revision blocker.
+- [ ] No `block`, `split_required`, `request_changes`, or explicit
+      human-gate-only condition applies.
+- [ ] No claim of merge eligibility or approval is made.
+
+### `check_pr_clear`
 
 Use when:
 
 - [ ] All required checks pass.
 - [ ] Scope matches issue.
-- [ ] No human gate applies.
-- [ ] Merge Decision Record is complete.
+- [ ] The human-gate boundary is clear: either no gate applies, or a durable
+      current-head `decision: approved` record exists and canonical policy plus
+      the current issue explicitly authorize the escalated merge path.
+- [ ] Strict `merge-decision` and live `check-pr` pass.
 - [ ] Runtime artifact and storage boundaries are clean.
 
 If all low-risk merge policy gates pass, the PR may be merged under
 `docs/control/LOW_RISK_AUTONOMOUS_MERGE_POLICY.md`.
+
+This outcome is not approval; a human or canonical policy still makes the merge
+decision.
+
+### `requires_human`
+
+Use when:
+
+- [ ] No `block`, `split_required`, or `request_changes` condition applies.
+- [ ] A specific human-gated decision or issue/policy-required semantic
+      acceptance remains unresolved, or explicit canonical-policy/current-issue
+      authority for an escalated merge path is absent.
+- [ ] Currently applicable non-human checks may be clear, but the named human
+      decision or merge authority remains.
+- [ ] Required current-head human evidence is missing, stale, or awaiting
+      reaffirmation.
+
+Do not use this outcome merely because an ordinary ready-for-review PR is
+waiting for routine review; use `reviewable_merge_blocked` for that state.
 
 ### `request_changes`
 
@@ -283,7 +406,7 @@ Use when:
 
 Use when:
 
-- [ ] Human-gated operation lacks approval.
+- [ ] Human-gated operation is outside durable scope or was rejected.
 - [ ] Scope is wrong.
 - [ ] Protected path or runtime artifact is present.
 - [ ] Validation fails for unclear reasons.
@@ -303,7 +426,7 @@ Use when:
 ```md
 ## PR Review Result
 
-Outcome: approve_or_merge_eligible | request_changes | block | split_required
+Outcome: reviewable_merge_blocked | check_pr_clear | requires_human | request_changes | block | split_required
 
 Evidence:
 - Linked issue/source:
@@ -326,6 +449,10 @@ Notes:
 Do not approve or merge when:
 
 - Checks are pending or unknown.
+- The durable result is `merge_blocked`; a coherent blocked body is reviewable,
+  not merge-eligible.
+- Human review applies only to an older head or a closed-unmerged PR.
+- A boolean or green workflow is presented as human approval.
 - The PR says `see chat` for scope or acceptance.
 - A summary doc conflicts with a canonical doc.
 - The agent changed files outside allowed paths.
