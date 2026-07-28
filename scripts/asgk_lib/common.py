@@ -28,30 +28,73 @@ def has_unresolved_todo(text: str) -> bool:
     return bool(re.search(r"\b(?:AI_TODO|TODO)\b", text))
 
 
+def strip_html_comments(text: str) -> str:
+    """Remove Markdown content hidden by HTML comments, including an unclosed tail."""
+
+    return re.sub(r"<!--.*?(?:-->|\Z)", "", text, flags=re.DOTALL)
+
+
+def _visible_level_two_heading_positions(text: str) -> tuple[str, list[tuple[int, str]]]:
+    """Return comment-free Markdown and visible level-two heading line indexes."""
+
+    visible = strip_html_comments(text)
+    positions: list[tuple[int, str]] = []
+    fence_character = ""
+    fence_length = 0
+    for index, line in enumerate(visible.splitlines()):
+        if fence_character:
+            if re.match(
+                rf"^[ \t]{{0,3}}{re.escape(fence_character)}"
+                rf"{{{fence_length},}}[ \t]*$",
+                line,
+            ):
+                fence_character = ""
+                fence_length = 0
+            continue
+
+        fence = re.match(r"^[ \t]{0,3}(`{3,}|~{3,}).*$", line)
+        if fence:
+            delimiter = fence.group(1)
+            fence_character = delimiter[0]
+            fence_length = len(delimiter)
+            continue
+
+        heading = re.match(r"^##[ \t]+(.+?)[ \t]*$", line)
+        if heading:
+            positions.append((index, heading.group(1).strip()))
+    return visible, positions
+
+
+def markdown_heading_occurrences(text: str) -> list[str]:
+    _visible, positions = _visible_level_two_heading_positions(text)
+    return [heading for _index, heading in positions]
+
+
 def markdown_headings(text: str) -> set[str]:
-    found: set[str] = set()
-    for line in text.splitlines():
-        match = re.match(r"^##\s+(.+?)\s*$", line)
-        if match:
-            found.add(match.group(1).strip())
-    return found
+    return set(markdown_heading_occurrences(text))
 
 
 def markdown_section(text: str, heading: str) -> str:
-    match = re.search(
-        rf"^## {re.escape(heading)}\s+(.+?)(?:\n## |\Z)",
-        text,
-        flags=re.MULTILINE | re.DOTALL,
-    )
-    return match.group(1).strip() if match else ""
+    visible, positions = _visible_level_two_heading_positions(text)
+    lines = visible.splitlines()
+    for position_index, (line_index, found_heading) in enumerate(positions):
+        if found_heading != heading:
+            continue
+        end_index = (
+            positions[position_index + 1][0]
+            if position_index + 1 < len(positions)
+            else len(lines)
+        )
+        return "\n".join(lines[line_index + 1:end_index]).strip()
+    return ""
 
 
 def line_field_exists(text: str, field: str) -> bool:
     return bool(re.search(rf"^[ \t]*{re.escape(field)}[ \t]*:", text, flags=re.MULTILINE))
 
 
-def field_value(text: str, field: str) -> str | None:
-    """Return a same-line scalar value for a lightweight YAML-like field."""
+def raw_field_value(text: str, field: str) -> str | None:
+    """Return an uncoerced same-line scalar for exact-token validation."""
 
     match = re.search(
         rf"^[ \t]*{re.escape(field)}[ \t]*:[ \t]*(.*?)[ \t]*$",
@@ -60,7 +103,16 @@ def field_value(text: str, field: str) -> str | None:
     )
     if not match:
         return None
-    return match.group(1).strip().strip('"').strip("'")
+    return match.group(1).strip()
+
+
+def field_value(text: str, field: str) -> str | None:
+    """Return a quote-normalized scalar value for prose-like lightweight YAML."""
+
+    value = raw_field_value(text, field)
+    if value is None:
+        return None
+    return value.strip('"').strip("'")
 
 
 def normalized_field_value(text: str, field: str) -> str:

@@ -1,6 +1,6 @@
 ## Summary
 
-Negative fixture for a required Merge Decision state.
+Negative fixture for a scalar-plus-children validation source.
 
 ## Task Reference
 
@@ -12,7 +12,7 @@ Issue #000.
 
 ## Validation
 
-Expected policy-gate failure.
+Expected strict and coherence failure.
 
 ## Evidence Of Completion
 
@@ -20,8 +20,7 @@ All unrelated fields are complete.
 
 ## Scope Boundaries
 
-Expected failure in both body modes: `merge_allowed` cannot declare
-`checks_passed` as pending.
+The malformed validation source object is the only intended defect.
 
 ## Current Status Impact
 
@@ -43,10 +42,10 @@ No runtime output.
 ```yaml
 merge_decision:
   issue: "#000"
-  lane: lane_07_docs_handoff
-  intelligence_level: standard
+  lane: lane_06_ci_github
+  intelligence_level: frontier
   durable_source_of_truth: "negative fixture"
-  checks_passed: pending
+  checks_passed: true
   allowed_paths_checked: true
   expected_output_checked: true
   contracts_checked: not_applicable
@@ -56,16 +55,16 @@ merge_decision:
   safety_review: negative_fixture
   human_gates_checked: true
   validation_evidence_checked: true
-  validation_claim_source:
-    local_doctor: not_run
+  validation_claim_source: forged
+    local_doctor: freshly_rerun
     ci: github_actions
   result: merge_allowed
-  reason: "Expected failure because the allowed decision overclaims incomplete checks."
+  reason: "Expected failure because validation_claim_source is not a nested object."
 ```
 
 ## Known Gaps
 
-The named state defect is intentional.
+The text is intentionally invalid YAML-like shape.
 
 ## Handoff Report
 

@@ -24,16 +24,57 @@ Use `docs/DOCUMENT_MAP.md` only if the work unit points to additional context.
 ## Procedure
 
 1. Check live open PRs before selecting an issue.
-2. If a PR is open, treat it as the current work boundary and inspect only what is needed for that PR.
-3. If no PR is open, compare live open issues with `CURRENT_STATUS.md`.
-4. If `CURRENT_STATUS.md` is stale but live GitHub state is clear, prefer live GitHub state and plan a status refresh only when repo-level recovery state would mislead the next session.
-5. If there is no active issue or PR, stop unless the user explicitly asks to create a durable issue.
+2. If a PR is open, treat it as the current work boundary and inspect only what
+   is needed for that PR. Distinguish its GitHub lifecycle state from its
+   `merge_decision.result`:
+   - draft or ready-for-review with `merge_blocked` is reviewable work, not
+     merge eligibility;
+   - `merge_allowed` is a body-level claim that still requires strict
+     `merge-decision` and live `check-pr`;
+   - draft status alone must not select the body validation mode.
+3. Resolve human-gate evidence before treating `human_gates_checked: true` as
+   supported:
+   - when a gate applies, require a durable current-head record with
+     `decision: approved`;
+   - `changes_requested` or `rejected` requires
+     `human_gates_checked: false` and `result: merge_blocked`;
+   - when no gate applies, require a durable no-gate risk/path determination.
+   A new code commit makes review of the older head stale unless reaffirmed. Do
+   not reuse review from a closed-unmerged or superseded PR.
+4. If validation failed or evidence is stale, the next safe action is to return
+   the durable result to `merge_blocked` before more work. Record the blocker
+   before converting the PR to draft for revision.
+5. If an open PR represents an approach that should be abandoned, do not patch
+   around it. Record the abandonment reason, return the durable result to
+   `merge_blocked`, close it unmerged, preserve its branch, commits, CI,
+   comments, and decision record, and restart authorized work from current
+   `main` on a fresh branch. A closed-unmerged PR did not change `main` and
+   needs no revert.
+6. If no PR is open, compare live open issues with `CURRENT_STATUS.md`. A
+   closed-unmerged PR is historical evidence, not authority for new edits.
+7. If `CURRENT_STATUS.md` is stale but live GitHub state is clear, prefer live
+   GitHub state and plan a status refresh only when repo-level recovery state
+   would mislead the next session.
+8. If there is no active issue or PR, stop unless the user explicitly asks to
+   create a durable issue.
 
 ## Stop States
 
-- `blocked`: startup docs missing, GitHub state unavailable, or instructions conflict.
-- `requires_human`: next action touches a human-gated operation.
+Report exactly one state. Apply `blocked`, `requires_human`,
+`closed_unmerged_restart_ready`, `ready_for_work_unit`, then `no_active_work`
+in that precedence order.
+
+- `blocked`: startup docs are missing, GitHub state is unavailable, instructions
+  conflict, or validation/evidence is stale and the durable Merge Decision has
+  not yet returned to `merge_blocked`.
+- `requires_human`: no non-human blocker remains and a specific applicable
+  human gate or issue/policy-required semantic decision remains unresolved, or
+  canonical policy and the current issue do not explicitly authorize the
+  escalated next action. Routine review requested by an ordinary
+  ready-for-review PR does not by itself create this state.
 - `ready_for_work_unit`: one durable issue or PR is identified.
+- `closed_unmerged_restart_ready`: the failed attempt is preserved and the
+  authorized issue permits a fresh branch from current `main`.
 - `no_active_work`: no current work exists; open a durable issue before editing.
 
 ## Exit Artifact

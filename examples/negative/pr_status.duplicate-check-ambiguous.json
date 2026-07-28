@@ -1,0 +1,44 @@
+{
+  "number": 160,
+  "title": "Repeated check ordering is ambiguous",
+  "state": "OPEN",
+  "isDraft": false,
+  "mergeStateStatus": "CLEAN",
+  "reviewDecision": "APPROVED",
+  "url": "https://github.com/example/repo/pull/160",
+  "statusCheckRollup": [
+    {
+      "__typename": "CheckRun",
+      "workflowName": "Bootstrap validation",
+      "name": "validate",
+      "status": "COMPLETED",
+      "conclusion": "NEUTRAL",
+      "startedAt": "2026-07-27T10:00:00Z",
+      "completedAt": "2026-07-27T10:01:00Z",
+      "detailsUrl": "https://github.com/example/repo/actions/runs/160/jobs/1"
+    },
+    {
+      "__typename": "CheckRun",
+      "workflowName": "Bootstrap validation",
+      "name": "validate",
+      "status": "COMPLETED",
+      "conclusion": "SUCCESS",
+      "startedAt": "2026-07-27T10:00:00Z",
+      "completedAt": "2026-07-27T10:01:00Z",
+      "detailsUrl": "https://github.com/example/repo/actions/runs/160/jobs/2"
+    }
+  ],
+  "files": [
+    {
+      "path": "README.md"
+    }
+  ],
+  "closingIssuesReferences": [
+    {
+      "number": 160,
+      "url": "https://github.com/example/repo/issues/160",
+      "body": "## Required Task Fields\n\n```yaml\nlane: lane_06_ci_github\nintelligence_level: frontier\nreason: \"Fixture isolates the named lifecycle behavior.\"\ndurable_source_of_truth: \"GitHub issue #160\"\nobjective: \"Prove fail-closed handling for ambiguous repeated checks.\"\nallowed_paths:\n  - README.md\nexpected_output:\n  - one ambiguous-order fixture\nplan:\n  - preserve both runs\nchecklist:\n  - ordering ambiguity blocks\nacceptance_sheet:\n  - check-pr fails closed\nnon_goals:\n  - choose a run arbitrarily\nstop_conditions:\n  - ambiguity passes\nrollback_expectations:\n  - close without merge\n```\n"
+    }
+  ],
+  "body": "## Summary\n\nNegative repeated-check fixture whose two passing runs have the same latest timestamp.\n\n## Task Reference\n\nCloses #160.\n\n## Changed Files\n\n- README.md\n\n## Validation\n\nThe latest run cannot be selected reliably.\n\n## Evidence Of Completion\n\nTwo passing conclusions share the same identity and timestamps.\n\n## Scope Boundaries\n\nOnly README.md is authorized.\n\n## Current Status Impact\n\n```yaml\ncurrent_status_impact:\n  status: not_applicable\n  reason: \"Negative fixture does not change repository recovery state.\"\n  current_status_updated_in_this_pr: false\n  post_merge_safe: not_applicable\n  follow_up_issue: none\n```\n\n## Runtime Output Status\n\nNo runtime outputs.\n\n## Merge Decision\n\n```yaml\nmerge_decision:\n  issue: \"#160\"\n  lane: lane_06_ci_github\n  intelligence_level: frontier\n  durable_source_of_truth: \"GitHub issue #160\"\n  checks_passed: true\n  allowed_paths_checked: true\n  expected_output_checked: true\n  contracts_checked: not_applicable\n  schemas_checked: not_applicable\n  storage_boundary: clean\n  runtime_artifact_boundary: clean\n  safety_review: complete\n  human_gates_checked: true\n  validation_evidence_checked: true\n  validation_claim_source:\n    local_doctor: freshly_rerun\n    ci: github_actions\n  result: merge_allowed\n  reason: \"Expected failure because two passing validate runs have indistinguishable timestamps.\"\n```\n\n## Known Gaps\n\nNo deterministic latest run exists in this payload.\n\n## Handoff Report\n\nNext safe action: keep merge blocked until current check identity and ordering are unambiguous.\n"
+}

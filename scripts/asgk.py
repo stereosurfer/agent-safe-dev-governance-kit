@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 import argparse
+from datetime import datetime, timezone
 import fnmatch
 import hashlib
 import json
@@ -22,6 +23,7 @@ from asgk_lib.common import (
     markdown_section,
     normalize_repo_path,
     normalized_field_value,
+    raw_field_value,
     read_changed_paths,
     read_text,
     rel,
@@ -35,7 +37,6 @@ from asgk_lib.status_policy import (
     CANONICAL_CURRENT_STATUS_PATH,
     CLOSEOUT_PRE_MERGE_NEXT_ACTION_PATTERNS,
     CURRENT_STATUS_IMPACT_ALLOWED_VALUES,
-    CURRENT_STATUS_IMPACT_REQUIRED_FIELDS,
     EMPTY_FOLLOWUP_VALUES,
     TRUE_VALUES,
 )
@@ -61,18 +62,8 @@ from asgk_lib.workspace_state import (
     workspace_state_findings,
 )
 
-PR_REQUIRED_HEADINGS = [
-    "Summary", "Task Reference", "Changed Files", "Validation",
-    "Evidence Of Completion", "Scope Boundaries", "Current Status Impact",
-    "Runtime Output Status", "Merge Decision", "Known Gaps", "Handoff Report",
-]
-MERGE_DECISION_REQUIRED_FIELDS = [
-    "issue", "lane", "intelligence_level", "durable_source_of_truth",
-    "checks_passed", "allowed_paths_checked", "expected_output_checked",
-    "contracts_checked", "schemas_checked", "storage_boundary",
-    "runtime_artifact_boundary", "safety_review", "human_gates_checked",
-    "result", "reason",
-]
+BODY_COHERENCE_MODE = "body-coherence"
+MERGE_DECISION_MODE = "merge-decision"
 TASK_PACKET_REQUIRED_FIELDS = [
     "task_id",
     "lane",
@@ -230,16 +221,39 @@ def run_many(commands: list[list[str]]) -> int:
     return 0
 
 
-def run_policy_gate(pr_body: str | Path, *, as_json: bool = False) -> int:
-    command = ["python3", "scripts/policy_gate_check.py", "--pr-body", str(pr_body)]
+def run_policy_gate(
+    pr_body: str | Path,
+    *,
+    mode: str = MERGE_DECISION_MODE,
+    as_json: bool = False,
+) -> int:
+    command = [
+        "python3",
+        "scripts/policy_gate_check.py",
+        "--pr-body",
+        str(pr_body),
+        "--mode",
+        mode,
+    ]
     if as_json:
         command.append("--json")
     return subprocess.run(command, cwd=ROOT).returncode
 
 
-def run_policy_gate_capture(pr_body: str | Path) -> subprocess.CompletedProcess[str]:
+def run_policy_gate_capture(
+    pr_body: str | Path,
+    *,
+    mode: str = MERGE_DECISION_MODE,
+) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
-        ["python3", "scripts/policy_gate_check.py", "--pr-body", str(pr_body)],
+        [
+            "python3",
+            "scripts/policy_gate_check.py",
+            "--pr-body",
+            str(pr_body),
+            "--mode",
+            mode,
+        ],
         cwd=ROOT,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
@@ -560,18 +574,241 @@ def compact_pr_report_restricted_boundaries(paths: list[str]) -> list[str]:
     return sorted(set(boundaries))
 
 
-def compact_pr_report_status_checks(status_rollup: object) -> list[dict[str, str]]:
-    checks: list[dict[str, str]] = []
+def nonblank_string(value: object) -> str | None:
+    if not isinstance(value, str):
+        return None
+    normalized = value.strip()
+    return normalized or None
+
+
+def status_check_name(item: dict[str, object]) -> str | None:
+    if "name" in item:
+        return nonblank_string(item.get("name"))
+    return nonblank_string(item.get("context"))
+
+
+def status_check_provider(item: dict[str, object]) -> str | None:
+    return nonblank_string(item.get("workflowName"))
+
+
+def status_check_identity(item: dict[str, object]) -> str | None:
+    name = status_check_name(item)
+    if name is None:
+        return None
+    workflow = status_check_provider(item)
+    return f"{workflow}::{name}" if workflow else name
+
+
+def parse_status_check_timestamp(value: object) -> tuple[float, str] | None:
+    if not isinstance(value, str) or not value.strip():
+        return None
+    normalized = value.strip()
+    try:
+        parsed = datetime.fromisoformat(normalized.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        timestamp = parsed.replace(tzinfo=timezone.utc).timestamp()
+    else:
+        timestamp = parsed.timestamp()
+    return timestamp, normalized
+
+
+def status_check_ordering(
+    item: dict[str, object],
+) -> tuple[float | None, str | None, str | None]:
+    selected_field = nonblank_string(item.get("_asgk_ordering_field"))
+    if selected_field:
+        parsed = parse_status_check_timestamp(item.get(selected_field))
+        if parsed is not None:
+            timestamp, value = parsed
+            return timestamp, selected_field, value
+    for field in ("startedAt", "createdAt", "completedAt", "updatedAt"):
+        parsed = parse_status_check_timestamp(item.get(field))
+        if parsed is not None:
+            timestamp, value = parsed
+            return timestamp, field, value
+    return None, None, None
+
+
+def common_status_check_ordering(
+    items: list[dict[str, object]],
+) -> tuple[str, list[tuple[float, str, dict[str, object]]]] | None:
+    for field in ("startedAt", "createdAt"):
+        ordered: list[tuple[float, str, dict[str, object]]] = []
+        for item in items:
+            parsed = parse_status_check_timestamp(item.get(field))
+            if parsed is None:
+                ordered = []
+                break
+            timestamp, value = parsed
+            ordered.append((timestamp, value, item))
+        if ordered:
+            return field, ordered
+    return None
+
+
+def select_latest_status_checks(
+    status_rollup: object,
+) -> tuple[
+    list[dict[str, object]],
+    list[dict[str, object]],
+    list[dict[str, str]],
+]:
     if not isinstance(status_rollup, list):
-        return checks
-    for item in status_rollup:
+        return [], [], [{
+            "field": "statusCheckRollup",
+            "reason": "statusCheckRollup is not a list",
+        }]
+
+    records: list[tuple[dict[str, object], str, str, bool]] = []
+    current: list[dict[str, object]] = []
+    superseded: list[dict[str, object]] = []
+    errors: list[dict[str, str]] = []
+    for index, item in enumerate(status_rollup):
         if not isinstance(item, dict):
+            errors.append({
+                "field": "statusCheckRollup.shape",
+                "reason": f"status check entry {index} is not an object",
+            })
             continue
+        if "name" in item and nonblank_string(item.get("name")) is None:
+            errors.append({
+                "field": "statusCheckRollup.identity",
+                "reason": (
+                    f"status check entry {index} has a non-string or blank "
+                    "`name` identity"
+                ),
+            })
+            current.append(item)
+            continue
+        if (
+            "workflowName" in item
+            and item.get("workflowName") is not None
+            and not isinstance(item.get("workflowName"), str)
+        ):
+            errors.append({
+                "field": "statusCheckRollup.identity",
+                "reason": (
+                    f"status check entry {index} has a non-string "
+                    "`workflowName` provider identity"
+                ),
+            })
+            current.append(item)
+            continue
+        identity = status_check_identity(item)
+        if identity is None:
+            errors.append({
+                "field": "statusCheckRollup.identity",
+                "reason": (
+                    f"status check entry {index} has no usable name or context "
+                    "identity"
+                ),
+            })
+            current.append(item)
+            continue
+        name = status_check_name(item)
+        assert name is not None
+        checkrun_like = "name" in item or item.get("__typename") == "CheckRun"
+        records.append((item, identity, name, checkrun_like))
+
+    ambiguous_checkruns: set[int] = set()
+    checkruns_by_name: dict[str, list[dict[str, object]]] = {}
+    for item, _identity, name, checkrun_like in records:
+        if checkrun_like:
+            checkruns_by_name.setdefault(name, []).append(item)
+    for name, items in sorted(checkruns_by_name.items()):
+        if len(items) <= 1 or all(status_check_provider(item) for item in items):
+            continue
+        errors.append({
+            "field": "statusCheckRollup.identity",
+            "reason": (
+                f"repeated CheckRun `{name}` has no workflow/provider identity "
+                "and cannot be safely treated as one rerun series"
+            ),
+        })
+        ambiguous_checkruns.update(id(item) for item in items)
+        current.extend(items)
+
+    groups: dict[str, list[dict[str, object]]] = {}
+    for item, identity, _name, _checkrun_like in records:
+        if id(item) not in ambiguous_checkruns:
+            groups.setdefault(identity, []).append(item)
+
+    for identity, items in sorted(groups.items()):
+        if len(items) == 1:
+            current.append(items[0])
+            continue
+
+        common_ordering = common_status_check_ordering(items)
+        if common_ordering is None:
+            errors.append({
+                "field": "statusCheckRollup.ordering",
+                "reason": (
+                    f"repeated status check `{identity}` cannot be ordered "
+                    "on one common valid `startedAt` or `createdAt` field"
+                ),
+            })
+            current.extend(items)
+            continue
+
+        ordering_field, timestamped = common_ordering
+        latest_timestamp = max(timestamp for timestamp, _value, _item in timestamped)
+        latest = [
+            item
+            for timestamp, _value, item in timestamped
+            if timestamp == latest_timestamp
+        ]
+        if len(latest) != 1:
+            errors.append({
+                "field": "statusCheckRollup.ordering",
+                "reason": (
+                    f"repeated status check `{identity}` has an ambiguous "
+                    "latest timestamp"
+                ),
+            })
+            current.extend(items)
+            continue
+
+        for timestamp, value, item in timestamped:
+            annotated = dict(item)
+            annotated["_asgk_ordering_field"] = ordering_field
+            annotated["_asgk_ordering_timestamp"] = value
+            if item is latest[0]:
+                current.append(annotated)
+            else:
+                superseded.append(annotated)
+
+    return current, superseded, errors
+
+
+def compact_pr_report_status_checks(status_rollup: object) -> list[dict[str, object]]:
+    checks: list[dict[str, object]] = []
+    current, superseded, errors = select_latest_status_checks(status_rollup)
+    for items, is_current in ((current, True), (superseded, False)):
+        for item in items:
+            _timestamp, ordering_field, ordering_value = status_check_ordering(item)
+            checks.append({
+                "identity": status_check_identity(item) or "missing_check_identity",
+                "name": str(item.get("name") or item.get("context") or "unnamed_check"),
+                "status": str(item.get("status") or ""),
+                "conclusion": str(item.get("conclusion") or item.get("state") or ""),
+                "details_url": str(item.get("detailsUrl") or item.get("targetUrl") or ""),
+                "ordering_field": ordering_field or "",
+                "ordering_timestamp": ordering_value or "",
+                "current": is_current,
+                "superseded": not is_current,
+            })
+    for error in errors:
         checks.append({
-            "name": str(item.get("name") or item.get("context") or "unnamed_check"),
-            "status": str(item.get("status") or ""),
-            "conclusion": str(item.get("conclusion") or ""),
-            "details_url": str(item.get("detailsUrl") or item.get("targetUrl") or ""),
+            "identity": error["field"],
+            "name": "statusCheckRollup",
+            "status": "AMBIGUOUS",
+            "conclusion": "",
+            "details_url": "",
+            "current": True,
+            "superseded": False,
+            "error": error["reason"],
         })
     return checks
 
@@ -1302,19 +1539,37 @@ def check_status_rollup(status_rollup: object, findings: list[dict[str, str]]) -
         )
         return
 
-    passing_conclusions = {"SUCCESS", "SKIPPED", "NEUTRAL"}
-    for item in status_rollup:
-        if not isinstance(item, dict):
-            add_pr_status_finding(
-                findings,
-                "statusCheckRollup",
-                "Status check entry is not an object.",
-                "Fetch PR status with gh pr view --json statusCheckRollup.",
+    current_checks, _superseded_checks, ordering_errors = select_latest_status_checks(
+        status_rollup
+    )
+    for error in ordering_errors:
+        if error["field"] == "statusCheckRollup.identity":
+            recommended_fix = (
+                "Provide a usable check name plus workflow/app/provider identity "
+                "for repeated CheckRuns; do not deduplicate by timestamp alone."
             )
-            continue
+        elif error["field"] == "statusCheckRollup.shape":
+            recommended_fix = (
+                "Fetch PR status with gh pr view --json statusCheckRollup and "
+                "preserve each check as a structured object."
+            )
+        else:
+            recommended_fix = (
+                "Keep the PR merge-blocked until repeated checks have a unique, "
+                "reliably timestamped latest run."
+            )
+        add_pr_status_finding(
+            findings,
+            error["field"],
+            error["reason"],
+            recommended_fix,
+        )
+
+    passing_conclusions = {"SUCCESS", "SKIPPED", "NEUTRAL"}
+    for item in current_checks:
         name = str(item.get("name") or item.get("context") or "unnamed_check")
         status = str(item.get("status") or "").upper()
-        conclusion = str(item.get("conclusion") or "").upper()
+        conclusion = str(item.get("conclusion") or item.get("state") or "").upper()
         if status and status != "COMPLETED":
             add_pr_status_finding(
                 findings,
@@ -1331,17 +1586,40 @@ def check_status_rollup(status_rollup: object, findings: list[dict[str, str]]) -
             )
 
 
-def pr_file_paths(files: object) -> list[str]:
+def validated_pr_file_paths(files: object) -> tuple[list[str], list[str]]:
     if not isinstance(files, list):
-        return []
+        return [], ["PR file list is not a list."]
     paths: list[str] = []
-    for item in files:
+    errors: list[str] = []
+    for index, item in enumerate(files):
         if isinstance(item, str):
-            paths.append(item)
-        elif isinstance(item, dict):
-            path = item.get("path") or item.get("filename")
+            path = item.strip()
             if path:
-                paths.append(str(path))
+                paths.append(path)
+            else:
+                errors.append(f"PR file entry {index} is a blank path string.")
+        elif isinstance(item, dict):
+            path_value = (
+                item.get("path")
+                if "path" in item
+                else item.get("filename")
+            )
+            path = nonblank_string(path_value)
+            if path is None:
+                errors.append(
+                    f"PR file entry {index} has no nonblank string path or filename."
+                )
+            else:
+                paths.append(path)
+        else:
+            errors.append(
+                f"PR file entry {index} is neither a path string nor an object."
+            )
+    return paths, errors
+
+
+def pr_file_paths(files: object) -> list[str]:
+    paths, _errors = validated_pr_file_paths(files)
     return paths
 
 
@@ -1423,13 +1701,15 @@ def pr_status_issue_payload(payload: dict[str, object], issue_number: int) -> di
     return None
 
 
-def check_pr_issue_allowed_paths(payload: dict[str, object], body: str, findings: list[dict[str, str]]) -> None:
+def check_pr_issue_allowed_paths(
+    payload: dict[str, object],
+    body: str,
+    file_paths: list[str],
+    findings: list[dict[str, str]],
+) -> None:
     issue_number = merge_decision_issue_number(body)
     if issue_number is None:
         return
-    if "files" not in payload:
-        return
-
     issue_payload = pr_status_issue_payload(payload, issue_number)
     if issue_payload is None:
         add_pr_status_finding(
@@ -1451,7 +1731,7 @@ def check_pr_issue_allowed_paths(payload: dict[str, object], body: str, findings
         )
         return
 
-    for path in pr_file_paths(payload.get("files")):
+    for path in file_paths:
         normalized = normalize_repo_path(path)
         if not any(path_matches_allowed(normalized, allowed) for allowed in allowed_paths):
             add_pr_status_finding(
@@ -1473,12 +1753,20 @@ def check_pr_status_payload(payload: dict[str, object]) -> tuple[str, list[dict[
             "Validate only open PRs before merge eligibility.",
         )
 
-    if payload.get("isDraft") is True:
+    if payload.get("isDraft") is not False:
+        draft_value = payload.get("isDraft")
         add_pr_status_finding(
             findings,
             "isDraft",
-            "PR is still draft.",
-            "Mark the PR ready for review only after gates are complete.",
+            (
+                "PR draft state is not positively established as boolean false; "
+                f"found {draft_value!r}."
+            ),
+            (
+                "Mark the PR ready when it should enter human review, while "
+                "keeping the durable decision merge_blocked until every "
+                "required gate is complete."
+            ),
         )
 
     merge_state = str(payload.get("mergeStateStatus") or "").upper()
@@ -1490,14 +1778,42 @@ def check_pr_status_payload(payload: dict[str, object]) -> tuple[str, list[dict[
             "Resolve merge conflicts, blocked state, or pending mergeability before merge.",
         )
 
-    review_decision = str(payload.get("reviewDecision") or "").upper()
-    if review_decision in {"CHANGES_REQUESTED", "REVIEW_REQUIRED"}:
+    if "reviewDecision" not in payload:
         add_pr_status_finding(
             findings,
             "reviewDecision",
-            f"Review decision blocks merge: {review_decision}.",
-            "Resolve requested changes or required review before merge eligibility.",
+            "Review decision metadata is missing.",
+            "Fetch PR metadata with gh pr view --json reviewDecision.",
         )
+    else:
+        raw_review_decision = payload.get("reviewDecision")
+        if raw_review_decision is None:
+            review_decision = ""
+        elif isinstance(raw_review_decision, str):
+            review_decision = raw_review_decision
+        else:
+            review_decision = "__INVALID_SHAPE__"
+
+        if review_decision in {"CHANGES_REQUESTED", "REVIEW_REQUIRED"}:
+            add_pr_status_finding(
+                findings,
+                "reviewDecision",
+                f"Review decision blocks merge: {review_decision}.",
+                "Resolve requested changes or required review before merge eligibility.",
+            )
+        elif review_decision not in {"", "APPROVED"}:
+            add_pr_status_finding(
+                findings,
+                "reviewDecision",
+                (
+                    "Review decision metadata has an unsupported shape or "
+                    f"value: {raw_review_decision!r}."
+                ),
+                (
+                    "Use GitHub reviewDecision metadata with APPROVED or an "
+                    "explicit empty/null no-decision state; unknown values fail closed."
+                ),
+            )
 
     check_status_rollup(payload.get("statusCheckRollup"), findings)
 
@@ -1505,20 +1821,39 @@ def check_pr_status_payload(payload: dict[str, object]) -> tuple[str, list[dict[
     if body is None:
         body = ""
     body_text = str(body)
+    merge_section = markdown_section(body_text, "Merge Decision")
+    declared_merge_result = (raw_field_value(merge_section, "result") or "").strip()
+    if declared_merge_result != "merge_allowed":
+        add_pr_status_finding(
+            findings,
+            "merge_decision.result",
+            f"Strict PR readiness requires result: merge_allowed; found {declared_merge_result or 'missing'}.",
+            "Keep the PR merge-blocked until every required decision gate is complete, then update the durable Merge Decision.",
+        )
+
     with tempfile.TemporaryDirectory() as tmpdir:
         body_path = Path(tmpdir) / "pull_request_body.md"
         body_path.write_text(body_text, encoding="utf-8")
-        policy_gate = run_policy_gate_capture(body_path)
-        if policy_gate.returncode != 0:
+        merge_decision_gate = run_policy_gate_capture(
+            body_path,
+            mode=MERGE_DECISION_MODE,
+        )
+        if merge_decision_gate.returncode != 0:
+            body_coherence = run_policy_gate_capture(
+                body_path,
+                mode=BODY_COHERENCE_MODE,
+            )
+        else:
+            body_coherence = merge_decision_gate
+        if body_coherence.returncode != 0:
             add_pr_status_finding(
                 findings,
                 "body",
-                "PR body policy gate failed.",
-                "Fix Current Status Impact, Merge Decision, source-of-truth, or PR structure fields.",
+                "PR body coherence check failed.",
+                "Fix Current Status Impact, Merge Decision, source-of-truth, or required PR structure fields.",
             )
 
     check_closing_issue_reference(payload, body_text, findings)
-    check_pr_issue_allowed_paths(payload, body_text, findings)
 
     if "files" not in payload:
         add_pr_status_finding(
@@ -1528,22 +1863,55 @@ def check_pr_status_payload(payload: dict[str, object]) -> tuple[str, list[dict[
             "Fetch PR metadata with gh pr view --json files or provide a fixture with files.",
         )
     else:
-        hygiene = run_hygiene_capture(pr_file_paths(payload.get("files")))
-        if hygiene.returncode != 0:
+        file_paths, file_shape_errors = validated_pr_file_paths(payload.get("files"))
+        for error in file_shape_errors:
             add_pr_status_finding(
                 findings,
-                "files",
-                "Changed-path hygiene failed.",
-                "Remove protected/runtime/private-source-like paths or keep the PR human-gated.",
+                "files.shape",
+                error,
+                (
+                    "Preserve the gh pr view files list as path strings or "
+                    "objects with one nonblank string path."
+                ),
             )
+        if not file_shape_errors:
+            check_pr_issue_allowed_paths(payload, body_text, file_paths, findings)
+            hygiene = run_hygiene_capture(file_paths)
+            if hygiene.returncode != 0:
+                add_pr_status_finding(
+                    findings,
+                    "files",
+                    "Changed-path hygiene failed.",
+                    "Remove protected/runtime/private-source-like paths or keep the PR human-gated.",
+                )
 
     return ("fail" if findings else "pass", findings)
 
 
-def print_pr_status_result(payload: dict[str, object], result: str, findings: list[dict[str, str]], *, as_json: bool) -> int:
+def print_pr_status_result(
+    payload: dict[str, object],
+    result: str,
+    findings: list[dict[str, str]],
+    *,
+    evidence_source: str,
+    as_json: bool,
+) -> int:
+    evidence_description = (
+        "live GitHub PR metadata"
+        if evidence_source == "live_github"
+        else "supplied fixture or captured PR metadata"
+    )
+    boundary = (
+        f"check-pr composes the named mechanical fields from {evidence_description}. "
+        "It does not infer low-risk status, human approval, or merge authority."
+    )
     output = {
         "result": result,
+        "evidence_source": evidence_source,
+        "proof_boundary": boundary,
         "low_risk_inferred": False,
+        "human_approval_inferred": False,
+        "merge_authority_inferred": False,
         "pr": payload.get("number"),
         "url": payload.get("url"),
         "findings": findings,
@@ -1556,9 +1924,9 @@ def print_pr_status_result(payload: dict[str, object], result: str, findings: li
                 f"{finding['severity']}: {finding['field']} - "
                 f"{finding['reason']} Fix: {finding['recommended_fix']}"
             )
-        print("PR status check result: fail. No low-risk status was inferred.")
+        print(f"PR status check result: fail. {boundary}")
     else:
-        print("PR status check passed. No low-risk status was inferred.")
+        print(f"PR status check passed. {boundary}")
     return 1 if findings else 0
 
 
@@ -1597,26 +1965,87 @@ def cmd_negative(args: argparse.Namespace) -> int:
     return run_negative_case(args.case)
 
 
+def print_policy_gate_routing_failure(
+    *,
+    field: str,
+    reason: str,
+    recommended_fix: str,
+    declared_result: str = "",
+    as_json: bool,
+) -> int:
+    finding = {
+        "severity": "FAIL",
+        "category": "policy_gate_routing",
+        "field": field,
+        "reason": reason,
+        "recommended_fix": recommended_fix,
+        "blocks_merge_eligibility": True,
+    }
+    boundary = (
+        "No body validation mode was selected because GitHub PR event routing "
+        "was incomplete or invalid."
+    )
+    if as_json:
+        print(json.dumps({
+            "result": "fail",
+            "routing": "fail_closed",
+            "declared_merge_decision": declared_result,
+            "proof_boundary": boundary,
+            "merge_eligibility_inferred": False,
+            "low_risk_inferred": False,
+            "human_approval_inferred": False,
+            "findings": [finding],
+        }, indent=2, sort_keys=True))
+    else:
+        print(
+            f"FAIL: [policy_gate_routing] {field} - {reason} "
+            f"Fix: {recommended_fix}"
+        )
+        print(boundary)
+        print(
+            "Full PR merge eligibility, low-risk status, and human approval "
+            "were not inferred."
+        )
+    return 1
+
+
 def cmd_policy_gate(args: argparse.Namespace) -> int:
     if bool(args.pr_body) == bool(args.github_event):
         return print_failures(["provide exactly one of --pr-body or --github-event"])
 
     if args.pr_body:
-        return run_policy_gate(rel(args.pr_body), as_json=args.json)
+        return run_policy_gate(
+            rel(args.pr_body),
+            mode=args.mode or MERGE_DECISION_MODE,
+            as_json=args.json,
+        )
+
+    if args.mode is not None:
+        return print_policy_gate_routing_failure(
+            field="mode",
+            reason=(
+                "GitHub PR event validation must route from the durable "
+                "Merge Decision result; an explicit mode override is not allowed."
+            ),
+            recommended_fix=(
+                "Remove `--mode` when using `--github-event`; use explicit "
+                "modes only with `--pr-body`."
+            ),
+            as_json=args.json,
+        )
 
     event = json.loads(rel(args.github_event).read_text(encoding="utf-8"))
     pull_request = event.get("pull_request")
     if not isinstance(pull_request, dict):
-        payload = {
-            "result": "skipped",
-            "reason": "GitHub event payload does not contain a pull_request object.",
-            "low_risk_inferred": False,
-        }
-        if args.json:
-            print(json.dumps(payload, indent=2, sort_keys=True))
-        else:
-            print("Policy gate skipped: GitHub event payload has no pull_request object.")
-        return 0
+        return print_policy_gate_routing_failure(
+            field="pull_request",
+            reason="GitHub event payload does not contain a pull_request object.",
+            recommended_fix=(
+                "Provide the complete pull_request event payload; do not treat "
+                "missing PR metadata as a successful skip."
+            ),
+            as_json=args.json,
+        )
 
     body = pull_request.get("body")
     if body is None:
@@ -1625,7 +2054,33 @@ def cmd_policy_gate(args: argparse.Namespace) -> int:
     with tempfile.TemporaryDirectory() as tmpdir:
         body_path = Path(tmpdir) / "pull_request_body.md"
         body_path.write_text(str(body), encoding="utf-8")
-        return run_policy_gate(body_path, as_json=args.json)
+        selected_mode = args.mode
+        if selected_mode is None:
+            merge_section = markdown_section(str(body), "Merge Decision")
+            declared_result = (raw_field_value(merge_section, "result") or "").strip()
+            if declared_result == "merge_allowed":
+                selected_mode = MERGE_DECISION_MODE
+            elif declared_result == "merge_blocked":
+                selected_mode = BODY_COHERENCE_MODE
+            else:
+                return print_policy_gate_routing_failure(
+                    field="result",
+                    reason=(
+                        "GitHub event routing requires a declared "
+                        "`merge_allowed` or `merge_blocked` result."
+                    ),
+                    recommended_fix=(
+                        "Add a valid durable Merge Decision result before "
+                        "rerunning the event check."
+                    ),
+                    declared_result=declared_result,
+                    as_json=args.json,
+                )
+        return run_policy_gate(
+            body_path,
+            mode=selected_mode,
+            as_json=args.json,
+        )
 
 
 def cmd_check_pr(args: argparse.Namespace) -> int:
@@ -1658,7 +2113,18 @@ def cmd_check_pr(args: argparse.Namespace) -> int:
         return print_failures(["PR status payload must be a JSON object"])
 
     result, findings = check_pr_status_payload(payload)
-    return print_pr_status_result(payload, result, findings, as_json=args.json)
+    evidence_source = (
+        "supplied_json_fixture_or_capture"
+        if args.json_file
+        else "live_github"
+    )
+    return print_pr_status_result(
+        payload,
+        result,
+        findings,
+        evidence_source=evidence_source,
+        as_json=args.json,
+    )
 
 
 def load_pr_payload(args: argparse.Namespace) -> dict[str, object]:
@@ -1959,34 +2425,13 @@ def cmd_current_status_impact_check(args: argparse.Namespace) -> int:
 
 
 def cmd_pr_body_check(args: argparse.Namespace) -> int:
-    text = read_text(args.file)
-    failures: list[str] = []
-    headings = markdown_headings(text)
-    for heading in PR_REQUIRED_HEADINGS:
-        if heading not in headings:
-            failures.append(f"missing PR heading: ## {heading}")
-    if has_see_chat(text):
-        failures.append("PR body contains forbidden chat-only authority phrase: see chat")
-    if "Current Status Impact" not in headings:
-        failures.append("missing Current Status Impact section")
-    else:
-        current_status_section = markdown_section(text, "Current Status Impact")
-        for field in CURRENT_STATUS_IMPACT_REQUIRED_FIELDS:
-            if not line_field_exists(current_status_section, field):
-                failures.append(f"missing Current Status Impact field: {field}")
-    if "Merge Decision" not in headings:
-        failures.append("missing Merge Decision section")
-    else:
-        for field in MERGE_DECISION_REQUIRED_FIELDS:
-            if not line_field_exists(text, field):
-                failures.append(f"missing Merge Decision field: {field}")
-    result = field_value(text, "result")
-    if result and "|" not in result and result not in {"merge_allowed", "merge_blocked"}:
-        failures.append("Merge Decision field result must be merge_allowed or merge_blocked")
-    checks_passed = field_value(text, "checks_passed")
-    if checks_passed and checks_passed.lower() in {"pending", "unknown", "pending github actions"}:
-        failures.append("checks_passed is pending or unknown")
-    return print_failures(failures)
+    policy_gate = run_policy_gate_capture(
+        args.file,
+        mode=BODY_COHERENCE_MODE,
+    )
+    if policy_gate.stdout.strip():
+        print(policy_gate.stdout.rstrip())
+    return policy_gate.returncode
 
 
 def cmd_task_packet_check(args: argparse.Namespace) -> int:
@@ -2290,6 +2735,15 @@ def build_parser() -> argparse.ArgumentParser:
     p = sub.add_parser("policy-gate", help="Run PR-body policy gate checks.")
     p.add_argument("--pr-body", help="Path to a PR body markdown file.")
     p.add_argument("--github-event", help="Path to a GitHub Actions event payload JSON file.")
+    p.add_argument(
+        "--mode",
+        choices=[BODY_COHERENCE_MODE, MERGE_DECISION_MODE],
+        help=(
+            "Explicit validation layer for --pr-body only. File-backed bodies "
+            "default to strict merge-decision; --github-event rejects mode "
+            "overrides and always routes by the declared result."
+        ),
+    )
     p.add_argument("--json", action="store_true", help="Emit machine-readable JSON output.")
     p.set_defaults(func=cmd_policy_gate)
 
