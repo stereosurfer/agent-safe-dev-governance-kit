@@ -63,7 +63,7 @@ roles:
   status: Current handoff or state surface.
   script: Executable validation or hygiene behavior.
   skill: Source-distributed reusable agent procedure.
-  future_optional: Planned future capability, not part of current v1.x core.
+  historical_evidence: Superseded or archival material for bounded historical or migration lookup; never current authority.
 ```
 
 ## Entry And Startup Documents
@@ -80,7 +80,7 @@ roles:
 | `docs/SKILL_PACK.md` | summary | ASGK skill usage modes, guided evidence and judgment contract, maintenance touchpoints, and no-new-gates constraint | no | installing or referencing ASGK skills, reviewing architecture-to-skill impact, field testing, target adoption or upgrade assessment | `lane_07_docs_handoff` |
 | `docs/DOCUMENT_REGISTRY.md` | canonical | complete repo-local document registry | no | canonical ownership lookup, registry repair, document-map split work | `lane_07_docs_handoff` |
 | `docs/control/DOCUMENT_MAP_POLICY.md` | canonical | document-map router/registry split, size limits, and maintenance rules | no | document-map structure changes, registry split work, target-template navigation changes | `lane_07_docs_handoff` |
-| `docs/EVOLUTION_MODEL.md` | canonical | docs-driven evolution, self-governance, self-validation maturity model | no | roadmap/evolution discussion | `lane_07_docs_handoff` |
+| `docs/EVOLUTION_MODEL.md` | historical_evidence | superseded pre-2.0 evolution and maturity framing; not current ASGK 2.0 authority | no | auditing or removing superseded evolution material | `lane_07_docs_handoff` |
 
 ## Target Assessment And Optional References
 
@@ -258,7 +258,7 @@ storage_specialized_policies:
 | `docs/bootstrap/07_contract_first.md` | canonical | contract-first rule | no | contract/schema/artifact work | `lane_02_schema_contracts` |
 | `docs/bootstrap/08_acceptance_criteria.md` | canonical | three-layer acceptance model and definition of done | no | issue/PR acceptance changes | `lane_00_controller` |
 | `docs/bootstrap/09_safety_checks.md` | summary | minimum safety check overview | no | safety orientation only | `lane_05_security` |
-| `docs/bootstrap/10_roadmap.md` | canonical | roadmap hierarchy and active milestone register | no | milestone/roadmap planning, active milestone review | `lane_00_controller` |
+| `docs/bootstrap/10_roadmap.md` | historical_evidence | v1 milestone history and superseded runtime-adapter roadmap framing; not current ASGK 2.0 authority | no | release-history audit or removal of superseded roadmap material | `lane_00_controller` |
 | `docs/bootstrap/12_productization_notes.md` | historical_evidence | superseded productization and v1.x/v2.0 roadmap framing; not current ASGK 2.0 authority | no | auditing or removing superseded roadmap material | `lane_07_docs_handoff` |
 | `docs/bootstrap/13_artifact_promotion_policy.md` | summary | promotion chain overview and status values | no | artifact/data/evidence-heavy work | `lane_02_schema_contracts` |
 | `docs/bootstrap/14_execution_lanes.md` | canonical | execution lanes and external-call boundaries | no | execution lane/API/provider discussions | `lane_05_security` |

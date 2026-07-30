@@ -1,0 +1,44 @@
+{
+  "number": 157,
+  "title": "Latest repeated check succeeds",
+  "state": "OPEN",
+  "isDraft": false,
+  "mergeStateStatus": "CLEAN",
+  "reviewDecision": "APPROVED",
+  "url": "https://github.com/example/repo/pull/157",
+  "statusCheckRollup": [
+    {
+      "__typename": "CheckRun",
+      "workflowName": "Bootstrap validation",
+      "name": "validate",
+      "status": "COMPLETED",
+      "conclusion": "FAILURE",
+      "startedAt": "2026-07-27T10:00:00Z",
+      "completedAt": "2026-07-27T10:01:00Z",
+      "detailsUrl": "https://github.com/example/repo/actions/runs/157/jobs/1"
+    },
+    {
+      "__typename": "CheckRun",
+      "workflowName": "Bootstrap validation",
+      "name": "validate",
+      "status": "COMPLETED",
+      "conclusion": "SUCCESS",
+      "startedAt": "2026-07-27T10:05:00Z",
+      "completedAt": "2026-07-27T10:06:00Z",
+      "detailsUrl": "https://github.com/example/repo/actions/runs/157/jobs/2"
+    }
+  ],
+  "files": [
+    {
+      "path": "README.md"
+    }
+  ],
+  "closingIssuesReferences": [
+    {
+      "number": 157,
+      "url": "https://github.com/example/repo/issues/157",
+      "body": "## Required Task Fields\n\n```yaml\nlane: lane_06_ci_github\nintelligence_level: frontier\nreason: \"Fixture isolates the named lifecycle behavior.\"\ndurable_source_of_truth: \"GitHub issue #157\"\nobjective: \"Fixture for latest repeated status-check selection.\"\nallowed_paths:\n  - README.md\nexpected_output:\n  - one current-status fixture\nplan:\n  - preserve the older run\n  - evaluate the latest run\nchecklist:\n  - superseded evidence remains visible\nacceptance_sheet:\n  - latest success passes\nnon_goals:\n  - delete old run history\nstop_conditions:\n  - ordering is ambiguous\nrollback_expectations:\n  - close without merge\n```\n"
+    }
+  ],
+  "body": "## Summary\n\nRepeated-check fixture whose reliably newer run succeeds.\n\n## Task Reference\n\nCloses #157.\n\n## Changed Files\n\n- README.md\n\n## Validation\n\nThe latest validate run succeeds; the older failure remains superseded evidence.\n\n## Evidence Of Completion\n\nRun timestamps and details URLs provide a unique ordering.\n\n## Scope Boundaries\n\nOnly README.md is authorized.\n\n## Current Status Impact\n\n```yaml\ncurrent_status_impact:\n  status: not_applicable\n  reason: \"Fixture does not change repository recovery state.\"\n  current_status_updated_in_this_pr: false\n  post_merge_safe: not_applicable\n  follow_up_issue: none\n```\n\n## Runtime Output Status\n\nNo runtime outputs.\n\n## Merge Decision\n\n```yaml\nmerge_decision:\n  issue: \"#157\"\n  lane: lane_06_ci_github\n  intelligence_level: frontier\n  durable_source_of_truth: \"GitHub issue #157\"\n  checks_passed: true\n  allowed_paths_checked: true\n  expected_output_checked: true\n  contracts_checked: not_applicable\n  schemas_checked: not_applicable\n  storage_boundary: clean\n  runtime_artifact_boundary: clean\n  safety_review: complete\n  human_gates_checked: true\n  validation_evidence_checked: true\n  validation_claim_source:\n    local_doctor: freshly_rerun\n    ci: github_actions\n  result: merge_allowed\n  reason: \"The reliably latest run succeeds and durable review of fixture head 2222222222222222222222222222222222222222 is recorded at https://github.com/example/repo/pull/157#issuecomment-1; the older failed run remains audit evidence.\"\n```\n\n## Known Gaps\n\nFixture ordering does not prove application semantics or merge authority.\n\n## Handoff Report\n\nNext safe action: evaluate only the unique latest run while reporting the older run as superseded.\n"
+}

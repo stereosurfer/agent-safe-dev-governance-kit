@@ -1,10 +1,27 @@
+## Summary
+
+Negative fixture for a required Merge Decision state.
+
 ## Task Reference
 
 Issue #000.
 
+## Changed Files
+
+- Fixture only.
+
+## Validation
+
+Expected policy-gate failure.
+
+## Evidence Of Completion
+
+All unrelated fields are complete.
+
 ## Scope Boundaries
 
-Expected failure: `human_gates_checked` is pending.
+Expected failure in both body modes: `merge_allowed` cannot declare
+`human_gates_checked` as pending.
 
 ## Current Status Impact
 
@@ -16,6 +33,10 @@ current_status_impact:
   post_merge_safe: not_applicable
   follow_up_issue: none
 ```
+
+## Runtime Output Status
+
+No runtime output.
 
 ## Merge Decision
 
@@ -34,9 +55,17 @@ merge_decision:
   runtime_artifact_boundary: no_runtime_artifacts_added
   safety_review: negative_fixture
   human_gates_checked: pending
-  result: merge_blocked
-  reason: "Expected failure fixture."
+  validation_evidence_checked: true
+  validation_claim_source:
+    local_doctor: freshly_rerun
+    ci: github_actions
+  result: merge_allowed
+  reason: "Expected failure because the allowed decision overclaims an incomplete human gate."
 ```
+
+## Known Gaps
+
+The named state defect is intentional.
 
 ## Handoff Report
 

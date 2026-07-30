@@ -1,28 +1,31 @@
 # Document Registry
 
-Status: target-project template.
+Status: optional target-project registry reference.
 
-This template is for a repository that installs or adopts ASGK governance.
+Use this template only when a target-specific assessment finds that the
+repository needs a document registry and lacks an adequate equivalent. It is
+not an ASGK adoption requirement or a required filename.
 
-`docs/DOCUMENT_MAP.md` should be the target repository's small navigation router.
-This file should be the target repository's complete document registry.
+Keep an existing target-owned ownership or navigation mechanism when it already
+satisfies the need. The example paths below are placeholders to adapt, not a
+bundle to install.
 
 ## Scope
 
 ```text
-DOCUMENT_REGISTRY.md is repo-local.
+The selected document registry is repo-local and target-owned.
 ```
 
 Replace every placeholder and delete every row that does not exist in the target
 repository.
 
-## Relationship To DOCUMENT_MAP.md
+## Relationship To Other Navigation Surfaces
 
 ```yaml
 relationship:
-  docs/DOCUMENT_MAP.md: compact navigation router
-  docs/DOCUMENT_REGISTRY.md: complete target repo document registry
-  docs/control/CONTEXT_BUDGET_POLICY.md: task-type read sets and context expansion
+  <target-owned router path or none>: compact navigation router
+  <target-owned registry path>: complete target repo document registry
+  <target-owned context policy path or none>: task-type read sets and context expansion
 ```
 
 Do not read this file by default. Read it only when canonical ownership,
@@ -40,17 +43,17 @@ roles:
   template: Reusable starting point for work units or GitHub surfaces.
   status: Current handoff or state surface.
   script: Executable validation or hygiene behavior.
-  future_optional: Planned future capability, not part of the current core.
+  historical_evidence: Superseded or archival material for bounded historical lookup; never current authority.
 ```
 
 ## Entry And Startup Documents
 
 | Document | Role | Canonical for | Read by default | Read when | Owned by lane |
 |---|---|---|---:|---|---|
-| `README.md` | summary | project positioning and onboarding | yes | all new sessions | `<lane>` |
-| `AGENTS.md` | canonical | generic operating profile, source-of-truth rule, escalation triggers, stop conditions | yes | all agent sessions | `<lane>` |
-| `docs/handoff/CURRENT_STATUS.md` | status | compact current repo snapshot and next safe work | yes | all new sessions, handoff recovery | `<lane>` |
-| current GitHub issue or PR | canonical | active task objective, allowed paths, acceptance, validation, merge state | yes | every work unit | active task lane |
+| `<target product entry or onboarding document>` | summary | project positioning and onboarding | `<yes or no>` | `<condition>` | `<lane>` |
+| `<target agent operating guide, if used>` | canonical | target operating rules and safety boundaries | `<yes or no>` | `<condition>` | `<lane>` |
+| `<target current-state or handoff surface, if used>` | status | compact current repo snapshot and next safe work | `<yes or no>` | `<condition>` | `<lane>` |
+| `<current durable work-unit surface>` | canonical | active objective, allowed paths, acceptance, validation, and decision state | yes | every work unit | active task lane |
 
 ## Project-Specific Documents
 
@@ -62,15 +65,15 @@ roles:
 
 | Path | Role | Canonical for | Read by default | Read when | Owned by lane |
 |---|---|---|---:|---|---|
-| `schemas/*.json` | schema | machine-readable validation structures | no | schema validation, fixtures, tooling | `<lane>` |
-| `contracts/*.yaml` | contract | semantic contract rules and invariants | no | contract, schema, validation, artifact work | `<lane>` |
+| `<target schema path or pattern>` | schema | machine-readable validation structures | no | schema validation, fixtures, tooling | `<lane>` |
+| `<target contract path or pattern>` | contract | semantic contract rules and invariants | no | contract, schema, validation, artifact work | `<lane>` |
 
 ## Scripts And CI
 
 | Document | Role | Canonical for | Read by default | Read when | Owned by lane |
 |---|---|---|---:|---|---|
-| `scripts/asgk.py` | script | ASGK validation wrapper if installed | no | local validation and CI debugging | `<lane>` |
-| `.github/workflows/<workflow>.yml` | script | CI validation behavior | no | CI/workflow changes | `<lane>` |
+| `<target validation entrypoint>` | script | target validation behavior | no | local validation and CI debugging | `<lane>` |
+| `<target CI workflow path>` | script | target CI validation behavior | no | CI/workflow changes | `<lane>` |
 
 ## Registry Rules
 

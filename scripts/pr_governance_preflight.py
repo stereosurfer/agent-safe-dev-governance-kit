@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import argparse
 import subprocess
-import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -36,16 +35,22 @@ def preflight(body_file: str) -> int:
         print(f"FAIL: PR body file does not exist: {body_file}")
         return 1
 
-    checks = [
-        ["python3", "scripts/asgk.py", "pr-body-check", "--file", str(body_path)],
-        ["python3", "scripts/policy_gate_check.py", "--pr-body", str(body_path)],
+    check = [
+        "python3",
+        "scripts/asgk.py",
+        "pr-body-check",
+        "--file",
+        str(body_path),
     ]
-    for check in checks:
-        result = run(check)
-        if result != 0:
-            print("FAIL: PR body governance preflight failed.")
-            return result
-    print("PR body governance preflight passed.")
+    result = run(check)
+    if result != 0:
+        print("FAIL: PR body governance preflight failed.")
+        return result
+    print(
+        "PR body governance preflight passed for submission coherence only. "
+        "Full PR merge eligibility, low-risk status, and human approval were "
+        "not inferred."
+    )
     return 0
 
 

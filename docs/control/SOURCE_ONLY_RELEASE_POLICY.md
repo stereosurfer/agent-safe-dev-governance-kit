@@ -3,10 +3,11 @@
 Status: active source-only release policy.
 
 This document defines ASGK v1.x source-only release gates, release-execution
-boundaries, closeout requirements, and v2.0 deferrals. The version scope is an
-applicability boundary, not a file naming convention to copy into target repos.
-It is not a release history ledger and does not execute tags, GitHub releases,
-packages, installers, or repository visibility changes.
+boundaries, closeout requirements, and historical v1 release-scope exclusions.
+Those exclusions do not define current ASGK 2.0 direction. The version scope is
+an applicability boundary, not a file naming convention to copy into target
+repos. This policy does not execute tags, GitHub releases, packages, installers,
+or repository visibility changes.
 
 ## Scope
 
@@ -19,7 +20,7 @@ source_only_release_policy_scope:
     - license-selection decision path
     - tag and release process plan
     - package or distribution boundary
-    - explicit v2.0 deferrals
+    - historical v1 release-scope exclusions
     - remaining human gates
   not_allowed_in_this_policy:
     - release tag creation
@@ -79,11 +80,11 @@ source_only_release_gates:
     human_gate: true
     status: selected_by_124
     output: source_only_github_release
-  v2_0_deferrals:
+  historical_v1_0_scope_exclusions:
     required: true
-    human_gate: maybe
+    human_gate: false
     status: explicit
-    output: "runtime-specific adapters and productization items deferred to v2.0"
+    output: "The v1.0 release excluded runtime adapters and productization; this historical fact does not define ASGK 2.0."
   release_execution_issue:
     required: true
     human_gate: true
@@ -176,10 +177,10 @@ package_distribution_boundary:
     - generated artifact or runtime output included
 ```
 
-## Explicit V2.0 Deferrals
+## Historical V1.0 Scope Exclusions
 
 ```yaml
-v2_0_deferrals:
+historical_v1_0_scope_exclusions:
   runtime_profiles:
     - Codex-specific profile
     - Claude Code profile
@@ -193,7 +194,9 @@ v2_0_deferrals:
     - default CI wiring for optional negative suites
     - runtime-specific adapter testing
   rule:
-    - these are not v1.x source-only release blockers unless a human-gated release issue explicitly changes scope
+    - these items were outside the v1.0 source-only release
+    - this historical exclusion is not current ASGK 2.0 roadmap authority
+    - any future proposal requires a new durable issue and current justification
 ```
 
 ## Remaining Human Gates
@@ -205,7 +208,6 @@ remaining_human_gates:
   - package publication
   - external distribution
   - any dependency/schema/workflow change during release execution
-  - any claim that v2.0 runtime-specific adapters are release blockers
 ```
 
 ## Release Execution Boundary
@@ -270,7 +272,7 @@ release_history_boundary:
     - release execution boundary
     - product-entry and handoff freshness requirements
     - human-gated operations
-    - explicit v2.0 deferrals
+    - historical v1 release-scope exclusions
   github_keeps:
     - per-release target commits
     - full release notes

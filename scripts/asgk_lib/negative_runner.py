@@ -53,15 +53,50 @@ def run_many(commands: tuple[tuple[str, ...], ...]) -> int:
 
 def run_expected_failures(commands: tuple[tuple[str, ...], ...]) -> int:
     unexpected_passes: list[tuple[tuple[str, ...], str]] = []
+    unexpected_crashes: list[tuple[tuple[str, ...], str]] = []
+    unexpected_exit_codes: list[
+        tuple[tuple[str, ...], int, str]
+    ] = []
     for command in commands:
         result = run_captured(command)
         if result.returncode == 0:
             unexpected_passes.append((command, result.stdout))
-    if unexpected_passes:
+        elif result.returncode != 1:
+            unexpected_exit_codes.append(
+                (command, result.returncode, result.stdout)
+            )
+        elif any(
+            marker in result.stdout
+            for marker in (
+                "Traceback (most recent call last):",
+                "SyntaxError:",
+                "ModuleNotFoundError:",
+                "ImportError:",
+            )
+        ):
+            unexpected_crashes.append((command, result.stdout))
+    if unexpected_passes or unexpected_crashes or unexpected_exit_codes:
         for command, output in unexpected_passes:
             print(f"FAIL: expected command to fail, but it passed: {format_command(command)}")
             print_captured_output(output)
-        print(f"FAIL: {len(unexpected_passes)} expected-failure check(s) unexpectedly passed.")
+        for command, output in unexpected_crashes:
+            print(
+                "FAIL: expected governance rejection, but command crashed: "
+                f"{format_command(command)}"
+            )
+            print_captured_output(output)
+        for command, returncode, output in unexpected_exit_codes:
+            print(
+                "FAIL: expected governance rejection with exit code 1, but "
+                f"command returned {returncode}: {format_command(command)}"
+            )
+            print_captured_output(output)
+        print(
+            "FAIL: "
+            f"{len(unexpected_passes)} expected-failure check(s) unexpectedly passed; "
+            f"{len(unexpected_crashes)} crashed with exit code 1; "
+            f"{len(unexpected_exit_codes)} returned another code or signal."
+        )
         return 1
     print(f"Expected-failure checks passed: {len(commands)} command(s) failed as expected.")
     return 0

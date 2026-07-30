@@ -92,7 +92,6 @@ roles:
   status: Current handoff or state surface.
   script: Executable validation or hygiene behavior.
   historical_evidence: Archived repo-local evidence; never current authority or target-project state.
-  future_optional: Planned future capability, not part of current v1.x core.
 ```
 
 ## Default Entry Summary

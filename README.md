@@ -24,6 +24,7 @@ issue
   -> pull request
   -> Merge Decision Record
   -> human gate or low-risk merge
+  -> issue closeout review
   -> handoff / current status
 ```
 

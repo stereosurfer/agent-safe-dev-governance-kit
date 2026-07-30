@@ -1,25 +1,29 @@
 # Document Map
 
-Status: target-project navigation router template.
+Status: optional target-project navigation-router reference.
 
-This template is for a repository that installs or adopts ASGK governance. It is
-not the ASGK repository's own document map.
+Use this template only when a target-specific assessment finds that the
+repository needs a small navigation router and lacks an adequate equivalent.
+It is not an ASGK adoption requirement, a required filename, or the ASGK
+repository's own document map.
 
-The finished target-project `docs/DOCUMENT_MAP.md` should remain a small
-repo-local navigation router. Put full registry tables in
-`docs/DOCUMENT_REGISTRY.md`, not here.
+Keep an existing target-owned navigation mechanism when it already satisfies
+the need. If the target chooses the example paths used below, the finished
+`docs/DOCUMENT_MAP.md` should remain a small repo-local router and full registry
+tables should live in `docs/DOCUMENT_REGISTRY.md`. Otherwise replace the example
+paths with the target's own names and structure.
 
 ## Scope Rule
 
 ```text
-DOCUMENT_MAP.md is repo-local.
+The selected navigation router is repo-local and target-owned.
 ```
 
 ASGK's internal `docs/DOCUMENT_MAP.md` governs only the ASGK repository. A target
-project must own its own `docs/DOCUMENT_MAP.md` and `docs/DOCUMENT_REGISTRY.md`
-after installation.
+must not copy it unchanged or treat it as target state.
 
-Do not copy ASGK's internal document map unchanged into a target repository.
+This reference does not require a target to create either a document map or a
+registry. Create or adapt only the surfaces justified by the assessment.
 
 ## Core Rule
 
@@ -28,22 +32,23 @@ Do not read the whole repository for every task.
 Read the smallest set of canonical documents required by the work unit.
 ```
 
-If two documents appear to disagree, prefer the document marked `canonical` for
-that topic in `docs/DOCUMENT_REGISTRY.md`. If a summary document disagrees with a
-canonical document, the summary document is stale and should be fixed in a
-separate issue.
+If the target uses a registry and two documents appear to disagree, prefer the
+document marked `canonical` for that topic. If a summary document disagrees with
+a canonical document, the summary is stale and should be fixed through the
+target's durable work-unit process.
 
 ## Default Startup Set
 
-Every new agent session should start with only this minimal set unless the
-current issue, PR, or handoff packet points elsewhere:
+If the assessment recommends an explicit default startup set, tailor it to the
+target's existing authority and handoff surfaces. The following is a pattern,
+not a required bundle:
 
 ```yaml
 default_startup_set:
-  - AGENTS.md
-  - README.md
-  - docs/handoff/CURRENT_STATUS.md
-  - current GitHub issue or PR
+  - <target agent operating guide, if used>
+  - <target product entry or onboarding document>
+  - <target compact current-state or handoff surface, if used>
+  - <current durable work unit>
 ```
 
 Additional documents should be pulled by task type, not by habit.
@@ -53,37 +58,37 @@ Additional documents should be pulled by task type, not by habit.
 ```yaml
 navigation_surfaces:
   router:
-    path: docs/DOCUMENT_MAP.md
+    path: <target-owned router path>
     read_by_default: false
     read_when:
       - document ownership is unclear
       - current issue asks for map/router work
   registry:
-    path: docs/DOCUMENT_REGISTRY.md
+    path: <target-owned registry path or none>
     read_by_default: false
     read_when:
       - canonical ownership must be inspected or changed
       - registry row must be added or repaired
   read_sets:
-    path: docs/control/CONTEXT_BUDGET_POLICY.md
+    path: <target-owned context policy path or none>
     read_by_default: false
     read_when:
       - task-specific context selection is needed
       - context expansion is required
 ```
 
-## Target Registry
+## Companion Registry When Needed
 
-The target repository should create its complete registry from
-`templates/DOCUMENT_REGISTRY.template.md`:
+If the assessment finds that the target needs a separate registry, this optional
+pairing may be adapted:
 
 ```text
 templates/DOCUMENT_REGISTRY.template.md
-  -> target repo docs/DOCUMENT_REGISTRY.md
+  -> <target-owned registry path>
 ```
 
-`docs/DOCUMENT_MAP.md` should point to the registry, not duplicate the full
-registry tables.
+The selected router should point to that registry rather than duplicate its
+full tables. Do not create a registry only because this reference mentions one.
 
 ## Document Roles
 
@@ -97,31 +102,31 @@ roles:
   template: Reusable starting point for work units or GitHub surfaces.
   status: Current handoff or state surface.
   script: Executable validation or hygiene behavior.
-  future_optional: Planned future capability, not part of the current core.
+  historical_evidence: Superseded or archival material for bounded historical lookup; never current authority.
 ```
 
 ## Compact Entry Summary
 
-Keep this section short. Full rows belong in `docs/DOCUMENT_REGISTRY.md`.
+Keep this section short. If the target uses a separate registry, full rows
+belong there.
 
 ```yaml
 entry_summary:
   default_startup:
-    - AGENTS.md
-    - README.md
-    - docs/handoff/CURRENT_STATUS.md
-    - current GitHub issue or PR
-  full_registry: docs/DOCUMENT_REGISTRY.md
-  context_read_sets: docs/control/CONTEXT_BUDGET_POLICY.md
+    - <target-owned startup surface>
+    - <current durable work unit>
+  full_registry: <target-owned registry path or none>
+  context_read_sets: <target-owned context policy path or none>
 ```
 
 ## Maintenance Rules
 
 1. Keep this file small enough to act as a router.
-2. Add full document rows to `docs/DOCUMENT_REGISTRY.md`, not this file.
-3. Add task-type read sets to `docs/control/CONTEXT_BUDGET_POLICY.md`, not this
-   file.
+2. If the target uses a separate registry, add full document rows there, not in
+   this router.
+3. If the target uses a separate context policy, add task-type read sets there,
+   not in this router.
 4. Summary documents should point to canonical documents rather than repeating
    full policy text.
-5. If a document becomes canonical for a new topic, update
-   `docs/DOCUMENT_REGISTRY.md` in the same PR.
+5. If a document becomes canonical for a new topic, update the target's
+   ownership surface in the same work unit.

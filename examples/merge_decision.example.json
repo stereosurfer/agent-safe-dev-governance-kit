@@ -12,6 +12,11 @@
   "runtime_artifact_boundary": "no runtime artifacts committed",
   "safety_review": "pass",
   "human_gates_checked": true,
+  "validation_evidence_checked": true,
+  "validation_claim_source": {
+    "local_doctor": "freshly_rerun",
+    "ci": "github_actions"
+  },
   "result": "merge_allowed",
-  "reason": "Docs-only scaffold change."
+  "reason": "All named checks passed and durable review of example head 0000000000000000000000000000000000000001 is recorded at https://github.com/example/repo/pull/1#issuecomment-1. Live PR eligibility and merge authority remain separate."
 }

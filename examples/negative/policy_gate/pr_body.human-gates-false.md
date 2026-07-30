@@ -21,7 +21,7 @@ All unrelated fields are complete.
 ## Scope Boundaries
 
 Expected failure in both body modes: `merge_allowed` cannot declare
-`checks_passed` as pending.
+`human_gates_checked` as false.
 
 ## Current Status Impact
 
@@ -43,10 +43,10 @@ No runtime output.
 ```yaml
 merge_decision:
   issue: "#000"
-  lane: lane_07_docs_handoff
-  intelligence_level: standard
+  lane: lane_06_ci_github
+  intelligence_level: frontier
   durable_source_of_truth: "negative fixture"
-  checks_passed: pending
+  checks_passed: true
   allowed_paths_checked: true
   expected_output_checked: true
   contracts_checked: not_applicable
@@ -54,13 +54,13 @@ merge_decision:
   storage_boundary: no_runtime_or_storage_boundary_change
   runtime_artifact_boundary: no_runtime_artifacts_added
   safety_review: negative_fixture
-  human_gates_checked: true
+  human_gates_checked: false
   validation_evidence_checked: true
   validation_claim_source:
-    local_doctor: not_run
+    local_doctor: freshly_rerun
     ci: github_actions
   result: merge_allowed
-  reason: "Expected failure because the allowed decision overclaims incomplete checks."
+  reason: "Expected failure because an unsatisfied human gate cannot support an allowed decision."
 ```
 
 ## Known Gaps
