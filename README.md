@@ -1,11 +1,12 @@
 # Agent-Safe Development Governance Kit
 
-A GitHub-native governance kit for safe AI-assisted repository changes.
+A GitHub-native governance kit for safe, durable human-AI repository work.
 
-ASGK helps a repository accept changes from humans, Codex, Claude Code, Cursor,
-ChatGPT, other AI agents, scripts, or automation without letting chat become the
-control plane. Work is authorized, bounded, validated, reviewed, and handed off
-through GitHub issues, pull requests, repository files, and local checks.
+ASGK is a set of rules and tools that lets people and AI hand work over safely
+and smoothly. It keeps work understandable, resumable, and traceable without
+depending on a particular model, provider, agent, or prior conversation. Work
+is authorized, bounded, validated, reviewed, and handed off through GitHub
+issues, pull requests, repository files, and local checks.
 
 ## What It Is
 
@@ -23,6 +24,7 @@ issue
   -> pull request
   -> Merge Decision Record
   -> human gate or low-risk merge
+  -> issue closeout review
   -> handoff / current status
 ```
 
@@ -68,12 +70,20 @@ repo core
 validators
   -> scripts/asgk.py, policy gate, PR status checks, negative fixtures
 skills
-  -> reusable procedures that sequence existing repo/GitHub gates
+  -> focused procedures that guide evidence gathering and model judgment
 ```
 
-Skills are not a new authority layer. They help agents use the repo governance
-surface with less repeated rule reading, while final authority remains in GitHub
-issues, pull requests, repository files, ASGK validators, and human gates.
+Skills are not a new authority layer or a substitute for model judgment. They
+direct attention to relevant evidence, safety boundaries, uncertainty, and stop
+conditions while durable authority remains in GitHub issues, pull requests,
+repository files, ASGK validators, and existing human gates.
+
+For target adoption and material upgrades, a human selects a
+frontier-capability evaluator outside ASGK. The Skill guides that
+evaluator; ASGK does not select, route, rank, switch, or price-tier models.
+Deterministic validators check known invariants and concrete claims. They do not
+decide whether ASGK fits a target, prescribe target architecture, or prove
+semantic adoption readiness.
 
 ## Who It Is For
 
@@ -101,8 +111,9 @@ governance model. ASGK v1.x deliberately keeps the default layer generic.
 - `docs/handoff/CURRENT_STATUS.md` as a compact recovery surface.
 - Current-status policy that makes status updates post-merge-safe by default.
 - Local validation through `python3 scripts/asgk.py doctor`.
-- Negative checks for governance hygiene, PR bodies, handoff packets, target
-  install readiness, and stale current-status patterns.
+- Negative fixtures for governance hygiene, PR bodies, handoff packets, the
+  current legacy target-install shape checker, and stale current-status
+  patterns.
 - Explicit validation-boundary wording so `doctor` evidence is not treated as a
   substitute for project-specific tests, security review, privacy review, or API
   freshness checks.
@@ -114,8 +125,9 @@ governance model. ASGK v1.x deliberately keeps the default layer generic.
   handoff, evidence audit, target-install audit, and governance health checks.
 - Document map and context-budget guidance so agents read the smallest
   sufficient context instead of the whole repository.
-- Target-install read-only checks for evaluating whether another repository has
-  the expected governance surface.
+- Read-only target-install diagnostics for a legacy expected source shape.
+  These provide mechanical observations, not a target-fit decision,
+  minimum-change recommendation, or adoption-readiness proof.
 
 ## Quick Start
 
@@ -125,9 +137,13 @@ For this repository:
 python3 scripts/asgk.py doctor
 ```
 
-For adopting ASGK in another repository, start with `docs/INSTALL_SURFACE.md`.
-Treat that path as copying and adapting a governance scaffold, not installing a
-runtime package.
+For adopting or materially upgrading ASGK in another repository, start with
+`docs/INSTALL_SURFACE.md` and
+`skills/asgk-target-install-audit/SKILL.md`. Have a human choose a
+frontier-capability evaluator. The read-only assessment uses target
+evidence to recommend the minimum sufficient adaptation, no change, or no
+adoption. It adds no approval gate; existing gates apply only if a proposed
+implementation triggers them.
 
 If your agent client supports skills, copy the needed directories under
 `skills/` into the client skill location. If it does not, keep them as
@@ -153,9 +169,10 @@ For a first governed change in a repository that already has ASGK adopted:
 12. Merge only when policy, validation, CI, and human gates allow it.
 ```
 
-Do not copy this repository's internal
-`docs/DOCUMENT_MAP.md` unchanged into a target repository; create the target
-repo's own map from `templates/DOCUMENT_MAP.template.md`.
+This repository's `docs/DOCUMENT_MAP.md` and `docs/DOCUMENT_REGISTRY.md` are
+repo-local. Do not copy them unchanged into a target repository. A target may
+keep equivalent existing navigation and ownership mechanisms; use the templates
+only when the assessment finds a real gap.
 
 ## Safety Model
 
@@ -184,9 +201,10 @@ source-only GitHub release: no package, installer, runtime adapter, dependency,
 schema, workflow, repository visibility change, cloud/API/model lane, MCP
 change, or v2.0 work is included.
 
-The v1.x line is the generic repo-governance product line. Later runtime-specific
-profiles or adapters are planned as optional optimization layers, not as the
-default governance model.
+The active ASGK 2.0 evolution keeps the generic governance core and focuses on
+clear, resumable, traceable human-AI work plus frontier-guided target
+assessment. The superseded runtime-adapter/profile roadmap does not define
+ASGK 2.0.
 
 ## What v1.x Does Not Include
 
@@ -210,7 +228,8 @@ ASGK v1.x does not:
 - `docs/QUICKSTART.md` for the first governed change.
 - `AGENTS.md` for agent operating rules.
 - `docs/DOCUMENT_MAP.md` for canonical document ownership in this repository.
-- `docs/INSTALL_SURFACE.md` for target-repository adoption boundaries.
+- `docs/INSTALL_SURFACE.md` for frontier-guided target assessment,
+  responsibility boundaries, and minimum sufficient adaptation.
 - `docs/SKILL_PACK.md` for source-distributed skill usage and maintenance
   touchpoints.
 - `docs/control/CURRENT_STATUS_POLICY.md` for current-status and handoff rules.
@@ -229,11 +248,10 @@ Bootstrap Kit v2.1
   = source lineage and template embryo
 
 ASGK v1.x
-  = current generic repo-governance product line
+  = latest released generic repo-governance line
 
 ASGK v2.0
-  = planned runtime-adapter/profile optimization line
+  = active docs-driven evolution of safe handoff, traceability, and assessment
 ```
 
-The lineage matters, but it is not the product boundary. ASGK v1.x is the
-generic repository governance core.
+The lineage matters, but old roadmap labels are not current product authority.

@@ -2,9 +2,10 @@
 
 Status: opt-in expected-failure fixtures.
 
-Files in this directory are intentionally bad inputs for governance validators.
-They are not positive examples, adoption templates, policy authority, or target
-repository starter content.
+Files in this directory are constructed to trigger current governance
+validators. Some represent real invariant violations; legacy fixtures may only
+preserve current mechanical behavior. They are not positive examples, adoption
+templates, policy authority, semantic defect proof, or target starter content.
 
 ## Rules
 
@@ -57,7 +58,7 @@ fixture_classes:
   compact_governance:
     purpose: compact report, scope-lock, task-packet, handoff, and target-upgrade red-team inputs
   target_install:
-    purpose: intentionally invalid target-repository structures
+    purpose: current legacy shape-check failures plus source-state isolation violations
 ```
 
 Do not add a negative fixture unless a validator, runner group, CI step, or

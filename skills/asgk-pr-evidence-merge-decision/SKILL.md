@@ -83,10 +83,10 @@ Each evidence item needs a limit or non-proof.
    evidence, and limits; do not paste full routine command logs when PR, CI, or
    issue artifacts already preserve the full output. Include fuller detail only
    for failures, blockers, material behavior changes, or reviewer decisions.
-11. For upgrade or adoption PRs, record the compact completion label used by the
-   relevant audit skill, such as `full_target_upgrade_alignment`,
-   `tooling_subset_only`, or `partial_followup_required`, and name the
-   stale-reference and path-existence evidence when completion is claimed.
+11. For adoption or material-upgrade PRs, cite the durable assessment's
+   recommendation, minimum bounded scope, target-owned state to preserve,
+   material evidence, proof limits, and any exact `next_action_gate`. Do not
+   require a fixed completion label or treat the assessment as approval.
 12. Before creating or editing a PR body, run local file-backed PR body
    preflight when available:
 

@@ -260,7 +260,7 @@ stale_when:
   - next safe action points to completed work
   - next safe action points to pre-merge validation for an already merged PR
   - repo-level release, milestone, or recovery state changed but status did not
-  - runtime-specific profile work appears as active in v1.x without a v2.0 issue
+  - superseded roadmap or adapter planning appears as current product authority
 ```
 
 When stale status is found, repair it in the active handoff/closeout PR when in

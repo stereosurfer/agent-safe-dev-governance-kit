@@ -19,12 +19,13 @@ previous chat transcript.
 
 ## Scope
 
-This is a v1.x generic handoff mechanism. It is not a Codex, OpenGoat, Claude
-Code, Cursor, Copilot, or ChatGPT-specific adapter.
+This is a generic handoff mechanism. It is not a Codex, OpenGoat, Claude Code,
+Cursor, Copilot, or ChatGPT-specific adapter.
 
-Runtime-specific adapters may optimize how a tool consumes this packet in v2.0,
-but they must not bypass the fields, stop conditions, validation, or merge gates
-specified here.
+Superseded runtime-adapter plans have no current ASGK 2.0 authority. Any future
+specialized integration requires a new durable issue justified from current
+needs and must not bypass the fields, stop conditions, validation, or merge
+gates specified here.
 
 ## Recommended Flow
 

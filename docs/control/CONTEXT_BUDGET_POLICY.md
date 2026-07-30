@@ -360,7 +360,7 @@ do_not_load_by_default:
   - private source files
   - cache directories
   - local state directories
-  - runtime-specific adapters before v2.0
+  - superseded runtime-specific adapter/profile plans unless a new durable issue directly scopes them
   - docs/DOCUMENT_REGISTRY.md
   - docs/INSTALL_SURFACE.md
 ```
@@ -432,5 +432,6 @@ maintenance_rules:
   - do_not_use_future_CLI_wrapper_plans_to_expand_current_startup_context
 ```
 
-Runtime-specific profiles and adapters remain v2.0 planned/optional work and
-must not be added to the v1.x default startup context.
+Superseded runtime-specific profile and adapter plans are not current ASGK 2.0
+authority and must not expand the default startup context. Any future proposal
+requires a new durable issue justified from current needs.

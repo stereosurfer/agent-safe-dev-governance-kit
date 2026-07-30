@@ -1,283 +1,155 @@
 ---
 name: asgk-upgrade-audit
-description: Use when updating an existing ASGK-adopted repository to newer ASGK guidance; audits target repo surfaces, separates reusable ASGK updates from target-owned state, and produces a bounded upgrade issue or PR plan without overwriting repo-local status or document maps.
+description: Use when an ASGK-adopted repository is considering a material update; guides a read-only frontier-capability comparison of source changes and target state, preserving target ownership while judging fit, minimum sufficient adaptation, uncertainty, and the next safe plan.
 ---
 
-# ASGK Upgrade Audit
+# ASGK Material Upgrade Assessment
 
-Use this skill when an existing repository has already adopted ASGK and needs to
-update to newer ASGK guidance, templates, skills, or policies.
+Use this skill when a repository already uses ASGK-derived governance and is
+considering materially newer guidance, templates, Skills, policies, or tooling.
+It guides read-only assessment and planning. It is not an auto-upgrader, version
+synchronizer, or approval mechanism.
 
-This skill is for audit and planning by default. It is not an auto-upgrader.
+## Capability Boundary
 
-## Authority
+A material ASGK upgrade is normally an infrequent, high-impact,
+context-sensitive task performed by a human-selected frontier-capability model.
+ASGK does not select, route, schedule, switch, price-tier, or orchestrate the
+evaluator.
 
-This skill does not create upgrade authority, approve changes, or override target
-repository rules. Durable scope must live in a GitHub issue or repository file.
+The Skill guides source-delta discovery, target evidence, comparison, universal
+safety boundaries, alternatives, confidence, unknowns, and stop behavior. The
+evaluator judges which source changes matter to the target, the governance
+depth that remains appropriate, the minimum sufficient adaptation, and whether
+any upgrade should be recommended.
 
-If this skill conflicts with `AGENTS.md`, the target repository's GitHub issue or
-PR, target repository control documents, or ASGK validators, stop and use the
-repository authority.
+## Authority And Safety Boundary
 
-## Core Rule
+The assessment is read-only and creates no target write, upgrade, approval, or
+merge authority. Durable implementation scope must live in a target-owned
+GitHub issue or PR with bounded allowed paths.
 
-```text
-Upgrade reusable ASGK governance surfaces; do not overwrite target-owned state.
-```
+The target repository owns its current status, instructions, document
+navigation, project boundaries, storage roots, protected paths, validation,
+license decisions, local conventions, and history. Preserve those meanings. A
+source file, newer version, or donor layout is evidence for comparison, not
+authority to overwrite target state.
 
-Target repositories own their own current status, document map, document
-registry, project brief, physical boundaries, storage roots, and project-specific
-rules. These must not be replaced with ASGK source-repository state.
+The assessment adds no human approval layer. Existing human gates apply only
+when a recommended implementation touches a concrete high-risk operation
+already defined by the target repository or
+`docs/control/HUMAN_GATED_OPERATIONS.md`. Name the exact operation and policy;
+do not create or report a gate merely because the comparison requires semantic
+judgment or manual adaptation.
 
-Safety is not completion. Preserving target-owned state is required, but an
-upgrade is not complete until ASGK-derived target surfaces have also been checked
-for source-delta coverage, stale references, and target path validity.
+## Minimum Reads
 
-## Required Inputs
+Read `docs/INSTALL_SURFACE.md`, the target's smallest authoritative entry set,
+and enough source-delta evidence to identify the baseline, material changes,
+target equivalents, and durable assessment destination. Follow references only
+when a material comparison requires more evidence.
 
-- Target repository name or local checkout.
-- Current ASGK source version or source branch to compare against.
-- Target repository governance files, when available:
-  - `AGENTS.md`
-  - `README.md`
-  - `.github/PULL_REQUEST_TEMPLATE.md`
-  - `.github/ISSUE_TEMPLATE/agent_task.yml`
-  - `docs/handoff/CURRENT_STATUS.md`
-  - `docs/DOCUMENT_MAP.md`
-  - `docs/DOCUMENT_REGISTRY.md`
-  - `docs/control/CURRENT_STATUS_POLICY.md`
-  - `docs/INSTALL_SURFACE.md`
-  - `scripts/asgk.py`
-  - `skills/`
-- Target validation command, usually `python3 scripts/asgk.py doctor`.
+Use `docs/control/TARGET_INSTALL_CHECKLIST.md` when comparison questions need
+expansion and `docs/control/TARGET_INSTALL_VALIDATION_PLAN.md` when
+deterministic commands or proof limits matter. Read a human-gate policy only
+when a proposed action could trigger it. Do not read or copy the full source
+tree by default.
 
-## Procedure
+## Assessment Procedure
 
-### 1. Detect
+### 1. Establish The Comparison Boundary
 
-Identify which ASGK surfaces exist in the target repository.
+Identify the target repository, the decision the assessment must inform, the
+best evidenced target ASGK baseline, the source reference being considered, the
+read-only scope, and the target-owned durable destination for the result. If
+the baseline is uncertain, record how that limits the comparison instead of
+inventing version certainty.
 
-```yaml
-detect:
-  required_checks:
-    - AGENTS.md exists
-    - PR template exists
-    - issue template exists or target issue process is documented
-    - CURRENT_STATUS.md exists and is target-owned
-    - validation command is known
-    - scripts/asgk.py exists or target has an explicit replacement
-    - skills/ exists or target uses repository-reference mode only
-```
+### 2. Discover Target-Owned State And ASGK Lineage
 
-Do not assume the target repository is current because one ASGK file exists.
-Before proposing allowed paths, do a read-only discovery pass over ASGK-derived
-target surfaces named by the startup set, document map, installer surface,
-validator scripts, profiles, manifests, and existing ASGK control docs.
+Use direct target evidence to find governance mechanisms that are ASGK-derived,
+locally adapted, or functionally equivalent. Record local behavior and
+customization that must be preserved. Do not classify the target into a fixed
+adoption type, and do not infer that a missing ASGK-named file means a missing
+capability.
 
-### 2. Classify
+Include only target surfaces made relevant by repository navigation, history,
+references, validation, recurring failures, or the material source delta.
 
-Classify the target repository before proposing changes.
+### 3. Compare Material Source Changes With Target Evidence
 
-```yaml
-target_classification:
-  recent_asgk:
-    meaning: "Target has current ASGK layout and validators; small guidance update may be enough."
-  older_asgk_without_skills:
-    meaning: "Target has core governance but no source-distributed skill pack."
-  customized_asgk:
-    meaning: "Target has ASGK-derived files with project-specific sections that must be manually merged."
-  partial_asgk:
-    meaning: "Target has only some governance surfaces; adoption audit may be needed before upgrade."
-  non_asgk:
-    meaning: "Target should use target-install audit, not upgrade audit."
-```
+Cite only source changes that could alter the recommendation. Combine related
+deltas when useful, and distinguish source evidence, target equivalent,
+relevance judgment, material effect, and proof limit.
 
-### 3. Separate Surfaces
+A newer source file, renamed path, or version difference is not by itself a
+target gap. The comparison must reason about responsibilities and effects, not
+source-tree conformity. Do not create a fixed completeness matrix or require
+every source surface to appear in the target.
 
-Separate safe update candidates from target-owned state.
+### 4. Use Deterministic Tools Only As Bounded Evidence
 
-```yaml
-safe_update_candidates:
-  - reusable skills when the target already uses ASGK skill layout
-  - generic control-policy wording when target customization is minimal
-  - PR template snippets when merged into the target template without removing local sections
-  - validator scripts only in a separate tooling issue
-manual_merge_required:
-  - .github/PULL_REQUEST_TEMPLATE.md when target has local sections
-  - docs/control/CURRENT_STATUS_POLICY.md when target has local recovery rules
-  - AGENTS.md when target has project-specific stop conditions
-  - docs/INSTALL_SURFACE.md when target adoption model differs
-never_overwrite:
-  - docs/handoff/CURRENT_STATUS.md
-  - docs/DOCUMENT_MAP.md
-  - docs/DOCUMENT_REGISTRY.md
-  - docs/bootstrap/00_project_brief.md
-  - docs/bootstrap/01_physical_boundaries.md
-  - docs/bootstrap/02_storage_roots.md
-  - docs/bootstrap/03_tech_stack.md
-  - target repository LICENSE without explicit license decision
-```
+Run a target-local or ASGK command only when it answers a material question.
+Apply `docs/control/TARGET_INSTALL_VALIDATION_PLAN.md`, state what was and was
+not proved, and treat any conflict with target evidence as a proof-limit
+finding. Do not weaken target-owned behavior to satisfy a legacy command or
+expand the assessment into a tool change without separate authorization.
 
-Do not treat `never_overwrite` as `out_of_scope_for_audit`. Target-owned files
-must not be replaced, but ASGK-derived references inside or pointing to them must
-still be classified as preserved, manually adapted, stale, intentionally absent,
-or deferred with reason.
+### 5. Exercise Frontier Judgment
 
-### 4. Check Completeness
+Judge, from the source comparison and target evidence:
 
-Before calling an upgrade complete, record a compact completeness matrix covering
-each in-scope source-version delta and each discovered ASGK-derived target
-surface:
+- whether the source changes materially improve the target;
+- whether the target already satisfies the responsibility through an
+  equivalent or stronger local mechanism;
+- the governance depth proportionate to current target risks;
+- the minimum sufficient change, if any;
+- target-owned behavior and local conventions that must be preserved;
+- alternatives, tradeoffs, downstream compatibility, and rollback needs;
+- whether retaining the current target state is the better recommendation.
 
-```yaml
-completeness_matrix:
-  adopted:
-  manually_adapted:
-  intentionally_not_adopted:
-  stale_reference_removed:
-  deferred_with_reason:
-```
+Do not choose from fixed target classifications, safe/manual/never-overwrite
+buckets, a module menu, a two-path Skill choice, or a preset completion label.
+The recommendation may conclude that no upgrade is warranted.
 
-Also record:
+### 6. State Confidence And Unknowns
 
-- `stale_reference_scan`: old ASGK versions, source-only document names,
-  deleted or renamed source files, and donor paths that differ from target paths.
-- `path_existence_validation`: manifest, planner, never-overwrite, read-set, and
-  files-to-inspect paths exist or are marked `intentionally_absent` with reason.
-- `completion_label`: `full_target_upgrade_alignment`,
-  `tooling_subset_only`, or `partial_followup_required`.
+Give a plain-language confidence statement with its basis. List material
+unknowns, why they matter, what evidence would resolve them, and whether a safe
+recommendation can still be made. Keep unknown or unverifiable compatibility,
+lineage, and validation claims unknown.
 
-Passing `doctor`, fixtures, strict checks, or CI is evidence for those named
-checks only; it is not upgrade completeness unless this matrix and the path
-checks are recorded.
+### 7. Produce The Next Safe Plan
 
-### 5. Check Compatibility
+Record the assessment in the target repository's existing issue, PR, or handoff
+lineage. If changes are recommended, draft the minimum bounded target-owned
+issue or PR plan with objective, discovered allowed paths, expected output,
+non-goals, validation, stop conditions, rollback expectations, and any exact
+existing human-gate trigger. Separate a tooling correction or unrelated
+high-risk action when the current durable scope does not authorize it.
 
-Before proposing a patch, check whether the target validator and templates are
-compatible.
+If no change is recommended, record the rationale, evidence limits, and the
+future condition that would justify reassessment. Do not create work merely to
+match a source version or source file shape.
 
-```yaml
-compatibility_questions:
-  - Does target `scripts/asgk.py` support the fields used by the new template?
-  - Does `python3 scripts/asgk.py doctor` pass before the upgrade?
-  - Does target CI run the same checks as the source ASGK version?
-  - Are policy-gate or current-status-impact fields understood by target tooling?
-  - Would a template update make target PRs fail existing CI?
-```
+## Durable Record
 
-If validator, workflow, schema, or required field compatibility is unclear, split
-the upgrade into a tooling issue before changing templates or skills.
+Adapt the assessment to the target's existing issue, PR, or handoff format. Do
+not create a separate schema, manifest, or declaration. Leave a concise,
+traceable record of:
 
-### 6. Produce A Bounded Upgrade Issue
+- recommendation and rationale;
+- material source/target evidence and proof limits;
+- minimum change or no-change conclusion and target state to preserve;
+- confidence, unknowns, alternatives, compatibility, tradeoffs, and rollback;
+- next authorized action and any exact existing gate that applies to it.
 
-Draft a target-repository issue instead of editing files directly unless the user
-has already supplied a durable issue.
+End with one compact assessment state: `assessment_complete` or `blocked`.
+Record any exact existing gate separately as `next_action_gate`; it blocks only
+the named implementation action.
 
-The issue should include:
-
-```yaml
-upgrade_issue_fields:
-  objective:
-  durable_source_of_truth:
-  source_asgk_version_or_commit:
-  detected_target_state:
-  discovered_asgk_derived_surfaces:
-  allowed_paths:
-  expected_output:
-  non_goals:
-  validation:
-  required_completeness_checks:
-  stop_conditions:
-  rollback_expectations:
-```
-
-## Output Format
-
-Return an audit report and issue draft.
-
-```yaml
-asgk_upgrade_audit:
-  target_repository:
-  source_asgk_reference:
-  classification:
-  detected_surfaces:
-  missing_or_stale_surfaces:
-  safe_update_candidates:
-  manual_merge_required:
-  never_overwrite:
-  completeness_matrix:
-  stale_reference_scan:
-  path_existence_validation:
-  validator_compatibility:
-  recommended_issue:
-    title:
-    allowed_paths:
-    validation:
-    stop_conditions:
-  completion_label: full_target_upgrade_alignment | tooling_subset_only | partial_followup_required
-  result: blocked | issue_ready | requires_human | target_install_audit_recommended
-```
-
-## Stop States
-
-- `blocked`: target state, validator compatibility, authority, or required stale-reference/path-existence evidence is missing.
-- `requires_human`: license, release, package publication, public visibility, dependency, workflow, schema, or protected-path changes are involved.
-- `target_install_audit_recommended`: target is partial or non-ASGK and should be audited for adoption before upgrade.
-- `issue_ready`: a bounded upgrade issue can be created.
-
-## Split-Issue Triggers
-
-Open a separate issue instead of mixing concerns when the upgrade requires:
-
-- `scripts/asgk.py` validator behavior changes;
-- GitHub Actions or CI workflow changes;
-- schema or contract changes;
-- dependency changes;
-- release execution, tag, package publication, or public visibility changes;
-- license changes or replacing the target repository `LICENSE`;
-- installer scaffold behavior;
-- runtime-specific adapters or profiles.
-
-## Common Scenarios
-
-### Recent ASGK Repository
-
-If the target is current and only needs a guidance update, propose a narrow issue
-covering the affected reusable surfaces.
-
-```yaml
-allowed_paths_example:
-  - .github/PULL_REQUEST_TEMPLATE.md
-  - skills/asgk-post-merge-closeout/SKILL.md
-  - skills/asgk-current-status-handoff/SKILL.md
-```
-
-### Older ASGK Repository Without Skills
-
-Do not add the full skill pack automatically. Offer two paths:
-
-```yaml
-options:
-  repository_reference_mode:
-    action: "Keep skills out of the target repo; update policy/template guidance only."
-  minimal_skill_adoption:
-    action: "Add only the skills needed by the upgrade, in a dedicated issue."
-```
-
-### Heavily Customized Target Repository
-
-Do not overwrite files. Produce a manual merge plan naming the section to update
-and the target-owned sections to preserve.
-
-### Stale Target CURRENT_STATUS
-
-Do not use upgrade work to hide stale state. Recommend a bounded current-status
-refresh issue first if stale status would mislead the next session.
-
-## Exit Artifact
-
-A concise audit report plus a bounded GitHub issue draft, including
-`safe_update_candidates`, `manual_merge_required`, `never_overwrite`,
-completeness matrix, stale-reference scan, path-existence validation, and a
-completion label. Do not perform file updates unless the target repository
-already has a durable issue authorizing the specific allowed paths.
+Use `assessment_complete` when evidence supports a target-specific
+recommendation, including no change. It does not approve an upgrade. Use
+`blocked` only when missing authority, access, source boundary, or material
+evidence prevents a responsible recommendation; state exactly what would
+unblock it.

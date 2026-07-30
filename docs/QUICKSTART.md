@@ -1,6 +1,6 @@
 # Quickstart
 
-Status: v1.x adoption guide.
+Status: active source-adoption guide.
 
 This guide shows the shortest practical path to use ASGK for one safe, bounded
 repository change. It is an onboarding summary, not the full policy layer, PR
@@ -29,14 +29,16 @@ ASGK source repo
   = this repository, where ASGK itself is maintained and released
 
 target repo
-  = a repository that copies and adapts the ASGK governance scaffold
+  = a repository being assessed against its own risks, controls, conventions,
+    and existing governance surfaces
 ```
 
 Commands in this guide run from the repository root of whichever context is
 being checked.
 
-Do not treat ASGK v1.x as a runtime package installed into an agent. It is a
-source-only governance scaffold copied and adapted into a repository.
+Do not treat ASGK v1.x as a runtime package or a universal target-repository
+shape. It is source-distributed governance guidance that may be selectively
+adapted when a target assessment recommends it.
 
 ## Before You Start
 
@@ -49,14 +51,14 @@ in the agent client, and a human reviewer for protected or human-gated work.
 
 ## Minimal Read Order
 
-For a human adopting ASGK:
+For a human assessing ASGK adoption:
 
 ```text
 1. README.md
-2. docs/QUICKSTART.md
-3. docs/INSTALL_SURFACE.md if installing into another repository
-4. docs/DOCUMENT_MAP.md when canonical ownership is unclear
-5. docs/control/HUMAN_GATED_OPERATIONS.md before risky work
+2. docs/INSTALL_SURFACE.md
+3. skills/asgk-target-install-audit/SKILL.md
+4. the target repository's own startup, authority, and handoff surfaces
+5. only the additional target evidence identified during assessment
 ```
 
 For an AI agent starting work in an ASGK-governed repository:
@@ -78,6 +80,11 @@ ASGK ships source-distributed skills under `skills/`. They are reusable
 procedures, not a new authority layer. Use `docs/SKILL_PACK.md` for the full
 list, usage timing, client-installed mode, and repository-reference mode.
 
+For target adoption or a material upgrade, the relevant Skill guides a
+human-selected frontier-capability evaluator through evidence, boundaries,
+alternatives, confidence, and unknowns. It does not contain a predetermined
+adoption decision and does not select or switch models.
+
 ## Validate The Kit
 
 From the ASGK source repository root, run:
@@ -87,19 +94,33 @@ python3 scripts/asgk.py doctor
 ```
 
 Expected-failure output during `doctor` is intentional when followed by an
-expected-failure summary. It proves known-bad governance examples are blocked.
+expected-failure summary. It confirms that current encoded fixtures trigger
+their expected mechanical failures. Legacy target-install fixtures do not prove
+a semantic target-governance defect.
 
-For target repositories, first copy and adapt the install surface described in
-`docs/INSTALL_SURFACE.md`, then run the target repository's configured
-validation command. If the ASGK checker is available from the source checkout,
-you can also run:
+## Assess Adoption In A Target Repository
+
+A human first chooses a frontier-capability evaluator. Use
+`docs/INSTALL_SURFACE.md` with
+`skills/asgk-target-install-audit/SKILL.md` to inspect the target repository
+read-only. The evaluator uses target evidence and judgment to determine fit,
+minimum sufficient adaptation, or whether no change or no adoption is the
+better result.
+
+Record the assessment in an existing target-owned issue, PR, or handoff lineage.
+The assessment itself adds no approval gate. Existing gates apply only when its
+implementation proposal touches a concrete protected or high-risk action.
+
+If the ASGK source checkout is available, this command may provide additional
+mechanical observations:
 
 ```bash
 python3 scripts/asgk.py target-install-check --repo-root /path/to/target/repo
 ```
 
-That check is read-only. It reports adoption-surface problems; it does not edit
-the target repository.
+The current command is a legacy fixed-shape diagnostic. It is read-only and
+does not prove semantic readiness, prescribe target architecture, or replace
+the evaluator's judgment.
 
 ## First Governed Change
 
@@ -226,23 +247,31 @@ closeout reviews.
 
 ## Adopt In Another Repository
 
-Use `docs/INSTALL_SURFACE.md` as the installation boundary.
+Use `docs/INSTALL_SURFACE.md` as the assessment boundary and
+`skills/asgk-target-install-audit/SKILL.md` as the guided procedure.
 
-Important distinction:
+The assessment should:
 
-```text
-ASGK docs/DOCUMENT_MAP.md
-  = repo-local map for this ASGK repository
+1. inspect the target's own authority, scope, forbidden actions, evidence,
+   decision lineage, and handoff mechanisms;
+2. identify actual risks and existing controls before proposing ASGK material;
+3. reuse equivalent target-owned mechanisms when they already satisfy the need;
+4. recommend the minimum sufficient adaptation, no change, or no adoption;
+5. record evidence, limits, confidence, unknowns, protected surfaces, and any
+   exact existing gate in the target's issue, PR, or handoff lineage.
 
-templates/DOCUMENT_MAP.template.md
-  = starter template for target repositories
+Only after a change is recommended should a target-owned implementation issue
+or PR authorize edits. The read-only assessment does not create an additional
+human approval layer.
 
-target repo docs/DOCUMENT_MAP.md
-  = repo-local map owned by the target project after adoption
-```
+ASGK's `docs/DOCUMENT_MAP.md` and `docs/DOCUMENT_REGISTRY.md` remain authority
+only for this repository. Their templates are optional references, not required
+target files. Use them only when the assessment finds that the target lacks an
+equivalent navigation or ownership surface.
 
 Do not copy ASGK repo-local readiness audits, handoff history, roadmap state,
-release-controller records, or adapter placeholders as target-project authority.
+release-controller records, or superseded adapter planning as target-project
+authority.
 
 ## Common Stop Conditions
 
@@ -257,7 +286,8 @@ exist.
 ```text
 agent startup and stop rules: AGENTS.md
 document routing: docs/DOCUMENT_MAP.md
-target adoption boundary: docs/INSTALL_SURFACE.md
+target adoption assessment: docs/INSTALL_SURFACE.md
+guided target assessment: skills/asgk-target-install-audit/SKILL.md
 validation proof boundary: docs/control/VALIDATION_STRATEGY.md
 negative test matrix: docs/control/NEGATIVE_TEST_PLAN.md
 human gates: docs/control/HUMAN_GATED_OPERATIONS.md

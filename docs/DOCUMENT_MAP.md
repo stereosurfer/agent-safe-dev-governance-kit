@@ -10,12 +10,12 @@ default.
 
 ## Repo-local Scope
 
-```text
-DOCUMENT_MAP.md is repo-local.
-```
+`DOCUMENT_MAP.md` is repo-local.
 
-This file governs only the ASGK repository. Target repositories must create their
-own compact map and full registry from the templates under `templates/`.
+This file governs only the ASGK repository. A target repository may retain its
+own equivalent navigation and ownership mechanisms. Templates under
+`templates/` are optional references used only when a frontier-guided
+assessment finds a real gap.
 
 ## Core Rule
 
@@ -55,11 +55,11 @@ progressive_disclosure_surfaces:
     read_by_default: false
   install_surface:
     path: docs/INSTALL_SURFACE.md
-    purpose: target-project copy/template/customize/do-not-copy boundary
+    purpose: frontier-guided target assessment, responsibility boundaries, and minimum sufficient adaptation
     read_by_default: false
   skill_pack:
     path: docs/SKILL_PACK.md
-    purpose: optional ASGK skill-pack source and usage modes
+    purpose: guided evidence and judgment procedures with source-distributed usage modes
     read_by_default: false
   issue_closeout_review_rules: {path: docs/handoff/ISSUE_CLOSEOUT_REVIEW_RULES.md, purpose: writing rules for mandatory issue closeout decision analysis in GitHub issue comments, read_by_default: false}
 ```
@@ -92,7 +92,6 @@ roles:
   status: Current handoff or state surface.
   script: Executable validation or hygiene behavior.
   historical_evidence: Archived repo-local evidence; never current authority or target-project state.
-  future_optional: Planned future capability, not part of current v1.x core.
 ```
 
 ## Default Entry Summary
@@ -106,44 +105,33 @@ default_entry_summary:
     - current GitHub issue or PR
   full_registry: docs/DOCUMENT_REGISTRY.md
   context_read_sets: docs/control/CONTEXT_BUDGET_POLICY.md
-  install_boundary: docs/INSTALL_SURFACE.md
+  adoption_assessment: docs/INSTALL_SURFACE.md
   skill_pack: docs/SKILL_PACK.md
   map_policy: docs/control/DOCUMENT_MAP_POLICY.md
 ```
-
-## Profile And Adapter Boundary
-
-ASGK v1.x uses a generic repo-agent governance core. Runtime-specific profile or
-adapter documents for Codex, ChatGPT Web/GitHub connector, OpenGoat, Claude Code,
-Cursor, Copilot, or other runtimes are ASGK v2.0 planned/optional work and are
-not part of the current default startup set.
-
-Runtime profile or adapter docs must not be treated as prerequisites for v1.x
-usage. They are optimization layers, not the governance core.
 
 ## Target Project Boundary
 
 ```yaml
 target_project_rule:
-  router_template: templates/DOCUMENT_MAP.template.md
-  registry_template: templates/DOCUMENT_REGISTRY.template.md
-  do_not_copy_as_is:
-    - docs/DOCUMENT_MAP.md
-    - docs/DOCUMENT_REGISTRY.md
-    - docs/control/HISTORICAL_ASGK_READINESS_EVIDENCE.md
-    - docs/control/HISTORICAL_ASGK_STABILIZATION_EVIDENCE.md
+  assessment_boundary: docs/INSTALL_SURFACE.md
+  guided_procedure: skills/asgk-target-install-audit/SKILL.md
+  reuse_target_owned_surfaces: true
+  optional_references: document-map and registry templates under templates/
+  never_copy_as_target_truth: ASGK repo-local maps, state, history, audits, or examples
 ```
 
-Use `docs/INSTALL_SURFACE.md` for the complete copy/template/customize/do-not-copy
-rules.
+The evaluator decides from target evidence whether either optional template
+addresses a real gap. ASGK does not require universal target filenames, a fixed
+document bundle, adoption declaration, module picker, or new approval gate.
 
 ## Maintenance Rules
 
 1. Add full document rows to `docs/DOCUMENT_REGISTRY.md`, not this file.
 2. Add context read-set definitions to `docs/control/CONTEXT_BUDGET_POLICY.md`,
    not this file.
-3. Add install/copy/template boundaries to `docs/INSTALL_SURFACE.md`, not this
-   file.
+3. Add target-assessment responsibilities, invariants, and optional-reference
+   boundaries to `docs/INSTALL_SURFACE.md`, not this file.
 4. Add skill-pack usage guidance to `docs/SKILL_PACK.md`, not this file.
 5. Keep this file small enough to act as a router.
 6. If this router exceeds the limits in `docs/control/DOCUMENT_MAP_POLICY.md`,

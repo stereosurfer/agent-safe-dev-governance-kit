@@ -15,10 +15,10 @@ or ownership rows must be inspected or updated.
 DOCUMENT_REGISTRY.md is repo-local.
 ```
 
-This file governs the ASGK repository only. Target repositories must create
-their own `docs/DOCUMENT_REGISTRY.md` from
-`templates/DOCUMENT_REGISTRY.template.md` when they adopt the source-only
-governance scaffold.
+This file governs the ASGK repository only. Target repositories are not
+required to create ASGK-named map or registry files. They retain target-owned
+authority and navigation surfaces; the templates are optional references used
+only when a frontier-guided assessment identifies a missing equivalent.
 
 ## Relationship To DOCUMENT_MAP.md
 
@@ -63,31 +63,31 @@ roles:
   status: Current handoff or state surface.
   script: Executable validation or hygiene behavior.
   skill: Source-distributed reusable agent procedure.
-  future_optional: Planned future capability, not part of current v1.x core.
+  historical_evidence: Superseded or archival material for bounded historical or migration lookup; never current authority.
 ```
 
 ## Entry And Startup Documents
 
 | Document | Role | Canonical for | Read by default | Read when | Owned by lane |
 |---|---|---|---:|---|---|
-| `README.md` | summary | project positioning, source-adoption path, operating loop overview | yes | all new sessions | `lane_07_docs_handoff` |
+| `README.md` | summary | product positioning, durable human-AI handoff, target-assessment entry, and operating loop overview | yes | all new sessions | `lane_07_docs_handoff` |
 | `LICENSE` | canonical | Apache-2.0 license for ASGK source release and copied/adapted ASGK-derived material | no | source release review, target-repo license handling, install-surface review | `lane_07_docs_handoff` |
 | `AGENTS.md` | canonical | agent startup order, source-of-truth rule, work-unit rule, stop conditions | yes | all agent sessions | `lane_00_controller` |
 | `docs/handoff/CURRENT_STATUS.md` | status | compact current repo snapshot and next safe work | yes | all new sessions, handoff recovery, handoff updates | `lane_07_docs_handoff` |
 | current GitHub issue or PR | canonical | active task objective, allowed paths, acceptance, validation, merge state | yes | every work unit | active task lane |
-| `docs/QUICKSTART.md` | summary | first-use workflow, onboarding, and target-repo source-adoption orientation | no | onboarding and first repository smoke test | `lane_07_docs_handoff` |
-| `docs/INSTALL_SURFACE.md` | canonical | target-project source-only adoption surface, license handling, copy/template/customize/do-not-copy boundaries | no | adopting ASGK into another repository, field-test preparation, target-repo scaffold planning, license-handling review | `lane_07_docs_handoff` |
-| `docs/SKILL_PACK.md` | summary | ASGK skill-pack usage modes, maintenance touchpoints, field-test sequence, and no-new-gates constraint | no | installing or referencing ASGK skills, reviewing architecture-to-skill impact, skill-pack field test, target adoption planning | `lane_07_docs_handoff` |
+| `docs/QUICKSTART.md` | summary | first-use workflow, onboarding, and frontier-guided target-assessment orientation | no | onboarding and first repository smoke test | `lane_07_docs_handoff` |
+| `docs/INSTALL_SURFACE.md` | canonical | frontier-guided read-only target assessment, evaluator/Skill/tool boundaries, invariants, license handling, and minimum sufficient adaptation | no | assessing ASGK adoption or a material upgrade, target evidence review, implementation planning after an assessment | `lane_07_docs_handoff` |
+| `docs/SKILL_PACK.md` | summary | ASGK skill usage modes, guided evidence and judgment contract, maintenance touchpoints, and no-new-gates constraint | no | installing or referencing ASGK skills, reviewing architecture-to-skill impact, field testing, target adoption or upgrade assessment | `lane_07_docs_handoff` |
 | `docs/DOCUMENT_REGISTRY.md` | canonical | complete repo-local document registry | no | canonical ownership lookup, registry repair, document-map split work | `lane_07_docs_handoff` |
 | `docs/control/DOCUMENT_MAP_POLICY.md` | canonical | document-map router/registry split, size limits, and maintenance rules | no | document-map structure changes, registry split work, target-template navigation changes | `lane_07_docs_handoff` |
-| `docs/EVOLUTION_MODEL.md` | canonical | docs-driven evolution, self-governance, self-validation maturity model | no | roadmap/evolution discussion | `lane_07_docs_handoff` |
+| `docs/EVOLUTION_MODEL.md` | historical_evidence | superseded pre-2.0 evolution and maturity framing; not current ASGK 2.0 authority | no | auditing or removing superseded evolution material | `lane_07_docs_handoff` |
 
-## Source Adoption And Target Project Templates
+## Target Assessment And Optional References
 
 | Document | Role | Canonical for | Read by default | Read when | Owned by lane |
 |---|---|---|---:|---|---|
-| `templates/DOCUMENT_MAP.template.md` | template | target-project document-map router starter structure | no | adopting ASGK into another repository, target-repo document-map creation | `lane_07_docs_handoff` |
-| `templates/DOCUMENT_REGISTRY.template.md` | template | target-project document-registry starter structure | no | adopting ASGK into another repository, target-repo document-registry creation | `lane_07_docs_handoff` |
+| `templates/DOCUMENT_MAP.template.md` | template | optional target-project navigation reference when assessment finds no equivalent surface | no | assessment recommends creating a target-owned compact router | `lane_07_docs_handoff` |
+| `templates/DOCUMENT_REGISTRY.template.md` | template | optional target-project ownership-registry reference when assessment finds no equivalent surface | no | assessment recommends creating a target-owned registry | `lane_07_docs_handoff` |
 | `templates/decision_packet.template.yaml` | template | reusable vertical-governance decision packet starting point | no | creating a decision packet for a major decision point | `lane_07_docs_handoff` |
 
 ## Source-Distributed Skills
@@ -102,24 +102,25 @@ roles:
 | `skills/asgk-current-status-handoff/SKILL.md` | skill | current-status impact and handoff refresh procedure | no | updating or auditing `docs/handoff/CURRENT_STATUS.md` | `lane_07_docs_handoff` |
 | `skills/asgk-evidence-audit/SKILL.md` | skill | validation and completion evidence classification procedure | no | auditing PR evidence, reports, or release notes | `lane_07_docs_handoff` |
 | `skills/asgk-release-prep/SKILL.md` | skill | source-only release planning, human-gated execution, and release-state closeout procedure | no | planning, executing, or closing out an ASGK source-only release | `lane_07_docs_handoff` |
-| `skills/asgk-target-install-audit/SKILL.md` | skill | target-repository ASGK adoption audit procedure | no | evaluating or transferring ASGK into another repository | `lane_07_docs_handoff` |
+| `skills/asgk-target-install-audit/SKILL.md` | skill | frontier-guided read-only target-adoption assessment procedure | no | evaluating ASGK fit, minimum sufficient adaptation, or no-adoption outcome in another repository | `lane_07_docs_handoff` |
+| `skills/asgk-upgrade-audit/SKILL.md` | skill | frontier-guided read-only comparison of newer ASGK guidance with target-owned governance | no | evaluating a material ASGK upgrade or deciding that no target change is needed | `lane_07_docs_handoff` |
 | `skills/asgk-governance-health-check/SKILL.md` | skill | periodic governance drift health-check procedure | no | weekly review, milestone review, or public/customer handoff | `lane_07_docs_handoff` |
 
-Template ownership rule:
+Optional-reference rule:
 
 ```yaml
-template_scope:
+reference_scope:
   asgk_repo_local_router: docs/DOCUMENT_MAP.md
   asgk_repo_local_registry: docs/DOCUMENT_REGISTRY.md
-  target_project_router_template: templates/DOCUMENT_MAP.template.md
-  target_project_registry_template: templates/DOCUMENT_REGISTRY.template.md
-  target_project_finished_router: target_repo/docs/DOCUMENT_MAP.md
-  target_project_finished_registry: target_repo/docs/DOCUMENT_REGISTRY.md
+  optional_target_router_reference: templates/DOCUMENT_MAP.template.md
+  optional_target_registry_reference: templates/DOCUMENT_REGISTRY.template.md
   decision_packet_template: templates/decision_packet.template.yaml
 rule:
   - do not copy ASGK's repo-local router or registry unchanged into a target project
-  - target repositories must customize their own router and registry
-  - decision packets are used for major decision points and must reference durable sources of truth
+  - reuse equivalent target-owned mechanisms when they already satisfy the need
+  - use a template only when the assessment identifies a real gap
+  - do not prescribe ASGK filenames or a universal document bundle
+  - decision packets remain optional existing-purpose artifacts, not adoption declarations
 ```
 
 ## Handoff And Recovery Documents
@@ -144,21 +145,16 @@ handoff_canonical_sources:
   source_of_truth_rule: AGENTS.md
 ```
 
-## Adapter Mechanism And Future Runtime Profiles
+## Superseded Adapter Planning Artifacts
 
 | Document | Role | Canonical for | Read by default | Read when | Owned by lane |
 |---|---|---|---:|---|---|
-| `docs/adapters/README.md` | canonical | v1.x generic adapter mechanism and v2.0 adapter boundary | no | adapter mechanism planning, v2.0 prep, handoff tool switch discussion | `lane_01_architecture` |
-| `docs/adapters/ADAPTER_TEMPLATE.md` | template | future v2.0 runtime adapter structure | no | creating v2.0 adapter specs after vendor docs and observed tests exist | `lane_01_architecture` |
+| `docs/adapters/README.md` | historical_evidence | superseded adapter-mechanism planning context; not current ASGK 2.0 direction | no | auditing or removing superseded adapter planning | `lane_01_architecture` |
+| `docs/adapters/ADAPTER_TEMPLATE.md` | historical_evidence | superseded runtime-adapter template context; not current ASGK 2.0 direction | no | auditing or removing superseded adapter planning | `lane_01_architecture` |
 
-Future runtime profile names such as Codex App, ChatGPT Web/GitHub connector,
-OpenGoat, Claude Code, and Cursor are conceptual v2.0 planning surfaces only.
-They are not current repo paths and should not be added to this registry as
-document rows until a scoped v2.0 profile issue creates concrete files with
-vendor documentation and observed tests.
-
-Runtime profile or adapter docs must not be treated as prerequisites for v1.x
-usage. They are optimization layers, not the governance core.
+The runtime-adapter/profile roadmap is superseded. These files are not product
+direction, adoption prerequisites, or default context; their later removal is a
+separately scoped cleanup.
 
 ## Control Documents
 
@@ -169,18 +165,18 @@ usage. They are optimization layers, not the governance core.
 | `docs/control/ISSUE_HYGIENE_GATE.md` | canonical | stale issue detection and issue-start gate | no | before selecting or closing issues | `lane_00_controller` |
 | `docs/control/FAILURE_THRESHOLDS.md` | canonical | stop thresholds and notification conditions | no | repeated failures, blockers | `lane_00_controller` |
 | `docs/control/CONTEXT_BUDGET_POLICY.md` | canonical | context read sets, handoff recovery read set, context expansion rules | no | context selection, handoff recovery, token-budget review | `lane_00_controller` |
-| `docs/control/AGENT_CAPABILITY_MATRIX.md` | canonical | task risk classification, minimum intelligence level, low-risk merge compatibility, human-gate requirement, escalation/downscope decisions, context read-set binding | no | task risk review, escalation, downscoping, merge eligibility review | `lane_00_controller` |
+| `docs/control/AGENT_CAPABILITY_MATRIX.md` | canonical | task risk and minimum capability, including the frontier-capability floor for target adoption and material-upgrade assessment; low-risk merge compatibility, human gates, escalation/downscope, and context binding | no | task risk review, target adoption or material-upgrade assessment, escalation, downscoping, merge eligibility review | `lane_00_controller` |
 | `docs/control/VALIDATION_STRATEGY.md` | canonical | validation proof boundary, validation layer responsibilities, blocking vs warning, negative-fixture ownership rules, fail-closed policy-gate validation, validator change requirements | no | validation/tooling work, policy-gate checker review | `lane_06_ci_github` |
 | `docs/control/PR_REVIEW_CHECKLIST.md` | canonical | repeatable PR review sequence, current-status freshness review, and outcomes | no | PR review, current-status impact review, merge readiness | `lane_00_controller` |
 | `docs/control/NEGATIVE_TEST_PLAN.md` | canonical | negative test matrix, expected outcomes, implementation phases | no | negative fixture or validator work | `lane_00_controller` |
 | `docs/control/UNCONTROLLED_DOCUMENT_AUDIT.md` | canonical | uncontrolled-document growth-risk classification and audit record | no | uncontrolled-document audit or status-like document growth review | `lane_07_docs_handoff` |
-| `docs/control/HISTORICAL_ASGK_READINESS_EVIDENCE.md` | historical_evidence | archived ASGK source-only readiness evidence and first-release decision trail | no | auditing old ASGK readiness decisions or target-install do-not-copy boundaries | `lane_07_docs_handoff` |
-| `docs/control/HISTORICAL_ASGK_STABILIZATION_EVIDENCE.md` | historical_evidence | archived ASGK early stabilization evidence and field-test lesson record | no | auditing old ASGK stabilization decisions or target-install do-not-copy boundaries | `lane_07_docs_handoff` |
+| `docs/control/HISTORICAL_ASGK_READINESS_EVIDENCE.md` | historical_evidence | archived ASGK source-only readiness evidence and first-release decision trail | no | auditing old ASGK readiness decisions or target source-state isolation | `lane_07_docs_handoff` |
+| `docs/control/HISTORICAL_ASGK_STABILIZATION_EVIDENCE.md` | historical_evidence | archived ASGK early stabilization evidence and field-test lesson record | no | auditing old ASGK stabilization decisions or target source-state isolation | `lane_07_docs_handoff` |
 | `docs/control/SOURCE_ONLY_RELEASE_POLICY.md` | canonical | Source-only release gates, human-gated release execution boundary, distribution boundary, version applicability, and release-history source-of-truth boundary | no | source-only release planning, release execution review, release-state closeout, distribution-boundary review | `lane_07_docs_handoff` |
 | `docs/control/DOCUMENT_MAP_POLICY.md` | canonical | document-map router/registry split, size limits, and maintenance rules | no | document-map structure changes, registry split work, target-template navigation changes | `lane_07_docs_handoff` |
 | `docs/control/DECISION_POINT_REGISTRY.md` | canonical | vertical-governance decision point router, authority order, decision packet trigger conditions | no | major decision point, decision packet creation, vertical-governance planning | `lane_07_docs_handoff` |
-| `docs/control/TARGET_INSTALL_CHECKLIST.md` | canonical | target-project install readiness checklist and structural acceptance conditions | no | target install review, field-test preparation, target-install validation planning | `lane_07_docs_handoff` |
-| `docs/control/TARGET_INSTALL_VALIDATION_PLAN.md` | canonical | target-install checker/planner behavior, future validator check categories, and output contract | no | target-install checker/planner behavior review, validator implementation planning, validation roadmap | `lane_06_ci_github` |
+| `docs/control/TARGET_INSTALL_CHECKLIST.md` | canonical | target-assessment questions, existing-control comparison, minimum sufficient adaptation, evidence, uncertainty, and outcome conditions | no | target adoption or material-upgrade assessment, target issue preparation | `lane_07_docs_handoff` |
+| `docs/control/TARGET_INSTALL_VALIDATION_PLAN.md` | canonical | semantic-assessment versus mechanical-check proof boundaries, current legacy command limitations, and future checker constraints | no | target diagnostic review, checker/planner behavior review, future validation work | `lane_06_ci_github` |
 
 Capability matrix boundary rule:
 
@@ -188,11 +184,14 @@ Capability matrix boundary rule:
 agent_capability_matrix_binding_for:
   - task risk classification
   - minimum intelligence level
+  - frontier-capability floor for target adoption and material-upgrade assessment
   - low-risk merge compatibility
-  - human-gate requirement
+  - existing human-gate requirement
   - escalation and downscope decisions
   - context read-set binding
 not_binding_for:
+  - evaluator, model, provider, or price-tier selection
+  - automatic model routing or switching
   - runtime-native subagent orchestration
   - vendor-specific profile routing
   - goal workflow behavior
@@ -259,8 +258,8 @@ storage_specialized_policies:
 | `docs/bootstrap/07_contract_first.md` | canonical | contract-first rule | no | contract/schema/artifact work | `lane_02_schema_contracts` |
 | `docs/bootstrap/08_acceptance_criteria.md` | canonical | three-layer acceptance model and definition of done | no | issue/PR acceptance changes | `lane_00_controller` |
 | `docs/bootstrap/09_safety_checks.md` | summary | minimum safety check overview | no | safety orientation only | `lane_05_security` |
-| `docs/bootstrap/10_roadmap.md` | canonical | roadmap hierarchy and active milestone register | no | milestone/roadmap planning, active milestone review | `lane_00_controller` |
-| `docs/bootstrap/12_productization_notes.md` | reference | productization framing, v1.x/v2.0 product boundary | no | productization planning only | `lane_07_docs_handoff` |
+| `docs/bootstrap/10_roadmap.md` | historical_evidence | v1 milestone history and superseded runtime-adapter roadmap framing; not current ASGK 2.0 authority | no | release-history audit or removal of superseded roadmap material | `lane_00_controller` |
+| `docs/bootstrap/12_productization_notes.md` | historical_evidence | superseded productization and v1.x/v2.0 roadmap framing; not current ASGK 2.0 authority | no | auditing or removing superseded roadmap material | `lane_07_docs_handoff` |
 | `docs/bootstrap/13_artifact_promotion_policy.md` | summary | promotion chain overview and status values | no | artifact/data/evidence-heavy work | `lane_02_schema_contracts` |
 | `docs/bootstrap/14_execution_lanes.md` | canonical | execution lanes and external-call boundaries | no | execution lane/API/provider discussions | `lane_05_security` |
 | `docs/bootstrap/15_source_or_input_class_matrix.md` | optional module | source/input class use boundaries | no | evidence, source, claim, or context-pack projects | `lane_02_schema_contracts` |
@@ -309,9 +308,9 @@ disagree, stop and open a schema/contract alignment issue.
 | `scripts/validate_bootstrap.py` | script | bootstrap governance validation behavior | no | CI/tooling/debug validation | `lane_06_ci_github` |
 | `scripts/governance_hygiene.py` | script | changed-path and protected-path hygiene | no | path hygiene, negative changed-path checks, future CLI work | `lane_06_ci_github` |
 | `scripts/policy_gate_check.py` | script | read-only fail-closed PR-body policy gate check without low-risk inference | no | policy-gate validation, PR-body gate coherence review | `lane_06_ci_github` |
-| `scripts/asgk.py` | script | ASGK CLI wrapper for doctor/validate/hygiene/negative/status/closeout/pr-body/task-packet/handoff/target-install checks and read-only target-install planning, including opt-in policy-gate and target-install expected failures | no | local validation, status-check, closeout-check, handoff-check, PR-body/task-packet checks, policy-gate negative checks, target-install negative checks, target-install-check, target-install-plan | `lane_06_ci_github` |
+| `scripts/asgk.py` | script | ASGK CLI wrapper for governance checks plus legacy fixed-shape target-install diagnostics; target-install output is not fit, readiness, architecture, or recommendation proof | no | local validation, status/closeout/handoff/PR checks, policy-gate checks, or optional mechanical target-install observations | `lane_06_ci_github` |
 | `scripts/pr_governance_preflight.py` | script | thin file-backed PR body preflight before `gh pr create` or `gh pr edit` | no | PR body create/edit, local preflight before GitHub Actions, target adoption of ASGK CLI tooling | `lane_06_ci_github` |
-| `scripts/target_install_plan.py` | script | standalone read-only target-install plan generation | no | target-install planning, scaffold preparation, install-plan review | `lane_06_ci_github` |
+| `scripts/target_install_plan.py` | script | standalone legacy fixed-shape target-install observation plan; not an adoption recommendation or readiness proof | no | optional mechanical target-install observation or future replacement planning | `lane_06_ci_github` |
 | `.github/workflows/bootstrap-validation.yml` | template/script | GitHub Actions bootstrap validation workflow | no | CI/workflow changes | `lane_06_ci_github` |
 | `.github/PULL_REQUEST_TEMPLATE.md` | template | required PR body sections, Current Status Impact, and Merge Decision Record surface | no | PR creation/review, current-status impact classification, template changes, `asgk.py pr-body-check` | `lane_06_ci_github` |
 
@@ -325,7 +324,7 @@ disagree, stop and open a schema/contract alignment issue.
 | `examples/*.md` | example/fixture | report, PR-body, or documentation examples and fixtures | no | onboarding, report examples, parser fixture design | `lane_07_docs_handoff` |
 | `examples/negative/*` | fixture | opt-in expected-failure fixtures | no | negative validation work, `asgk.py negative`, governance hygiene tests | `lane_02_schema_contracts` |
 | `examples/negative/policy_gate/*` | fixture | opt-in expected-failure PR-body policy-gate fixtures | no | policy-gate negative validation work | `lane_06_ci_github` |
-| `examples/negative/target_install/*` | fixture | opt-in expected-failure target-install checker fixtures | no | target-install negative validation work | `lane_06_ci_github` |
+| `examples/negative/target_install/*` | fixture | legacy target-install shape-check expected-failure fixtures | no | maintaining current mechanical diagnostics or planning their replacement | `lane_06_ci_github` |
 
 Examples and fixtures are not policy authority. If an example or fixture
 conflicts with a canonical policy, contract, schema, validator, or current
@@ -337,6 +336,7 @@ GitHub issue/PR, fix the example or the stale reference.
 2. Keep `docs/DOCUMENT_MAP.md` as a compact router.
 3. Do not add context read-set definitions here; use
    `docs/control/CONTEXT_BUDGET_POLICY.md`.
-4. Do not add install-surface rules here; use `docs/INSTALL_SURFACE.md`.
+4. Do not add target-assessment or optional-reference rules here; use
+   `docs/INSTALL_SURFACE.md`.
 5. If this registry conflicts with a canonical document, fix the registry or the
    stale summary in a separate issue.

@@ -29,7 +29,7 @@ progressive_disclosure_model:
     purpose: context read sets, expansion rules, and context reporting
   install_surface:
     path: docs/INSTALL_SURFACE.md
-    purpose: target-project install copy/template/customize/do-not-copy boundary
+    purpose: frontier-guided target assessment and optional-reference boundary
   policy:
     path: docs/control/DOCUMENT_MAP_POLICY.md
     purpose: maintenance, size limits, and split rules
@@ -49,7 +49,6 @@ document_map_may_contain:
   - pointers to DOCUMENT_REGISTRY.md
   - pointers to CONTEXT_BUDGET_POLICY.md
   - pointers to INSTALL_SURFACE.md
-  - v1.x/v2.0 profile and adapter boundary summary
   - emergency conflict rule
   - compact maintenance summary
 ```
@@ -60,7 +59,7 @@ It must not contain:
 document_map_must_not_contain:
   - full document registry tables
   - complete context read-set catalog
-  - install-surface checklist details
+  - target-assessment procedure details
   - historical audit records
   - detailed readiness or stabilization plans
   - runtime-specific adapter instructions
@@ -121,20 +120,22 @@ Task-type reading guides and context expansion rules belong in
 `docs/DOCUMENT_MAP.md` should point to that policy instead of duplicating full
 read sets.
 
-## Install-Surface Rules
+## Target-Assessment Rules
 
-Target-project copy/template/customize/do-not-copy rules belong in
-`docs/INSTALL_SURFACE.md`.
+Target-assessment responsibilities, universal invariants, and
+optional-reference boundaries belong in `docs/INSTALL_SURFACE.md`.
 
 `docs/DOCUMENT_MAP.md` should point to that policy instead of duplicating the
-install checklist.
+assessment procedure.
 
 ## Target Repository Rules
 
-Target repositories that adopt ASGK should use the same split:
+A target repository keeps its existing navigation and ownership mechanisms when
+they already satisfy the need. A frontier-guided assessment may recommend the
+following split when the target lacks equivalent surfaces:
 
 ```yaml
-target_repo_document_navigation:
+optional_target_repo_document_navigation:
   docs/DOCUMENT_MAP.md: small repo-local router
   docs/DOCUMENT_REGISTRY.md: full target repo registry
   docs/control/CONTEXT_BUDGET_POLICY.md: target repo read sets
@@ -143,12 +144,18 @@ target_repo_document_navigation:
 Target repositories must not copy ASGK's internal `docs/DOCUMENT_MAP.md` or
 `docs/DOCUMENT_REGISTRY.md` unchanged.
 
+The templates under `templates/` are optional references, not universal target
+requirements. This policy does not create a fixed document bundle, target
+filename requirement, adoption declaration, module picker, or human approval
+gate.
+
 ## Maintenance Rules
 
 1. Add new document rows to `docs/DOCUMENT_REGISTRY.md`, not the router, unless
    the row is part of the default startup set.
 2. Add new context read-set definitions to `docs/control/CONTEXT_BUDGET_POLICY.md`.
-3. Add new install/copy/template boundaries to `docs/INSTALL_SURFACE.md`.
+3. Add target-assessment and optional-reference boundaries to
+   `docs/INSTALL_SURFACE.md`.
 4. Keep `docs/DOCUMENT_MAP.md` small enough to read as a routing document.
 5. If a summary document repeats canonical policy text, replace the repeated text
    with a pointer to the canonical document in a separate issue.
