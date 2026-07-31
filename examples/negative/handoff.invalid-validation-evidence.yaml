@@ -1,0 +1,34 @@
+negative_case:
+  id: NEG-W3B-003-handoff-invalid-validation-evidence
+  title: Handoff packet uses scalar validation evidence
+  expected_outcome: blocked
+  owner: asgk_handoff_check
+  should_block_positive_validation: false
+
+handoff_packet:
+  active_issue: "#333"
+  active_pr: "none; negative fixture"
+  durable_source_of_truth:
+    - "GitHub issue #333"
+  branch: "codex/example"
+  objective: "Exercise typed nested validation evidence."
+  current_state: "All fields except validation evidence use the canonical type."
+  remaining:
+    - "Reject this packet."
+  allowed_paths:
+    - "examples/negative/handoff.invalid-validation-evidence.yaml"
+  modified_files:
+    - "examples/negative/handoff.invalid-validation-evidence.yaml"
+  non_goals:
+    - "Do not infer approval."
+  must_not_do:
+    - "Do not continue from this packet."
+  must_read:
+    - "AGENTS.md"
+  validation_status:
+    status: "not_run"
+    evidence: "Negative fixture incorrectly uses a scalar."
+    reason: "The checker has not run yet."
+  blockers:
+    - "validation evidence has the wrong type"
+  next_safe_action: "Reject this packet with HP_FIELD_TYPE_INVALID."

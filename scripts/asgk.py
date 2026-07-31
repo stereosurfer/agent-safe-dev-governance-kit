@@ -15,9 +15,7 @@ from asgk_lib.common import (
     field_block_text,
     field_value,
     has_see_chat,
-    has_unresolved_todo,
-    line_field_exists,
-    list_field_has_material_item,
+    markdown_heading_occurrences,
     markdown_headings,
     markdown_section,
     normalize_repo_path,
@@ -28,16 +26,21 @@ from asgk_lib.common import (
     rel,
     same_repo_path,
     strip_html_comments,
-    yaml_quote,
 )
-from asgk_lib.compact_handoff import compact_handoff_check
+from asgk_lib.compact_handoff import (
+    branch_ref_matches,
+    compact_handoff_check,
+    numbered_ref_matches,
+    valid_follow_up_issue,
+)
 from asgk_lib.compact_target_upgrade import compact_target_upgrade_check
+from asgk_lib.handoff import evaluate_handoff_file, is_material_handoff_text
 from asgk_lib.release_state import check_release_state_docs
 from asgk_lib.status_policy import (
     CANONICAL_CURRENT_STATUS_PATH,
     CLOSEOUT_PRE_MERGE_NEXT_ACTION_PATTERNS,
     CURRENT_STATUS_IMPACT_ALLOWED_VALUES,
-    EMPTY_FOLLOWUP_VALUES,
+    CURRENT_STATUS_IMPACT_REQUIRED_FIELDS,
     TRUE_VALUES,
 )
 from asgk_lib.target_install import (
@@ -63,6 +66,7 @@ from asgk_lib.task_packet import (
 )
 from asgk_lib.text_fields import (
     TaskFieldAmbiguityError,
+    _visible_markdown_headings,
     material_items,
     parse_simple_task_packet_yaml_checked,
     parse_visible_task_fields,
@@ -94,24 +98,14 @@ TASK_PACKET_SOURCE_FIELDS = {
     *TASK_PACKET_REFINEMENT_FIELDS,
     *TASK_PACKET_LEGACY_FIELDS,
 }
-HANDOFF_REQUIRED_FIELDS = [
-    "active_issue", "active_pr", "branch", "objective", "current_state",
-    "completed", "remaining", "allowed_paths", "modified_files",
-    "validation_status", "blockers", "next_safe_action", "must_read",
-    "must_not_do", "decisions", "open_questions",
-]
-HANDOFF_REQUIRED_LIST_FIELDS = [
-    "completed", "remaining", "allowed_paths", "modified_files", "must_read",
-    "must_not_do", "decisions", "open_questions",
-]
-HANDOFF_REQUIRED_SCALAR_FIELDS = ["active_issue"]
 STATUS_REQUIRED_HEADINGS = [
     "Durable source of truth", "Current snapshot", "Active work",
-    "Current validation entrypoint", "Closed gates", "Last completed",
+    "Current validation entrypoint", "Closed gates",
     "Runtime artifact status", "Next safe action",
 ]
 STATUS_FORBIDDEN_HISTORY_HEADINGS = [
     "History", "Work Log", "Chronological Log", "Completed Work Log",
+    "Last completed",
 ]
 STATUS_FORBIDDEN_PHRASES = [
     "full PR body", "raw CI log", "chat transcript", "see chat",
@@ -122,6 +116,37 @@ CONTEXT_MEASUREMENT_METHOD = (
     "excludes issue/PR text, system prompt, chat, tool output, model completion, "
     "and provider billing usage."
 )
+
+
+def strict_contract_scalar_value(text: str, field: str) -> tuple[str, bool]:
+    """Parse one lightweight scalar without forgiving malformed quote layers."""
+
+    raw = raw_field_value(text, field)
+    if raw is None:
+        return "", False
+    source = raw.strip()
+    if not source:
+        return "", False
+    if source[0] == '"':
+        if len(source) < 2 or source[-1] != '"':
+            return "", False
+        try:
+            value = json.loads(source)
+        except json.JSONDecodeError:
+            return "", False
+        return (value, True) if isinstance(value, str) else ("", False)
+    if source[0] == "'":
+        if len(source) < 2 or source[-1] != "'":
+            return "", False
+        inner = source[1:-1]
+        if "'" in inner.replace("''", ""):
+            return "", False
+        return inner.replace("''", "'"), True
+    if '"' in source or "'" in source:
+        return "", False
+    return source, True
+
+
 def run_command(args: list[str], *, cwd: Path = ROOT) -> int:
     print("+ " + " ".join(args))
     return subprocess.run(args, cwd=cwd).returncode
@@ -2247,36 +2272,80 @@ def cmd_status_check(args: argparse.Namespace) -> int:
     failures: list[str] = []
     if not status_path.exists():
         return print_failures([f"missing current status file: {args.file}"])
+    if not status_path.is_file():
+        return print_failures([f"current status path is not a readable file: {args.file}"])
 
-    text = status_path.read_text(encoding="utf-8")
-    headings = markdown_headings(text)
+    try:
+        text = status_path.read_text(encoding="utf-8")
+    except (OSError, UnicodeError) as exc:
+        return print_failures([f"could not read current status file: {exc}"])
+    visible_text = strip_html_comments(text)
+    heading_occurrences = markdown_heading_occurrences(visible_text)
+    all_heading_occurrences = [
+        heading
+        for _line, _level, heading, _style
+        in _visible_markdown_headings(visible_text.splitlines())
+    ]
+    normalized_headings = {
+        heading.casefold()
+        for heading in all_heading_occurrences
+    }
 
     for heading in STATUS_REQUIRED_HEADINGS:
-        if heading not in headings:
+        exact_count = heading_occurrences.count(heading)
+        folded_count = sum(
+            found.casefold() == heading.casefold()
+            for found in all_heading_occurrences
+        )
+        if exact_count == 0:
             failures.append(f"missing current status heading: ## {heading}")
+        elif exact_count > 1:
+            failures.append(f"duplicate current status heading: ## {heading}")
+        if folded_count > exact_count:
+            failures.append(
+                f"case-variant duplicate current status heading: ## {heading}"
+            )
 
     line_count = len(text.splitlines())
     if line_count > args.max_lines:
         failures.append(f"current status is too long: {line_count} lines > {args.max_lines}")
 
-    if "python3 scripts/asgk.py doctor" not in text:
+    if "python3 scripts/asgk.py doctor" not in visible_text:
         failures.append("current status does not name python3 scripts/asgk.py doctor")
 
-    if re.search(r"issue:\s*['\"]?#23\b", text):
-        failures.append("current status appears to retain stale issue #23 active state")
-
     for heading in STATUS_FORBIDDEN_HISTORY_HEADINGS:
-        if heading in headings:
+        if heading.casefold() in normalized_headings:
             failures.append(f"forbidden history-log heading in current status: ## {heading}")
 
-    lower_text = text.lower()
+    lower_text = visible_text.lower()
     for phrase in STATUS_FORBIDDEN_PHRASES:
         if phrase.lower() in lower_text:
             failures.append(f"forbidden current-status phrase: {phrase}")
 
-    next_action = markdown_section(text, "Next safe action")
+    next_action = markdown_section(visible_text, "Next safe action")
     if not next_action:
         failures.append("current status next safe action is empty")
+
+    active_work = markdown_section(visible_text, "Active work")
+    for field in ("issue", "pr", "branch", "state"):
+        exact_occurrences = re.findall(
+            rf"^[ \t]*{re.escape(field)}[ \t]*:",
+            active_work,
+            flags=re.MULTILINE,
+        )
+        folded_occurrences = re.findall(
+            rf"^[ \t]*{re.escape(field)}[ \t]*:",
+            active_work,
+            flags=re.MULTILINE | re.IGNORECASE,
+        )
+        if len(exact_occurrences) != 1 or len(folded_occurrences) != 1:
+            failures.append(
+                f"current status active work must contain exactly one {field} field"
+            )
+        else:
+            value = field_value(active_work, field)
+            if value is None or not value.strip():
+                failures.append(f"current status active work {field} is empty")
 
     return print_failures(failures)
 
@@ -2285,22 +2354,30 @@ def cmd_closeout_check(args: argparse.Namespace) -> int:
     status_path = rel(args.file)
     if not status_path.exists():
         return print_failures([f"missing closeout status file: {args.file}"])
+    if not status_path.is_file():
+        return print_failures([f"closeout status path is not a readable file: {args.file}"])
 
-    text = status_path.read_text(encoding="utf-8")
+    try:
+        text = strip_html_comments(status_path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError) as exc:
+        return print_failures([f"could not read closeout status file: {exc}"])
     active_work = markdown_section(text, "Active work")
     next_safe_action = markdown_section(text, "Next safe action")
+    active_issue = field_value(active_work, "issue")
+    active_pr = field_value(active_work, "pr")
+    active_branch = field_value(active_work, "branch")
     failures: list[str] = []
 
     for issue in args.completed_issue:
-        if issue and issue in active_work:
+        if numbered_ref_matches(active_issue, issue):
             failures.append(f"completed issue still appears in active work: {issue}")
 
     for pr in args.completed_pr:
-        if pr and pr in active_work:
+        if numbered_ref_matches(active_pr, pr):
             failures.append(f"completed PR still appears in active work: {pr}")
 
     for branch in args.completed_branch:
-        if branch and branch in active_work:
+        if branch_ref_matches(active_branch, branch):
             failures.append(f"completed branch still appears in active work: {branch}")
 
     if not next_safe_action:
@@ -2314,8 +2391,14 @@ def cmd_closeout_check(args: argparse.Namespace) -> int:
 
 
 def cmd_current_status_impact_check(args: argparse.Namespace) -> int:
-    pr_body = read_text(args.pr_body)
-    changed_paths = read_changed_paths(args.changed_paths_file)
+    try:
+        pr_body = read_text(args.pr_body)
+    except (OSError, UnicodeError) as exc:
+        return print_failures([f"could not read PR body file: {exc}"])
+    try:
+        changed_paths = read_changed_paths(args.changed_paths_file)
+    except (OSError, UnicodeError) as exc:
+        return print_failures([f"could not read changed-paths file: {exc}"])
     current_status_path = args.file.lstrip("./")
     current_status_changed = any(
         same_repo_path(path, current_status_path)
@@ -2329,17 +2412,44 @@ def cmd_current_status_impact_check(args: argparse.Namespace) -> int:
     if not current_status_section:
         return print_failures(["missing PR Current Status Impact section"])
 
-    status = normalized_field_value(current_status_section, "status")
-    if status not in CURRENT_STATUS_IMPACT_ALLOWED_VALUES:
+    for field in CURRENT_STATUS_IMPACT_REQUIRED_FIELDS:
+        exact_occurrences = re.findall(
+            rf"^[ \t]*{re.escape(field)}[ \t]*:",
+            current_status_section,
+            flags=re.MULTILINE,
+        )
+        folded_occurrences = re.findall(
+            rf"^[ \t]*{re.escape(field)}[ \t]*:",
+            current_status_section,
+            flags=re.MULTILINE | re.IGNORECASE,
+        )
+        if len(exact_occurrences) != 1 or len(folded_occurrences) != 1:
+            failures.append(
+                f"Current Status Impact must contain exactly one {field} field"
+            )
+
+    status, status_shape_valid = strict_contract_scalar_value(
+        current_status_section,
+        "status",
+    )
+    if not status_shape_valid or status not in CURRENT_STATUS_IMPACT_ALLOWED_VALUES:
         failures.append("Current Status Impact status must be updated, not_applicable, or deferred")
 
-    reason = normalized_field_value(current_status_section, "reason")
-    if reason in {"", "pending", "unknown", "none", "tbd", "todo"}:
+    reason = field_value(current_status_section, "reason")
+    if not is_material_handoff_text(reason):
         failures.append("Current Status Impact reason is missing or non-specific")
 
-    updated = normalized_field_value(current_status_section, "current_status_updated_in_this_pr")
+    updated_raw = raw_field_value(
+        current_status_section,
+        "current_status_updated_in_this_pr",
+    ) or ""
+    updated = updated_raw.strip()
+    if updated not in {"true", "false"}:
+        failures.append("current_status_updated_in_this_pr must be true or false")
     if status == "updated" and updated not in TRUE_VALUES:
         failures.append("status is updated but current_status_updated_in_this_pr is not true")
+    if status in {"not_applicable", "deferred"} and updated != "false":
+        failures.append(f"status is {status} but current_status_updated_in_this_pr is not false")
 
     if current_status_changed and status != "updated":
         failures.append(f"{CANONICAL_CURRENT_STATUS_PATH} changed but Current Status Impact status is not updated")
@@ -2347,14 +2457,35 @@ def cmd_current_status_impact_check(args: argparse.Namespace) -> int:
     if status == "updated" and not current_status_changed:
         failures.append(f"Current Status Impact status is updated but {CANONICAL_CURRENT_STATUS_PATH} did not change")
 
-    post_merge_safe = normalized_field_value(current_status_section, "post_merge_safe")
+    post_merge_safe_raw = raw_field_value(
+        current_status_section,
+        "post_merge_safe",
+    ) or ""
+    post_merge_safe = post_merge_safe_raw.strip()
+    if (
+        post_merge_safe.startswith(('"', "'"))
+        and post_merge_safe.endswith(post_merge_safe[0])
+    ):
+        post_merge_safe = post_merge_safe[1:-1]
+    if post_merge_safe not in {"true", "false", "not_applicable"}:
+        failures.append("post_merge_safe must be true, false, or not_applicable")
+    elif (
+        post_merge_safe in {"true", "false"}
+        and post_merge_safe_raw.strip() != post_merge_safe
+    ):
+        failures.append("post_merge_safe booleans must be unquoted")
     if status == "updated" and post_merge_safe not in TRUE_VALUES:
         failures.append("status is updated but post_merge_safe is not true")
 
-    follow_up = normalized_field_value(current_status_section, "follow_up_issue")
+    follow_up, follow_up_shape_valid = strict_contract_scalar_value(
+        current_status_section,
+        "follow_up_issue",
+    )
+    if not follow_up_shape_valid or not valid_follow_up_issue(follow_up):
+        failures.append("follow_up_issue must be exactly none or one #<number> issue reference")
     if status == "deferred":
         has_handoff_next_action = bool(re.search(r"next safe action", handoff_section, flags=re.IGNORECASE))
-        if follow_up in EMPTY_FOLLOWUP_VALUES and not has_handoff_next_action:
+        if follow_up == "none" and not has_handoff_next_action:
             failures.append("status is deferred without follow_up_issue or Handoff Report next safe action")
         if current_status_changed:
             failures.append(f"status is deferred but {CANONICAL_CURRENT_STATUS_PATH} changed")
@@ -2369,27 +2500,49 @@ def cmd_current_status_impact_check(args: argparse.Namespace) -> int:
         )
         if status_result.returncode != 0:
             failures.append("status-check failed for current status file")
-
-        status_text = read_text(args.file)
-        active_work = markdown_section(status_text, "Active work")
-        next_safe_action = markdown_section(status_text, "Next safe action")
-
-        if args.this_pr and args.this_pr in active_work:
-            failures.append(f"current status active work points to this PR: {args.this_pr}")
-
-        for issue in args.closing_issue:
-            if issue and issue in active_work:
-                failures.append(f"current status active work points to closing issue: {issue}")
-
-        if args.this_branch and args.this_branch in active_work:
-            failures.append(f"current status active work points to this branch: {args.this_branch}")
-
-        if not next_safe_action:
-            failures.append("current status next safe action is empty")
         else:
-            for pattern in CLOSEOUT_PRE_MERGE_NEXT_ACTION_PATTERNS:
-                if re.search(pattern, next_safe_action, flags=re.IGNORECASE):
-                    failures.append(f"next safe action appears to describe pre-merge closeout work: {pattern}")
+            try:
+                status_text = strip_html_comments(read_text(args.file))
+            except (OSError, UnicodeError) as exc:
+                failures.append(f"could not read current status file: {exc}")
+            else:
+                active_work = markdown_section(status_text, "Active work")
+                next_safe_action = markdown_section(status_text, "Next safe action")
+                active_issue = field_value(active_work, "issue")
+                active_pr = field_value(active_work, "pr")
+                active_branch = field_value(active_work, "branch")
+
+                if numbered_ref_matches(active_pr, args.this_pr):
+                    failures.append(
+                        f"current status active work points to this PR: {args.this_pr}"
+                    )
+
+                for issue in args.closing_issue:
+                    if numbered_ref_matches(active_issue, issue):
+                        failures.append(
+                            "current status active work points to closing issue: "
+                            f"{issue}"
+                        )
+
+                if branch_ref_matches(active_branch, args.this_branch):
+                    failures.append(
+                        "current status active work points to this branch: "
+                        f"{args.this_branch}"
+                    )
+
+                if not next_safe_action:
+                    failures.append("current status next safe action is empty")
+                else:
+                    for pattern in CLOSEOUT_PRE_MERGE_NEXT_ACTION_PATTERNS:
+                        if re.search(
+                            pattern,
+                            next_safe_action,
+                            flags=re.IGNORECASE,
+                        ):
+                            failures.append(
+                                "next safe action appears to describe pre-merge "
+                                f"closeout work: {pattern}"
+                            )
 
     return print_failures(failures)
 
@@ -2617,31 +2770,22 @@ def cmd_context_budget_measure(args: argparse.Namespace) -> int:
 
 
 def cmd_handoff_check(args: argparse.Namespace) -> int:
-    text = read_text(args.file)
-    failures: list[str] = []
-    for field in HANDOFF_REQUIRED_FIELDS:
-        if not line_field_exists(text, field):
-            failures.append(f"missing handoff field: {field}")
-    if has_see_chat(text):
-        failures.append("handoff packet contains forbidden chat-only authority phrase: see chat")
-    if args.fail_on_todo and has_unresolved_todo(text):
-        failures.append("handoff packet contains unresolved TODO or AI_TODO marker")
-    next_safe_action = field_value(text, "next_safe_action")
-    if next_safe_action is not None and not next_safe_action:
-        failures.append("next_safe_action is empty")
-    validation_status_value = field_value(text, "validation_status")
-    if validation_status_value and validation_status_value.lower() == "unknown":
-        failures.append("validation_status must not be unknown")
-    if re.search(r"^[ \t]*status[ \t]*:[ \t]*['\"]?unknown['\"]?[ \t]*$", text, flags=re.MULTILINE):
-        failures.append("validation_status.status must not be unknown")
-    for field in HANDOFF_REQUIRED_SCALAR_FIELDS:
-        value = field_value(text, field)
-        if value is not None and not value:
-            failures.append(f"{field} is empty")
-    for field in HANDOFF_REQUIRED_LIST_FIELDS:
-        if line_field_exists(text, field) and not list_field_has_material_item(text, field):
-            failures.append(f"{field} has no material list item")
-    return print_failures(failures)
+    result, output, _packet = evaluate_handoff_file(
+        args.file,
+    )
+    if args.json:
+        print(json.dumps(output, indent=2, sort_keys=True))
+    elif result == "pass":
+        print("Handoff check passed.")
+        print(output["proof_boundary"])
+    else:
+        for finding in output.get("findings", []):
+            print(
+                f"FAIL: [{finding.get('code', 'HP_UNKNOWN')}] "
+                f"{finding['field']} - {finding['reason']}"
+            )
+        print("Handoff check failed. No approval or completion was inferred.")
+    return 0 if result == "pass" else 1
 
 
 def cmd_handoff_template(args: argparse.Namespace) -> int:
@@ -2650,36 +2794,40 @@ def cmd_handoff_template(args: argparse.Namespace) -> int:
     branch = args.branch or "AI_TODO: current branch"
     objective = args.objective or "AI_TODO: summarize objective from durable source"
 
+    def quote(value: str) -> str:
+        return json.dumps(value, ensure_ascii=False)
+
     packet = f"""handoff_packet:
-  active_issue: {yaml_quote(active_issue)}
-  active_pr: {yaml_quote(active_pr)}
-  branch: {yaml_quote(branch)}
-  objective: {yaml_quote(objective)}
+  active_issue: {quote(active_issue)}
+  active_pr: {quote(active_pr)}
+  durable_source_of_truth:
+    - {quote(active_issue)}
+  branch: {quote(branch)}
+  objective: {quote(objective)}
   current_state: "AI_TODO: summarize current state from issue, PR, and repo files."
-  completed:
-    - "AI_TODO: completed step or output."
   remaining:
     - "AI_TODO: remaining bounded work."
   allowed_paths:
     - "AI_TODO: copy allowed path from issue."
   modified_files:
-    - "AI_TODO: list modified file or none."
-  validation_status:
-    status: "not_run"
-    evidence: "TODO: pass/fail/blocked/not_run evidence. Do not write unknown."
-  blockers: "AI_TODO: blocker list or none."
-  next_safe_action: "AI_TODO: one concrete next safe action."
+    - "AI_TODO: list modified file, or none with a reason."
+  non_goals:
+    - "AI_TODO: copy a material non-goal from the issue."
+  must_not_do:
+    - "AI_TODO: forbidden action or path for the next actor."
   must_read:
     - "AGENTS.md"
     - "docs/handoff/CURRENT_STATUS.md"
     - "docs/control/HANDOFF_PACKET.md"
-    - "docs/DOCUMENT_MAP.md"
-  must_not_do:
-    - "AI_TODO: forbidden action for the next actor."
-  decisions:
-    - "AI_TODO: durable decision already made, or none."
-  open_questions:
-    - "AI_TODO: open question requiring human/reviewer judgment, or none."
+    - "AI_TODO: active issue or PR."
+  validation_status:
+    status: "not_run"
+    evidence:
+      - "AI_TODO: command result or reason validation has not run."
+    reason: "AI_TODO: explain why this status is accurate."
+  blockers:
+    - "AI_TODO: blocker, or none with a material reason."
+  next_safe_action: "AI_TODO: one concrete next safe action."
 """
     print(packet, end="")
     return 0
@@ -2793,8 +2941,8 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--json", action="store_true", help="Emit machine-readable JSON output.")
     p.set_defaults(func=cmd_compact_pr_body_check)
 
-    p = sub.add_parser("compact-handoff-check", help="Check a compact handoff against current-status freshness rules.")
-    p.add_argument("--file", required=True, help="Compact handoff YAML-like file.")
+    p = sub.add_parser("compact-handoff-check", help="Check the canonical handoff core, then compact current-status freshness.")
+    p.add_argument("--handoff", "--file", dest="file", required=True, help="Compact handoff YAML file.")
     p.add_argument("--current-status", default="docs/handoff/CURRENT_STATUS.md", help="Current-status file to check.")
     p.add_argument("--completed-issue", action="append", default=[], help="Completed issue ref that must not remain active.")
     p.add_argument("--completed-pr", action="append", default=[], help="Completed PR ref that must not remain active.")
@@ -2899,9 +3047,14 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--json", action="store_true", help="Emit machine-readable JSON output.")
     p.set_defaults(func=cmd_context_budget_measure)
 
-    p = sub.add_parser("handoff-check", help="Check generic handoff packet completeness.")
+    p = sub.add_parser("handoff-check", help="Check canonical handoff packet shape and material content.")
     p.add_argument("--file", required=True)
-    p.add_argument("--fail-on-todo", action="store_true", help="Fail if TODO or AI_TODO markers remain.")
+    p.add_argument(
+        "--fail-on-todo",
+        action="store_true",
+        help="Compatibility flag; TODO and AI_TODO markers always fail.",
+    )
+    p.add_argument("--json", action="store_true", help="Emit machine-readable JSON output.")
     p.set_defaults(func=cmd_handoff_check)
 
     p = sub.add_parser("handoff-template", help="Print an AI-fillable handoff packet draft.")

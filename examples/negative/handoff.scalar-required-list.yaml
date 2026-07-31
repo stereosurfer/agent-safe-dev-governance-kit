@@ -1,6 +1,6 @@
 negative_case:
-  id: NEG-033-handoff-empty-next-safe-action
-  title: Handoff packet has empty next_safe_action
+  id: NEG-W3B-002-handoff-scalar-required-list
+  title: Handoff packet uses a scalar where allowed_paths must be a list
   expected_outcome: blocked
   owner: asgk_handoff_check
   should_block_positive_validation: false
@@ -11,14 +11,13 @@ handoff_packet:
   durable_source_of_truth:
     - "GitHub issue #333"
   branch: "codex/example"
-  objective: "Exercise an empty next safe action."
-  current_state: "All other core fields are materially populated."
+  objective: "Exercise nested type validation."
+  current_state: "All fields except allowed_paths use the canonical type."
   remaining:
-    - "Block this packet."
-  allowed_paths:
-    - "examples/negative/handoff.empty-next-safe-action.yaml"
+    - "Reject this packet."
+  allowed_paths: "examples/negative/handoff.scalar-required-list.yaml"
   modified_files:
-    - "examples/negative/handoff.empty-next-safe-action.yaml"
+    - "examples/negative/handoff.scalar-required-list.yaml"
   non_goals:
     - "Do not infer approval."
   must_not_do:
@@ -31,5 +30,5 @@ handoff_packet:
       - "Negative fixture input."
     reason: "The checker has not run yet."
   blockers:
-    - "next_safe_action is empty"
-  next_safe_action:
+    - "allowed_paths has the wrong type"
+  next_safe_action: "Reject this packet with HP_FIELD_TYPE_INVALID."

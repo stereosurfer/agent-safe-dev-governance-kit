@@ -2,242 +2,203 @@
 
 Status: active control specification.
 
-This document defines the generic, runtime-agnostic handoff packet used when a
-human, AI agent, model, IDE, browser session, or automation runner must stop and
-another actor must safely continue.
+This document defines the runtime-agnostic work-unit packet used when a human
+or AI must stop and another actor must safely continue.
 
 ## Purpose
 
-A handoff packet prevents work from being trapped in chat, local memory, or an
-agent-specific runtime. It makes the next safe action recoverable from durable
-repository and GitHub state.
+The packet makes six things immediately recoverable:
+
+1. what to do;
+2. where to work;
+3. what is outside the work;
+4. which actions or paths are forbidden;
+5. what evidence currently exists;
+6. the next safe action.
+
+It does not replace the live issue or PR, repeat close-out history, or carry
+authority from a previous chat.
 
 ```text
-A new actor should be able to resume from the handoff packet without reading the
-previous chat transcript.
+A new actor should be able to resume from durable repository and GitHub state
+without reading the previous conversation.
 ```
 
-## Scope
+## Canonical Shape
 
-This is a generic handoff mechanism. It is not a Codex, OpenGoat, Claude Code,
-Cursor, Copilot, or ChatGPT-specific adapter.
+The machine-readable projection of this canonical contract is
+`schemas/handoff_packet.schema.json`.
 
-Superseded runtime-adapter plans have no current ASGK 2.0 authority. Any future
-specialized integration requires a new durable issue justified from current
-needs and must not bypass the fields, stop conditions, validation, or merge
-gates specified here.
-
-## Recommended Flow
-
-Use this sequence:
-
-```text
-handoff-template
-  -> AI fills judgment-heavy fields
-  -> handoff-check
-  -> human or next agent reads packet
-```
-
-The template command creates a safe draft. It does not claim final judgment and
-it does not write files automatically.
-
-```bash
-python3 scripts/asgk.py handoff-template \
-  --issue "#40 [TOOLS] Add handoff-template command" \
-  --pr "none; PR not opened yet" \
-  --branch "codex/add-handoff-template" \
-  --objective "Add an AI-fillable handoff packet template command."
-```
-
-After AI or a human fills the TODO fields, validate the result:
-
-```bash
-python3 scripts/asgk.py handoff-check --file handoff.yaml
-```
-
-## Required Handoff Packet
+The following is an illustrative W3B self-use example, not current work
+authority. Its issue, branch, state, and next action are example data and grant
+no authority.
 
 ```yaml
 handoff_packet:
-  active_issue:
-  active_pr:
-  branch:
-  objective:
-  current_state:
-  completed:
-  remaining:
-  allowed_paths:
-  modified_files:
-  validation_status:
-  blockers:
-  next_safe_action:
-  must_read:
-  must_not_do:
-  decisions:
-  open_questions:
-```
-
-## Field Requirements
-
-| Field | Required | Meaning | Block when |
-|---|---:|---|---|
-| `active_issue` | yes | GitHub issue number/title or durable repo document. | missing, empty, or `see chat` |
-| `active_pr` | yes | Active PR number/title, or `none` with reason. | missing or ambiguous |
-| `branch` | yes | Current branch for the work unit, or `none` with reason. | missing or unknown |
-| `objective` | yes | One concrete result for the active work unit. | missing, vague, or chat-only |
-| `current_state` | yes | Current repo/task state in one compact paragraph or YAML object. | missing |
-| `completed` | yes | Completed steps or outputs. | missing |
-| `remaining` | yes | Remaining bounded work. | missing |
-| `allowed_paths` | yes | Paths the next actor may touch. | missing, empty, or too broad |
-| `modified_files` | yes | Files already modified in the active branch/PR. | missing or unknown when PR exists |
-| `validation_status` | yes | Pass/fail/blocked/not-run plus command evidence. | missing, `unknown`, or ungrounded |
-| `blockers` | yes | Current blockers or `none`. | missing |
-| `next_safe_action` | yes | The next single safe action. | missing, empty, or multiple ambiguous actions |
-| `must_read` | yes | Minimal read set for the next actor. | missing or too broad |
-| `must_not_do` | yes | Actions forbidden for the next actor. | missing |
-| `decisions` | yes | Durable decisions already made. | missing |
-| `open_questions` | yes | Questions requiring human/reviewer judgment, or `none`. | missing |
-
-## Minimal Valid Example
-
-```yaml
-handoff_packet:
-  active_issue: "#27 [TOOLS] Add cross-agent handoff and validation CLI core"
+  active_issue: "#333 ASGK 2.0 W3B"
   active_pr: "none; PR not opened yet"
-  branch: "codex/cross-agent-handoff-cli-core"
-  objective: "Add generic handoff packet spec and minimal ASGK validation CLI."
-  current_state: "Issue and branch created; implementation in progress."
-  completed:
-    - "Created issue."
-    - "Created branch."
+  durable_source_of_truth:
+    - "GitHub issue #333"
+    - "GitHub issue #323 owner-approved program comment"
+  branch: "codex/asgk-2-w3b-handoff-status-convergence"
+  objective: "Converge typed handoff and recovery-only CURRENT_STATUS."
+  current_state: "Issue authority passed; implementation is in progress."
   remaining:
-    - "Add docs/control/HANDOFF_PACKET.md."
-    - "Add scripts/asgk.py."
-    - "Open PR and wait for Actions."
+    - "Complete the bounded implementation and validation."
+    - "Open a protected PR and obtain current-head human approval."
   allowed_paths:
-    - "scripts/asgk.py"
     - "docs/control/HANDOFF_PACKET.md"
-    - "docs/control/CONTEXT_BUDGET_POLICY.md"
-    - "docs/adapters/README.md"
-    - "docs/adapters/ADAPTER_TEMPLATE.md"
-    - "docs/DOCUMENT_MAP.md"
+    - "schemas/handoff_packet.schema.json"
   modified_files:
     - "docs/control/HANDOFF_PACKET.md"
-  validation_status:
-    status: "not_run"
-    reason: "PR not opened yet"
-    commands:
-      - "python3 scripts/check_project.py"
-      - "python3 scripts/validate_bootstrap.py"
-  blockers: "none"
-  next_safe_action: "Add scripts/asgk.py, then open PR."
+    - "schemas/handoff_packet.schema.json"
+  non_goals:
+    - "Do not implement W3C's global validation envelope."
+  must_not_do:
+    - "Do not modify paths outside issue #333."
+    - "Do not infer approval from validator success."
   must_read:
     - "AGENTS.md"
     - "docs/handoff/CURRENT_STATUS.md"
-    - "GitHub issue #27"
-    - "docs/control/HANDOFF_PACKET.md"
-    - "docs/DOCUMENT_MAP.md"
-  must_not_do:
-    - "Do not implement runtime-specific adapters."
-    - "Do not add dependencies."
-    - "Do not modify CI unless explicitly required."
-  decisions:
-    - "v1.x remains generic/runtime-agnostic."
-  open_questions: "none"
+    - "GitHub issue #333"
+  validation_status:
+    status: "not_run"
+    evidence:
+      - "Validation is pending until the bounded diff is complete."
+    reason: "The work unit has not reached its validation step."
+  blockers:
+    - "none; no known blocker at this snapshot"
+  next_safe_action: "Complete the issue #333 diff, then run its validation set."
 ```
 
-## Validation Status Values
+The compact projection uses the same core fields under `compact_handoff` and
+adds only `current_status_impact`; see
+`docs/control/COMPACT_HANDOFF_PROFILE.md`.
+
+## Field Contract
+
+| Field | Type | What it answers |
+|---|---|---|
+| `active_issue` | material string | Which live issue is the current work authority? |
+| `active_pr` | material string | Which PR carries the current diff, or why is there none? |
+| `durable_source_of_truth` | non-empty string list | Which durable issue, PR, comment, or repo document must be trusted? |
+| `branch` | material string | Where should repository work continue? |
+| `objective` | material string | What bounded result is being produced? |
+| `current_state` | material string | What is true at this recovery snapshot? |
+| `remaining` | non-empty string list | What bounded work remains? |
+| `allowed_paths` | non-empty string list | Where may the next actor write? |
+| `modified_files` | non-empty string list | What has changed, or why has nothing changed? |
+| `non_goals` | non-empty string list | What work is explicitly outside this unit? |
+| `must_not_do` | non-empty string list | Which actions or paths are forbidden? |
+| `must_read` | non-empty string list | What is the smallest recovery read set? |
+| `validation_status` | typed mapping | What mechanical evidence exists and why is its status accurate? |
+| `blockers` | non-empty string list | What blocks progress, or why are there no known blockers? |
+| `next_safe_action` | material string | What single bounded action should happen next? |
+
+`completed`, `decisions`, and `open_questions` are not packet fields. Completed
+work and decision history belong in GitHub issues, PRs, comments, commits, and
+close-out reviews. A current unresolved question is either a blocker, remaining
+work, or a human gate and should be stated in the corresponding current field.
+
+## Validation Status
 
 ```yaml
-validation_status_values:
-  pass:
-    meaning: required validation commands passed
-  fail:
-    meaning: validation failed and output must be recorded
-  blocked:
-    meaning: validation cannot proceed because a gate or dependency is missing
-  not_run:
-    meaning: validation has not been run; reason required
+validation_status:
+  status: pass | fail | blocked | not_run
+  evidence:
+    - "<command result, durable link, or material reason no command ran>"
+  reason: "<why the selected status is accurate>"
 ```
 
-`unknown` is not valid. If status is not known, write `not_run` or `blocked` and
-explain why.
+`unknown`, a scalar `evidence`, an empty evidence list, or an absent reason is
+invalid. `pass` describes only the recorded validation boundary; it never means
+human approval, issue completion, PR readiness, or merge authority.
 
-## Required Recovery Read Set
+## Commands
 
-When recovering from a handoff, the next actor should use the
-`handoff_recovery` context profile from `docs/control/CONTEXT_BUDGET_POLICY.md`.
+Create an AI-fillable draft:
 
-Minimum read set:
-
-```yaml
-handoff_recovery:
-  always_read:
-    - AGENTS.md
-    - docs/handoff/CURRENT_STATUS.md
-    - active GitHub issue
-    - active PR if one exists
-    - docs/control/HANDOFF_PACKET.md
-    - docs/DOCUMENT_MAP.md
-  read_from_packet:
-    - must_read
-    - modified_files
-    - allowed_paths
+```bash
+python3 scripts/asgk.py handoff-template \
+  --issue "#333 ASGK 2.0 W3B" \
+  --pr "none; PR not opened yet" \
+  --branch "codex/asgk-2-w3b-handoff-status-convergence" \
+  --objective "Converge typed handoff and recovery-only CURRENT_STATUS."
 ```
+
+After every TODO has been replaced:
+
+```bash
+python3 scripts/asgk.py handoff-check \
+  --file handoff.yaml \
+  --fail-on-todo \
+  --json
+```
+
+Every handoff check rejects TODO and AI_TODO markers, case-insensitively.
+`--fail-on-todo` is retained as an explicit compatibility spelling for existing
+callers; it does not make draft markers optional when omitted.
+
+The dependency-free checker supports the mapping, list, scalar, and indentation
+subset emitted by `handoff-template`. It rejects ambiguous or advanced YAML
+instead of guessing.
+
+## Durable Placement
+
+A validated packet must be left where the next actor can actually recover it:
+
+- in the active issue or PR body/comment; or
+- in an explicitly issue-authorized repository handoff path.
+
+Do not leave the only copy in chat, an untracked local file, a temporary
+directory, or a provider-specific session. The packet remains a recovery
+projection; the live issue or PR remains the work authority.
+
+## Recovery Read Set
+
+Begin with:
+
+1. `AGENTS.md`;
+2. `README.md`;
+3. `docs/handoff/CURRENT_STATUS.md`;
+4. the packet's active issue and PR;
+5. the packet's `must_read` entries.
+
+Use `docs/DOCUMENT_MAP.md` only when one of those surfaces points to more
+context. Do not read every governance document by default.
 
 ## Stop Conditions
 
-The next actor must stop when:
+Stop instead of guessing when:
 
-- `active_issue` is missing or says `see chat`.
-- `validation_status` is `unknown`.
-- `next_safe_action` is empty.
-- `allowed_paths` is missing or too broad.
-- `must_read` is missing.
-- The active PR changed files outside `allowed_paths`.
-- The packet conflicts with the active issue or PR.
-- A human-gated operation appears without durable approval.
+- the expected packet root or any required field is missing;
+- a required scalar, list, or nested validation field has the wrong type;
+- the packet says `see chat`;
+- any check finds TODO or AI_TODO markers;
+- the active issue or PR conflicts with the packet;
+- changed paths exceed `allowed_paths`;
+- a forbidden path or human-gated action is required;
+- supplied evidence cannot support the claimed validation status.
 
-## Relationship To Other Documents
+## Proof Boundary
 
-```yaml
-related_docs:
-  current_status: docs/handoff/CURRENT_STATUS.md
-  document_map: docs/DOCUMENT_MAP.md
-  context_budget: docs/control/CONTEXT_BUDGET_POLICY.md
-  issue_hygiene: docs/control/ISSUE_HYGIENE_GATE.md
-  pr_review: docs/control/PR_REVIEW_CHECKLIST.md
-  merge_decision: docs/control/MERGE_DECISION_RECORD.md
-```
+`handoff-check` mechanically checks the expected root, required types, material
+content, supported validation-status enum, and selected forbidden markers.
 
-`CURRENT_STATUS.md` is the repo-level handoff surface. A handoff packet is the
-work-unit-level recovery object.
+It does not check:
+
+- whether statements or references are true;
+- whether GitHub links, issues, PRs, or branches are live;
+- whether paths are authorized or a diff stays within them;
+- whether commands actually produced the stated evidence;
+- whether work is complete;
+- whether a human gate, Merge Decision Record, or merge boundary is satisfied.
 
 ## Automation Boundary
 
-`handoff-template` may create a draft. It must not:
+`handoff-template` prints a draft. It does not write repository files, call an
+external service, invent decisions, choose an Agent, or claim validation.
 
-- invent final decisions;
-- claim validation passed without evidence;
-- replace human judgment;
-- automatically write repository files;
-- call GitHub or external APIs;
-- fill runtime-specific adapter behavior.
-
-The first stable pattern is:
-
-```text
-Generate draft -> AI fills TODOs -> run handoff-check -> human/reviewer accepts.
-```
-
-## Future Automation
-
-The minimum CLI check is:
-
-```bash
-python3 scripts/asgk.py handoff-check --file <handoff-packet-file>
-```
-
-The check should block missing required fields, `see chat`, empty
-`next_safe_action`, `validation_status: unknown`, missing `allowed_paths`, and
-missing `must_read`.
+`handoff-check` validates only the supplied local packet. Acceptance and
+execution remain with the receiving human or Agent under the live issue, PR,
+and repository policies.

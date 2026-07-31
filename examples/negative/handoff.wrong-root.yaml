@@ -1,24 +1,24 @@
 negative_case:
-  id: NEG-033-handoff-empty-next-safe-action
-  title: Handoff packet has empty next_safe_action
+  id: NEG-W3B-001-handoff-wrong-root
+  title: Handoff content is nested under a non-canonical root
   expected_outcome: blocked
   owner: asgk_handoff_check
   should_block_positive_validation: false
 
-handoff_packet:
+handoff_bundle:
   active_issue: "#333"
   active_pr: "none; negative fixture"
   durable_source_of_truth:
     - "GitHub issue #333"
   branch: "codex/example"
-  objective: "Exercise an empty next safe action."
-  current_state: "All other core fields are materially populated."
+  objective: "Exercise the canonical root requirement."
+  current_state: "The content is intentionally under the wrong root."
   remaining:
-    - "Block this packet."
+    - "Reject this packet."
   allowed_paths:
-    - "examples/negative/handoff.empty-next-safe-action.yaml"
+    - "examples/negative/handoff.wrong-root.yaml"
   modified_files:
-    - "examples/negative/handoff.empty-next-safe-action.yaml"
+    - "examples/negative/handoff.wrong-root.yaml"
   non_goals:
     - "Do not infer approval."
   must_not_do:
@@ -31,5 +31,5 @@ handoff_packet:
       - "Negative fixture input."
     reason: "The checker has not run yet."
   blockers:
-    - "next_safe_action is empty"
-  next_safe_action:
+    - "canonical root is missing"
+  next_safe_action: "Reject this packet with HP_PACKET_ROOT_MISSING."

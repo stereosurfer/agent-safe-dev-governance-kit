@@ -6,26 +6,28 @@ negative_case:
   should_block_positive_validation: false
 
 handoff_packet:
-  active_issue: "#000"
-  active_pr: "#000"
+  active_issue: "#333"
+  active_pr: "none; negative fixture"
+  durable_source_of_truth:
+    - "GitHub issue #333"
   branch: "codex/example"
-  objective: "Bad example missing must_read."
-  current_state: "Bad example."
-  completed:
-    - "Created bad fixture."
+  objective: "Exercise a missing recovery read set."
+  current_state: "All other core fields are materially populated."
   remaining:
-    - "Should be blocked."
+    - "Block this packet."
   allowed_paths:
-    - "docs/"
+    - "examples/negative/handoff.missing-must-read.yaml"
   modified_files:
-    - "docs/example.md"
+    - "examples/negative/handoff.missing-must-read.yaml"
+  non_goals:
+    - "Do not infer approval."
+  must_not_do:
+    - "Do not continue without the read set."
   validation_status:
     status: "not_run"
-    reason: "negative fixture"
-  blockers: "none"
-  next_safe_action: "Block this handoff packet."
-  must_not_do:
-    - "Do not proceed."
-  decisions:
-    - "This is a negative fixture."
-  open_questions: "none"
+    evidence:
+      - "Negative fixture input."
+    reason: "The checker has not run yet."
+  blockers:
+    - "must_read is missing"
+  next_safe_action: "Reject this packet with HP_FIELD_MISSING."

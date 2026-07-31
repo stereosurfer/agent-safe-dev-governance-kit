@@ -32,15 +32,6 @@ python3 scripts/asgk.py doctor
 
 - release preparation before v1.1 stabilization and field test
 
-## Last completed
-
-```yaml
-issue: "#52 [TEST] Add positive handoff-template fixture"
-pr: "#53 test: add positive handoff packet fixture"
-merge_commit: "c2f9dcb3929d173069dfa49d083efa0fa1fb1820"
-note: "Details are in GitHub."
-```
-
 ## Runtime artifact status
 
 No runtime artifacts are authorized by this negative fixture.

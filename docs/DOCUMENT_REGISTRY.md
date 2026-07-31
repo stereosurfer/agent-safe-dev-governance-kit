@@ -126,7 +126,9 @@ rule:
 | Document | Role | Canonical for | Read by default | Read when | Owned by lane |
 |---|---|---|---:|---|---|
 | `docs/control/CURRENT_STATUS_POLICY.md` | canonical | current-status overwrite, compaction, stale-status, PR status freshness gate, and size rules | no | current-status update, stale status repair, handoff policy work, PR current-status impact review | `lane_07_docs_handoff` |
-| `docs/control/HANDOFF_PACKET.md` | canonical | generic work-unit handoff packet fields, validation status values, recovery stop conditions | no | interruption, model switch, tool switch, handoff recovery, `asgk.py handoff-check` | `lane_00_controller` |
+| `docs/control/HANDOFF_PACKET.md` | canonical | one typed work-unit handoff core, validation status, recovery stop conditions, and proof boundary | no | interruption, model switch, tool switch, handoff recovery, `asgk.py handoff-check` | `lane_00_controller` |
+| `docs/control/COMPACT_HANDOFF_PROFILE.md` | conditional | canonical handoff-core projection plus CURRENT_STATUS impact and freshness checks | no | compact handoff or CURRENT_STATUS freshness validation | `lane_00_controller` |
+| `schemas/handoff_packet.schema.json` | schema | machine-readable core handoff and compact-projection shape | no | handoff schema, validator, or fixture work | `lane_02_schema_contracts` |
 | `docs/handoff/CURRENT_STATUS.md` | status | repo-level compact current state and next safe work | yes | all sessions and handoff updates | `lane_07_docs_handoff` |
 | `docs/handoff/DECISIONS.md` | status | durable architecture/governance decisions | no | decision lookup or update | `lane_07_docs_handoff` |
 | `docs/handoff/ISSUE_CLOSEOUT_REVIEW_RULES.md` | status | writing rules for mandatory issue closeout decision analysis in GitHub issue comments | no | closeout review, governance health check, upgrade audit, or similar prior-work lookup | `lane_07_docs_handoff` |
@@ -139,6 +141,8 @@ handoff_canonical_sources:
   repo_level_status: docs/handoff/CURRENT_STATUS.md
   repo_level_status_policy: docs/control/CURRENT_STATUS_POLICY.md
   work_unit_packet_spec: docs/control/HANDOFF_PACKET.md
+  compact_projection: docs/control/COMPACT_HANDOFF_PROFILE.md
+  schema_projection: schemas/handoff_packet.schema.json
   recovery_context: docs/control/CONTEXT_BUDGET_POLICY.md
   source_of_truth_rule: AGENTS.md
 ```

@@ -16,6 +16,16 @@ from asgk_lib.common import (
     markdown_section,
 )
 from asgk_lib.negative_runner import run_expected_failures
+from asgk_lib.compact_handoff import FOLLOW_UP_ISSUE_PATTERN
+from asgk_lib.handoff import (
+    CORE_HANDOFF_ROOT,
+    COMPACT_HANDOFF_ROOT,
+    CORE_REQUIRED_FIELDS,
+    FORBIDDEN_HANDOFF_CHARACTER_PATTERN_SOURCE,
+    VALIDATION_STATUS_FIELDS,
+    VALIDATION_STATUS_VALUES,
+    is_material_handoff_text,
+)
 from asgk_lib.task_packet import (
     CANONICAL_TASK_FIELDS,
     TASK_PACKET_FALLBACK_FIELDS,
@@ -37,7 +47,7 @@ REQUIRED_FILES = [
  'docs/handoff/CURRENT_STATUS.md','docs/handoff/DECISIONS.md','docs/handoff/AGENT_LOG.md',
  'templates/task_packet.template.yaml',
  'contracts/storage_profile.contract.yaml','contracts/artifact_contract.yaml','contracts/validation_result.contract.yaml','contracts/promotion_gate.contract.yaml','contracts/execution_lane.contract.yaml',
- 'schemas/validation_result.schema.json','schemas/storage_profile.schema.json','schemas/task_packet.schema.json','schemas/merge_decision.schema.json','schemas/promotion_gate.schema.json','schemas/execution_lane.schema.json','schemas/agent_report.schema.json',
+ 'schemas/validation_result.schema.json','schemas/storage_profile.schema.json','schemas/task_packet.schema.json','schemas/handoff_packet.schema.json','schemas/merge_decision.schema.json','schemas/promotion_gate.schema.json','schemas/execution_lane.schema.json','schemas/agent_report.schema.json',
  'scripts/check_project.py','scripts/validate_bootstrap.py','scripts/governance_hygiene.py',
  '.github/ISSUE_TEMPLATE/agent_task.yml','.github/ISSUE_TEMPLATE/workbench_task.md','.github/PULL_REQUEST_TEMPLATE.md','.github/workflows/bootstrap-validation.yml',
  'examples/storage_profile.local.json','examples/task_packet.example.yaml','examples/merge_decision.example.json','examples/promotion_gate.example.json','examples/execution_lane.example.json','examples/agent_report.example.md',
@@ -2454,6 +2464,1483 @@ def check_w3a_work_unit_and_task_packet_projection(root):
         fail('compact red-team runner must accept a repo-relative fixture path')
 
 
+def check_w3b_handoff_projection(root):
+    schema = json.loads(read(root, 'schemas/handoff_packet.schema.json'))
+    expected_schema_id = (
+        'https://github.com/stereosurfer/'
+        'agent-safe-dev-governance-kit/schemas/handoff_packet.schema.json'
+    )
+    if schema.get('$id') != expected_schema_id:
+        fail('handoff schema id must use the canonical repository URL')
+    if schema.get('unevaluatedProperties') is not False:
+        fail('handoff schema must reject unknown top-level siblings')
+    for metadata_root in ['positive_case', 'negative_case']:
+        if schema.get('properties', {}).get(metadata_root, {}).get('type') != 'object':
+            fail(f'handoff schema {metadata_root} metadata must be an object')
+
+    definitions = schema.get('$defs', {})
+    core_schema = definitions.get('core', {})
+    if set(core_schema.get('required', [])) != set(CORE_REQUIRED_FIELDS):
+        fail('handoff schema core required fields drifted from the evaluator')
+    if set(core_schema.get('properties', {})) != set(CORE_REQUIRED_FIELDS):
+        fail('handoff schema core properties drifted from the evaluator')
+    for removed in {'completed', 'decisions', 'open_questions'}:
+        if removed in core_schema.get('properties', {}):
+            fail(f'handoff schema retained duplicate history field: {removed}')
+
+    validation_schema = definitions.get('validationStatus', {})
+    if set(validation_schema.get('required', [])) != set(VALIDATION_STATUS_FIELDS):
+        fail('handoff schema validation_status required fields drifted')
+    status_values = (
+        validation_schema.get('properties', {})
+        .get('status', {})
+        .get('enum', [])
+    )
+    if set(status_values) != set(VALIDATION_STATUS_VALUES):
+        fail('handoff schema validation status enum drifted')
+    if validation_schema.get('additionalProperties') is not False:
+        fail('handoff validation_status must reject unknown nested fields')
+    impact_schema = definitions.get('currentStatusImpact', {})
+    follow_up_schema = (
+        impact_schema.get('properties', {})
+        .get('follow_up_issue', {})
+    )
+    if follow_up_schema.get('pattern') != FOLLOW_UP_ISSUE_PATTERN:
+        fail('handoff schema/evaluator follow-up issue shape drifted')
+    material_schema = definitions.get('materialString', {})
+    material_exclusions = material_schema.get('not', {}).get('anyOf', [])
+    non_material_pattern = next(
+        (
+            item.get('pattern')
+            for item in material_exclusions
+            if isinstance(item, dict)
+            and item.get('pattern', '').startswith('^\\s*')
+        ),
+        None,
+    )
+    if not non_material_pattern:
+        fail('handoff schema material strings must reject generic placeholders')
+    if not any(
+        item.get('pattern') == FORBIDDEN_HANDOFF_CHARACTER_PATTERN_SOURCE
+        for item in material_exclusions
+        if isinstance(item, dict)
+    ):
+        fail('handoff schema material strings must reject zero-width format characters')
+    compiled_non_material = re.compile(non_material_pattern)
+    compiled_forbidden_format = re.compile(
+        FORBIDDEN_HANDOFF_CHARACTER_PATTERN_SOURCE
+    )
+    for sample in [
+        'pending',
+        'unknown.',
+        'none',
+        'n...a',
+        'not\tapplicable',
+        'not\napplicable',
+        'not _applicable',
+        'not__applicable',
+        'not ._ applicable',
+        'none?',
+        'unKnown',
+        '\u00a0pending\u00a0',
+        'not\u00a0applicable',
+        '\u2003none\u2003',
+        '\u200b',
+        '\u202e',
+        '\u2061',
+        '\u180e',
+        '\u0080',
+        '\ud800',
+        'none; no known blocker',
+        'not applicable because this packet has no target PR',
+    ]:
+        evaluator_accepts = is_material_handoff_text(sample)
+        schema_accepts = (
+            compiled_non_material.search(sample) is None
+            and compiled_forbidden_format.search(sample) is None
+            and re.search(r'\S', sample) is not None
+        )
+        if evaluator_accepts != schema_accepts:
+            fail(
+                'handoff schema/evaluator material-string parity drifted for '
+                f'{sample!r}'
+            )
+
+    roots = {
+        root_name
+        for option in schema.get('oneOf', [])
+        for root_name in option.get('properties', {})
+    }
+    if roots != {CORE_HANDOFF_ROOT, COMPACT_HANDOFF_ROOT}:
+        fail(f'handoff schema root projections drifted: {sorted(roots)}')
+    for option in schema.get('oneOf', []):
+        required_root = next(iter(option.get('required', [])), None)
+        other_root = (
+            COMPACT_HANDOFF_ROOT
+            if required_root == CORE_HANDOFF_ROOT
+            else CORE_HANDOFF_ROOT
+        )
+        if other_root not in option.get('not', {}).get('required', []):
+            fail('handoff schema alternatives must explicitly reject the other root')
+        for root_schema in option.get('properties', {}).values():
+            if root_schema.get('unevaluatedProperties') is not False:
+                fail('handoff schema projections must reject unknown core fields')
+
+    positive = run_json_command(
+        root,
+        [
+            'scripts/asgk.py', 'handoff-check',
+            '--file', 'examples/handoff_packet.valid.yaml',
+            '--fail-on-todo', '--json',
+        ],
+        expected_returncode=0,
+        label='valid typed handoff',
+    )
+    if positive.get('result') != 'pass' or positive.get('findings') != []:
+        fail('valid handoff must pass without findings')
+    proof_boundary = str(positive.get('proof_boundary', ''))
+    for term in ['does not prove', 'human gate', 'merge decision']:
+        if term not in proof_boundary.lower():
+            fail(f'handoff proof boundary missing limit: {term}')
+
+    template_result = subprocess.run(
+        [
+            sys.executable,
+            'scripts/asgk.py',
+            'handoff-template',
+            '--issue',
+            '#333',
+            '--pr',
+            'none; PR not opened yet',
+            '--branch',
+            'codex/example',
+            '--objective',
+            'Exercise the draft template.',
+        ],
+        cwd=root,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    if template_result.returncode != 0:
+        fail('handoff-template must emit a draft successfully')
+    durable_source_block = '\n'.join(
+        field_block_lines(
+            template_result.stdout,
+            'durable_source_of_truth',
+        )
+        or []
+    )
+    if 'none; PR not opened yet' in durable_source_block:
+        fail('handoff-template must not treat a nonexistent PR as a durable source')
+    template_check = run_text_payload_command(
+        root,
+        [
+            'scripts/asgk.py', 'handoff-check',
+            '--file', '{payload}', '--json',
+        ],
+        template_result.stdout,
+        expected_returncode=1,
+    )
+    if set(finding_codes(template_check)) != {'HP_TODO_UNRESOLVED'}:
+        fail('unfilled handoff-template output must fail TODO checking by default')
+
+    template_control_result = subprocess.run(
+        [
+            sys.executable,
+            'scripts/asgk.py',
+            'handoff-template',
+            '--issue',
+            '#333\tW3B',
+            '--pr',
+            'none; PR not opened yet',
+            '--branch',
+            'codex/example',
+            '--objective',
+            'First line\nsecond line',
+        ],
+        cwd=root,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    if template_control_result.returncode != 0:
+        fail('handoff-template must quote control whitespace safely')
+    template_control_check = run_text_payload_command(
+        root,
+        [
+            'scripts/asgk.py', 'handoff-check',
+            '--file', '{payload}', '--json',
+        ],
+        template_control_result.stdout,
+        expected_returncode=1,
+    )
+    if set(finding_codes(template_control_check)) != {'HP_TODO_UNRESOLVED'}:
+        fail('handoff-template output with escaped whitespace must remain parseable')
+
+    negative_cases = [
+        (
+            'wrong handoff root',
+            'examples/negative/handoff.wrong-root.yaml',
+            False,
+            {'HP_PACKET_ROOT_MISSING'},
+        ),
+        (
+            'missing active issue',
+            'examples/negative/handoff.missing-active-issue.yaml',
+            False,
+            {'HP_FIELD_MISSING'},
+        ),
+        (
+            'empty next safe action',
+            'examples/negative/handoff.empty-next-safe-action.yaml',
+            False,
+            {'HP_FIELD_EMPTY'},
+        ),
+        (
+            'invalid validation status',
+            'examples/negative/handoff.unknown-validation-status.yaml',
+            False,
+            {'HP_VALIDATION_STATUS_INVALID'},
+        ),
+        (
+            'missing allowed paths',
+            'examples/negative/handoff.missing-allowed-paths.yaml',
+            False,
+            {'HP_FIELD_MISSING'},
+        ),
+        (
+            'missing must read',
+            'examples/negative/handoff.missing-must-read.yaml',
+            False,
+            {'HP_FIELD_MISSING'},
+        ),
+        (
+            'scalar required list',
+            'examples/negative/handoff.scalar-required-list.yaml',
+            False,
+            {'HP_FIELD_TYPE_INVALID'},
+        ),
+        (
+            'scalar validation evidence',
+            'examples/negative/handoff.invalid-validation-evidence.yaml',
+            False,
+            {'HP_FIELD_TYPE_INVALID'},
+        ),
+        (
+            'unresolved TODO',
+            'examples/negative/handoff.unresolved-todo.yaml',
+            True,
+            {'HP_TODO_UNRESOLVED'},
+        ),
+    ]
+    for label, fixture, fail_on_todo, expected_codes in negative_cases:
+        command = [
+            'scripts/asgk.py', 'handoff-check',
+            '--file', fixture,
+            '--json',
+        ]
+        if fail_on_todo:
+            command.insert(-1, '--fail-on-todo')
+        payload = run_json_command(
+            root,
+            command,
+            expected_returncode=1,
+            label=label,
+        )
+        actual_codes = set(finding_codes(payload))
+        if actual_codes != expected_codes:
+            fail(
+                f'{label} finding codes {sorted(actual_codes)} != '
+                f'{sorted(expected_codes)}'
+            )
+        if label == 'wrong handoff root':
+            checked = payload.get('mechanically_checked', [])
+            not_checked = payload.get('not_checked', [])
+            if any('required core field' in item for item in checked):
+                fail('wrong-root handoff must not claim core fields were checked')
+            if not any('required core fields' in item for item in not_checked):
+                fail('wrong-root handoff must name skipped core checks')
+
+    valid_handoff_text = read(root, 'examples/handoff_packet.valid.yaml')
+    mutation_cases = [
+        (
+            'boolean scalar type',
+            valid_handoff_text.replace(
+                '  branch: "codex/asgk-2-w3b-handoff-status-convergence"',
+                '  branch: true',
+                1,
+            ),
+            {'HP_FIELD_TYPE_INVALID'},
+        ),
+        (
+            'duplicate packet key',
+            valid_handoff_text.replace(
+                'handoff_packet:\n',
+                'handoff_packet:\n  active_issue: "#duplicate"\n',
+                1,
+            ),
+            {'HP_PACKET_AMBIGUOUS'},
+        ),
+        (
+            'removed history field',
+            valid_handoff_text.replace(
+                '  next_safe_action:',
+                '  completed:\n    - "old duplicate history"\n  next_safe_action:',
+                1,
+            ),
+            {'HP_FIELD_UNKNOWN'},
+        ),
+        (
+            'missing validation reason',
+            re.sub(
+                r'(?m)^    reason: "The fixture describes the pre-validation state\."\n',
+                '',
+                valid_handoff_text,
+                count=1,
+            ),
+            {'HP_FIELD_MISSING'},
+        ),
+        (
+            'missing validation status',
+            re.sub(
+                r'(?m)^    status: "not_run"\n',
+                '',
+                valid_handoff_text,
+                count=1,
+            ),
+            {'HP_FIELD_MISSING'},
+        ),
+        (
+            'packet root has scalar type',
+            'handoff_packet: true\n',
+            {'HP_PACKET_TYPE_INVALID'},
+        ),
+        (
+            'unsupported top-level authority sibling',
+            valid_handoff_text
+            + '\nauthority_override: "see chat"\n',
+            {'HP_PACKET_AMBIGUOUS'},
+        ),
+        (
+            'scalar fixture metadata',
+            re.sub(
+                r'\Apositive_case:\n(?:  .+\n)+\n',
+                'positive_case: invalid\n\n',
+                valid_handoff_text,
+                count=1,
+            ),
+            {'HP_PACKET_AMBIGUOUS'},
+        ),
+        (
+            'competing handoff roots',
+            valid_handoff_text + '\ncompact_handoff: {}\n',
+            {'HP_PACKET_AMBIGUOUS'},
+        ),
+        (
+            'chat-only authority',
+            valid_handoff_text.replace(
+                '  objective: "Prove the canonical typed handoff core and fixture agree."',
+                '  objective: "see chat"',
+                1,
+            ),
+            {'HP_CHAT_AUTHORITY_FORBIDDEN'},
+        ),
+        (
+            'tab-separated chat-only authority',
+            valid_handoff_text.replace(
+                '  objective: "Prove the canonical typed handoff core and fixture agree."',
+                '  objective: "see\\tchat"',
+                1,
+            ),
+            {'HP_CHAT_AUTHORITY_FORBIDDEN'},
+        ),
+        (
+            'newline-separated chat-only authority',
+            valid_handoff_text.replace(
+                '  objective: "Prove the canonical typed handoff core and fixture agree."',
+                '  objective: "see\\nchat"',
+                1,
+            ),
+            {'HP_CHAT_AUTHORITY_FORBIDDEN'},
+        ),
+        (
+            'lowercase unresolved marker',
+            valid_handoff_text.replace(
+                '  objective: "Prove the canonical typed handoff core and fixture agree."',
+                '  objective: "todo: fill this later"',
+                1,
+            ),
+            {'HP_TODO_UNRESOLVED'},
+        ),
+        (
+            'identifier-style unresolved marker',
+            valid_handoff_text.replace(
+                '  objective: "Prove the canonical typed handoff core and fixture agree."',
+                '  objective: "AI_TODO_value"',
+                1,
+            ),
+            {'HP_TODO_UNRESOLVED'},
+        ),
+        (
+            'generic next-action placeholder',
+            re.sub(
+                r'(?m)^  next_safe_action: .*$',
+                '  next_safe_action: "pending."',
+                valid_handoff_text,
+                count=1,
+            ),
+            {'HP_FIELD_EMPTY'},
+        ),
+        (
+            'generic list placeholder',
+            valid_handoff_text.replace(
+                '    - "none; no known blocker in this fixture"',
+                '    - "none."',
+                1,
+            ),
+            {'HP_FIELD_EMPTY'},
+        ),
+        (
+            'generic evidence placeholder',
+            valid_handoff_text.replace(
+                '      - "This fixture is the input to the validation command."',
+                '      - "unknown"',
+                1,
+            ),
+            {'HP_FIELD_EMPTY'},
+        ),
+        (
+            'zero-width-only material',
+            valid_handoff_text.replace(
+                '  objective: "Prove the canonical typed handoff core and fixture agree."',
+                '  objective: "\\u200b"',
+                1,
+            ),
+            {'HP_FIELD_EMPTY'},
+        ),
+        (
+            'bidi-format-only material',
+            valid_handoff_text.replace(
+                '  objective: "Prove the canonical typed handoff core and fixture agree."',
+                '  objective: "\\u202e"',
+                1,
+            ),
+            {'HP_FIELD_EMPTY'},
+        ),
+        (
+            'escaped control character',
+            valid_handoff_text.replace(
+                '  active_issue: "#333 ASGK 2.0 W3B"',
+                '  active_issue: "issue \\u0000 333"',
+                1,
+            ),
+            {'HP_PACKET_AMBIGUOUS'},
+        ),
+        (
+            'escaped lone surrogate',
+            valid_handoff_text.replace(
+                '  active_issue: "#333 ASGK 2.0 W3B"',
+                '  active_issue: "\\ud800"',
+                1,
+            ),
+            {'HP_PACKET_AMBIGUOUS'},
+        ),
+    ]
+    for label, source, expected_codes in mutation_cases:
+        payload = run_text_payload_command(
+            root,
+            [
+                'scripts/asgk.py', 'handoff-check',
+                '--file', '{payload}', '--json',
+            ],
+            source,
+            expected_returncode=1,
+        )
+        if set(finding_codes(payload)) != expected_codes:
+            fail(f'{label} must fail with exact handoff finding code')
+
+    branch_line = '  branch: "codex/asgk-2-w3b-handoff-status-convergence"'
+    for label, scalar in [
+        ('inline YAML comment', 'true # actually a YAML boolean'),
+        ('explicit YAML tag', '!!int 7'),
+        ('YAML anchor', '&branch codex/example'),
+        ('forbidden YAML indicator', '@not-valid-yaml'),
+        ('exact sequence indicator', '-'),
+        ('trailing mapping colon', 'invalid:'),
+        ('concatenated quoted literals', '"first" "second"'),
+        ('flow-style scalar', '[one, two]'),
+        ('raw control character', 'material\x00value'),
+        ('raw C1 control character', 'material\u0080value'),
+    ]:
+        payload = run_text_payload_command(
+            root,
+            [
+                'scripts/asgk.py', 'handoff-check',
+                '--file', '{payload}', '--json',
+            ],
+            valid_handoff_text.replace(
+                branch_line,
+                f'  branch: {scalar}',
+                1,
+            ),
+            expected_returncode=1,
+        )
+        if set(finding_codes(payload)) != {'HP_PACKET_AMBIGUOUS'}:
+            fail(f'{label} must fail closed as ambiguous YAML')
+
+    for label, scalar in [
+        ('scientific number', '1e3'),
+        ('YAML timestamp', '2026-07-31'),
+    ]:
+        payload = run_text_payload_command(
+            root,
+            [
+                'scripts/asgk.py', 'handoff-check',
+                '--file', '{payload}', '--json',
+            ],
+            valid_handoff_text.replace(
+                branch_line,
+                f'  branch: {scalar}',
+                1,
+            ),
+            expected_returncode=1,
+        )
+        if set(finding_codes(payload)) != {'HP_FIELD_TYPE_INVALID'}:
+            fail(f'{label} must not pass as a string')
+
+    yaml_single_quote = valid_handoff_text.replace(
+        '  objective: "Prove the canonical typed handoff core and fixture agree."',
+        "  objective: 'Prove the agent''s handoff remains material.'",
+        1,
+    )
+    run_text_payload_command(
+        root,
+        [
+            'scripts/asgk.py', 'handoff-check',
+            '--file', '{payload}', '--json',
+        ],
+        yaml_single_quote,
+        expected_returncode=0,
+    )
+
+    missing_handoff = run_json_command(
+        root,
+        [
+            'scripts/asgk.py', 'handoff-check',
+            '--file', 'examples/negative/does-not-exist.yaml',
+            '--json',
+        ],
+        expected_returncode=1,
+        label='missing handoff file',
+    )
+    if set(finding_codes(missing_handoff)) != {'HP_FILE_MISSING'}:
+        fail('missing handoff file must report HP_FILE_MISSING')
+
+    unreadable_handoff = run_json_command(
+        root,
+        [
+            'scripts/asgk.py', 'handoff-check',
+            '--file', '.',
+            '--json',
+        ],
+        expected_returncode=1,
+        label='handoff path is a directory',
+    )
+    if set(finding_codes(unreadable_handoff)) != {'HP_FILE_UNREADABLE'}:
+        fail('non-file handoff path must report HP_FILE_UNREADABLE')
+
+    empty_lists = run_json_command(
+        root,
+        [
+            'scripts/asgk.py', 'handoff-check',
+            '--file', 'examples/negative/handoff.empty-required-lists.yaml',
+            '--json',
+        ],
+        expected_returncode=1,
+        label='empty required handoff lists',
+    )
+    if set(finding_codes(empty_lists)) != {
+        'HP_LIST_EMPTY',
+        'HP_VALIDATION_EVIDENCE_MISSING',
+    }:
+        fail('empty required handoff lists must report exact list/evidence codes')
+
+    compact_positive = run_json_command(
+        root,
+        [
+            'scripts/asgk.py', 'compact-handoff-check',
+            '--handoff', 'examples/compact_governance/handoff.compact.valid.yaml',
+            '--current-status',
+            'examples/compact_governance/current_status.compact.clean.md',
+            '--json',
+        ],
+        expected_returncode=0,
+        label='valid compact handoff',
+    )
+    if (
+        compact_positive.get('result') != 'pass'
+        or compact_positive.get('freshness_checked') is not True
+        or compact_positive.get('findings') != []
+    ):
+        fail('valid compact handoff must run and pass core plus freshness checks')
+
+    valid_compact_text = read(
+        root,
+        'examples/compact_governance/handoff.compact.valid.yaml',
+    )
+    impact_block_pattern = (
+        r'(?m)^  current_status_impact:\n'
+        r'(?:    .*\n?)+'
+    )
+    impact_mutations = [
+        (
+            'missing compact impact',
+            re.sub(
+                impact_block_pattern,
+                '',
+                valid_compact_text,
+                count=1,
+            ),
+            {'CH_CURRENT_STATUS_IMPACT_MISSING'},
+        ),
+        (
+            'missing compact impact field',
+            re.sub(
+                r'(?m)^    reason: "The supplied clean status fixture.*"\n',
+                '',
+                valid_compact_text,
+                count=1,
+            ),
+            {'CH_CURRENT_STATUS_IMPACT_FIELD_MISSING'},
+        ),
+        (
+            'invalid compact impact status',
+            valid_compact_text.replace(
+                '    status: "not_applicable"',
+                '    status: "banana"',
+                1,
+            ),
+            {'CH_CURRENT_STATUS_IMPACT_STATUS_INVALID'},
+        ),
+        (
+            'generic compact impact reason',
+            re.sub(
+                r'(?m)^    reason: "The supplied clean status fixture.*"$',
+                '    reason: "not applicable"',
+                valid_compact_text,
+                count=1,
+            ),
+            {'CH_CURRENT_STATUS_IMPACT_REASON_INVALID'},
+        ),
+        (
+            'invalid compact impact boolean',
+            valid_compact_text.replace(
+                '    current_status_updated_in_this_pr: false',
+                '    current_status_updated_in_this_pr: "false"',
+                1,
+            ),
+            {'CH_CURRENT_STATUS_IMPACT_FIELD_INVALID'},
+        ),
+        (
+            'inconsistent compact impact',
+            valid_compact_text.replace(
+                '    status: "not_applicable"',
+                '    status: "updated"',
+                1,
+            ),
+            {'CH_CURRENT_STATUS_IMPACT_INCONSISTENT'},
+        ),
+        (
+            'unknown compact impact field',
+            valid_compact_text.replace(
+                '  current_status_impact:\n',
+                '  current_status_impact:\n    extra_gate: true\n',
+                1,
+            ),
+            {'CH_CURRENT_STATUS_IMPACT_FIELD_INVALID'},
+        ),
+        (
+            'invalid compact follow-up issue',
+            valid_compact_text.replace(
+                '    follow_up_issue: "none"',
+                '    follow_up_issue: "pending"',
+                1,
+            ),
+            {'CH_CURRENT_STATUS_IMPACT_FIELD_INVALID'},
+        ),
+        (
+            'newline compact follow-up issue',
+            valid_compact_text.replace(
+                '    follow_up_issue: "none"',
+                '    follow_up_issue: "none\\n"',
+                1,
+            ),
+            {'CH_CURRENT_STATUS_IMPACT_FIELD_INVALID'},
+        ),
+        (
+            'line-separator compact follow-up issue',
+            valid_compact_text.replace(
+                '    follow_up_issue: "none"',
+                '    follow_up_issue: "none\\u2028"',
+                1,
+            ),
+            {'CH_CURRENT_STATUS_IMPACT_FIELD_INVALID'},
+        ),
+    ]
+    for label, source, expected_codes in impact_mutations:
+        payload = run_text_payload_command(
+            root,
+            [
+                'scripts/asgk.py', 'compact-handoff-check',
+                '--handoff', '{payload}',
+                '--current-status', 'examples/negative/does-not-exist.md',
+                '--json',
+            ],
+            source,
+            expected_returncode=1,
+        )
+        if (
+            set(finding_codes(payload)) != expected_codes
+            or payload.get('freshness_checked') is not False
+        ):
+            fail(f'{label} must stop before freshness with exact CH code')
+
+    compact_invalid_core = run_json_command(
+        root,
+        [
+            'scripts/asgk.py', 'compact-handoff-check',
+            '--handoff',
+            'examples/negative/compact_governance/handoff.compact.invalid-core.yaml',
+            '--current-status', 'examples/negative/does-not-exist.md',
+            '--json',
+        ],
+        expected_returncode=1,
+        label='compact invalid core',
+    )
+    if (
+        set(finding_codes(compact_invalid_core)) != {'HP_FIELD_TYPE_INVALID'}
+        or compact_invalid_core.get('freshness_checked') is not False
+    ):
+        fail('compact invalid core must preserve HP finding and skip freshness')
+
+    compact_missing_status = run_json_command(
+        root,
+        [
+            'scripts/asgk.py', 'compact-handoff-check',
+            '--handoff', 'examples/compact_governance/handoff.compact.valid.yaml',
+            '--current-status', 'examples/negative/does-not-exist.md',
+            '--json',
+        ],
+        expected_returncode=1,
+        label='compact missing current status',
+    )
+    if (
+        set(finding_codes(compact_missing_status))
+        != {'CH_CURRENT_STATUS_FILE_MISSING'}
+        or compact_missing_status.get('freshness_checked') is not False
+    ):
+        fail('missing CURRENT_STATUS must stop with exact file finding')
+
+    compact_unreadable_status = run_json_command(
+        root,
+        [
+            'scripts/asgk.py', 'compact-handoff-check',
+            '--handoff', 'examples/compact_governance/handoff.compact.valid.yaml',
+            '--current-status', '.',
+            '--json',
+        ],
+        expected_returncode=1,
+        label='compact current status path is a directory',
+    )
+    if (
+        set(finding_codes(compact_unreadable_status))
+        != {'CH_CURRENT_STATUS_CHECK_FAILED'}
+        or compact_unreadable_status.get('freshness_checked') is not False
+    ):
+        fail('non-file CURRENT_STATUS path must fail without overstating freshness')
+
+    closeout_unreadable = subprocess.run(
+        [
+            sys.executable,
+            'scripts/asgk.py',
+            'closeout-check',
+            '--file',
+            '.',
+        ],
+        cwd=root,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    if (
+        closeout_unreadable.returncode != 1
+        or 'not a readable file' not in closeout_unreadable.stdout
+        or 'Traceback' in closeout_unreadable.stdout
+        or 'Traceback' in closeout_unreadable.stderr
+    ):
+        fail('closeout-check must bound non-file status input without traceback')
+
+    def compact_with_status_text(
+        label,
+        status_source,
+        *,
+        completed_issues=(),
+        completed_prs=(),
+        completed_branches=(),
+        expected_returncode,
+    ):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            status_path = Path(tmpdir) / 'CURRENT_STATUS.md'
+            status_path.write_text(status_source, encoding='utf-8')
+            command = [
+                'scripts/asgk.py', 'compact-handoff-check',
+                '--handoff',
+                'examples/compact_governance/handoff.compact.valid.yaml',
+                '--current-status',
+                str(status_path),
+            ]
+            for issue in completed_issues:
+                command.extend(['--completed-issue', issue])
+            for pr in completed_prs:
+                command.extend(['--completed-pr', pr])
+            for branch in completed_branches:
+                command.extend(['--completed-branch', branch])
+            command.append('--json')
+            return run_json_command(
+                root,
+                command,
+                expected_returncode=expected_returncode,
+                label=label,
+            )
+
+    compact_empty_status = compact_with_status_text(
+        'compact empty current status',
+        '',
+        expected_returncode=1,
+    )
+    if (
+        set(finding_codes(compact_empty_status))
+        != {'CH_CURRENT_STATUS_CHECK_FAILED'}
+        or compact_empty_status.get('freshness_checked') is not False
+    ):
+        fail('empty CURRENT_STATUS must fail structural status-check exactly')
+
+    compact_stale = run_json_command(
+        root,
+        [
+            'scripts/asgk.py', 'compact-handoff-check',
+            '--handoff',
+            'examples/negative/compact_governance/handoff.compact.hides-stale-current-status.yaml',
+            '--current-status',
+            'examples/negative/compact_governance/current_status.compact.stale-active.md',
+            '--completed-issue', '#240',
+            '--completed-pr', '#241',
+            '--completed-branch', 'codex/compact-pr-body-profile-240',
+            '--json',
+        ],
+        expected_returncode=1,
+        label='compact stale current status',
+    )
+    if set(finding_codes(compact_stale)) != {
+        'CH_STALE_COMPLETED_ISSUE',
+        'CH_STALE_COMPLETED_PR',
+        'CH_STALE_COMPLETED_BRANCH',
+    }:
+        fail('compact stale status must report exact supplied-ref freshness codes')
+
+    compact_prefix_refs = run_json_command(
+        root,
+        [
+            'scripts/asgk.py', 'compact-handoff-check',
+            '--handoff',
+            'examples/negative/compact_governance/handoff.compact.hides-stale-current-status.yaml',
+            '--current-status',
+            'examples/negative/compact_governance/current_status.compact.stale-active.md',
+            '--completed-issue', '#24',
+            '--completed-pr', '#24',
+            '--completed-branch', 'codex/compact-pr-body-profile-24',
+            '--json',
+        ],
+        expected_returncode=0,
+        label='compact non-matching prefix refs',
+    )
+    if compact_prefix_refs.get('findings') != []:
+        fail('compact freshness must not match caller refs by substring prefix')
+
+    stale_status_text = read(
+        root,
+        'examples/negative/compact_governance/current_status.compact.stale-active.md',
+    )
+    url_status_text = stale_status_text.replace(
+        'issue: "#240 Add compact PR body profile"',
+        (
+            'issue: "https://github.com/stereosurfer/'
+            'agent-safe-dev-governance-kit/issues/240"'
+        ),
+        1,
+    ).replace(
+        'pr: "#241 Add compact PR body profile check"',
+        (
+            'pr: "https://github.com/stereosurfer/'
+            'agent-safe-dev-governance-kit/pull/241"'
+        ),
+        1,
+    )
+    compact_url_refs = compact_with_status_text(
+        'compact GitHub URL completed refs',
+        url_status_text,
+        completed_issues=('#240',),
+        completed_prs=('#241',),
+        expected_returncode=1,
+    )
+    if set(finding_codes(compact_url_refs)) != {
+        'CH_STALE_COMPLETED_ISSUE',
+        'CH_STALE_COMPLETED_PR',
+    }:
+        fail('compact freshness must normalize GitHub URL issue and PR refs')
+
+    url_with_secondary_hash = url_status_text.replace(
+        'issues/240"',
+        'issues/240 supersedes #24"',
+        1,
+    )
+    compact_url_precedence = compact_with_status_text(
+        'compact leading GitHub URL ref precedence',
+        url_with_secondary_hash,
+        completed_issues=('#24',),
+        expected_returncode=0,
+    )
+    if compact_url_precedence.get('findings') != []:
+        fail('compact freshness must use the leading canonical ref only')
+
+    compact_leading_zero_ref = compact_with_status_text(
+        'compact numeric ref leading-zero normalization',
+        stale_status_text,
+        completed_issues=('#0240',),
+        expected_returncode=1,
+    )
+    if set(finding_codes(compact_leading_zero_ref)) != {
+        'CH_STALE_COMPLETED_ISSUE'
+    }:
+        fail('compact freshness must compare issue numbers numerically')
+
+    clean_status_text = read(
+        root,
+        'examples/compact_governance/current_status.compact.clean.md',
+    )
+    premerge_status_text = re.sub(
+        r'(?ms)(^## Next safe action\n\n).*',
+        r'\1Merge only if checks pass.\n',
+        clean_status_text,
+        count=1,
+    )
+    compact_premerge_action = compact_with_status_text(
+        'compact pre-merge next action',
+        premerge_status_text,
+        expected_returncode=1,
+    )
+    if set(finding_codes(compact_premerge_action)) != {
+        'CH_NEXT_SAFE_ACTION_STALE'
+    }:
+        fail('compact freshness must identify pre-merge next-action residue')
+
+    status_result = subprocess.run(
+        [
+            sys.executable,
+            'scripts/asgk.py',
+            'status-check',
+            '--file',
+            'docs/handoff/CURRENT_STATUS.md',
+        ],
+        cwd=root,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    if status_result.returncode != 0:
+        fail(f'canonical CURRENT_STATUS failed status-check: {status_result.stdout}')
+
+    closeout_prefix = subprocess.run(
+        [
+            sys.executable,
+            'scripts/asgk.py',
+            'closeout-check',
+            '--file',
+            'examples/negative/compact_governance/current_status.compact.stale-active.md',
+            '--completed-issue',
+            '#24',
+            '--completed-pr',
+            '#24',
+            '--completed-branch',
+            'codex/compact-pr-body-profile-24',
+        ],
+        cwd=root,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    if closeout_prefix.returncode != 0:
+        fail('closeout-check must not match completed refs by substring prefix')
+
+    closeout_exact = subprocess.run(
+        [
+            sys.executable,
+            'scripts/asgk.py',
+            'closeout-check',
+            '--file',
+            'examples/negative/compact_governance/current_status.compact.stale-active.md',
+            '--completed-issue',
+            '#0240',
+            '--completed-pr',
+            '#0241',
+            '--completed-branch',
+            'codex/compact-pr-body-profile-240',
+        ],
+        cwd=root,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    if (
+        closeout_exact.returncode != 1
+        or closeout_exact.stdout.count('still appears in active work') != 3
+    ):
+        fail('closeout-check must share exact completed-ref semantics')
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        changed_none = Path(tmpdir) / 'changed-none.txt'
+        changed_status = Path(tmpdir) / 'changed-status.txt'
+        changed_none.write_text('', encoding='utf-8')
+        changed_status.write_text(
+            'docs/handoff/CURRENT_STATUS.md\n',
+            encoding='utf-8',
+        )
+        impact_body = Path(tmpdir) / 'pr-body.md'
+        impact_body.write_text(
+            '## Current Status Impact\n\n'
+            'status: not_applicable\n'
+            'reason: Recovery state is unchanged.\n'
+            'current_status_updated_in_this_pr: false\n'
+            'post_merge_safe: not_applicable\n'
+            'follow_up_issue: pending\n',
+            encoding='utf-8',
+        )
+        invalid_follow_up = subprocess.run(
+            [
+                sys.executable,
+                'scripts/asgk.py',
+                'current-status-impact-check',
+                '--pr-body',
+                str(impact_body),
+                '--changed-paths-file',
+                str(changed_none),
+            ],
+            cwd=root,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        if (
+            invalid_follow_up.returncode != 1
+            or 'follow_up_issue must be exactly none or one #<number>' not in invalid_follow_up.stdout
+        ):
+            fail('current-status-impact-check must enforce canonical follow-up issue shape')
+
+        impact_body.write_text(
+            '## Current Status Impact\n\n'
+            'status: not_applicable\n'
+            'reason: Recovery state is unchanged.\n'
+            'current_status_updated_in_this_pr: false\n'
+            'post_merge_safe: not_applicable\n'
+            'follow_up_issue: NONE\n',
+            encoding='utf-8',
+        )
+        uppercase_follow_up = subprocess.run(
+            [
+                sys.executable,
+                'scripts/asgk.py',
+                'current-status-impact-check',
+                '--pr-body',
+                str(impact_body),
+                '--changed-paths-file',
+                str(changed_none),
+            ],
+            cwd=root,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        if uppercase_follow_up.returncode != 1:
+            fail('current-status-impact-check must enforce exact follow-up issue case')
+
+        for malformed_follow_up in ['none"', '"none', '"\'none\'"']:
+            impact_body.write_text(
+                '## Current Status Impact\n\n'
+                'status: not_applicable\n'
+                'reason: Recovery state is unchanged.\n'
+                'current_status_updated_in_this_pr: false\n'
+                'post_merge_safe: not_applicable\n'
+                f'follow_up_issue: {malformed_follow_up}\n',
+                encoding='utf-8',
+            )
+            malformed_follow_up_result = subprocess.run(
+                [
+                    sys.executable,
+                    'scripts/asgk.py',
+                    'current-status-impact-check',
+                    '--pr-body',
+                    str(impact_body),
+                    '--changed-paths-file',
+                    str(changed_none),
+                ],
+                cwd=root,
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+            if malformed_follow_up_result.returncode != 1:
+                fail('current-status-impact-check must reject malformed quote layers')
+
+        impact_body.write_text(
+            '## Current Status Impact\n\n'
+            'status: "not_applicable"\n'
+            'reason: Recovery state is unchanged.\n'
+            'current_status_updated_in_this_pr: false\n'
+            'post_merge_safe: "not_applicable"\n'
+            'follow_up_issue: "none"\n',
+            encoding='utf-8',
+        )
+        quoted_string_impact = subprocess.run(
+            [
+                sys.executable,
+                'scripts/asgk.py',
+                'current-status-impact-check',
+                '--pr-body',
+                str(impact_body),
+                '--changed-paths-file',
+                str(changed_none),
+            ],
+            cwd=root,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        if quoted_string_impact.returncode != 0:
+            fail('current-status-impact-check must accept one balanced quote layer')
+
+        impact_body.write_text(
+            '## Current Status Impact\n\n'
+            'status: not_applicable\n'
+            'reason: Recovery state is unchanged.\n'
+            'current_status_updated_in_this_pr: "false"\n'
+            'post_merge_safe: not_applicable\n'
+            'follow_up_issue: none\n',
+            encoding='utf-8',
+        )
+        quoted_impact_boolean = subprocess.run(
+            [
+                sys.executable,
+                'scripts/asgk.py',
+                'current-status-impact-check',
+                '--pr-body',
+                str(impact_body),
+                '--changed-paths-file',
+                str(changed_none),
+            ],
+            cwd=root,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        if (
+            quoted_impact_boolean.returncode != 1
+            or 'must be true or false' not in quoted_impact_boolean.stdout
+        ):
+            fail('current-status-impact-check must preserve boolean types')
+
+        impact_body.write_text(
+            '## Current Status Impact\n\n'
+            'status: not_applicable\n'
+            'reason: Recovery state is unchanged.\n'
+            'current_status_updated_in_this_pr: false\n'
+            'post_merge_safe: not_applicable\n'
+            'follow_up_issue: none\n'
+            'follow_up_issue: "#999"\n',
+            encoding='utf-8',
+        )
+        duplicate_follow_up = subprocess.run(
+            [
+                sys.executable,
+                'scripts/asgk.py',
+                'current-status-impact-check',
+                '--pr-body',
+                str(impact_body),
+                '--changed-paths-file',
+                str(changed_none),
+            ],
+            cwd=root,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        if (
+            duplicate_follow_up.returncode != 1
+            or 'exactly one follow_up_issue field' not in duplicate_follow_up.stdout
+        ):
+            fail('current-status-impact-check must reject duplicate follow-up fields')
+
+        impact_body.write_text(
+            '## Current Status Impact\n\n'
+            'status: not_applicable\n'
+            'reason: none?\n'
+            'current_status_updated_in_this_pr: false\n'
+            'post_merge_safe: not_applicable\n'
+            'follow_up_issue: none\n',
+            encoding='utf-8',
+        )
+        generic_impact_reason = subprocess.run(
+            [
+                sys.executable,
+                'scripts/asgk.py',
+                'current-status-impact-check',
+                '--pr-body',
+                str(impact_body),
+                '--changed-paths-file',
+                str(changed_none),
+            ],
+            cwd=root,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        if (
+            generic_impact_reason.returncode != 1
+            or 'reason is missing or non-specific' not in generic_impact_reason.stdout
+        ):
+            fail('current-status-impact-check must share material reason semantics')
+
+        impact_body.write_text(
+            '## Current Status Impact\n\n'
+            'status: updated\n'
+            'reason: The supplied recovery snapshot is post-merge-safe.\n'
+            'current_status_updated_in_this_pr: true\n'
+            'post_merge_safe: true\n'
+            'follow_up_issue: none\n',
+            encoding='utf-8',
+        )
+        prefix_impact = subprocess.run(
+            [
+                sys.executable,
+                'scripts/asgk.py',
+                'current-status-impact-check',
+                '--pr-body',
+                str(impact_body),
+                '--changed-paths-file',
+                str(changed_status),
+                '--file',
+                'examples/negative/compact_governance/current_status.compact.stale-active.md',
+                '--this-pr',
+                '#24',
+                '--closing-issue',
+                '#24',
+                '--this-branch',
+                'codex/compact-pr-body-profile-24',
+            ],
+            cwd=root,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        if prefix_impact.returncode != 0:
+            fail('current-status-impact-check must not match refs by substring prefix')
+
+        exact_impact = subprocess.run(
+            [
+                sys.executable,
+                'scripts/asgk.py',
+                'current-status-impact-check',
+                '--pr-body',
+                str(impact_body),
+                '--changed-paths-file',
+                str(changed_status),
+                '--file',
+                'examples/negative/compact_governance/current_status.compact.stale-active.md',
+                '--this-pr',
+                '#0241',
+                '--closing-issue',
+                '#0240',
+                '--this-branch',
+                'codex/compact-pr-body-profile-240',
+            ],
+            cwd=root,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        if exact_impact.returncode != 1:
+            fail('current-status-impact-check must identify exact active refs')
+
+        missing_status_impact = subprocess.run(
+            [
+                sys.executable,
+                'scripts/asgk.py',
+                'current-status-impact-check',
+                '--pr-body',
+                str(impact_body),
+                '--changed-paths-file',
+                str(changed_status),
+                '--file',
+                'examples/negative/does-not-exist.md',
+            ],
+            cwd=root,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        if (
+            missing_status_impact.returncode != 1
+            or 'status-check failed for current status file' not in missing_status_impact.stdout
+            or 'Traceback' in missing_status_impact.stdout
+            or 'Traceback' in missing_status_impact.stderr
+        ):
+            fail('current-status-impact-check must bound missing status input')
+
+    status_policy = read(root, 'docs/control/CURRENT_STATUS_POLICY.md')
+    status_text = read(root, 'docs/handoff/CURRENT_STATUS.md')
+    with tempfile.TemporaryDirectory() as tmpdir:
+        stale_status_path = Path(tmpdir) / 'current-status-with-history.md'
+        stale_status_path.write_text(
+            status_text
+            + '\n## last Completed\n\n'
+            + 'This duplicate history surface must be rejected.\n',
+            encoding='utf-8',
+        )
+        stale_status_result = subprocess.run(
+            [
+                sys.executable,
+                'scripts/asgk.py',
+                'status-check',
+                '--file',
+                str(stale_status_path),
+            ],
+            cwd=root,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        if (
+            stale_status_result.returncode != 1
+            or 'forbidden history-log heading' not in stale_status_result.stdout
+        ):
+            fail('status-check must reject a Last completed history heading')
+
+    def assert_status_rejected(label, source, expected_fragment):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            candidate = Path(tmpdir) / 'CURRENT_STATUS.md'
+            candidate.write_text(source, encoding='utf-8')
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    'scripts/asgk.py',
+                    'status-check',
+                    '--file',
+                    str(candidate),
+                ],
+                cwd=root,
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+            if (
+                result.returncode != 1
+                or expected_fragment not in result.stdout
+            ):
+                fail(f'status-check did not reject {label} with the expected reason')
+
+    assert_status_rejected(
+        'case-variant H3 Last completed heading',
+        status_text
+        + '\n### LAST COMPLETED\n\n'
+        + 'This nested history surface must be rejected.\n',
+        'forbidden history-log heading',
+    )
+    assert_status_rejected(
+        'wrong-level duplicate Active work heading',
+        status_text
+        + '\n### Active work\n\n'
+        + 'issue: "#decoy"\npr: none\nbranch: main\nstate: stale\n',
+        'case-variant duplicate current status heading',
+    )
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        hidden_heading_path = Path(tmpdir) / 'CURRENT_STATUS.md'
+        hidden_heading_path.write_text(
+            status_text
+            + '\n<!--\n### Last completed\nhidden historical prose\n-->\n',
+            encoding='utf-8',
+        )
+        hidden_heading_result = subprocess.run(
+            [
+                sys.executable,
+                'scripts/asgk.py',
+                'status-check',
+                '--file',
+                str(hidden_heading_path),
+            ],
+            cwd=root,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        if hidden_heading_result.returncode != 0:
+            fail('status-check must ignore headings inside HTML comments')
+
+    active_block = markdown_section(status_text, 'Active work')
+    assert_status_rejected(
+        'duplicate Active work heading',
+        status_text
+        + '\n## Active work\n\n'
+        + active_block
+        + '\n',
+        'duplicate current status heading',
+    )
+    assert_status_rejected(
+        'case-variant Active work heading',
+        status_text
+        + '\n## ACTIVE WORK\n\n'
+        + active_block
+        + '\n',
+        'case-variant duplicate current status heading',
+    )
+    assert_status_rejected(
+        'duplicate issue field',
+        status_text.replace(
+            'issue: "#323 ASGK 2.0 program"',
+            'issue: "#323 ASGK 2.0 program"\nissue: "#240 stale"',
+            1,
+        ),
+        'exactly one issue field',
+    )
+    assert_status_rejected(
+        'case-variant issue field',
+        status_text.replace(
+            'issue: "#323 ASGK 2.0 program"',
+            'issue: "#323 ASGK 2.0 program"\nIssue: "#240 stale"',
+            1,
+        ),
+        'exactly one issue field',
+    )
+
+    if re.search(r'^## Last completed\s*$', status_policy, re.M):
+        fail('CURRENT_STATUS policy canonical shape retained Last completed')
+    if re.search(r'^## Last completed\s*$', status_text, re.M):
+        fail('CURRENT_STATUS retained a completed-work ledger heading')
+    asgk_source = read(root, 'scripts/asgk.py')
+    if 'stale issue #23 active state' in asgk_source:
+        fail('status-check retained the hard-coded historical issue #23 assumption')
+
+
 def check_negative_runner_projection():
     cases = [
         (
@@ -2515,6 +4002,7 @@ def main():
     check_policy_gate_failure_projection(root)
     check_pr_status_projection(root)
     check_w3a_work_unit_and_task_packet_projection(root)
+    check_w3b_handoff_projection(root)
     check_negative_runner_projection()
     check_control_sections(root)
     check_storage_profile(root)

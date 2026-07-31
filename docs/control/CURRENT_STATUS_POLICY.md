@@ -90,7 +90,7 @@ allowed_content:
   - active issue, PR, and branch, or none
   - current validation entrypoint
   - closed gates
-  - last completed work as a short durable reference
+  - runtime artifact boundary
   - next safe action
 
 forbidden_content:
@@ -232,7 +232,6 @@ mislead the next session.
 soft_limits:
   max_lines: 120
   max_active_work_units: 1
-  max_last_completed_items: 3
   max_next_safe_actions: 1
 ```
 
@@ -280,13 +279,17 @@ Last updated: `<UTC timestamp>`
 ## Active work
 ## Current validation entrypoint
 ## Closed gates
-## Last completed
 ## Runtime artifact status
 ## Next safe action
 ```
 
 The active work block should name one issue, one PR, one branch, and one state,
 or `none` when no work is active.
+
+There is no `Last completed` section. A completed issue, PR, decision, release,
+or validation record is history and remains available through the durable
+GitHub references named above. Copying it into the default startup surface
+creates a second owner and makes old work compete with the current next action.
 
 ## Relationship To Handoff Packet
 

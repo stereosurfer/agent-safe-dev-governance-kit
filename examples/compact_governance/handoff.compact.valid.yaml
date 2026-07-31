@@ -1,22 +1,41 @@
 compact_handoff:
-  active_issue: "#240 Add compact PR body profile"
-  active_pr: "#241 Add compact PR body profile check"
-  branch: "codex/compact-pr-body-profile-240"
-  durable_source_of_truth: "GitHub issue #240 and PR #241"
-  objective: "Record that package 6 completed without requiring a repo-level current-status change."
-  state: "merged"
+  active_issue: "#333 ASGK 2.0 W3B"
+  active_pr: "#334 W3B convergence"
+  durable_source_of_truth:
+    - "GitHub issue #333"
+    - "GitHub PR #334"
+  branch: "codex/asgk-2-w3b-handoff-status-convergence"
+  objective: "Prove compact handoff uses the complete canonical core before freshness checks."
+  current_state: "The fixture models a validated W3B PR awaiting human approval."
+  remaining:
+    - "Obtain current-head human approval."
   allowed_paths:
-    - "docs/control/COMPACT_PR_BODY_PROFILE.md"
-    - "examples/compact_governance/**"
-    - "examples/negative/compact_governance/**"
-    - "scripts/asgk.py"
+    - "docs/control/HANDOFF_PACKET.md"
+    - "scripts/asgk_lib/handoff.py"
+    - "scripts/asgk_lib/compact_handoff.py"
+  modified_files:
+    - "docs/control/HANDOFF_PACKET.md"
+    - "scripts/asgk_lib/handoff.py"
+    - "scripts/asgk_lib/compact_handoff.py"
+  non_goals:
+    - "Do not infer merge authority."
+  must_not_do:
+    - "Do not merge without current-head human approval."
+  must_read:
+    - "AGENTS.md"
+    - "GitHub issue #333"
+    - "GitHub PR #334"
   validation_status:
     status: "pass"
-    evidence: "Fixture models package closeout after local validation, live check-pr, and GitHub Actions passed."
+    evidence:
+      - "The positive fixture models a successful bounded local validation."
+    reason: "The fixture's named local boundary is complete."
+  blockers:
+    - "current-head human approval remains outside mechanical validation"
+  next_safe_action: "Review the exact PR head and record the human decision."
   current_status_impact:
     status: "not_applicable"
-    reason: "The package detail is recorded in issue and PR history; the repo-level next safe action remains controlled by #229."
+    reason: "The supplied clean status fixture already points to the correct repo-level next action."
     current_status_updated_in_this_pr: false
-    post_merge_safe: not_applicable
-    follow_up_issue: none
-  next_safe_action: "Continue #229 with package 7."
+    post_merge_safe: "not_applicable"
+    follow_up_issue: "none"

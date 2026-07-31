@@ -1,22 +1,37 @@
 compact_handoff:
   active_issue: "#240 Add compact PR body profile"
   active_pr: "#241 Add compact PR body profile check"
+  durable_source_of_truth:
+    - "GitHub issue #240"
+    - "GitHub PR #241"
   branch: "codex/compact-pr-body-profile-240"
-  durable_source_of_truth: "GitHub issue #240 and PR #241"
-  objective: "Negative fixture: claim no current-status update is needed while stale active work remains."
-  state: "merged"
+  objective: "Exercise a false no-update claim while completed work remains active."
+  current_state: "The fixture models package 6 as completed."
+  remaining:
+    - "Repair the stale repo-level recovery snapshot."
   allowed_paths:
-    - "docs/control/COMPACT_PR_BODY_PROFILE.md"
-    - "examples/compact_governance/**"
-    - "examples/negative/compact_governance/**"
-    - "scripts/asgk.py"
+    - "examples/negative/compact_governance/handoff.compact.hides-stale-current-status.yaml"
+  modified_files:
+    - "examples/negative/compact_governance/handoff.compact.hides-stale-current-status.yaml"
+  non_goals:
+    - "Do not infer low risk."
+  must_not_do:
+    - "Do not hide completed work in CURRENT_STATUS active work."
+  must_read:
+    - "AGENTS.md"
+    - "GitHub issue #240"
+    - "GitHub PR #241"
   validation_status:
     status: "pass"
-    evidence: "Negative fixture only."
+    evidence:
+      - "Negative fixture models locally completed validation."
+    reason: "The intended failure is freshness, not the handoff core."
+  blockers:
+    - "CURRENT_STATUS still names completed refs as active"
+  next_safe_action: "Repair the stale active-work block."
   current_status_impact:
     status: "not_applicable"
-    reason: "Claims GitHub issue and PR history is enough."
+    reason: "This claim is intentionally false for the supplied stale status fixture."
     current_status_updated_in_this_pr: false
-    post_merge_safe: not_applicable
-    follow_up_issue: none
-  next_safe_action: "Continue #229 with the next package."
+    post_merge_safe: "not_applicable"
+    follow_up_issue: "none"

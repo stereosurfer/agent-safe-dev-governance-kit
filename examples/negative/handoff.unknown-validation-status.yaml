@@ -1,33 +1,35 @@
 negative_case:
   id: NEG-034-handoff-unknown-validation-status
-  title: Handoff packet has unknown validation status
+  title: Handoff packet has unsupported validation status
   expected_outcome: blocked
   owner: asgk_handoff_check
   should_block_positive_validation: false
 
 handoff_packet:
-  active_issue: "#000"
-  active_pr: "#000"
+  active_issue: "#333"
+  active_pr: "none; negative fixture"
+  durable_source_of_truth:
+    - "GitHub issue #333"
   branch: "codex/example"
-  objective: "Bad example with unknown validation status."
-  current_state: "Bad example."
-  completed:
-    - "Created bad fixture."
+  objective: "Exercise the closed validation-status enum."
+  current_state: "All other core fields are materially populated."
   remaining:
-    - "Should be blocked."
+    - "Block this packet."
   allowed_paths:
-    - "docs/"
+    - "examples/negative/handoff.unknown-validation-status.yaml"
   modified_files:
-    - "docs/example.md"
-  validation_status:
-    status: "unknown"
-    reason: "negative fixture"
-  blockers: "none"
-  next_safe_action: "Block this handoff packet."
+    - "examples/negative/handoff.unknown-validation-status.yaml"
+  non_goals:
+    - "Do not infer approval."
+  must_not_do:
+    - "Do not continue from this packet."
   must_read:
     - "AGENTS.md"
-  must_not_do:
-    - "Do not proceed."
-  decisions:
-    - "This is a negative fixture."
-  open_questions: "none"
+  validation_status:
+    status: "unknown"
+    evidence:
+      - "Negative fixture input."
+    reason: "Unknown is intentionally unsupported."
+  blockers:
+    - "validation status is invalid"
+  next_safe_action: "Reject this packet with HP_VALIDATION_STATUS_INVALID."
