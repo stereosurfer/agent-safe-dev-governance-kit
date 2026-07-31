@@ -1,4 +1,4 @@
-"""Compact handoff validation helpers."""
+"""Compact handoff validation built on the canonical core evaluator."""
 
 from __future__ import annotations
 
@@ -6,26 +6,183 @@ import re
 import subprocess
 from pathlib import Path
 
-from asgk_lib.common import (
-    ROOT,
-    field_block_text,
-    field_value,
-    has_see_chat,
-    has_unresolved_todo,
-    line_field_exists,
-    list_field_has_material_item,
-    markdown_section,
-    normalize_repo_path,
-    normalized_field_value,
-    rel,
+from asgk_lib.common import ROOT, field_value, markdown_section, normalize_repo_path, rel
+from asgk_lib.handoff import (
+    COMPACT_HANDOFF_ROOT,
+    evaluate_handoff_file,
+    is_material_handoff_text,
 )
 from asgk_lib.status_policy import (
     CLOSEOUT_PRE_MERGE_NEXT_ACTION_PATTERNS,
     CURRENT_STATUS_IMPACT_ALLOWED_VALUES,
     CURRENT_STATUS_IMPACT_REQUIRED_FIELDS,
-    EMPTY_FOLLOWUP_VALUES,
-    TRUE_VALUES,
 )
+
+FOLLOW_UP_ISSUE_PATTERN = r"^(?:none|#[0-9]+)(?![\s\S])"
+
+
+def _finding(code: str, field: str, reason: str) -> dict[str, object]:
+    return {
+        "code": code,
+        "field": field,
+        "reason": reason,
+        "blocking": True,
+    }
+
+
+def valid_follow_up_issue(value: object) -> bool:
+    return (
+        isinstance(value, str)
+        and re.fullmatch(FOLLOW_UP_ISSUE_PATTERN, value) is not None
+    )
+
+
+def numbered_ref_matches(active_value: str | None, completed_ref: str) -> bool:
+    if not active_value or not completed_ref:
+        return False
+
+    def number(value: str) -> int | None:
+        stripped = value.strip()
+        github_ref = re.match(
+            r"https://github[.]com/[^/\s]+/[^/\s]+/"
+            r"(?:issues|pull)/([0-9]+)(?:\b|/)",
+            stripped,
+        )
+        if github_ref:
+            return int(github_ref.group(1))
+        hash_ref = re.match(r"#([0-9]+)\b", stripped)
+        if hash_ref:
+            return int(hash_ref.group(1))
+        bare_ref = re.fullmatch(r"([0-9]+)", stripped)
+        return int(bare_ref.group(1)) if bare_ref else None
+
+    active_number = number(active_value)
+    completed_number = number(completed_ref)
+    if active_number and completed_number:
+        return active_number == completed_number
+    return active_value.strip() == completed_ref.strip()
+
+
+def branch_ref_matches(active_value: str | None, completed_ref: str) -> bool:
+    return bool(
+        active_value
+        and completed_ref
+        and active_value.strip() == completed_ref.strip()
+    )
+
+
+def _impact_findings(packet: dict[str, object]) -> list[dict[str, object]]:
+    findings: list[dict[str, object]] = []
+    impact = packet.get("current_status_impact")
+    if not isinstance(impact, dict):
+        return [
+            _finding(
+                "CH_CURRENT_STATUS_IMPACT_MISSING",
+                "current_status_impact",
+                "compact handoff requires a current_status_impact mapping",
+            )
+        ]
+
+    for field in CURRENT_STATUS_IMPACT_REQUIRED_FIELDS:
+        if field not in impact:
+            findings.append(
+                _finding(
+                    "CH_CURRENT_STATUS_IMPACT_FIELD_MISSING",
+                    f"current_status_impact.{field}",
+                    "required current-status impact field is missing",
+                )
+            )
+
+    unknown = sorted(set(impact) - set(CURRENT_STATUS_IMPACT_REQUIRED_FIELDS))
+    for field in unknown:
+        findings.append(
+            _finding(
+                "CH_CURRENT_STATUS_IMPACT_FIELD_INVALID",
+                f"current_status_impact.{field}",
+                "field is not part of the current-status impact contract",
+            )
+        )
+
+    status = impact.get("status")
+    status_valid = False
+    if "status" in impact and (
+        not isinstance(status, str)
+        or status not in CURRENT_STATUS_IMPACT_ALLOWED_VALUES
+    ):
+        findings.append(
+            _finding(
+                "CH_CURRENT_STATUS_IMPACT_STATUS_INVALID",
+                "current_status_impact.status",
+                "status must be updated, not_applicable, or deferred",
+            )
+        )
+    elif "status" in impact:
+        status_valid = True
+
+    reason = impact.get("reason")
+    if "reason" in impact and not is_material_handoff_text(reason):
+        findings.append(
+            _finding(
+                "CH_CURRENT_STATUS_IMPACT_REASON_INVALID",
+                "current_status_impact.reason",
+                "reason must be a material string",
+            )
+        )
+
+    updated = impact.get("current_status_updated_in_this_pr")
+    updated_valid = isinstance(updated, bool)
+    if "current_status_updated_in_this_pr" in impact and not updated_valid:
+        findings.append(
+            _finding(
+                "CH_CURRENT_STATUS_IMPACT_FIELD_INVALID",
+                "current_status_impact.current_status_updated_in_this_pr",
+                "field must be a boolean",
+            )
+        )
+
+    post_merge_safe = impact.get("post_merge_safe")
+    post_merge_safe_valid = (
+        isinstance(post_merge_safe, bool)
+        or post_merge_safe == "not_applicable"
+    )
+    if "post_merge_safe" in impact and not post_merge_safe_valid:
+        findings.append(
+            _finding(
+                "CH_CURRENT_STATUS_IMPACT_FIELD_INVALID",
+                "current_status_impact.post_merge_safe",
+                "field must be a boolean or not_applicable",
+            )
+        )
+
+    follow_up = impact.get("follow_up_issue")
+    if "follow_up_issue" in impact and not valid_follow_up_issue(follow_up):
+        findings.append(
+            _finding(
+                "CH_CURRENT_STATUS_IMPACT_FIELD_INVALID",
+                "current_status_impact.follow_up_issue",
+                "field must be exactly none or one #<number> issue reference",
+            )
+        )
+
+    if status_valid and updated_valid and post_merge_safe_valid and status == "updated":
+        if updated is not True or post_merge_safe is not True:
+            findings.append(
+                _finding(
+                    "CH_CURRENT_STATUS_IMPACT_INCONSISTENT",
+                    "current_status_impact",
+                    "updated requires both update and post-merge-safe booleans to be true",
+                )
+            )
+    elif status_valid and updated_valid and status in {"not_applicable", "deferred"} and updated is True:
+        findings.append(
+            _finding(
+                "CH_CURRENT_STATUS_IMPACT_INCONSISTENT",
+                "current_status_impact.current_status_updated_in_this_pr",
+                f"{status} cannot claim the status file was updated in this PR",
+            )
+        )
+
+    return findings
 
 
 def compact_handoff_check(
@@ -36,196 +193,196 @@ def compact_handoff_check(
     completed_prs: list[str],
     completed_branches: list[str],
 ) -> tuple[str, dict[str, object]]:
-    handoff_path = rel(handoff_file)
-    status_path = rel(current_status_file)
-    findings: list[dict[str, str]] = []
+    core_result, core_report, packet = evaluate_handoff_file(
+        handoff_file,
+        root_name=COMPACT_HANDOFF_ROOT,
+        allowed_extra_fields={"current_status_impact"},
+    )
 
-    if not handoff_path.exists():
-        findings.append({
-            "field": "file",
-            "reason": f"compact handoff file does not exist: {handoff_file}",
-        })
-        handoff_text = ""
-    else:
-        handoff_text = handoff_path.read_text(encoding="utf-8")
-
-    if not status_path.exists():
-        findings.append({
-            "field": "current_status",
-            "reason": f"current-status file does not exist: {current_status_file}",
-        })
-        status_text = ""
-    else:
-        status_text = status_path.read_text(encoding="utf-8")
-
-    if handoff_text:
-        if has_see_chat(handoff_text):
-            findings.append({
-                "field": "handoff",
-                "reason": "compact handoff contains forbidden chat-only authority phrase: see chat",
-            })
-        if has_unresolved_todo(handoff_text):
-            findings.append({
-                "field": "handoff",
-                "reason": "compact handoff contains unresolved TODO or AI_TODO marker",
-            })
-
-        required_scalar_fields = [
-            "active_issue",
-            "active_pr",
-            "branch",
-            "objective",
-            "state",
-            "next_safe_action",
-            "durable_source_of_truth",
-        ]
-        for field in required_scalar_fields:
-            value = field_value(handoff_text, field)
-            if value is None:
-                findings.append({
-                    "field": field,
-                    "reason": "compact handoff is missing required field",
-                })
-            elif not value:
-                findings.append({
-                    "field": field,
-                    "reason": "compact handoff required field is empty",
-                })
-
-        if not list_field_has_material_item(handoff_text, "allowed_paths"):
-            findings.append({
-                "field": "allowed_paths",
-                "reason": "compact handoff must include at least one material allowed path",
-            })
-
-        validation_status = field_block_text(handoff_text, "validation_status")
-        if not validation_status:
-            findings.append({
-                "field": "validation_status",
-                "reason": "compact handoff is missing validation_status block",
-            })
-        else:
-            validation_value = normalized_field_value(validation_status, "status")
-            if validation_value in {"", "unknown"}:
-                findings.append({
-                    "field": "validation_status.status",
-                    "reason": "validation status must be pass, fail, blocked, or not_run; unknown is not allowed",
-                })
-
-    current_status_impact = field_block_text(handoff_text, "current_status_impact")
-    if not current_status_impact:
-        findings.append({
-            "field": "current_status_impact",
-            "reason": "compact handoff is missing current_status_impact block",
-        })
-    else:
-        for field in CURRENT_STATUS_IMPACT_REQUIRED_FIELDS:
-            if not line_field_exists(current_status_impact, field):
-                findings.append({
-                    "field": f"current_status_impact.{field}",
-                    "reason": "compact handoff current_status_impact is missing required field",
-                })
-
-        impact_status = normalized_field_value(current_status_impact, "status")
-        if impact_status not in CURRENT_STATUS_IMPACT_ALLOWED_VALUES:
-            findings.append({
-                "field": "current_status_impact.status",
-                "reason": "status must be updated, not_applicable, or deferred",
-            })
-
-        reason = normalized_field_value(current_status_impact, "reason")
-        if reason in {"", "pending", "unknown", "none", "tbd", "todo"}:
-            findings.append({
-                "field": "current_status_impact.reason",
-                "reason": "reason is missing or non-specific",
-            })
-
-        updated = normalized_field_value(current_status_impact, "current_status_updated_in_this_pr")
-        post_merge_safe = normalized_field_value(current_status_impact, "post_merge_safe")
-        follow_up = normalized_field_value(current_status_impact, "follow_up_issue")
-
-        if impact_status == "updated":
-            if updated not in TRUE_VALUES:
-                findings.append({
-                    "field": "current_status_impact.current_status_updated_in_this_pr",
-                    "reason": "status is updated but current_status_updated_in_this_pr is not true",
-                })
-            if post_merge_safe not in TRUE_VALUES:
-                findings.append({
-                    "field": "current_status_impact.post_merge_safe",
-                    "reason": "status is updated but post_merge_safe is not true",
-                })
-        elif impact_status in {"not_applicable", "deferred"} and updated in TRUE_VALUES:
-            findings.append({
-                "field": "current_status_impact.current_status_updated_in_this_pr",
-                "reason": f"status is {impact_status} but current_status_updated_in_this_pr is true",
-            })
-
-        if impact_status == "deferred":
-            next_safe_action = normalized_field_value(handoff_text, "next_safe_action")
-            if follow_up in EMPTY_FOLLOWUP_VALUES and next_safe_action in EMPTY_FOLLOWUP_VALUES:
-                findings.append({
-                    "field": "current_status_impact.follow_up_issue",
-                    "reason": "deferred status needs follow_up_issue or a material next_safe_action",
-                })
-
-    if status_text:
-        status_result = subprocess.run(
-            ["python3", "scripts/asgk.py", "status-check", "--file", str(status_path)],
-            cwd=ROOT,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            text=True,
-        )
-        if status_result.returncode != 0:
-            findings.append({
-                "field": "current_status",
-                "reason": "current-status file failed status-check",
-            })
-
-        active_work = markdown_section(status_text, "Active work")
-        next_safe_action_section = markdown_section(status_text, "Next safe action")
-        for issue in completed_issues:
-            if issue and issue in active_work:
-                findings.append({
-                    "field": "current_status.active_work",
-                    "reason": f"completed issue still appears in active work: {issue}",
-                })
-        for pr in completed_prs:
-            if pr and pr in active_work:
-                findings.append({
-                    "field": "current_status.active_work",
-                    "reason": f"completed PR still appears in active work: {pr}",
-                })
-        for branch in completed_branches:
-            if branch and branch in active_work:
-                findings.append({
-                    "field": "current_status.active_work",
-                    "reason": f"completed branch still appears in active work: {branch}",
-                })
-        if not next_safe_action_section:
-            findings.append({
-                "field": "current_status.next_safe_action",
-                "reason": "current status next safe action is empty",
-            })
-        else:
-            for pattern in CLOSEOUT_PRE_MERGE_NEXT_ACTION_PATTERNS:
-                if re.search(pattern, next_safe_action_section, flags=re.IGNORECASE):
-                    findings.append({
-                        "field": "current_status.next_safe_action",
-                        "reason": f"next safe action appears to describe pre-merge closeout work: {pattern}",
-                    })
-
-    result = "fail" if findings else "pass"
-    return result, {
-        "result": result,
-        "low_risk_inferred": False,
+    base_output: dict[str, object] = {
+        **core_report,
         "handoff_file": normalize_repo_path(str(handoff_file)),
         "current_status": normalize_repo_path(str(current_status_file)),
-        "completed_refs_checked": {
+        "completed_refs_supplied": {
             "issues": completed_issues,
             "prs": completed_prs,
             "branches": completed_branches,
         },
+        "low_risk_inferred": False,
+    }
+    if core_result != "pass" or packet is None:
+        base_output["freshness_checked"] = False
+        base_output["not_checked"] = [
+            *list(core_report.get("not_checked", [])),
+            "current-status impact shape and consistency",
+            "CURRENT_STATUS file existence, status-check, or supplied completed refs",
+        ]
+        return "fail", base_output
+
+    findings = _impact_findings(packet)
+    if findings:
+        return "fail", {
+            **base_output,
+            "result": "fail",
+            "freshness_checked": False,
+            "mechanically_checked": [
+                *list(core_report.get("mechanically_checked", [])),
+                "current_status_impact required fields, types, and status consistency",
+            ],
+            "not_checked": [
+                *list(core_report.get("not_checked", [])),
+                "CURRENT_STATUS file existence, status-check, or supplied completed refs",
+                "live GitHub state, human approval, PR readiness, or merge authority",
+            ],
+            "proof_boundary": (
+                f"{core_report['proof_boundary']} The compact impact check proves "
+                "only local field shape and consistency; freshness was not checked "
+                "because the impact block failed."
+            ),
+            "findings": findings,
+        }
+
+    status_path = rel(current_status_file)
+    status_valid = False
+    if not status_path.exists():
+        findings.append(
+            _finding(
+                "CH_CURRENT_STATUS_FILE_MISSING",
+                "current_status",
+                f"current-status file does not exist: {current_status_file}",
+            )
+        )
+        status_text = ""
+    elif not status_path.is_file():
+        findings.append(
+            _finding(
+                "CH_CURRENT_STATUS_CHECK_FAILED",
+                "current_status",
+                f"current-status path is not a readable file: {current_status_file}",
+            )
+        )
+        status_text = ""
+    else:
+        try:
+            status_text = status_path.read_text(encoding="utf-8")
+        except (OSError, UnicodeError) as exc:
+            findings.append(
+                _finding(
+                    "CH_CURRENT_STATUS_CHECK_FAILED",
+                    "current_status",
+                    f"could not read current-status file: {exc}",
+                )
+            )
+            status_text = ""
+        else:
+            status_result = subprocess.run(
+                ["python3", "scripts/asgk.py", "status-check", "--file", str(status_path)],
+                cwd=ROOT,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+            )
+            if status_result.returncode != 0:
+                findings.append(
+                    _finding(
+                        "CH_CURRENT_STATUS_CHECK_FAILED",
+                        "current_status",
+                        "current-status file failed status-check",
+                    )
+                )
+            else:
+                status_valid = True
+
+    if not status_valid:
+        return "fail", {
+            **base_output,
+            "result": "fail",
+            "freshness_checked": False,
+            "mechanically_checked": [
+                *list(core_report.get("mechanically_checked", [])),
+                "current_status_impact required fields, types, and status consistency",
+                "CURRENT_STATUS file existence and local status-check result",
+            ],
+            "not_checked": [
+                *list(core_report.get("not_checked", [])),
+                "caller-supplied completed issue, PR, and branch references",
+                "CURRENT_STATUS pre-merge next-action patterns",
+                "live GitHub state, human approval, PR readiness, or merge authority",
+            ],
+            "proof_boundary": (
+                f"{core_report['proof_boundary']} The compact impact block passed, "
+                "but full freshness was not checked because CURRENT_STATUS was "
+                "missing or failed its local structural check."
+            ),
+            "findings": findings,
+        }
+
+    if status_valid:
+        active_work = markdown_section(status_text, "Active work")
+        next_safe_action_section = markdown_section(status_text, "Next safe action")
+        active_issue = field_value(active_work, "issue")
+        active_pr = field_value(active_work, "pr")
+        active_branch = field_value(active_work, "branch")
+        for issue in completed_issues:
+            if numbered_ref_matches(active_issue, issue):
+                findings.append(
+                    _finding(
+                        "CH_STALE_COMPLETED_ISSUE",
+                        "current_status.active_work",
+                        f"completed issue still appears in active work: {issue}",
+                    )
+                )
+        for pr in completed_prs:
+            if numbered_ref_matches(active_pr, pr):
+                findings.append(
+                    _finding(
+                        "CH_STALE_COMPLETED_PR",
+                        "current_status.active_work",
+                        f"completed PR still appears in active work: {pr}",
+                    )
+                )
+        for branch in completed_branches:
+            if branch_ref_matches(active_branch, branch):
+                findings.append(
+                    _finding(
+                        "CH_STALE_COMPLETED_BRANCH",
+                        "current_status.active_work",
+                        f"completed branch still appears in active work: {branch}",
+                    )
+                )
+
+        for pattern in CLOSEOUT_PRE_MERGE_NEXT_ACTION_PATTERNS:
+            if re.search(pattern, next_safe_action_section, flags=re.IGNORECASE):
+                findings.append(
+                    _finding(
+                        "CH_NEXT_SAFE_ACTION_STALE",
+                        "current_status.next_safe_action",
+                        "next safe action appears to describe pre-merge closeout work: "
+                        f"{pattern}",
+                    )
+                )
+
+    result = "fail" if findings else "pass"
+    return result, {
+        **base_output,
+        "result": result,
+        "freshness_checked": True,
+        "mechanically_checked": [
+            *list(core_report.get("mechanically_checked", [])),
+            "current_status_impact required fields, types, and status consistency",
+            "CURRENT_STATUS local status-check result",
+            "caller-supplied completed issue, PR, and branch references",
+        ],
+        "not_checked": [
+            *list(core_report.get("not_checked", [])),
+            "live GitHub state of completed or active references",
+            "semantic correctness of current-status impact classification",
+            "human approval, PR readiness, or merge authority",
+        ],
+        "proof_boundary": (
+            f"{core_report['proof_boundary']} Compact freshness checks additionally "
+            "prove only local consistency with the supplied CURRENT_STATUS file and "
+            "caller-supplied completed references."
+        ),
         "findings": findings,
     }

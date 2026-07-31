@@ -31,14 +31,6 @@ python3 scripts/asgk.py doctor
 
 - compact artifacts do not infer low-risk status
 
-## Last completed
-
-```yaml
-issue: "#238"
-pr: "#239"
-state: "merged"
-```
-
 ## Runtime artifact status
 
 No runtime artifacts are authorized.

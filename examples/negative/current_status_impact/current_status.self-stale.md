@@ -31,14 +31,6 @@ python3 scripts/asgk.py doctor
 
 - fixture
 
-## Last completed
-
-```yaml
-issue: "#130"
-pr: "#131"
-note: "Fixture only."
-```
-
 ## Runtime artifact status
 
 No runtime artifacts.

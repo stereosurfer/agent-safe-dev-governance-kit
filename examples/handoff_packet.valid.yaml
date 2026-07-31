@@ -1,42 +1,43 @@
 positive_case:
-  id: POS-001-handoff-template-valid-packet
-  title: Filled handoff-template output passes handoff-check
+  id: POS-W3B-001-typed-handoff-core
+  title: Filled canonical handoff packet passes the typed core evaluator
   expected_outcome: passes
   owner: asgk_handoff_check
   should_block_positive_validation: false
 
 handoff_packet:
-  active_issue: "#56"
-  active_pr: "none; fixture describes template/checker alignment before PR creation"
-  branch: "codex/align-handoff-template-check"
-  objective: "Prove that filled handoff-template-style list output passes handoff-check."
-  current_state: "Issue #56 authorizes a bounded validator and fixture alignment work unit."
-  completed:
-    - "Created a concrete positive handoff fixture using list-shaped fields."
+  active_issue: "#333 ASGK 2.0 W3B"
+  active_pr: "none; fixture models the state before PR creation"
+  durable_source_of_truth:
+    - "GitHub issue #333"
+    - "GitHub issue #323 owner-approved program comment"
+  branch: "codex/asgk-2-w3b-handoff-status-convergence"
+  objective: "Prove the canonical typed handoff core and fixture agree."
+  current_state: "Issue authority passed and the bounded implementation is in progress."
   remaining:
-    - "Run handoff-check, doctor, and GitHub Actions before merge."
+    - "Run the W3B validation set and open the protected PR."
   allowed_paths:
     - "scripts/asgk.py"
+    - "scripts/asgk_lib/handoff.py"
     - "examples/handoff_packet.valid.yaml"
-    - ".github/workflows/bootstrap-validation.yml"
-    - "docs/control/HANDOFF_PACKET.md"
   modified_files:
     - "scripts/asgk.py"
+    - "scripts/asgk_lib/handoff.py"
     - "examples/handoff_packet.valid.yaml"
-  validation_status:
-    status: "not_run"
-    evidence: "Validation is expected to be run by local command or CI after this fixture is updated."
-  blockers: "none"
-  next_safe_action: "Run python3 scripts/asgk.py handoff-check --file examples/handoff_packet.valid.yaml --fail-on-todo."
+  non_goals:
+    - "Do not implement W3C's shared validation envelope."
+  must_not_do:
+    - "Do not modify paths outside issue #333."
+    - "Do not infer approval from this fixture passing."
   must_read:
     - "AGENTS.md"
-    - "scripts/asgk.py"
-    - "examples/handoff_packet.valid.yaml"
-    - "GitHub issue #56"
-  must_not_do:
-    - "Do not add dependencies or introduce a full YAML parser."
-    - "Do not expand into closeout policy, uncontrolled-document audit, or field-test work."
-  decisions:
-    - "The fixture intentionally uses list-shaped allowed_paths and must_read fields to match handoff-template output."
-  open_questions:
-    - "None for this fixture."
+    - "docs/handoff/CURRENT_STATUS.md"
+    - "GitHub issue #333"
+  validation_status:
+    status: "not_run"
+    evidence:
+      - "This fixture is the input to the validation command."
+    reason: "The fixture describes the pre-validation state."
+  blockers:
+    - "none; no known blocker in this fixture"
+  next_safe_action: "Run handoff-check with strict draft-marker checking and JSON output."
