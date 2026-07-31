@@ -2336,7 +2336,7 @@ CONTROLLED_ERROR_SCENARIOS = (
         ),
         expected_mechanically_checked=(
             "supplied source inventory file readability",
-            "supplied source inventory JSON parsing",
+            "supplied source inventory JSON nesting bound",
         ),
         expected_not_checked=SOURCE_INPUT_NOT_CHECKED,
     ),

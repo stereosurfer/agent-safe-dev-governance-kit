@@ -59,6 +59,7 @@ from policy_gate_check import (
 )
 
 VALIDATOR_REFERENCE_ROOT = Path(__file__).resolve().parents[2]
+MAX_SOURCE_INVENTORY_JSON_NESTING = 64
 
 STATIC_REQUIRED_SOURCE_PATHS_BY_ROLE = {
     "canonical_owner_spine": (
@@ -4835,6 +4836,33 @@ def _inventory_object_without_duplicate_keys(pairs):
     return payload
 
 
+def _inventory_nesting_problem(raw):
+    depth = 0
+    in_string = False
+    escaped = False
+    for character in raw:
+        if in_string:
+            if escaped:
+                escaped = False
+            elif character == "\\":
+                escaped = True
+            elif character == '"':
+                in_string = False
+            continue
+        if character == '"':
+            in_string = True
+        elif character in "[{":
+            depth += 1
+            if depth > MAX_SOURCE_INVENTORY_JSON_NESTING:
+                return (
+                    "source inventory exceeds the supported JSON nesting "
+                    f"depth of {MAX_SOURCE_INVENTORY_JSON_NESTING}"
+                )
+        elif character in "]}":
+            depth = max(0, depth - 1)
+    return None
+
+
 def evaluate_source_inventory(source_inventory_file):
     inventory_path = Path(source_inventory_file)
     evidence_source = f"supplied_source_inventory:{inventory_path}"
@@ -4847,6 +4875,18 @@ def evaluate_source_inventory(source_inventory_file):
             field="source_inventory_file",
             evidence_source=evidence_source,
             checked=("supplied source inventory file readability",),
+        )
+    nesting_problem = _inventory_nesting_problem(raw)
+    if nesting_problem:
+        return _input_failure(
+            "SV_INVENTORY_JSON_INVALID",
+            nesting_problem,
+            field="source_inventory_file",
+            evidence_source=evidence_source,
+            checked=(
+                "supplied source inventory file readability",
+                "supplied source inventory JSON nesting bound",
+            ),
         )
     try:
         payload = json.loads(

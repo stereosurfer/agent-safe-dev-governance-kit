@@ -199,7 +199,7 @@ validation evidence.
 | `NEG-106-source-inventory-invalid-json` | supplied source inventory is malformed JSON | blocked | source_validation.py | registered temporary input | Must emit only `SV_INVENTORY_JSON_INVALID`. |
 | `NEG-107-source-inventory-invalid-shape` | supplied inventory is not the exact normalized unique path-array object | blocked | source_validation.py | registered temporary input | Must emit only `SV_INVENTORY_SHAPE_INVALID`. |
 | `NEG-108-source-inventory-duplicate-key` | supplied inventory repeats a JSON object key and a later value would otherwise replace the earlier value | blocked | source_validation.py | registered transformed temporary input | Must emit only `SV_INVENTORY_SHAPE_INVALID`; JSON last-key-wins behavior cannot create evidence. |
-| `NEG-109-source-inventory-json-too-deep` | supplied inventory exceeds safe JSON nesting depth | blocked | source_validation.py | registered generated temporary input | Must emit one envelope with only `SV_INVENTORY_JSON_INVALID`, never a traceback. |
+| `NEG-109-source-inventory-json-too-deep` | supplied inventory exceeds the explicit pre-parse JSON nesting bound | blocked | source_validation.py | registered generated temporary input | Must emit one envelope with only `SV_INVENTORY_JSON_INVALID`, never depend on interpreter recursion behavior or produce a traceback. |
 
 ## Current Execution Surface
 
