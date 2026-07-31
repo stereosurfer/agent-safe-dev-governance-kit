@@ -2127,7 +2127,7 @@ def check_w3a_work_unit_and_task_packet_projection(root):
         (
             'task-packet read-set case mismatch',
             ('task_packet', 'context_read_set'),
-            ['agents.md'],
+            ['Current GitHub Issue'],
             {'TP_READ_SET_EXPANSION'},
         ),
         (
@@ -2151,6 +2151,15 @@ def check_w3a_work_unit_and_task_packet_projection(root):
     ]
     for label, (parent, field), value, expected_codes in refinement_mutations:
         mutation = json.loads(json.dumps(refinement_bundle))
+        if label == 'task-packet read-set case mismatch':
+            marker = 'project_specific_validation:\n'
+            if marker not in mutation['issue']['body']:
+                fail('case-mismatch fixture is missing its insertion point')
+            mutation['issue']['body'] = mutation['issue']['body'].replace(
+                marker,
+                f'  - current GitHub issue\n{marker}',
+                1,
+            )
         mutation[parent][field] = value
         if label == 'task-packet unrelated repository issue URL':
             mutation['issue']['html_url'] = (
