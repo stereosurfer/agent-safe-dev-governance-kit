@@ -474,6 +474,9 @@ SOURCE_INPUT_FAILURE_BOUNDARY = (
     "approval, PR-readiness, or merge-authority claim was established."
 )
 SOURCE_INVENTORY_CHECKED = (
+    "supplied source inventory file readability",
+    "supplied source inventory JSON nesting bound",
+    "supplied source inventory JSON parsing",
     "supplied source inventory JSON object shape",
     "supplied source inventory path normalization and uniqueness",
     "required ASGK source path membership",
@@ -2254,6 +2257,7 @@ CONTROLLED_ERROR_SCENARIOS = (
         temp_input=TempInput(content="{", suffix=".json"),
         expected_mechanically_checked=(
             "supplied source inventory file readability",
+            "supplied source inventory JSON nesting bound",
             "supplied source inventory JSON parsing",
         ),
         expected_not_checked=SOURCE_INPUT_NOT_CHECKED,
@@ -2279,6 +2283,7 @@ CONTROLLED_ERROR_SCENARIOS = (
         ),
         expected_mechanically_checked=(
             "supplied source inventory file readability",
+            "supplied source inventory JSON nesting bound",
             "supplied source inventory JSON parsing",
             "supplied source inventory JSON object shape",
         ),
@@ -2310,6 +2315,7 @@ CONTROLLED_ERROR_SCENARIOS = (
         ),
         expected_mechanically_checked=(
             "supplied source inventory file readability",
+            "supplied source inventory JSON nesting bound",
             "supplied source inventory JSON parsing",
             "supplied source inventory JSON object shape",
         ),

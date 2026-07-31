@@ -215,6 +215,9 @@ REQUIRED_TERMS = {
 }
 
 SOURCE_INVENTORY_CHECKED = (
+    "supplied source inventory file readability",
+    "supplied source inventory JSON nesting bound",
+    "supplied source inventory JSON parsing",
     "supplied source inventory JSON object shape",
     "supplied source inventory path normalization and uniqueness",
     "required ASGK source path membership",
@@ -4901,6 +4904,7 @@ def evaluate_source_inventory(source_inventory_file):
             evidence_source=evidence_source,
             checked=(
                 "supplied source inventory file readability",
+                "supplied source inventory JSON nesting bound",
                 "supplied source inventory JSON parsing",
                 "supplied source inventory JSON object shape",
             ),
@@ -4913,6 +4917,7 @@ def evaluate_source_inventory(source_inventory_file):
             evidence_source=evidence_source,
             checked=(
                 "supplied source inventory file readability",
+                "supplied source inventory JSON nesting bound",
                 "supplied source inventory JSON parsing",
             ),
         )
@@ -4926,6 +4931,7 @@ def evaluate_source_inventory(source_inventory_file):
             evidence_source=evidence_source,
             checked=(
                 "supplied source inventory file readability",
+                "supplied source inventory JSON nesting bound",
                 "supplied source inventory JSON parsing",
                 "supplied source inventory JSON object shape",
             ),
