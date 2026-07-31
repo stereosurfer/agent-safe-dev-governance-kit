@@ -115,6 +115,77 @@ external_specialist_validation:
   rule: ASGK does not provide these checks unless the adopting project adds them
 ```
 
+## Common JSON Validation Envelope
+
+Every retained core command that accepts `--json` emits one common evidence
+envelope. Command-specific fields remain beside the envelope; they do not gain
+authority from it.
+
+```yaml
+result: pass | fail | blocked | warning
+evidence_source: <material evidence source>
+mechanically_checked:
+  - <what this invocation actually checked>
+not_checked:
+  - <material limit or unchecked claim>
+human_gate:
+  status: not_checked | not_applicable | required
+  reason: <material explanation>
+proof_boundary: <exact claim limit>
+findings:
+  - code: <STABLE_UPPER_SNAKE_CASE>
+    field: <exact field> # or path, exactly one
+    reason: <cause>
+    blocking: true | false
+```
+
+The contract, schema, and dependency-free helper are:
+
+```yaml
+contract: contracts/validation_result.contract.yaml
+schema: schemas/validation_result.schema.json
+helper: scripts/asgk_lib/validation_result.py
+```
+
+The result vocabulary is evidence state, not work or merge authority:
+
+- `pass` has no findings.
+- `warning` has one or more nonblocking findings and no blocking finding.
+- `fail` has a blocking finding for a mechanically observed invalid state or
+  malformed caller-supplied input.
+- `blocked` has a blocking finding because a required check could not be
+  completed or a human gate is required.
+
+`human_gate.status` never reports approval as passed. `required` is valid only
+with `result: blocked`. Domain outcomes such as `fail_closed` and
+`requires_human` remain in command-specific fields such as `domain_result`,
+`derived_state`, or `routing`; they do not replace the common result vocabulary.
+Human-gate state is derived independently from ordinary mechanical findings. If
+one result has both a mechanical failure and a restricted boundary, the common
+result remains `blocked`, the gate remains `required`, both finding causes remain
+visible, and the command-specific `domain_result` may remain `fail`.
+
+`mechanically_checked`, `not_checked`, and `proof_boundary` describe the branch
+that actually ran. An unreadable file, unavailable metadata marker, missing
+`gh`/`git` executable, or failed lookup must not inherit the successful branch's
+checked claims.
+
+Exit status is registered per scenario. It must not be inferred from the result
+token alone: for example, workspace warnings exit `0` by default and `1` under
+`--strict`.
+
+Each finding code is selected at the owning cause. Codes must not be generated
+from prose, field names, or exit status. A finding names exactly one `field` or
+`path`, and scenario checks compare the full code multiset so duplicate findings
+cannot disappear.
+
+The retained JSON surface is policy-gate, PR status, work unit, task packet,
+handoff, compact handoff, compact issue scope, compact scope lock, compact PR
+report, compact PR body, context budget, and workspace state. Legacy
+`target-install-*`, `compact-target-upgrade-check`, and the parallel compact
+red-team runner are not W3C envelope authority; their replacement or removal is
+separately scoped under ASGK 2.0.
+
 ## Validation Layers
 
 The current CLI is the executable interface. Use `python3 scripts/asgk.py --help`
@@ -134,6 +205,7 @@ proves:
   - bootstrap documents contain required terms and sections
   - schemas and positive examples are parseable where checked
   - PR and issue templates keep required governance fields
+  - doctor executes the same registered negative and exact scenarios used by CI
 does_not_prove:
   - semantic correctness
   - live GitHub state
@@ -259,13 +331,12 @@ does_not_prove:
 blocking_rule: ambiguous task fields, path, authority, strict Merge Decision, live PR state, latest-check failure or pending, and ambiguous check ordering block; workspace observations warn unless strict mode or policy says otherwise
 ```
 
-### Task, Context, And Target Adoption
+### Task, Context, And Legacy Target Diagnostics
 
 ```yaml
 owners:
   - python3 scripts/asgk.py task-packet-check
   - python3 scripts/asgk.py context-budget-measure
-  - python3 scripts/asgk.py target-install-check
 proves:
   - task packets use exactly one supported projection mode with material values
   - raw YAML task packets reject duplicate or quoted top-level keys and retain implicit null, boolean, and numeric scalar types for schema-parity checks
@@ -280,20 +351,22 @@ proves:
   - context_read_set accepts only whole-item durable references or existing in-root regular files and rejects appended broad-read clauses
   - fallback allowed_paths reject mechanically recognizable protected governance boundaries
   - context-budget estimates are derived from concrete named files
-  - target-install checks report copy, template, customize, and do-not-copy boundaries
 does_not_prove:
-  - that a target repository has adopted ASGK correctly after manual edits
   - that a context estimate equals provider-billed tokens
   - semantic equivalence of context or validation items
   - general glob-set containment beyond exact packet/issue glob equality
   - that GitHub was actually unavailable
   - every non-path escalation trigger or the semantic sufficiency of project-specific validation
   - PR readiness, human approval, merge authority, or issue completion
-blocking_rule: task-field ambiguity, unsupported packet modes, legacy fields, scope/read/validation expansion, malformed authority, invalid context references, or recognized fallback escalation paths block; target-install findings remain read-only until a target-owned issue authorizes changes
+blocking_rule: task-field ambiguity, unsupported packet modes, legacy fields, scope/read/validation expansion, malformed authority, invalid context references, or recognized fallback escalation paths block
 ```
 
 Material `not_applicable` reasons are Unicode-aware; punctuation and connector
 words alone fail, while concrete non-English reasons remain valid.
+
+The still-present target-install commands are legacy fixed-shape diagnostics.
+They are not target fit, adoption, architecture, governance-depth, approval, or
+W3C retained-JSON evidence. W4 owns their clean replacement and removal.
 
 Ambiguity maps to stable findings:
 
@@ -338,13 +411,11 @@ owners:
   - python3 scripts/asgk.py compact-scope-lock
   - python3 scripts/asgk.py compact-pr-report
   - python3 scripts/asgk.py task-packet-check
-  - python3 scripts/asgk.py compact-target-upgrade-check
 proves:
   - the 13-field task identity can be normalized into a canonical object
   - scope locks detect drift in that 13-field identity
   - compact-task-packet-check delegates to the canonical task-packet evaluator rather than owning comparison semantics
   - PR reports preserve tool-derived state and blocking findings
-  - target-upgrade manifests do not overwrite target-owned state by default
 does_not_prove:
   - freshness or validity of context_read_set and project_specific_validation; work-unit-check owns those execution gates
   - low-risk eligibility by itself
@@ -353,15 +424,30 @@ does_not_prove:
 blocking_rule: unavailable metadata or prose/tool conflicts fail closed
 ```
 
+`compact-target-upgrade-check` and
+`scripts/compact_governance_red_team_check.py` retain bounded legacy regression
+coverage only. They are not a second compact-governance oracle and do not own
+retained JSON expectations.
+
 ### Negative Validation
 
 ```yaml
-owner:
-  - python3 scripts/asgk.py negative
-  - scripts/asgk_lib/negative.py
-matrix_owner: docs/control/NEGATIVE_TEST_PLAN.md
+owners:
+  scenario_expectations: scripts/asgk_lib/scenario_registry.py
+  exact_execution: scripts/asgk_lib/scenario_runner.py
+projections:
+  public_facade: scripts/asgk_lib/negative.py
+  cli: python3 scripts/asgk.py negative
+  doctor: python3 scripts/asgk.py doctor
+  ci: .github/workflows/bootstrap-validation.yml
+human_case_intent: docs/control/NEGATIVE_TEST_PLAN.md
 proves:
-  - registered known-bad fixtures fail as expected
+  - registered commands match exact exit, result, finding-code multiset, human-gate state, and proof boundary
+  - branch-specific scenarios may additionally lock exact mechanically_checked and not_checked lists
+  - positive and negative retained scenarios remain paired
+  - canonical and compact task-packet commands remain byte-for-byte equivalent
+  - controlled missing, malformed, unavailable, and missing-executable inputs emit exactly one JSON object
+  - runner self-tests reject crashes, signals, mixed output, wrong codes, wrong proof boundaries, wrong human-gate/domain states, and wrong checked/unchecked claims
   - expected-failure fixtures are not treated as positive examples
   - bad workflow claims stay blocked or human-gated where modeled
 does_not_prove:
@@ -371,14 +457,18 @@ does_not_prove:
 blocking_rule: expected-failure mismatches block validation work
 ```
 
+Compatibility modules `negative_cases.py` and `negative_runner.py` delegate to
+the canonical registry and runner. They do not own expectations.
+
 ### GitHub Actions
 
 ```yaml
 owner: .github/workflows/bootstrap-validation.yml
 proves:
   - configured repository checks run repeatably on the event that triggered CI
-  - bootstrap validation and configured negative checks pass in CI
+  - doctor runs the canonical scenario registry in CI
   - PR-body validation mode is selected from the declared durable result
+  - changed-path hygiene is evaluated against the triggering PR
 does_not_prove:
   - final status of the currently running workflow before it completes
   - semantic review
@@ -459,12 +549,23 @@ Negative fixtures are safety tests, not examples for adoption.
 ```yaml
 negative_fixture_rule:
   canonical_matrix: docs/control/NEGATIVE_TEST_PLAN.md
-  executable_registry: scripts/asgk_lib/negative.py
+  executable_registry: scripts/asgk_lib/scenario_registry.py
+  exact_runner: scripts/asgk_lib/scenario_runner.py
+  facade: scripts/asgk_lib/negative.py
   allowed_locations:
     - examples/negative/
     - tests/fixtures/negative/
   must_be_opt_in: true
-  must_record_expected_failure: true
+  retained_json_expectations:
+    - polarity
+    - exact owner command
+    - exact exit
+    - exact common result
+    - exact finding-code multiset
+    - exact human-gate status
+    - exact proof boundary
+    - optional exact mechanically_checked list for branch-specific evidence
+    - optional exact not_checked list for branch-specific evidence
   must_not_be_loaded_by_positive_validation_as_valid_example: true
   must_name_owner_or_validator: true
 ```
@@ -473,8 +574,9 @@ Do not add malformed files into normal schema, template, or positive example
 paths unless the relevant validator explicitly treats them as expected failures.
 
 Do not duplicate the full negative case matrix here. This document owns the
-fixture rules and proof boundary; `docs/control/NEGATIVE_TEST_PLAN.md` owns the
-case IDs, expected outcomes, and implementation status.
+fixture rules and common proof boundary. `docs/control/NEGATIVE_TEST_PLAN.md`
+owns human-readable case intent and classification. The scenario registry alone
+owns executable retained-JSON expectations.
 
 ## Command Documentation Rule
 
@@ -529,8 +631,12 @@ validator_change_record:
   behavior_added:
   behavior_removed:
   blocking_or_warning:
-  positive_cases:
-  negative_cases:
+  positive_scenarios:
+  negative_scenarios:
+  expected_result:
+  expected_exit:
+  expected_finding_codes:
+  proof_boundary:
   rollback_plan:
 ```
 

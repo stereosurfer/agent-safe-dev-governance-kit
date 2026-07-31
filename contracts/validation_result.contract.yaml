@@ -1,11 +1,45 @@
 name: validation_result
-version: 0.1.0
+version: 2.0.0
+owner: docs/control/VALIDATION_STRATEGY.md
+purpose: >-
+  Common machine-readable evidence envelope for retained ASGK JSON validators.
+  Domain-specific payload fields remain at the top level and do not gain
+  authority from the envelope.
 required_fields:
-  - status
-  - checked_at
-  - checks
-  - failures
-status_values:
+  - result
+  - evidence_source
+  - mechanically_checked
+  - not_checked
+  - human_gate
+  - proof_boundary
+  - findings
+result_values:
   - pass
   - fail
   - blocked
+  - warning
+human_gate_status_values:
+  - not_checked
+  - not_applicable
+  - required
+finding_required_fields:
+  - code
+  - reason
+  - blocking
+finding_location_rule: exactly_one_of_field_or_path
+invariants:
+  - pass has no findings
+  - warning has one or more nonblocking findings and no blocking finding
+  - fail and blocked have one or more blocking findings
+  - mechanically_checked and not_checked each have one or more material items
+  - codes are stable semantic identifiers and are not generated from prose or exit status
+  - human_gate never reports approval passed
+  - human_gate required is valid only when result is blocked
+  - a required human gate remains visible when ordinary mechanical findings also exist
+  - checked, unchecked, and proof-boundary claims describe only the branch that actually ran
+  - command-specific payload remains permitted
+proof_boundary: >-
+  Envelope conformance proves only that a validator describes its checked and
+  unchecked mechanical evidence consistently. It does not prove semantic
+  correctness, human approval, low-risk status, merge authority, or successful
+  work completion.

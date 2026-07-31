@@ -879,15 +879,32 @@ def evaluate_task_packet(
         source_text,
         repo_root=repo_root,
     )
-    mechanically_checked.append("packet mode and field shape")
+    mechanically_checked.append(
+        "packet mode presence, scalar type, and supported token"
+    )
+    if mode in TASK_PACKET_MODES:
+        mechanically_checked.append("mode-specific field presence and shape")
+    else:
+        not_checked.append("mode-specific field presence and shape")
     if shape_result == "pass":
         mechanically_checked.extend(
             [
                 "legacy-field exclusion",
-                "context_read_set exact-reference syntax, existence, and repository containment",
+                "context_read_set item syntax and repository containment",
                 "project-specific validation bare-not_applicable reason",
             ]
         )
+        context_items = list_items(packet.get("context_read_set"))
+        if any(
+            not is_context_pseudo_ref(
+                item,
+                allow_task_packet_ref=True,
+            )
+            for item in context_items
+        ):
+            mechanically_checked.append(
+                "repository-file context_read_set existence"
+            )
         if mode == GITHUB_UNAVAILABLE_FALLBACK_MODE:
             mechanically_checked.append(
                 "known path-based fallback escalation boundaries"
