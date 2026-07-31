@@ -24,6 +24,12 @@ machine_fixtures:
   examples:
     - examples/pr_status.valid.json
     - examples/work_unit.valid-issue.json
+source_inventory_fixtures:
+  purpose: required-path inclusion inputs for the ASGK source reference-superset validator
+  authority: source-validator input only; not a target manifest or adoption surface
+  positive: examples/source_validation/reference-superset.valid.json
+  negative: examples/negative/source_validation/missing-required-path.json
+  proof_limit: listed paths are not opened, read, or semantically evaluated in supplied-inventory mode
 negative_expected_failures:
   purpose: inputs expected to trigger current opt-in mechanical checks
   authority: regression fixture only
@@ -31,8 +37,8 @@ negative_expected_failures:
   proof_limit: not every mechanical failure establishes a semantic repository defect
   location: examples/negative/
 compact_red_team_fixtures:
-  purpose: legacy bounded compact-governance regression inputs
-  authority: regression input only; not a second compact-governance oracle or retained JSON expectation owner
+  purpose: legacy compact-governance inputs retained pending separately scoped deletion
+  authority: inactive legacy input only; not a doctor or negative-all prerequisite, second compact-governance oracle, or retained JSON expectation owner
   locations:
     - examples/compact_governance/
     - examples/negative/compact_governance/
@@ -50,6 +56,9 @@ compact_red_team_fixtures:
 - Every retained JSON behavior has positive and negative scenarios. The runner
   checks exact outcomes rather than accepting any nonzero exit as a valid
   negative result.
+- A passing source-inventory fixture proves only that the caller-supplied list
+  contains the retained ASGK source paths. It does not prove those files exist,
+  inspect their contents, prescribe a target layout, or decide adoption.
 - Target repositories must not copy this directory as an adoption bundle.
 - Negative fixtures must not be used as positive examples. Interpret each only
   at the registry's or bounded legacy check's proof boundary.

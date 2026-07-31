@@ -55,8 +55,11 @@ fixture_classes:
     purpose: task-packet mode, legacy-field, authority, path/read/validation expansion, and exact finding-code failures
   handoff:
     purpose: handoff packet and current-status stale-state expected failures
+  source_validation:
+    purpose: supplied source-inventory shape and required retained-path inclusion failures
+    proof_limit: never target fit, target layout, adoption readiness, human approval, or merge authority
   compact_governance:
-    purpose: compact report, scope-lock, task-packet, handoff, and target-upgrade red-team inputs
+    purpose: retained compact report, scope-lock, task-packet, and handoff cases plus inactive legacy target-upgrade/red-team inputs
   target_install:
     purpose: current legacy shape-check failures plus source-state isolation violations
 ```

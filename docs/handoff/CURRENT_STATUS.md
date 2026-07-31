@@ -4,7 +4,7 @@ This is the repository recovery snapshot. It is overwritten, not appended.
 Historical evidence and completed-work detail belong in GitHub issues, PRs,
 comments, releases, and merge commits.
 
-Last updated: `2026-07-31T15:48:20Z`
+Last updated: `2026-07-31T22:35:53Z`
 
 ## Durable source of truth
 
@@ -31,6 +31,14 @@ scenario expectations; doctor and CI execute the same registry rather than
 maintaining duplicate fixture lists. Early failures name only checks that ran,
 missing live-tool executables emit controlled envelopes, and a mechanical
 failure cannot hide a simultaneous required human gate.
+
+ASGK source validation now has one engine:
+`scripts/asgk_lib/source_validation.py`. `asgk validate`, `doctor`, and the thin
+`validate_bootstrap.py` compatibility wrapper reach that engine. Its retained
+source-reference set excludes superseded Roadmap, duplicate-owner,
+fixed-storage/promotion, legacy-target, and directory-only checker
+prerequisites. Supplied source inventories prove path membership only; they do
+not inspect contents or describe a target installation shape.
 
 CURRENT_STATUS is only a recovery snapshot. It does not own completed-work or
 decision history.
@@ -61,6 +69,7 @@ python3 scripts/asgk.py doctor
 
 Additional focused checks:
 
+- Source only: `python3 scripts/asgk.py validate`
 - Exact registered scenarios: `python3 scripts/asgk.py negative all`
 - PR body: `python3 scripts/pr_governance_preflight.py check --body-file <body-file>`
 - PR readiness: `python3 scripts/asgk.py check-pr --pr <number>`
@@ -83,10 +92,10 @@ model cache, or external preparation outputs are authorized by this status.
 
 ## Next safe action
 
-Create the separately scoped W4A child issue from current `main` after W3C
-close-out. W4A owns the source reference-superset validator split; do not
-preempt W4B target claim checking, W4C legacy-tool removal, or resume superseded
-plans.
+Create the separately scoped W4B child issue from current `main` after W4A
+close-out. W4B owns the new caller-supplied target mechanical-claim interface;
+do not preempt W4C legacy-tool removal, infer target governance depth, or resume
+superseded plans.
 
 ```yaml
 reference_scope:

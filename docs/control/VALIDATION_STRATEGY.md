@@ -181,7 +181,8 @@ cannot disappear.
 
 The retained JSON surface is policy-gate, PR status, work unit, task packet,
 handoff, compact handoff, compact issue scope, compact scope lock, compact PR
-report, compact PR body, context budget, and workspace state. Legacy
+report, compact PR body, context budget, workspace state, and source validation.
+Legacy
 `target-install-*`, `compact-target-upgrade-check`, and the parallel compact
 red-team runner are not W3C envelope authority; their replacement or removal is
 separately scoped under ASGK 2.0.
@@ -192,27 +193,47 @@ The current CLI is the executable interface. Use `python3 scripts/asgk.py --help
 and the command-specific help output for exact syntax. This strategy groups
 validators by responsibility instead of duplicating the full command catalog.
 
-### Scaffold And Bootstrap
+### Source Reference-Superset Validation
 
 ```yaml
-owners:
-  - scripts/check_project.py
-  - scripts/validate_bootstrap.py
-  - python3 scripts/asgk.py doctor
+owner: scripts/asgk_lib/source_validation.py
+public_entrypoints:
   - python3 scripts/asgk.py validate
+  - python3 scripts/asgk.py doctor
+compatibility_projection: scripts/validate_bootstrap.py
 proves:
-  - required directory and file surfaces exist
-  - bootstrap documents contain required terms and sections
-  - schemas and positive examples are parseable where checked
-  - PR and issue templates keep required governance fields
+  - the retained ASGK source-reference paths exist in live mode
+  - current encoded source policy and W2/W3 projection checks pass
+  - present schema and example JSON is parseable where checked
+  - the issue, PR, handoff, validation, and scenario projections remain aligned
   - doctor executes the same registered negative and exact scenarios used by CI
+  - a caller-supplied source inventory has the supported shape and includes the retained required paths
 does_not_prove:
-  - semantic correctness
+  - that a supplied-inventory path exists or that its contents were inspected
+  - unencoded semantic correctness
+  - target fit, target layout, governance depth, or adoption readiness
   - live GitHub state
-  - low-risk merge eligibility
+  - human approval, PR readiness, or merge authority
   - external security, privacy, dependency, or license safety
 blocking_rule: failures block baseline repository validation
 ```
+
+`scripts/validate_bootstrap.py` is a thin compatibility delegate and owns no
+required list, policy rule, fixture expectation, or parallel implementation.
+`doctor` reaches the same engine through `asgk validate`; it no longer invokes
+the directory-existence-only `scripts/check_project.py`. That file remains
+present only for its separately authorized W6D removal.
+
+`asgk validate --source-inventory-file <path> --json` is a source-only
+fixture/capture mode. It checks caller-supplied path membership without reading
+the listed paths. It is not a target checker, install manifest, adoption plan,
+or evidence that a target should resemble this repository.
+
+Live `--repo-root` mode names both `inspected_source_root` and the
+`validator_reference_root` that owns the required set. Encoded live checks may
+execute Python commands from the inspected root, including its scenario
+registry and runner. Use this mode only for a trusted ASGK source tree; it is not
+an arbitrary-target or untrusted-code inspection interface.
 
 ### PR Body And Merge Evidence
 
@@ -425,9 +446,11 @@ blocking_rule: unavailable metadata or prose/tool conflicts fail closed
 ```
 
 `compact-target-upgrade-check` and
-`scripts/compact_governance_red_team_check.py` retain bounded legacy regression
-coverage only. They are not a second compact-governance oracle and do not own
-retained JSON expectations.
+`scripts/compact_governance_red_team_check.py` remain in the source tree only
+until their separately scoped cutover or deletion work. The red-team script is
+not part of `doctor`, `negative all`, or source-validation orchestration. Neither
+surface is a second compact-governance oracle or owns retained JSON
+expectations.
 
 ### Negative Validation
 
@@ -446,6 +469,7 @@ proves:
   - branch-specific scenarios may additionally lock exact mechanically_checked and not_checked lists
   - positive and negative retained scenarios remain paired
   - canonical and compact task-packet commands remain byte-for-byte equivalent
+  - the canonical source command and bootstrap compatibility wrapper remain byte-for-byte equivalent for positive and negative inventory scenarios
   - controlled missing, malformed, unavailable, and missing-executable inputs emit exactly one JSON object
   - runner self-tests reject crashes, signals, mixed output, wrong codes, wrong proof boundaries, wrong human-gate/domain states, and wrong checked/unchecked claims
   - expected-failure fixtures are not treated as positive examples

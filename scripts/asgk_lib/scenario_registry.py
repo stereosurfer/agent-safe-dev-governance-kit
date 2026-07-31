@@ -221,7 +221,6 @@ NEGATIVE_CASE_GROUPS = {
         ("examples/negative/workspace_state.stale-branch-untracked.json",),
         ("--expect-warnings",),
     )),
-    "compact-governance": NegativeCaseGroup(COMMANDS_PASS, (("python3", "scripts/compact_governance_red_team_check.py"),)),
     "compact-issue-scope": NegativeCaseGroup(EXPECTED_FAILURE, _commands(
         (*ASGK, "compact-issue-scope", "--json-file"),
         ("examples/negative/compact_governance/issue-scope.missing-allowed-paths.json",),
@@ -460,6 +459,35 @@ WORKSPACE_LOOKUP_INCOMPLETE_BOUNDARY = (
     "Reports only the workspace lookup attempts that completed; failed lookup "
     "surfaces remain explicitly not checked. It does not infer issue authority, "
     "path authorization, human approval, low-risk status, or merge readiness."
+)
+SOURCE_INVENTORY_PROOF_BOUNDARY = (
+    "Exit 0 proves only that the caller-supplied source inventory has the "
+    "supported JSON shape and includes the retained ASGK source-reference "
+    "paths. It does not prove any listed file exists or is readable, inspect "
+    "file contents or semantic correctness, assess a target repository's fit, "
+    "layout, governance depth, or adoption readiness, establish human approval, "
+    "or grant PR or merge authority."
+)
+SOURCE_INPUT_FAILURE_BOUNDARY = (
+    "No source required-path comparison or live source-tree validation ran "
+    "because the supplied input could not be accepted. No target, human "
+    "approval, PR-readiness, or merge-authority claim was established."
+)
+SOURCE_INVENTORY_CHECKED = (
+    "supplied source inventory JSON object shape",
+    "supplied source inventory path normalization and uniqueness",
+    "required ASGK source path membership",
+)
+SOURCE_INVENTORY_NOT_CHECKED = (
+    "source file existence, readability, or contents",
+    "semantic correctness of any listed source file",
+    "target repository fit, layout, governance depth, or adoption readiness",
+    "human approval",
+    "PR readiness or merge authority",
+)
+SOURCE_INPUT_NOT_CHECKED = (
+    "required ASGK source path membership",
+    *SOURCE_INVENTORY_NOT_CHECKED,
 )
 
 
@@ -1322,6 +1350,42 @@ RETAINED_JSON_SCENARIOS = (
             json_transform="compact_pr_restricted_boundary_with_mechanical_failure",
         ),
     ),
+    JsonScenario(
+        "source_inventory_reference_superset",
+        "source-validation",
+        (
+            *ASGK,
+            "validate",
+            "--source-inventory-file",
+            "examples/source_validation/reference-superset.valid.json",
+            "--json",
+        ),
+        "positive",
+        "pass",
+        0,
+        (),
+        SOURCE_INVENTORY_PROOF_BOUNDARY,
+        expected_mechanically_checked=SOURCE_INVENTORY_CHECKED,
+        expected_not_checked=SOURCE_INVENTORY_NOT_CHECKED,
+    ),
+    JsonScenario(
+        "source_inventory_missing_required_path",
+        "source-validation",
+        (
+            *ASGK,
+            "validate",
+            "--source-inventory-file",
+            "examples/negative/source_validation/missing-required-path.json",
+            "--json",
+        ),
+        "negative",
+        "fail",
+        1,
+        ("SV_REQUIRED_PATH_MISSING",),
+        SOURCE_INVENTORY_PROOF_BOUNDARY,
+        expected_mechanically_checked=SOURCE_INVENTORY_CHECKED,
+        expected_not_checked=SOURCE_INVENTORY_NOT_CHECKED,
+    ),
 )
 
 
@@ -2130,6 +2194,152 @@ CONTROLLED_ERROR_SCENARIOS = (
             "merged-into-base evidence",
         ),
     ),
+    JsonScenario(
+        "source_validation_input_mode_invalid",
+        "controlled-errors",
+        (
+            *ASGK,
+            "validate",
+            "--repo-root",
+            ".",
+            "--source-inventory-file",
+            "examples/source_validation/reference-superset.valid.json",
+            "--json",
+        ),
+        "negative",
+        "fail",
+        1,
+        ("SV_INPUT_MODE_INVALID",),
+        SOURCE_INPUT_FAILURE_BOUNDARY,
+        expected_mechanically_checked=(
+            "source validation input mode selection",
+        ),
+        expected_not_checked=SOURCE_INPUT_NOT_CHECKED,
+    ),
+    JsonScenario(
+        "source_inventory_file_unreadable",
+        "controlled-errors",
+        (
+            *ASGK,
+            "validate",
+            "--source-inventory-file",
+            "__asgk_missing__/source-inventory.json",
+            "--json",
+        ),
+        "negative",
+        "fail",
+        1,
+        ("SV_INVENTORY_FILE_UNREADABLE",),
+        SOURCE_INPUT_FAILURE_BOUNDARY,
+        expected_mechanically_checked=(
+            "supplied source inventory file readability",
+        ),
+        expected_not_checked=SOURCE_INPUT_NOT_CHECKED,
+    ),
+    JsonScenario(
+        "source_inventory_json_invalid",
+        "controlled-errors",
+        (
+            *ASGK,
+            "validate",
+            "--source-inventory-file",
+            "{temp_input}",
+            "--json",
+        ),
+        "negative",
+        "fail",
+        1,
+        ("SV_INVENTORY_JSON_INVALID",),
+        SOURCE_INPUT_FAILURE_BOUNDARY,
+        temp_input=TempInput(content="{", suffix=".json"),
+        expected_mechanically_checked=(
+            "supplied source inventory file readability",
+            "supplied source inventory JSON parsing",
+        ),
+        expected_not_checked=SOURCE_INPUT_NOT_CHECKED,
+    ),
+    JsonScenario(
+        "source_inventory_shape_invalid",
+        "controlled-errors",
+        (
+            *ASGK,
+            "validate",
+            "--source-inventory-file",
+            "{temp_input}",
+            "--json",
+        ),
+        "negative",
+        "fail",
+        1,
+        ("SV_INVENTORY_SHAPE_INVALID",),
+        SOURCE_INPUT_FAILURE_BOUNDARY,
+        temp_input=TempInput(
+            content='{"paths": "README.md"}',
+            suffix=".json",
+        ),
+        expected_mechanically_checked=(
+            "supplied source inventory file readability",
+            "supplied source inventory JSON parsing",
+            "supplied source inventory JSON object shape",
+        ),
+        expected_not_checked=SOURCE_INPUT_NOT_CHECKED,
+    ),
+    JsonScenario(
+        "source_inventory_duplicate_key",
+        "controlled-errors",
+        (
+            *ASGK,
+            "validate",
+            "--source-inventory-file",
+            "{temp_input}",
+            "--json",
+        ),
+        "negative",
+        "fail",
+        1,
+        ("SV_INVENTORY_SHAPE_INVALID",),
+        SOURCE_INPUT_FAILURE_BOUNDARY,
+        temp_input=TempInput(
+            source="examples/source_validation/reference-superset.valid.json",
+            replacements=(
+                (
+                    '"paths": [',
+                    '"paths": ["LICENSE"],\n  "paths": [',
+                ),
+            ),
+        ),
+        expected_mechanically_checked=(
+            "supplied source inventory file readability",
+            "supplied source inventory JSON parsing",
+            "supplied source inventory JSON object shape",
+        ),
+        expected_not_checked=SOURCE_INPUT_NOT_CHECKED,
+    ),
+    JsonScenario(
+        "source_inventory_json_too_deep",
+        "controlled-errors",
+        (
+            *ASGK,
+            "validate",
+            "--source-inventory-file",
+            "{temp_input}",
+            "--json",
+        ),
+        "negative",
+        "fail",
+        1,
+        ("SV_INVENTORY_JSON_INVALID",),
+        SOURCE_INPUT_FAILURE_BOUNDARY,
+        temp_input=TempInput(
+            content="[" * 2000 + "]" * 2000,
+            suffix=".json",
+        ),
+        expected_mechanically_checked=(
+            "supplied source inventory file readability",
+            "supplied source inventory JSON parsing",
+        ),
+        expected_not_checked=SOURCE_INPUT_NOT_CHECKED,
+    ),
 )
 
 
@@ -2149,6 +2359,44 @@ PARITY_SCENARIOS = (
         "compact-task-packet",
         (*ASGK, "task-packet-check", "--json-file", "examples/negative/compact_governance/task-packet-delta-expands-scope.json", "--json"),
         (*ASGK, "compact-task-packet-check", "--json-file", "examples/negative/compact_governance/task-packet-delta-expands-scope.json", "--json"),
+        "negative",
+    ),
+    ParityScenario(
+        "source_validation_wrapper_positive_parity",
+        "source-validation",
+        (
+            *ASGK,
+            "validate",
+            "--source-inventory-file",
+            "examples/source_validation/reference-superset.valid.json",
+            "--json",
+        ),
+        (
+            "python3",
+            "scripts/validate_bootstrap.py",
+            "--source-inventory-file",
+            "examples/source_validation/reference-superset.valid.json",
+            "--json",
+        ),
+        "positive",
+    ),
+    ParityScenario(
+        "source_validation_wrapper_negative_parity",
+        "source-validation",
+        (
+            *ASGK,
+            "validate",
+            "--source-inventory-file",
+            "examples/negative/source_validation/missing-required-path.json",
+            "--json",
+        ),
+        (
+            "python3",
+            "scripts/validate_bootstrap.py",
+            "--source-inventory-file",
+            "examples/negative/source_validation/missing-required-path.json",
+            "--json",
+        ),
         "negative",
     ),
 )
