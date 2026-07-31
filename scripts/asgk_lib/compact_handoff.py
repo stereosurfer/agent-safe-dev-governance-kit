@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 import subprocess
+import sys
 from pathlib import Path
 
 from asgk_lib.common import ROOT, field_value, markdown_section, normalize_repo_path, rel
@@ -235,15 +236,16 @@ def compact_handoff_check(
                 "live GitHub state, human approval, PR readiness, or merge authority",
             ],
             "proof_boundary": (
-                f"{core_report['proof_boundary']} The compact impact check proves "
-                "only local field shape and consistency; freshness was not checked "
-                "because the impact block failed."
+                f"{core_report['proof_boundary']} The compact impact block was "
+                "evaluated and found structurally invalid or internally "
+                "inconsistent; CURRENT_STATUS freshness was therefore not checked."
             ),
             "findings": findings,
         }
 
     status_path = rel(current_status_file)
     status_valid = False
+    status_check_ran = False
     if not status_path.exists():
         findings.append(
             _finding(
@@ -276,12 +278,13 @@ def compact_handoff_check(
             status_text = ""
         else:
             status_result = subprocess.run(
-                ["python3", "scripts/asgk.py", "status-check", "--file", str(status_path)],
+                [sys.executable, "scripts/asgk.py", "status-check", "--file", str(status_path)],
                 cwd=ROOT,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 text=True,
             )
+            status_check_ran = True
             if status_result.returncode != 0:
                 findings.append(
                     _finding(
@@ -294,6 +297,14 @@ def compact_handoff_check(
                 status_valid = True
 
     if not status_valid:
+        checked_status_surfaces = [
+            "CURRENT_STATUS path existence, file type, and readability",
+        ]
+        unchecked_status_surfaces: list[str] = []
+        if status_check_ran:
+            checked_status_surfaces.append("CURRENT_STATUS local status-check result")
+        else:
+            unchecked_status_surfaces.append("CURRENT_STATUS local status-check result")
         return "fail", {
             **base_output,
             "result": "fail",
@@ -301,10 +312,11 @@ def compact_handoff_check(
             "mechanically_checked": [
                 *list(core_report.get("mechanically_checked", [])),
                 "current_status_impact required fields, types, and status consistency",
-                "CURRENT_STATUS file existence and local status-check result",
+                *checked_status_surfaces,
             ],
             "not_checked": [
                 *list(core_report.get("not_checked", [])),
+                *unchecked_status_surfaces,
                 "caller-supplied completed issue, PR, and branch references",
                 "CURRENT_STATUS pre-merge next-action patterns",
                 "live GitHub state, human approval, PR readiness, or merge authority",
@@ -363,6 +375,20 @@ def compact_handoff_check(
                 )
 
     result = "fail" if findings else "pass"
+    freshness_boundary = (
+        (
+            f"{core_report['proof_boundary']} Compact freshness checks additionally "
+            "prove only local consistency with the supplied CURRENT_STATUS file and "
+            "caller-supplied completed references."
+        )
+        if result == "pass"
+        else (
+            f"{core_report['proof_boundary']} Compact freshness checks evaluated "
+            "the supplied CURRENT_STATUS file and caller-supplied completed "
+            "references and found a local inconsistency. No live GitHub state, "
+            "human approval, PR readiness, or merge authority was established."
+        )
+    )
     return result, {
         **base_output,
         "result": result,
@@ -379,10 +405,6 @@ def compact_handoff_check(
             "semantic correctness of current-status impact classification",
             "human approval, PR readiness, or merge authority",
         ],
-        "proof_boundary": (
-            f"{core_report['proof_boundary']} Compact freshness checks additionally "
-            "prove only local consistency with the supplied CURRENT_STATUS file and "
-            "caller-supplied completed references."
-        ),
+        "proof_boundary": freshness_boundary,
         "findings": findings,
     }

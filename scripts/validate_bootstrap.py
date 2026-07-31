@@ -7,7 +7,7 @@ missing durable source fields, thin templates, invalid JSON, and storage-boundar
 regressions.
 """
 from __future__ import annotations
-import contextlib, io, json, re, subprocess, sys, tempfile
+import json, re, subprocess, sys, tempfile
 from pathlib import Path
 
 from asgk_lib.common import (
@@ -15,7 +15,20 @@ from asgk_lib.common import (
     markdown_heading_occurrences,
     markdown_section,
 )
-from asgk_lib.negative_runner import run_expected_failures
+from asgk_lib.scenario_registry import (
+    CONTROLLED_ERROR_SCENARIOS,
+    NEGATIVE_CASE_CHOICES,
+    PARITY_SCENARIOS,
+    RETAINED_JSON_SCENARIOS,
+)
+from asgk_lib.scenario_runner import run_scenario_runner_self_tests
+from asgk_lib.validation_result import (
+    HUMAN_GATE_STATUS_VALUES,
+    RESULT_VALUES,
+    checked_validation_result,
+    make_finding,
+    validation_result_errors,
+)
 from asgk_lib.compact_handoff import FOLLOW_UP_ISSUE_PATTERN
 from asgk_lib.handoff import (
     CORE_HANDOFF_ROOT,
@@ -398,6 +411,8 @@ def check_policy_gate_routing_fixtures(root):
         )
         if payload.get('mode') != expected_mode:
             fail(f'{fixture} routed to {payload.get("mode")}, expected {expected_mode}')
+        if payload.get('evidence_source') != 'supplied_github_event_file':
+            fail(f'{fixture} must preserve GitHub event provenance')
 
     for fixture in [
         'examples/negative/github_events/pr.missing-result.json',
@@ -410,6 +425,8 @@ def check_policy_gate_routing_fixtures(root):
         )
         if payload.get('routing') != 'fail_closed' or 'mode' in payload:
             fail(f'{fixture} must fail routing before selecting a proof mode')
+        if payload.get('evidence_source') != 'supplied_github_event_file':
+            fail(f'{fixture} routing failure must preserve GitHub event provenance')
 
     override = run_json_command(
         root,
@@ -3941,34 +3958,346 @@ def check_w3b_handoff_projection(root):
         fail('status-check retained the hard-coded historical issue #23 assumption')
 
 
-def check_negative_runner_projection():
-    cases = [
-        (
-            'traceback crash',
-            'raise RuntimeError("asgk-negative-runner-crash-sentinel")',
-            'command crashed',
-        ),
-        (
-            'exit code 2',
-            'raise SystemExit(2)',
-            'command returned 2',
-        ),
-        (
-            'signal termination',
-            'import os, signal; os.kill(os.getpid(), signal.SIGTERM)',
-            'another code or signal',
-        ),
-    ]
-    for label, code, expected_output in cases:
-        captured = io.StringIO()
-        with contextlib.redirect_stdout(captured):
-            result = run_expected_failures(
-                ((sys.executable, '-c', code),)
-            )
-        if result != 1 or expected_output not in captured.getvalue():
+def check_validation_result_projection(root):
+    schema = json.loads(read(root, 'schemas/validation_result.schema.json'))
+    contract = read(root, 'contracts/validation_result.contract.yaml')
+    expected_required = {
+        'result',
+        'evidence_source',
+        'mechanically_checked',
+        'not_checked',
+        'human_gate',
+        'proof_boundary',
+        'findings',
+    }
+    if set(schema.get('required', [])) != expected_required:
+        fail('validation-result schema required envelope fields drifted')
+    properties = schema.get('properties', {})
+    if set(properties.get('result', {}).get('enum', [])) != set(RESULT_VALUES):
+        fail('validation-result schema result enum drifted from helper')
+    gate = properties.get('human_gate', {})
+    gate_values = (
+        gate.get('properties', {})
+        .get('status', {})
+        .get('enum', [])
+    )
+    if set(gate_values) != set(HUMAN_GATE_STATUS_VALUES):
+        fail('validation-result schema human-gate enum drifted from helper')
+    if schema.get('additionalProperties') is not True:
+        fail('validation-result schema must preserve command-specific payload')
+    if gate.get('additionalProperties') is not False:
+        fail('validation-result human_gate must reject extra keys')
+    finding = schema.get('$defs', {}).get('finding', {})
+    if set(finding.get('required', [])) != {'code', 'reason', 'blocking'}:
+        fail('validation-result finding required fields drifted')
+    if len(finding.get('oneOf', [])) != 2:
+        fail('validation-result finding must require exactly one field or path')
+    for token in (
+        'version: 2.0.0',
+        'finding_location_rule: exactly_one_of_field_or_path',
+        'human_gate never reports approval passed',
+        'human_gate required is valid only when result is blocked',
+    ):
+        if token not in contract:
+            fail(f'validation-result contract missing invariant: {token}')
+
+    checked = ['one mechanical surface']
+    unchecked = ['semantic truth and human approval']
+    boundary = 'Envelope test proves only common result-shape conformance.'
+    valid_payloads = (
+        {
+            'result': 'pass',
+            'evidence_source': 'bootstrap_self_test',
+            'mechanically_checked': checked,
+            'not_checked': unchecked,
+            'human_gate': {
+                'status': 'not_checked',
+                'reason': 'No human approval was checked.',
+            },
+            'proof_boundary': boundary,
+            'findings': [],
+        },
+        {
+            'result': 'warning',
+            'evidence_source': 'bootstrap_self_test',
+            'mechanically_checked': checked,
+            'not_checked': unchecked,
+            'human_gate': {
+                'status': 'not_applicable',
+                'reason': 'This warning has no human decision gate.',
+            },
+            'proof_boundary': boundary,
+            'findings': [
+                make_finding(
+                    'VR_TEST_WARNING',
+                    'nonblocking warning',
+                    field='test',
+                    blocking=False,
+                )
+            ],
+        },
+        {
+            'result': 'fail',
+            'evidence_source': 'bootstrap_self_test',
+            'mechanically_checked': checked,
+            'not_checked': unchecked,
+            'human_gate': {
+                'status': 'not_checked',
+                'reason': 'No human approval was checked.',
+            },
+            'proof_boundary': boundary,
+            'findings': [
+                make_finding(
+                    'VR_TEST_FAILURE',
+                    'blocking failure',
+                    path='test.json',
+                    blocking=True,
+                )
+            ],
+        },
+        {
+            'result': 'blocked',
+            'evidence_source': 'bootstrap_self_test',
+            'mechanically_checked': checked,
+            'not_checked': unchecked,
+            'human_gate': {
+                'status': 'required',
+                'reason': 'A human decision is required at this boundary.',
+            },
+            'proof_boundary': boundary,
+            'findings': [
+                make_finding(
+                    'VR_TEST_BLOCKED',
+                    'blocking human boundary',
+                    field='human_gate',
+                    blocking=True,
+                )
+            ],
+        },
+    )
+    for payload in valid_payloads:
+        errors = validation_result_errors(payload)
+        if errors:
             fail(
-                f'negative runner must reject {label} as governance evidence'
+                'validation-result helper rejected a valid result variant: '
+                + '; '.join(errors)
             )
+
+    invalid_payloads = (
+        {
+            **valid_payloads[0],
+            'findings': [
+                make_finding(
+                    'VR_TEST_PASS_FINDING',
+                    'pass cannot carry findings',
+                    field='result',
+                    blocking=False,
+                )
+            ],
+        },
+        {
+            **valid_payloads[1],
+            'findings': [
+                make_finding(
+                    'VR_TEST_BLOCKING_WARNING',
+                    'warning cannot block',
+                    field='result',
+                    blocking=True,
+                )
+            ],
+        },
+        {
+            **valid_payloads[2],
+            'findings': [],
+        },
+        {
+            **valid_payloads[2],
+            'human_gate': {
+                'status': 'required',
+                'reason': 'Required gates must map to blocked.',
+            },
+        },
+        {
+            **valid_payloads[2],
+            'findings': [
+                {
+                    'code': 'invalid-code',
+                    'field': 'test',
+                    'path': 'test.json',
+                    'reason': 'invalid finding identity',
+                    'blocking': True,
+                }
+            ],
+        },
+    )
+    if any(not validation_result_errors(payload) for payload in invalid_payloads):
+        fail('validation-result helper accepted an invalid envelope mutation')
+
+    internal = checked_validation_result(
+        {
+            'result': 'pass',
+            'findings': [
+                make_finding(
+                    'VR_TEST_INTERNAL',
+                    'invalid pass finding',
+                    field='result',
+                    blocking=True,
+                )
+            ],
+        },
+        evidence_source='bootstrap_self_test',
+        mechanically_checked=checked,
+        not_checked=unchecked,
+        proof_boundary=boundary,
+    )
+    if (
+        internal.get('result') != 'fail'
+        or finding_codes(internal) != ['VR_INTERNAL_ENVELOPE_INVALID']
+    ):
+        fail('validation-result checked wrapper must fail closed on bad envelopes')
+
+
+def check_scenario_registry_projection():
+    expected_behaviors = {
+        'policy-gate',
+        'pr-status',
+        'work-unit',
+        'compact-task-packet',
+        'handoff',
+        'compact-handoff',
+        'compact-issue-scope',
+        'compact-scope-lock',
+        'compact-pr-report',
+        'compact-pr-body',
+        'context-budget',
+        'workspace-state',
+    }
+    actual_behaviors = {
+        scenario.group for scenario in RETAINED_JSON_SCENARIOS
+    }
+    if actual_behaviors != expected_behaviors:
+        fail(
+            'retained JSON behavior registry drifted: '
+            f'{sorted(actual_behaviors)}'
+        )
+    names = [
+        scenario.name
+        for scenario in (
+            *RETAINED_JSON_SCENARIOS,
+            *CONTROLLED_ERROR_SCENARIOS,
+        )
+    ]
+    if len(names) != len(set(names)):
+        fail('scenario registry contains duplicate scenario names')
+    required_w3c_scenarios = {
+        'compact_pr_report_mixed_failure_and_human_gate',
+        'compact_pr_report_metadata_unavailable',
+        'compact_scope_lock_projection_failure',
+        'compact_scope_lock_capture_hash_missing_skips_equality',
+        'compact_handoff_status_missing',
+        'policy_body_file_missing',
+        'policy_event_mode_override_forbidden',
+        'policy_event_shape_invalid',
+        'policy_event_pull_request_missing',
+        'check_pr_invalid_files_skip_downstream_checks',
+        'check_pr_missing_status_rollup_skips_ordering',
+        'work_unit_missing_allowed_paths_and_execution_gates',
+        'compact_pr_report_invalid_files_skip_restricted_boundary',
+        'compact_pr_report_invalid_and_restricted_files_preserve_gate',
+        'workspace_state_wrong_object_shape',
+        'task_packet_unsupported_mode_skips_field_shape',
+        'task_packet_pseudo_ref_does_not_claim_file_existence',
+        'context_budget_unsupported_mode_skips_field_and_context_checks',
+        'compact_handoff_invalid_impact_does_not_claim_consistency',
+        'compact_handoff_stale_refs_do_not_claim_consistency',
+        'compact_pr_body_malformed_findings_fail_closed',
+        'check_pr_live_executable_missing',
+        'work_unit_live_executable_missing',
+        'task_packet_live_executable_missing',
+        'compact_issue_scope_live_executable_missing',
+        'compact_scope_lock_live_executable_missing',
+        'compact_pr_report_live_executable_missing',
+        'workspace_git_executable_missing',
+    }
+    if not required_w3c_scenarios.issubset(set(names)):
+        fail('scenario registry is missing W3C mixed-gate or executable-unavailable coverage')
+    for behavior in sorted(expected_behaviors):
+        polarities = {
+            scenario.polarity
+            for scenario in RETAINED_JSON_SCENARIOS
+            if scenario.group == behavior
+        }
+        if polarities != {'positive', 'negative'}:
+            fail(f'{behavior} must retain a positive and negative scenario')
+
+    for scenario in (
+        *RETAINED_JSON_SCENARIOS,
+        *CONTROLLED_ERROR_SCENARIOS,
+    ):
+        if not scenario.command or '--json' not in scenario.command:
+            fail(f'{scenario.name} must name one machine-readable owner command')
+        if scenario.expected_result not in RESULT_VALUES:
+            fail(f'{scenario.name} has unsupported expected result')
+        if scenario.expected_exit not in {0, 1}:
+            fail(f'{scenario.name} has unsupported expected exit')
+        if not scenario.proof_boundary.strip():
+            fail(f'{scenario.name} has an empty proof boundary')
+        for field_name in (
+            'expected_mechanically_checked',
+            'expected_not_checked',
+        ):
+            exact_items = getattr(scenario, field_name)
+            if exact_items is not None and (
+                not exact_items
+                or any(not isinstance(item, str) or not item.strip() for item in exact_items)
+            ):
+                fail(f'{scenario.name} has invalid {field_name} expectations')
+        if scenario.polarity == 'positive':
+            if (
+                scenario.expected_result != 'pass'
+                or scenario.expected_exit != 0
+                or scenario.expected_codes
+            ):
+                fail(f'{scenario.name} positive expectations are incoherent')
+        elif scenario.polarity == 'negative':
+            if scenario.expected_result == 'pass' or not scenario.expected_codes:
+                fail(f'{scenario.name} negative expectations are incomplete')
+        else:
+            fail(f'{scenario.name} has unsupported polarity')
+        for code in scenario.expected_codes:
+            if not re.fullmatch(r'[A-Z][A-Z0-9_]*', code):
+                fail(f'{scenario.name} has invalid expected finding code: {code}')
+
+    if (
+        not CONTROLLED_ERROR_SCENARIOS
+        or {scenario.group for scenario in CONTROLLED_ERROR_SCENARIOS}
+        != {'controlled-errors'}
+        or not {
+            scenario.expected_result
+            for scenario in CONTROLLED_ERROR_SCENARIOS
+        }.issuperset({'fail', 'blocked'})
+    ):
+        fail('controlled-error scenarios must cover fail and blocked outcomes')
+
+    parity_polarities = {
+        scenario.polarity for scenario in PARITY_SCENARIOS
+    }
+    if (
+        len(PARITY_SCENARIOS) != 2
+        or parity_polarities != {'positive', 'negative'}
+        or {scenario.group for scenario in PARITY_SCENARIOS}
+        != {'compact-task-packet'}
+    ):
+        fail('task-packet alias parity must retain one positive and one negative case')
+    if not {'retained-json', 'controlled-errors', 'scenario-runner', 'all'}.issubset(
+        set(NEGATIVE_CASE_CHOICES)
+    ):
+        fail('negative CLI choices do not expose the canonical scenario registry')
+
+
+def check_negative_runner_projection():
+    if run_scenario_runner_self_tests() != 0:
+        fail('scenario runner self-tests rejected their own expected mutations')
 
 def check_control_sections(root):
     text = read(root,'docs/control/CONTROL_LAYER_V0.md')
@@ -4003,6 +4332,8 @@ def main():
     check_pr_status_projection(root)
     check_w3a_work_unit_and_task_packet_projection(root)
     check_w3b_handoff_projection(root)
+    check_validation_result_projection(root)
+    check_scenario_registry_projection()
     check_negative_runner_projection()
     check_control_sections(root)
     check_storage_profile(root)

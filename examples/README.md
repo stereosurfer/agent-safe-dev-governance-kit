@@ -19,6 +19,7 @@ human_examples:
 machine_fixtures:
   purpose: validator inputs used by local checks, CI, or focused commands
   authority: test input only
+  executable_expectation_owner: scripts/asgk_lib/scenario_registry.py
   work_unit_boundary: valid work-unit fixtures carry the 13 canonical fields plus both execution gates
   examples:
     - examples/pr_status.valid.json
@@ -26,11 +27,12 @@ machine_fixtures:
 negative_expected_failures:
   purpose: inputs expected to trigger current opt-in mechanical checks
   authority: regression fixture only
+  expected_outcome_boundary: fixture metadata is descriptive; exact executable expectations live in the scenario registry or an explicitly bounded legacy group
   proof_limit: not every mechanical failure establishes a semantic repository defect
   location: examples/negative/
 compact_red_team_fixtures:
-  purpose: compact-governance tool-state and claim-conflict test inputs
-  authority: regression fixture only
+  purpose: legacy bounded compact-governance regression inputs
+  authority: regression input only; not a second compact-governance oracle or retained JSON expectation owner
   locations:
     - examples/compact_governance/
     - examples/negative/compact_governance/
@@ -39,10 +41,21 @@ compact_red_team_fixtures:
 ## Boundary Rules
 
 - Examples and fixtures are not policy authority.
+- A fixture supplies input, not its own expected result. For retained JSON
+  behavior, `scripts/asgk_lib/scenario_registry.py` alone records the exact
+  owner command, polarity, exit, common result, finding-code multiset,
+  human-gate state, and proof boundary. Branch-specific cases may also lock
+  exact checked and unchecked claims so an early failure cannot reuse a
+  successful branch's evidence language.
+- Every retained JSON behavior has positive and negative scenarios. The runner
+  checks exact outcomes rather than accepting any nonzero exit as a valid
+  negative result.
 - Target repositories must not copy this directory as an adoption bundle.
 - Negative fixtures must not be used as positive examples. Interpret each only
-  at its documented proof boundary; some preserve legacy checker behavior
-  without establishing a semantic repository defect.
+  at the registry's or bounded legacy check's proof boundary.
+- Target-install and compact target-upgrade fixtures preserve legacy checker
+  coverage pending their separately scoped cutover. They do not prove target
+  fit, adoption, architecture, governance depth, or approval.
 - Historical issue, PR, CI, and release evidence belongs in GitHub, not as
   copied narrative inside this directory.
 - Agents should not read this directory during default startup; read only the

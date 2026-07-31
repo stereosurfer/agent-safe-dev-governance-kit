@@ -6,6 +6,7 @@ import hashlib
 import json
 import re
 import subprocess
+import sys
 import tempfile
 from pathlib import Path
 
@@ -74,14 +75,16 @@ from asgk_lib.text_fields import (
 )
 from asgk_lib.negative import (
     NEGATIVE_CASE_CHOICES,
-    run_changed_path_hygiene_checks,
     run_negative_case,
-    run_textual_negative_checks,
 )
 from asgk_lib.workspace_state import (
     live_workspace_state,
     print_workspace_state_result,
     workspace_state_findings,
+)
+from asgk_lib.validation_result import (
+    checked_validation_result,
+    make_finding,
 )
 
 BODY_COHERENCE_MODE = "body-coherence"
@@ -116,6 +119,14 @@ CONTEXT_MEASUREMENT_METHOD = (
     "excludes issue/PR text, system prompt, chat, tool output, model completion, "
     "and provider billing usage."
 )
+
+
+def finding_display_location(finding: dict[str, object]) -> str:
+    for key in ("field", "path"):
+        value = finding.get(key)
+        if isinstance(value, str) and value.strip():
+            return value
+    return "finding"
 
 
 def strict_contract_scalar_value(text: str, field: str) -> tuple[str, bool]:
@@ -168,14 +179,17 @@ def run_policy_gate(
     *,
     mode: str = MERGE_DECISION_MODE,
     as_json: bool = False,
+    evidence_source: str = "supplied_pr_body_file",
 ) -> int:
     command = [
-        "python3",
+        sys.executable,
         "scripts/policy_gate_check.py",
         "--pr-body",
         str(pr_body),
         "--mode",
         mode,
+        "--evidence-source",
+        evidence_source,
     ]
     if as_json:
         command.append("--json")
@@ -189,7 +203,7 @@ def run_policy_gate_capture(
 ) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
         [
-            "python3",
+            sys.executable,
             "scripts/policy_gate_check.py",
             "--pr-body",
             str(pr_body),
@@ -208,7 +222,7 @@ def run_hygiene_capture(paths: list[str]) -> subprocess.CompletedProcess[str]:
         paths_file = Path(tmpdir) / "changed_paths.txt"
         paths_file.write_text("\n".join(paths) + ("\n" if paths else ""), encoding="utf-8")
         return subprocess.run(
-            ["python3", "scripts/governance_hygiene.py", "--paths-file", str(paths_file)],
+            [sys.executable, "scripts/governance_hygiene.py", "--paths-file", str(paths_file)],
             cwd=ROOT,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
@@ -269,13 +283,16 @@ def read_changed_path_list(path: str | Path) -> list[str]:
 
 
 def git_remote_repo_slug() -> str:
-    result = subprocess.run(
-        ["git", "remote", "get-url", "origin"],
-        cwd=ROOT,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        text=True,
-    )
+    try:
+        result = subprocess.run(
+            ["git", "remote", "get-url", "origin"],
+            cwd=ROOT,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+        )
+    except OSError as exc:
+        raise RuntimeError(f"could not execute git to resolve origin: {exc}") from exc
     if result.returncode != 0:
         raise RuntimeError(result.stdout.strip() or "git remote get-url origin failed")
     remote = result.stdout.strip()
@@ -285,6 +302,28 @@ def git_remote_repo_slug() -> str:
     return f"{match.group('owner')}/{match.group('repo')}"
 
 
+class LivePayloadError(RuntimeError):
+    """A live lookup succeeded at transport level but returned unusable JSON."""
+
+    def __init__(self, message: str, *, checked_stage: str) -> None:
+        super().__init__(message)
+        self.checked_stage = checked_stage
+
+
+def run_live_gh(command: list[str]) -> subprocess.CompletedProcess[str]:
+    """Run one live GitHub lookup and normalize executable failures."""
+    try:
+        return subprocess.run(
+            command,
+            cwd=ROOT,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+        )
+    except OSError as exc:
+        raise RuntimeError(f"could not execute gh for live GitHub lookup: {exc}") from exc
+
+
 def load_live_work_unit(kind: str, number: str) -> dict[str, object]:
     repo = git_remote_repo_slug()
     endpoint = (
@@ -292,18 +331,21 @@ def load_live_work_unit(kind: str, number: str) -> dict[str, object]:
         if kind == "issue"
         else f"repos/{repo}/pulls/{number}"
     )
-    result = subprocess.run(
-        ["gh", "api", endpoint],
-        cwd=ROOT,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        text=True,
-    )
+    result = run_live_gh(["gh", "api", endpoint])
     if result.returncode != 0:
         raise RuntimeError(result.stdout.strip() or f"gh api {endpoint} failed")
-    payload = json.loads(result.stdout)
+    try:
+        payload = json.loads(result.stdout)
+    except json.JSONDecodeError as exc:
+        raise LivePayloadError(
+            f"gh api {endpoint} returned invalid JSON: {exc}",
+            checked_stage="json",
+        ) from exc
     if not isinstance(payload, dict):
-        raise RuntimeError("GitHub work-unit payload must be a JSON object")
+        raise LivePayloadError(
+            "GitHub work-unit payload must be a JSON object",
+            checked_stage="shape",
+        )
     payload["_asgk_requested_kind"] = kind
     return payload
 
@@ -366,21 +408,24 @@ def canonical_issue_scope_from_payload(payload: dict[str, object]) -> tuple[str,
     fields, ambiguity_reasons = parse_work_unit_task_fields_checked(
         str(payload.get("body") or "")
     )
-    findings: list[dict[str, str]] = []
+    findings: list[dict[str, object]] = []
     canonical_fields: dict[str, list[str]] = {}
 
     if kind != "issue":
-        findings.append({
-            "field": "kind",
-            "reason": f"canonical issue scope requires an issue payload, got {kind}",
-        })
+        findings.append(make_finding(
+            "CIS_KIND_NOT_ISSUE",
+            f"canonical issue scope requires an issue payload, got {kind}",
+            field="kind",
+            blocking=True,
+        ))
 
     for reason in ambiguity_reasons:
-        findings.append({
-            "code": "WU_TASK_FIELD_AMBIGUOUS",
-            "field": "body",
-            "reason": reason,
-        })
+        findings.append(make_finding(
+            "CIS_TASK_FIELD_AMBIGUOUS",
+            reason,
+            field="body",
+            blocking=True,
+        ))
 
     for field in WORK_UNIT_REQUIRED_FIELDS:
         value = work_unit_field_value(fields, field)
@@ -388,10 +433,12 @@ def canonical_issue_scope_from_payload(payload: dict[str, object]) -> tuple[str,
         if field == "allowed_paths":
             items = [normalize_repo_path(item) for item in items]
         if not items and not ambiguity_reasons:
-            findings.append({
-                "field": field,
-                "reason": "missing material issue scope field",
-            })
+            findings.append(make_finding(
+                "CIS_REQUIRED_FIELD_MISSING",
+                "missing material issue scope field",
+                field=field,
+                blocking=True,
+            ))
         canonical_fields[field] = items
 
     canonical_issue_scope = {
@@ -470,20 +517,26 @@ def compare_scope_lock(current: dict[str, object], captured: dict[str, object]) 
     captured_hash = extract_scope_hash(captured)
     findings: list[dict[str, str]] = []
     if not captured_hash:
-        findings.append({
-            "field": "compare_file",
-            "reason": "captured scope lock is missing scope_hash",
-        })
+        findings.append(make_finding(
+            "CSL_CAPTURE_HASH_MISSING",
+            "captured scope lock is missing scope_hash",
+            field="compare_file",
+            blocking=True,
+        ))
     if not current_hash:
-        findings.append({
-            "field": "scope_hash",
-            "reason": "current scope lock is missing scope_hash",
-        })
+        findings.append(make_finding(
+            "CSL_CURRENT_HASH_MISSING",
+            "current scope lock is missing scope_hash",
+            field="scope_hash",
+            blocking=True,
+        ))
     if current_hash and captured_hash and current_hash != captured_hash:
-        findings.append({
-            "field": "scope_hash",
-            "reason": "captured scope lock does not match current issue scope",
-        })
+        findings.append(make_finding(
+            "CSL_HASH_MISMATCH",
+            "captured scope lock does not match current issue scope",
+            field="scope_hash",
+            blocking=True,
+        ))
     return findings
 
 
@@ -774,20 +827,31 @@ def compact_pr_report_agent_claims(payload: dict[str, object], body: str) -> dic
 
 def compact_pr_report_claim_conflict_findings(
     agent_claims: dict[str, object],
-    tool_findings: list[dict[str, str]],
-    human_gate_findings: list[dict[str, str]],
-) -> list[dict[str, str]]:
-    findings: list[dict[str, str]] = []
-    if (tool_findings or human_gate_findings) and agent_claims.get("merge_ready_claimed") is True:
-        findings.append({
-            "field": "agent_claims",
-            "reason": "agent-authored merge-ready claim conflicts with tool-derived blocking state",
-        })
-    if human_gate_findings and agent_claims.get("human_gate_claimed") is True:
-        findings.append({
-            "field": "agent_claims",
-            "reason": "agent-authored human-gate claim conflicts with tool-derived restricted-boundary state",
-        })
+    tool_findings: list[dict[str, object]],
+    human_gate_findings: list[dict[str, object]],
+) -> list[dict[str, object]]:
+    findings: list[dict[str, object]] = []
+    fixture_claims = agent_claims.get("fixture")
+    fixture = fixture_claims if isinstance(fixture_claims, dict) else {}
+    fixture_merge_claimed = (
+        str(fixture.get("merge_result") or "").lower() == "merge_allowed"
+        or fixture.get("auto_merge_eligible") is True
+    )
+    fixture_human_gate_claimed = fixture.get("human_gates_checked") is True
+    if (tool_findings or human_gate_findings) and fixture_merge_claimed:
+        findings.append(make_finding(
+            "CPR_AGENT_MERGE_CLAIM_CONFLICT",
+            "explicit agent-authored merge-ready claim conflicts with tool-derived blocking or restricted-boundary state",
+            field="agent_claims",
+            blocking=True,
+        ))
+    if human_gate_findings and fixture_human_gate_claimed:
+        findings.append(make_finding(
+            "CPR_AGENT_HUMAN_GATE_CLAIM_CONFLICT",
+            "explicit agent-authored human-gate claim conflicts with a restricted boundary",
+            field="agent_claims",
+            blocking=True,
+        ))
     return findings
 
 
@@ -795,11 +859,31 @@ def compact_pr_report_from_payload(payload: dict[str, object]) -> tuple[str, dic
     if payload.get("metadata_available") is False:
         return "fail_closed", {
             "result": "fail_closed",
+            "derived_state": "fail_closed",
             "low_risk_inferred": False,
-            "findings": [{
-                "field": "metadata_available",
-                "reason": "GitHub PR metadata is unavailable",
-            }],
+            "mechanically_checked": [
+                "PR metadata availability marker",
+            ],
+            "not_checked": [
+                "strict check-pr projection",
+                "closing-issue reference, canonical scope, or deterministic scope lock",
+                "agent-authored claim conflicts",
+                "changed-path restricted-boundary patterns",
+                "human approval, low-risk status, or merge authority",
+            ],
+            "proof_boundary": (
+                "Only the explicit PR metadata-unavailable marker was checked; "
+                "no PR status, issue-scope, scope-lock, claim-conflict, or "
+                "restricted-boundary proof was produced."
+            ),
+            "findings": [
+                make_finding(
+                    "CPR_METADATA_UNAVAILABLE",
+                    "GitHub PR metadata is unavailable",
+                    field="metadata_available",
+                    blocking=True,
+                )
+            ],
         }
 
     pr_number = payload.get("number")
@@ -808,55 +892,55 @@ def compact_pr_report_from_payload(payload: dict[str, object]) -> tuple[str, dic
         payload.get("kind") or payload.get("_asgk_requested_kind") or ""
     ).strip().lower()
     agent_claims = compact_pr_report_agent_claims(payload, body)
-    changed_paths = pr_file_paths(payload.get("files"))
+    files_present = "files" in payload
+    changed_paths, file_shape_errors = validated_pr_file_paths(payload.get("files"))
+    files_usable = files_present and not file_shape_errors
     issue_number = merge_decision_issue_number(body)
     issue_payload = pr_status_issue_payload(payload, issue_number) if issue_number is not None else None
 
     issue_scope_output: dict[str, object] | None = None
     scope_lock_output: dict[str, object] | None = None
-    findings: list[dict[str, str]] = []
+    findings: list[dict[str, object]] = []
 
     if issue_number is None:
-        findings.append({
-            "field": "issue",
-            "reason": "Merge Decision issue is missing",
-        })
+        findings.append(make_finding(
+            "CPR_ISSUE_REFERENCE_MISSING",
+            "Merge Decision issue is missing",
+            field="issue",
+            blocking=True,
+        ))
     elif issue_payload is None:
-        findings.append({
-            "field": "issue",
-            "reason": f"closing issue #{issue_number} metadata is unavailable",
-        })
+        findings.append(make_finding(
+            "CPR_ISSUE_METADATA_UNAVAILABLE",
+            f"closing issue #{issue_number} metadata is unavailable",
+            field="issue",
+            blocking=True,
+        ))
     else:
         scope_result, issue_scope_output = canonical_issue_scope_from_payload(issue_payload)
         if scope_result != "pass":
             for finding in issue_scope_output.get("findings", []):
                 if isinstance(finding, dict):
-                    findings.append({
-                        "field": str(finding.get("field") or "issue_scope"),
-                        "reason": str(finding.get("reason") or "canonical issue scope failed"),
-                    })
+                    findings.append(dict(finding))
         lock_result, scope_lock_output = compact_scope_lock_from_payload(issue_payload)
         if lock_result != "pass":
             for finding in scope_lock_output.get("findings", []):
                 if isinstance(finding, dict):
-                    findings.append({
-                        "field": str(finding.get("field") or "scope_lock"),
-                        "reason": str(finding.get("reason") or "scope lock failed"),
-                    })
+                    findings.append(dict(finding))
 
     pr_status_result, pr_status_findings = check_pr_status_payload(payload)
     for finding in pr_status_findings:
-        findings.append({
-            "field": str(finding.get("field") or "pr_status"),
-            "reason": str(finding.get("reason") or "PR status check failed"),
-        })
+        findings.append(dict(finding))
 
     restricted_boundaries = compact_pr_report_restricted_boundaries(changed_paths)
-    human_gate_findings = [
-        {
-            "field": "restricted_boundaries",
-            "reason": "restricted boundary requires human review: " + ", ".join(restricted_boundaries),
-        }
+    human_gate_findings: list[dict[str, object]] = [
+        make_finding(
+            "CPR_RESTRICTED_BOUNDARY_REQUIRES_HUMAN",
+            "restricted boundary requires human review: "
+            + ", ".join(restricted_boundaries),
+            field="restricted_boundaries",
+            blocking=True,
+        )
     ] if restricted_boundaries else []
     findings.extend(compact_pr_report_claim_conflict_findings(
         agent_claims,
@@ -864,8 +948,95 @@ def compact_pr_report_from_payload(payload: dict[str, object]) -> tuple[str, dic
         human_gate_findings,
     ))
 
-    derived_state = "fail" if findings else ("requires_human" if restricted_boundaries else "checkable_pass")
-    result = "fail" if findings else ("requires_human" if restricted_boundaries else "pass")
+    derived_state = (
+        "fail"
+        if findings
+        else ("requires_human" if restricted_boundaries else "checkable_pass")
+    )
+    result = (
+        "fail"
+        if findings
+        else ("requires_human" if restricted_boundaries else "pass")
+    )
+    common_findings = [*findings, *human_gate_findings]
+    issue_scope_checked = issue_number is not None and issue_payload is not None
+    mechanically_checked = [
+        "PR metadata availability and strict check-pr projection",
+        "closing-issue reference presence",
+        "agent-authored claim conflicts",
+    ]
+    not_checked = [
+        "truth or freshness of fixture/captured metadata",
+        "semantic correctness of the PR diff or issue scope",
+        "current-head human approval, low-risk status, or merge authority",
+    ]
+    if files_usable:
+        mechanically_checked.append("changed-path restricted-boundary patterns")
+    elif changed_paths:
+        mechanically_checked.append(
+            "restricted-boundary patterns for valid PR file entries"
+        )
+        not_checked.append(
+            "complete changed-path restricted-boundary coverage"
+        )
+    else:
+        not_checked.append("changed-path restricted-boundary patterns")
+    if issue_scope_checked:
+        mechanically_checked.append(
+            "closing-issue canonical scope and deterministic scope lock"
+        )
+        if files_usable:
+            boundary = (
+                "Compiles only mechanically observable PR, issue-scope, scope-lock, "
+                "check, explicit-claim-conflict, and restricted-boundary evidence "
+                "from supplied or live metadata; it does not infer human approval, "
+                "low-risk status, or merge authority."
+            )
+        elif changed_paths:
+            boundary = (
+                "Compiles mechanically observable PR, issue-scope, scope-lock, "
+                "check, explicit-claim-conflict, and restricted-boundary evidence "
+                "from valid PR file entries. Invalid entries prevent complete "
+                "restricted-boundary coverage, but any observed restricted path "
+                "still requires a human gate; no approval or merge authority is inferred."
+            )
+        else:
+            boundary = (
+                "Compiles only the mechanically observable PR, issue-scope, "
+                "scope-lock, check, and explicit-claim-conflict evidence supported "
+                "by supplied or live metadata. No restricted-boundary proof was "
+                "produced because the PR file list was missing or invalid; it does "
+                "not infer human approval, low-risk status, or merge authority."
+            )
+    else:
+        not_checked.append(
+            "closing-issue canonical scope and deterministic scope lock"
+        )
+        if files_usable:
+            boundary = (
+                "Compiles mechanically observable PR, check, explicit-claim-conflict, "
+                "restricted-boundary, and closing-issue availability evidence; no "
+                "issue-scope or scope-lock proof was produced because closing-issue "
+                "metadata was unavailable. It does not infer human approval, low-risk "
+                "status, or merge authority."
+            )
+        elif changed_paths:
+            boundary = (
+                "Compiles mechanically observable PR, check, explicit-claim-conflict, "
+                "closing-issue availability, and restricted-boundary evidence from "
+                "valid PR file entries. Invalid entries prevent complete boundary "
+                "coverage, and closing-issue metadata did not support scope-lock proof; "
+                "any observed restricted path still requires a human gate."
+            )
+        else:
+            boundary = (
+                "Compiles only the mechanically observable PR, check, explicit-claim-"
+                "conflict, and closing-issue availability evidence supported by the "
+                "input. Neither restricted-boundary nor issue-scope/scope-lock proof "
+                "was produced because the PR file list and closing-issue metadata were "
+                "unavailable or invalid. It does not infer human approval, low-risk "
+                "status, or merge authority."
+            )
     return result, {
         "result": result,
         "derived_state": derived_state,
@@ -887,7 +1058,10 @@ def compact_pr_report_from_payload(payload: dict[str, object]) -> tuple[str, dic
         "restricted_boundaries": restricted_boundaries,
         "human_gate_findings": human_gate_findings,
         "pr_status_result": pr_status_result,
-        "findings": findings,
+        "mechanically_checked": mechanically_checked,
+        "not_checked": not_checked,
+        "proof_boundary": boundary,
+        "findings": common_findings,
     }
 
 
@@ -1049,6 +1223,15 @@ def check_work_unit_payload(
         if not task_field_ambiguity
         else []
     )
+    raw_allowed_paths = (
+        material_items(task_fields.get("allowed_paths"))
+        if not task_field_ambiguity
+        else []
+    )
+    allowed_paths_usable = bool(raw_allowed_paths) and all(
+        repo_relative_path_problem(item, ROOT, allow_glob=True) is None
+        for item in raw_allowed_paths
+    )
     normalized_changed_paths = [normalize_repo_path(path) for path in changed_paths if normalize_repo_path(path)]
     if not authority_only and not normalized_changed_paths:
         add(
@@ -1061,7 +1244,8 @@ def check_work_unit_payload(
     if not authority_only:
         unauthorized = [
             path for path in normalized_changed_paths
-            if allowed_paths and not any(path_matches_allowed(path, allowed) for allowed in allowed_paths)
+            if allowed_paths_usable
+            and not any(path_matches_allowed(path, allowed) for allowed in allowed_paths)
         ]
         for path in unauthorized:
             add(
@@ -1091,23 +1275,39 @@ def print_work_unit_result(
     changed_paths: list[str],
     *,
     authority_only: bool,
+    evidence_source: str,
     as_json: bool,
 ) -> int:
+    visible_body = strip_html_comments(str(payload.get("body") or ""))
+    task_fields, task_field_ambiguity_reasons = parse_work_unit_task_fields_checked(
+        visible_body
+    )
     task_fields_ambiguous = any(
         finding.get("code") == "WU_TASK_FIELD_AMBIGUOUS"
         for finding in findings
     )
+    if task_field_ambiguity_reasons:
+        task_fields_ambiguous = True
+    allowed_path_items = (
+        material_items(task_fields.get("allowed_paths"))
+        if not task_fields_ambiguous
+        else []
+    )
+    allowed_paths_usable = bool(allowed_path_items) and all(
+        repo_relative_path_problem(item, ROOT, allow_glob=True) is None
+        for item in allowed_path_items
+    )
+    context_items_available = bool(
+        material_items(task_fields.get("context_read_set"))
+    ) if not task_fields_ambiguous else False
+    project_validation_items_available = bool(
+        material_items(task_fields.get("project_specific_validation"))
+    ) if not task_fields_ambiguous else False
     mechanically_checked = [
         "work-unit kind and open state",
         "single visible task-field representation and field uniqueness",
         "chat-only authority exclusion",
     ]
-    if not task_fields_ambiguous:
-        mechanically_checked.extend([
-            "visible canonical 13-field task identity",
-            "context_read_set exact-reference syntax, existence, and repository containment",
-            "project_specific_validation bare-not_applicable reason",
-        ])
     not_checked = [
         "availability, content, or repository identity of durable pseudo-references",
         "semantic necessity of context references",
@@ -1116,6 +1316,31 @@ def print_work_unit_result(
         "human approval or protected-path authorization",
         "PR readiness, merge authority, or issue completion",
     ]
+    if not task_fields_ambiguous:
+        mechanically_checked.append("visible canonical 13-field task identity")
+        if context_items_available:
+            mechanically_checked.append(
+                "context_read_set item syntax and repository containment"
+            )
+            if any(
+                not is_context_pseudo_ref(item)
+                for item in material_items(task_fields.get("context_read_set"))
+            ):
+                mechanically_checked.append(
+                    "repository-file context_read_set existence"
+                )
+        else:
+            not_checked.append(
+                "context_read_set item syntax, existence, and repository containment"
+            )
+        if project_validation_items_available:
+            mechanically_checked.append(
+                "project_specific_validation bare-not_applicable reason"
+            )
+        else:
+            not_checked.append(
+                "project_specific_validation item syntax and bare-not_applicable reason"
+            )
     if task_fields_ambiguous:
         not_checked.extend([
             "canonical task-field completeness and execution-gate semantics",
@@ -1131,8 +1356,10 @@ def print_work_unit_result(
         )
     else:
         mechanically_checked.append("supplied changed-path presence")
-        if not task_fields_ambiguous:
+        if allowed_paths_usable:
             mechanically_checked.append("allowed_paths containment")
+        else:
+            not_checked.append("allowed_paths containment")
         mechanically_checked.append("changed-path hygiene patterns")
         proof_boundary = (
             "Exit 0 in post-diff mode proves only that the supplied open "
@@ -1141,7 +1368,7 @@ def print_work_unit_result(
             "It does not prove implementation correctness, human approval, or "
             "merge authority."
         )
-    output = {
+    output = checked_validation_result({
         "result": result,
         "low_risk_inferred": False,
         "work_unit": {
@@ -1158,15 +1385,19 @@ def print_work_unit_result(
         "changed_paths": changed_paths,
         "mechanically_checked": mechanically_checked,
         "not_checked": not_checked,
-        "proof_boundary": proof_boundary,
         "findings": findings,
-    }
+    },
+        evidence_source=evidence_source,
+        mechanically_checked=mechanically_checked,
+        not_checked=not_checked,
+        proof_boundary=proof_boundary,
+    )
     if as_json:
         print(json.dumps(output, indent=2, sort_keys=True))
     elif findings:
         for finding in findings:
             print(
-                f"{finding['severity']}: {finding['field']} - "
+                f"{finding['severity']}: {finding_display_location(finding)} - "
                 f"{finding['reason']} Fix: {finding['recommended_fix']}"
             )
         print("Work-unit check result: fail. No low-risk status was inferred.")
@@ -1174,7 +1405,7 @@ def print_work_unit_result(
         mode = "authority-only" if authority_only else "post-diff"
         print(f"Work-unit {mode} check passed. No low-risk status was inferred.")
         print(proof_boundary)
-    return 1 if findings else 0
+    return 0 if output["result"] == "pass" else 1
 
 
 def load_task_packet_payload(path: str | Path) -> tuple[dict[str, object], str]:
@@ -1271,8 +1502,8 @@ def context_budget_measurement(packet: dict[str, object]) -> dict[str, object]:
         try:
             raw = path.read_bytes()
             text = raw.decode("utf-8")
-        except UnicodeDecodeError as exc:
-            read_errors.append({"path": ref, "error": f"utf-8 decode failed: {exc}"})
+        except (OSError, UnicodeError) as exc:
+            read_errors.append({"path": ref, "error": f"file read failed: {exc}"})
             continue
         total_bytes += len(raw)
         total_characters += len(text)
@@ -1297,7 +1528,8 @@ def context_budget_measurement(packet: dict[str, object]) -> dict[str, object]:
         "overbroad_refs": overbroad_refs,
         "read_errors": read_errors,
         "limits": (
-            "Estimate covers UTF-8 text from repo files named in context_read_set only; "
+            "Estimate covers successfully read UTF-8 text from repo files named "
+            "in context_read_set only; "
             "it does not include GitHub issue or PR body text, system/developer prompts, chat history, "
             "tool output, retrieved web/app content, or model completion tokens."
         ),
@@ -1306,8 +1538,73 @@ def context_budget_measurement(packet: dict[str, object]) -> dict[str, object]:
 
 def print_context_budget_measurement(measurement: dict[str, object], *, as_json: bool) -> int:
     blocking = bool(measurement["missing_refs"] or measurement["overbroad_refs"] or measurement["read_errors"])
+    findings: list[dict[str, object]] = []
+    for ref in measurement["missing_refs"]:
+        findings.append(make_finding(
+            "CBM_CONTEXT_REF_MISSING",
+            "context reference does not exist",
+            path=str(ref),
+            blocking=True,
+        ))
+    for ref in measurement["overbroad_refs"]:
+        findings.append(make_finding(
+            "CBM_CONTEXT_REF_OVERBROAD",
+            "context reference is overbroad",
+            path=str(ref),
+            blocking=True,
+        ))
+    for read_error in measurement["read_errors"]:
+        if isinstance(read_error, dict):
+            ref = str(read_error.get("path") or "context_read_set")
+            reason = str(read_error.get("error") or "context reference could not be read")
+        else:
+            ref = "context_read_set"
+            reason = str(read_error)
+        findings.append(make_finding(
+            "CBM_CONTEXT_READ_FAILED",
+            reason,
+            path=ref,
+            blocking=True,
+        ))
+    mechanically_checked = [
+        "task-packet context_read_set projection",
+        "repo-relative context path existence and file shape",
+    ]
+    not_checked = [
+        "GitHub issue, PR, prompt, chat, tool-output, or completion tokens",
+        "provider billing-token usage",
+        "semantic necessity or sufficiency of selected context",
+        "human approval, low-risk status, or merge authority",
+    ]
+    if measurement["files_count"]:
+        mechanically_checked.extend([
+            "UTF-8 byte and character counts for successfully read repo files",
+            "deterministic character-based token estimate for successfully read repo files",
+        ])
+    else:
+        not_checked.extend([
+            "UTF-8 byte and character counts for repo files",
+            "character-based token estimate for repo files",
+        ])
+    if blocking:
+        not_checked.append(
+            "content and size of missing, overbroad, or unreadable context references"
+        )
+    payload = checked_validation_result(
+        {
+            "result": "fail" if blocking else "pass",
+            **measurement,
+            "findings": findings,
+        },
+        evidence_source="supplied_task_packet_and_repo_files",
+        mechanically_checked=mechanically_checked,
+        not_checked=not_checked,
+        proof_boundary=(
+            f"{measurement['limits']} It does not prove that selected context "
+            "is semantically necessary or sufficient."
+        ),
+    )
     if as_json:
-        payload = {"result": "fail" if blocking else "pass", **measurement}
         print(json.dumps(payload, indent=2, sort_keys=True))
     else:
         print("Context budget measurement:")
@@ -1327,103 +1624,217 @@ def print_context_budget_measurement(measurement: dict[str, object], *, as_json:
             else:
                 print(f"{field}: none")
         print(f"limits: {measurement['limits']}")
-    return 1 if blocking else 0
+    return 0 if payload["result"] == "pass" else 1
 
 
 def compact_pr_body_check(body_file: str | Path, report_file: str | Path) -> tuple[str, dict[str, object]]:
     body_path = rel(body_file)
     report_path = rel(report_file)
-    findings: list[dict[str, str]] = []
+    findings: list[dict[str, object]] = []
+    body_readable = False
 
     if not body_path.exists():
-        findings.append({"field": "body_file", "reason": f"PR body file does not exist: {body_file}"})
+        findings.append(make_finding(
+            "CPB_BODY_FILE_MISSING",
+            f"PR body file does not exist: {body_file}",
+            path=str(body_file),
+            blocking=True,
+        ))
         body_text = ""
     else:
-        body_text = body_path.read_text(encoding="utf-8")
+        try:
+            body_text = body_path.read_text(encoding="utf-8")
+            body_readable = True
+        except (OSError, UnicodeError) as exc:
+            findings.append(make_finding(
+                "CPB_BODY_FILE_UNREADABLE",
+                f"could not read compact PR body: {exc}",
+                path=str(body_file),
+                blocking=True,
+            ))
+            body_text = ""
 
-    headings = markdown_headings(body_text)
-    if "Compiled Report Reference" not in headings:
-        findings.append({
-            "field": "Compiled Report Reference",
-            "reason": "compact PR body must include a Compiled Report Reference section",
-        })
-    else:
-        report_section = markdown_section(body_text, "Compiled Report Reference")
-        if not normalized_field_value(report_section, "report_source"):
-            findings.append({
-                "field": "report_source",
-                "reason": "Compiled Report Reference must name report_source",
-            })
+    if body_readable:
+        headings = markdown_headings(body_text)
+        if "Compiled Report Reference" not in headings:
+            findings.append(make_finding(
+                "CPB_COMPILED_REFERENCE_SECTION_MISSING",
+                "compact PR body must include a Compiled Report Reference section",
+                field="Compiled Report Reference",
+                blocking=True,
+            ))
+        else:
+            report_section = markdown_section(body_text, "Compiled Report Reference")
+            if not normalized_field_value(report_section, "report_source"):
+                findings.append(make_finding(
+                    "CPB_REPORT_SOURCE_MISSING",
+                    "Compiled Report Reference must name report_source",
+                    field="report_source",
+                    blocking=True,
+                ))
 
-    if body_path.exists():
+    if body_readable:
         pr_body_result = subprocess.run(
-            ["python3", "scripts/asgk.py", "pr-body-check", "--file", str(body_path)],
+            [sys.executable, "scripts/asgk.py", "pr-body-check", "--file", str(body_path)],
             cwd=ROOT,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True,
         )
         if pr_body_result.returncode != 0:
-            findings.append({
-                "field": "pr_body_check",
-                "reason": "compact PR body failed required PR body structure checks",
-            })
+            findings.append(make_finding(
+                "CPB_PR_BODY_CHECK_FAILED",
+                "compact PR body failed required PR body structure checks",
+                field="pr_body_check",
+                blocking=True,
+            ))
 
         policy_gate = run_policy_gate_capture(body_path)
         if policy_gate.returncode != 0:
-            findings.append({
-                "field": "policy_gate",
-                "reason": "compact PR body failed policy gate checks",
-            })
+            findings.append(make_finding(
+                "CPB_POLICY_GATE_FAILED",
+                "compact PR body failed policy gate checks",
+                field="policy_gate",
+                blocking=True,
+            ))
 
     report: dict[str, object] = {}
+    report_parsed = False
     if not report_path.exists():
-        findings.append({"field": "report_json", "reason": f"compact PR report file does not exist: {report_file}"})
+        findings.append(make_finding(
+            "CPB_REPORT_FILE_MISSING",
+            f"compact PR report file does not exist: {report_file}",
+            path=str(report_file),
+            blocking=True,
+        ))
     else:
+        report_loaded = False
         try:
             loaded_report = json.loads(report_path.read_text(encoding="utf-8"))
+            report_loaded = True
         except json.JSONDecodeError as exc:
-            findings.append({"field": "report_json", "reason": f"invalid compact PR report JSON: {exc}"})
+            findings.append(make_finding(
+                "CPB_REPORT_JSON_INVALID",
+                f"invalid compact PR report JSON: {exc}",
+                path=str(report_file),
+                blocking=True,
+            ))
             loaded_report = {}
-        if not isinstance(loaded_report, dict):
-            findings.append({"field": "report_json", "reason": "compact PR report JSON must be an object"})
-        else:
-            report = loaded_report
+        except (OSError, UnicodeError) as exc:
+            findings.append(make_finding(
+                "CPB_REPORT_FILE_UNREADABLE",
+                f"could not read compact PR report: {exc}",
+                path=str(report_file),
+                blocking=True,
+            ))
+            loaded_report = {}
+        if report_loaded:
+            if not isinstance(loaded_report, dict):
+                findings.append(make_finding(
+                    "CPB_REPORT_TYPE_INVALID",
+                    "compact PR report JSON must be an object",
+                    field="report_json",
+                    blocking=True,
+                ))
+            else:
+                report = loaded_report
+                report_parsed = True
 
     report_result = str(report.get("result") or "").lower()
-    if report and report_result != "pass":
-        findings.append({
-            "field": "report.result",
-            "reason": f"compiled report result is not pass: {report_result or 'missing'}",
-        })
+    if report_parsed and report_result != "pass":
+        findings.append(make_finding(
+            "CPB_REPORT_RESULT_NOT_PASS",
+            f"compiled report result is not pass: {report_result or 'missing'}",
+            field="report.result",
+            blocking=True,
+        ))
 
     pr_status_result = report.get("pr_status_result")
-    if report and pr_status_result is not None and str(pr_status_result).lower() != "pass":
-        findings.append({
-            "field": "report.pr_status_result",
-            "reason": f"compiled report PR status result is not pass: {pr_status_result}",
-        })
+    if report_parsed and str(pr_status_result or "").lower() != "pass":
+        findings.append(make_finding(
+            "CPB_REPORT_PR_STATUS_NOT_PASS",
+            f"compiled report PR status result is not pass: {pr_status_result}",
+            field="report.pr_status_result",
+            blocking=True,
+        ))
 
     derived_state = str(report.get("derived_state") or "").lower()
-    if report and derived_state != "checkable_pass":
-        findings.append({
-            "field": "report.derived_state",
-            "reason": f"compiled report derived_state is not checkable_pass: {derived_state or 'missing'}",
-        })
+    if report_parsed and derived_state != "checkable_pass":
+        findings.append(make_finding(
+            "CPB_REPORT_DERIVED_STATE_NOT_CHECKABLE",
+            f"compiled report derived_state is not checkable_pass: {derived_state or 'missing'}",
+            field="report.derived_state",
+            blocking=True,
+        ))
 
-    if report and report.get("low_risk_inferred") is not False:
-        findings.append({
-            "field": "report.low_risk_inferred",
-            "reason": "compiled report must explicitly keep low_risk_inferred false",
-        })
+    if report_parsed and report.get("low_risk_inferred") is not False:
+        findings.append(make_finding(
+            "CPB_REPORT_LOW_RISK_CLAIM_INVALID",
+            "compiled report must explicitly keep low_risk_inferred false",
+            field="report.low_risk_inferred",
+            blocking=True,
+        ))
 
     report_findings = report.get("findings")
-    if isinstance(report_findings, list) and report_findings:
-        findings.append({
-            "field": "report.findings",
-            "reason": "compiled report has blocking findings",
-        })
+    if report_parsed:
+        if not isinstance(report_findings, list):
+            findings.append(make_finding(
+                "CPB_REPORT_FINDINGS_TYPE_INVALID",
+                "compiled report findings must be an array",
+                field="report.findings",
+                blocking=True,
+            ))
+        elif report_findings:
+            findings.append(make_finding(
+                "CPB_REPORT_FINDINGS_NONEMPTY",
+                "compiled report has blocking findings",
+                field="report.findings",
+                blocking=True,
+            ))
 
+    mechanically_checked = [
+        "compact PR body file existence and readability",
+        "compiled report file existence and readability",
+    ]
+    not_checked = [
+        "whether the compiled report is current or live",
+        "semantic correctness of PR evidence or diff contents",
+        "human approval, low-risk status, or merge authority",
+    ]
+    if body_readable:
+        mechanically_checked.extend([
+            "Compiled Report Reference structure",
+            "canonical PR body coherence and strict policy gate",
+        ])
+    else:
+        not_checked.extend([
+            "Compiled Report Reference structure",
+            "canonical PR body coherence and strict policy gate",
+        ])
+    if report_parsed:
+        mechanically_checked.append(
+            "compiled report result, PR status, derived state, inference flags, and findings array"
+        )
+    else:
+        not_checked.append(
+            "compiled report result, PR status, derived state, inference flags, and findings array"
+        )
+    complete_inputs = body_readable and report_parsed
+    proof_boundary = (
+        (
+            "Checks only local compact PR-body structure against the supplied "
+            "compiled report; it does not prove that report is current or live, "
+            "or establish human approval, low-risk status, or merge authority."
+        )
+        if complete_inputs
+        else (
+            "Only local input availability and the checks supported by readable "
+            "inputs were evaluated; unavailable or malformed inputs prevented a "
+            "complete compact PR-body/report comparison. No freshness, semantic "
+            "correctness, human approval, low-risk status, or merge authority "
+            "was established."
+        )
+    )
     result = "fail" if findings else "pass"
     return result, {
         "result": result,
@@ -1437,6 +1848,9 @@ def compact_pr_body_check(body_file: str | Path, report_file: str | Path) -> tup
             "low_risk_inferred": report.get("low_risk_inferred"),
             "restricted_boundaries": report.get("restricted_boundaries"),
         },
+        "mechanically_checked": mechanically_checked,
+        "not_checked": not_checked,
+        "proof_boundary": proof_boundary,
         "findings": findings,
     }
 
@@ -1450,18 +1864,71 @@ def print_failures(failures: list[str]) -> int:
     return 0
 
 
+def print_validation_input_failure(
+    *,
+    code: str,
+    reason: str,
+    as_json: bool,
+    evidence_source: str,
+    mechanically_checked: list[str],
+    not_checked: list[str],
+    proof_boundary: str,
+    field: str | None = None,
+    path: str | None = None,
+    recommended_fix: str = "Correct the input and rerun the validator.",
+    extra_payload: dict[str, object] | None = None,
+    result: str = "fail",
+) -> int:
+    finding = make_finding(
+        code,
+        reason,
+        field=field,
+        path=path,
+        blocking=True,
+        severity="FAIL",
+        recommended_fix=recommended_fix,
+    )
+    report: dict[str, object] = {
+        "result": result,
+        "low_risk_inferred": False,
+        "findings": [finding],
+    }
+    if extra_payload:
+        report.update(extra_payload)
+    output = checked_validation_result(
+        report,
+        evidence_source=evidence_source,
+        mechanically_checked=mechanically_checked,
+        not_checked=not_checked,
+        proof_boundary=proof_boundary,
+    )
+    if as_json:
+        print(json.dumps(output, indent=2, sort_keys=True))
+    else:
+        location = field if field is not None else path
+        print(
+            f"FAIL: [{code}] {location} - {reason} "
+            f"Fix: {recommended_fix}"
+        )
+        print(proof_boundary)
+    return 1
+
+
 def add_pr_status_finding(
-    findings: list[dict[str, str]],
+    findings: list[dict[str, object]],
+    code: str,
     field: str,
     reason: str,
     recommended_fix: str,
 ) -> None:
     findings.append(
         {
+            "code": code,
             "severity": "FAIL",
             "field": field,
             "reason": reason,
             "recommended_fix": recommended_fix,
+            "blocking": True,
         }
     )
 
@@ -1470,6 +1937,7 @@ def check_status_rollup(status_rollup: object, findings: list[dict[str, str]]) -
     if not isinstance(status_rollup, list) or not status_rollup:
         add_pr_status_finding(
             findings,
+            "PR_STATUS_CHECKS_MISSING",
             "statusCheckRollup",
             "No status checks were reported for this PR.",
             "Wait for GitHub Actions or investigate missing required checks.",
@@ -1481,22 +1949,26 @@ def check_status_rollup(status_rollup: object, findings: list[dict[str, str]]) -
     )
     for error in ordering_errors:
         if error["field"] == "statusCheckRollup.identity":
+            code = "PR_STATUS_CHECK_IDENTITY_INVALID"
             recommended_fix = (
                 "Provide a usable check name plus workflow/app/provider identity "
                 "for repeated CheckRuns; do not deduplicate by timestamp alone."
             )
         elif error["field"] == "statusCheckRollup.shape":
+            code = "PR_STATUS_CHECK_SHAPE_INVALID"
             recommended_fix = (
                 "Fetch PR status with gh pr view --json statusCheckRollup and "
                 "preserve each check as a structured object."
             )
         else:
+            code = "PR_STATUS_CHECK_ORDERING_AMBIGUOUS"
             recommended_fix = (
                 "Keep the PR merge-blocked until repeated checks have a unique, "
                 "reliably timestamped latest run."
             )
         add_pr_status_finding(
             findings,
+            code,
             error["field"],
             error["reason"],
             recommended_fix,
@@ -1510,6 +1982,7 @@ def check_status_rollup(status_rollup: object, findings: list[dict[str, str]]) -
         if status and status != "COMPLETED":
             add_pr_status_finding(
                 findings,
+                "PR_STATUS_CHECK_PENDING",
                 f"statusCheckRollup.{name}",
                 f"Status check is not complete: {status}.",
                 "Wait for the check to complete before merge eligibility.",
@@ -1517,6 +1990,7 @@ def check_status_rollup(status_rollup: object, findings: list[dict[str, str]]) -
         elif conclusion not in passing_conclusions:
             add_pr_status_finding(
                 findings,
+                "PR_STATUS_CHECK_NOT_PASSING",
                 f"statusCheckRollup.{name}",
                 f"Status check conclusion is not passing: {conclusion or 'missing'}.",
                 "Fix the failing check or keep the PR merge-blocked.",
@@ -1597,6 +2071,7 @@ def check_closing_issue_reference(payload: dict[str, object], body: str, finding
     if "closingIssuesReferences" not in payload:
         add_pr_status_finding(
             findings,
+            "PR_CLOSING_REFERENCES_MISSING",
             "closingIssuesReferences",
             "PR closing issue references are missing from the metadata payload.",
             "Fetch PR metadata with gh pr view --json closingIssuesReferences or provide fixture metadata.",
@@ -1606,6 +2081,7 @@ def check_closing_issue_reference(payload: dict[str, object], body: str, finding
     if issue_number not in closing_issue_numbers(payload.get("closingIssuesReferences")):
         add_pr_status_finding(
             findings,
+            "PR_CLOSING_REFERENCE_MISMATCH",
             "closingIssuesReferences",
             f"Merge Decision issue #{issue_number} is not a GitHub closing issue reference.",
             f"Use a GitHub closing keyword such as `Closes #{issue_number}` instead of a non-closing reference.",
@@ -1651,6 +2127,7 @@ def check_pr_issue_allowed_paths(
     if issue_payload is None:
         add_pr_status_finding(
             findings,
+            "PR_ISSUE_SCOPE_UNAVAILABLE",
             "issue.allowed_paths",
             f"Closing issue #{issue_number} body is unavailable for allowed_paths verification.",
             "Fetch live PR status with --pr or provide fixture issue metadata with body and allowed_paths.",
@@ -1662,6 +2139,7 @@ def check_pr_issue_allowed_paths(
     if not allowed_paths:
         add_pr_status_finding(
             findings,
+            "PR_ISSUE_ALLOWED_PATHS_MISSING",
             "issue.allowed_paths",
             f"Closing issue #{issue_number} does not include material allowed_paths.",
             "Add explicit allowed_paths to the closing issue before merge eligibility.",
@@ -1673,6 +2151,7 @@ def check_pr_issue_allowed_paths(
         if not any(path_matches_allowed(normalized, allowed) for allowed in allowed_paths):
             add_pr_status_finding(
                 findings,
+                "PR_PATH_OUTSIDE_ALLOWED",
                 "files.allowed_paths",
                 f"PR file is outside closing issue allowed_paths: {normalized}",
                 "Remove the file from this PR or update the durable issue before merge eligibility.",
@@ -1685,6 +2164,7 @@ def check_pr_status_payload(payload: dict[str, object]) -> tuple[str, list[dict[
     if payload.get("state") != "OPEN":
         add_pr_status_finding(
             findings,
+            "PR_STATE_NOT_OPEN",
             "state",
             f"PR state is not OPEN: {payload.get('state') or 'missing'}.",
             "Validate only open PRs before merge eligibility.",
@@ -1694,6 +2174,7 @@ def check_pr_status_payload(payload: dict[str, object]) -> tuple[str, list[dict[
         draft_value = payload.get("isDraft")
         add_pr_status_finding(
             findings,
+            "PR_DRAFT_STATE_INVALID",
             "isDraft",
             (
                 "PR draft state is not positively established as boolean false; "
@@ -1710,6 +2191,7 @@ def check_pr_status_payload(payload: dict[str, object]) -> tuple[str, list[dict[
     if merge_state != "CLEAN":
         add_pr_status_finding(
             findings,
+            "PR_MERGE_STATE_NOT_CLEAN",
             "mergeStateStatus",
             f"PR merge state is not CLEAN: {merge_state or 'missing'}.",
             "Resolve merge conflicts, blocked state, or pending mergeability before merge.",
@@ -1718,6 +2200,7 @@ def check_pr_status_payload(payload: dict[str, object]) -> tuple[str, list[dict[
     if "reviewDecision" not in payload:
         add_pr_status_finding(
             findings,
+            "PR_REVIEW_DECISION_MISSING",
             "reviewDecision",
             "Review decision metadata is missing.",
             "Fetch PR metadata with gh pr view --json reviewDecision.",
@@ -1734,6 +2217,7 @@ def check_pr_status_payload(payload: dict[str, object]) -> tuple[str, list[dict[
         if review_decision in {"CHANGES_REQUESTED", "REVIEW_REQUIRED"}:
             add_pr_status_finding(
                 findings,
+                "PR_REVIEW_DECISION_BLOCKING",
                 "reviewDecision",
                 f"Review decision blocks merge: {review_decision}.",
                 "Resolve requested changes or required review before merge eligibility.",
@@ -1741,6 +2225,7 @@ def check_pr_status_payload(payload: dict[str, object]) -> tuple[str, list[dict[
         elif review_decision not in {"", "APPROVED"}:
             add_pr_status_finding(
                 findings,
+                "PR_REVIEW_DECISION_INVALID",
                 "reviewDecision",
                 (
                     "Review decision metadata has an unsupported shape or "
@@ -1763,6 +2248,7 @@ def check_pr_status_payload(payload: dict[str, object]) -> tuple[str, list[dict[
     if declared_merge_result != "merge_allowed":
         add_pr_status_finding(
             findings,
+            "PR_MERGE_DECISION_NOT_ALLOWED",
             "merge_decision.result",
             f"Strict PR readiness requires result: merge_allowed; found {declared_merge_result or 'missing'}.",
             "Keep the PR merge-blocked until every required decision gate is complete, then update the durable Merge Decision.",
@@ -1785,6 +2271,7 @@ def check_pr_status_payload(payload: dict[str, object]) -> tuple[str, list[dict[
         if body_coherence.returncode != 0:
             add_pr_status_finding(
                 findings,
+                "PR_BODY_COHERENCE_FAILED",
                 "body",
                 "PR body coherence check failed.",
                 "Fix Current Status Impact, Merge Decision, source-of-truth, or required PR structure fields.",
@@ -1795,6 +2282,7 @@ def check_pr_status_payload(payload: dict[str, object]) -> tuple[str, list[dict[
     if "files" not in payload:
         add_pr_status_finding(
             findings,
+            "PR_FILES_MISSING",
             "files",
             "PR file list is missing.",
             "Fetch PR metadata with gh pr view --json files or provide a fixture with files.",
@@ -1804,6 +2292,7 @@ def check_pr_status_payload(payload: dict[str, object]) -> tuple[str, list[dict[
         for error in file_shape_errors:
             add_pr_status_finding(
                 findings,
+                "PR_FILES_SHAPE_INVALID",
                 "files.shape",
                 error,
                 (
@@ -1817,12 +2306,96 @@ def check_pr_status_payload(payload: dict[str, object]) -> tuple[str, list[dict[
             if hygiene.returncode != 0:
                 add_pr_status_finding(
                     findings,
+                    "PR_PATH_HYGIENE_FAILED",
                     "files",
                     "Changed-path hygiene failed.",
                     "Remove protected/runtime/private-source-like paths or keep the PR human-gated.",
                 )
 
     return ("fail" if findings else "pass", findings)
+
+
+def pr_status_evidence_claims(
+    payload: dict[str, object],
+    findings: list[dict[str, str]],
+    *,
+    evidence_description: str,
+) -> tuple[list[str], list[str], str]:
+    codes = {
+        str(finding.get("code") or "")
+        for finding in findings
+        if isinstance(finding, dict)
+    }
+    mechanically_checked = [
+        "PR open, draft, and merge-state metadata",
+        "status-check presence and top-level shape",
+        "strict Merge Decision body validation",
+        "GitHub closing issue reference",
+        "PR file-list presence and shape",
+    ]
+    not_checked = [
+        "semantic correctness of PR changes or evidence prose",
+        "human approval or current-head approval evidence",
+        "low-risk eligibility or merge authority",
+        "security, privacy, dependency, or release correctness",
+    ]
+    status_rollup = payload.get("statusCheckRollup")
+    status_rollup_usable = isinstance(status_rollup, list) and bool(status_rollup)
+    if status_rollup_usable:
+        mechanically_checked.append(
+            "status-check entry shape and latest-run ordering"
+        )
+    else:
+        not_checked.append(
+            "status-check entry shape and latest-run ordering"
+        )
+
+    files_usable = not {
+        "PR_FILES_MISSING",
+        "PR_FILES_SHAPE_INVALID",
+    }.intersection(codes)
+    issue_number = merge_decision_issue_number(str(payload.get("body") or ""))
+    scope_unavailable = bool({
+        "PR_ISSUE_SCOPE_UNAVAILABLE",
+        "PR_ISSUE_ALLOWED_PATHS_MISSING",
+    }.intersection(codes))
+
+    if files_usable:
+        mechanically_checked.append("changed-path hygiene patterns")
+        if issue_number is None:
+            not_checked.append("closing-issue allowed_paths containment")
+        elif scope_unavailable:
+            mechanically_checked.append("closing-issue allowed_paths availability")
+            not_checked.append("closing-issue allowed_paths containment")
+        else:
+            mechanically_checked.append("closing-issue allowed_paths containment")
+    else:
+        not_checked.extend([
+            "closing-issue allowed_paths containment",
+            "changed-path hygiene patterns",
+        ])
+
+    partial = (
+        (not status_rollup_usable)
+        or (not files_usable)
+        or issue_number is None
+        or scope_unavailable
+    )
+    boundary = (
+        (
+            f"check-pr reports only completed mechanical fields from "
+            f"{evidence_description}; unavailable file-list or issue-scope "
+            "surfaces remain explicitly not checked. It does not infer low-risk "
+            "status, human approval, or merge authority."
+        )
+        if partial
+        else (
+            f"check-pr composes the named mechanical fields from "
+            f"{evidence_description}. It does not infer low-risk status, human "
+            "approval, or merge authority."
+        )
+    )
+    return mechanically_checked, not_checked, boundary
 
 
 def print_pr_status_result(
@@ -1838,14 +2411,13 @@ def print_pr_status_result(
         if evidence_source == "live_github"
         else "supplied fixture or captured PR metadata"
     )
-    boundary = (
-        f"check-pr composes the named mechanical fields from {evidence_description}. "
-        "It does not infer low-risk status, human approval, or merge authority."
+    mechanically_checked, not_checked, boundary = pr_status_evidence_claims(
+        payload,
+        findings,
+        evidence_description=evidence_description,
     )
     output = {
         "result": result,
-        "evidence_source": evidence_source,
-        "proof_boundary": boundary,
         "low_risk_inferred": False,
         "human_approval_inferred": False,
         "merge_authority_inferred": False,
@@ -1853,18 +2425,25 @@ def print_pr_status_result(
         "url": payload.get("url"),
         "findings": findings,
     }
+    output = checked_validation_result(
+        output,
+        evidence_source=evidence_source,
+        mechanically_checked=mechanically_checked,
+        not_checked=not_checked,
+        proof_boundary=boundary,
+    )
     if as_json:
         print(json.dumps(output, indent=2, sort_keys=True))
     elif findings:
         for finding in findings:
             print(
-                f"{finding['severity']}: {finding['field']} - "
+                f"{finding['severity']}: {finding_display_location(finding)} - "
                 f"{finding['reason']} Fix: {finding['recommended_fix']}"
             )
         print(f"PR status check result: fail. {boundary}")
     else:
         print(f"PR status check passed. {boundary}")
-    return 1 if findings else 0
+    return 0 if output["result"] == "pass" else 1
 
 
 def cmd_doctor(_args: argparse.Namespace) -> int:
@@ -1875,9 +2454,8 @@ def cmd_doctor(_args: argparse.Namespace) -> int:
         ["python3", "scripts/asgk.py", "status-check"],
     ]
     baseline = run_many(commands)
-    changed_paths = run_changed_path_hygiene_checks()
-    textual = run_textual_negative_checks()
-    return 1 if baseline or changed_paths or textual else 0
+    scenarios = run_negative_case("all")
+    return 1 if baseline or scenarios else 0
 
 
 def cmd_validate(_args: argparse.Namespace) -> int:
@@ -1904,35 +2482,45 @@ def cmd_negative(args: argparse.Namespace) -> int:
 
 def print_policy_gate_routing_failure(
     *,
+    code: str,
     field: str,
     reason: str,
     recommended_fix: str,
     declared_result: str = "",
     as_json: bool,
+    mechanically_checked: list[str],
+    not_checked: list[str],
 ) -> int:
-    finding = {
-        "severity": "FAIL",
-        "category": "policy_gate_routing",
-        "field": field,
-        "reason": reason,
-        "recommended_fix": recommended_fix,
-        "blocks_merge_eligibility": True,
-    }
+    finding = make_finding(
+        code,
+        reason,
+        field=field,
+        blocking=True,
+        severity="FAIL",
+        category="policy_gate_routing",
+        recommended_fix=recommended_fix,
+        blocks_merge_eligibility=True,
+    )
     boundary = (
         "No body validation mode was selected because GitHub PR event routing "
         "was incomplete or invalid."
     )
     if as_json:
-        print(json.dumps({
+        output = checked_validation_result({
             "result": "fail",
             "routing": "fail_closed",
             "declared_merge_decision": declared_result,
-            "proof_boundary": boundary,
             "merge_eligibility_inferred": False,
             "low_risk_inferred": False,
             "human_approval_inferred": False,
             "findings": [finding],
-        }, indent=2, sort_keys=True))
+        },
+            evidence_source="supplied_github_event_file",
+            mechanically_checked=mechanically_checked,
+            not_checked=not_checked,
+            proof_boundary=boundary,
+        )
+        print(json.dumps(output, indent=2, sort_keys=True))
     else:
         print(
             f"FAIL: [policy_gate_routing] {field} - {reason} "
@@ -1948,17 +2536,33 @@ def print_policy_gate_routing_failure(
 
 def cmd_policy_gate(args: argparse.Namespace) -> int:
     if bool(args.pr_body) == bool(args.github_event):
-        return print_failures(["provide exactly one of --pr-body or --github-event"])
+        return print_validation_input_failure(
+            code="PG_INPUT_MODE_INVALID",
+            reason="provide exactly one of --pr-body or --github-event",
+            field="input",
+            as_json=args.json,
+            evidence_source="command_arguments",
+            mechanically_checked=["policy-gate command input mode"],
+            not_checked=[
+                "PR body or GitHub event contents",
+                "human approval, low-risk status, or merge authority",
+            ],
+            proof_boundary=(
+                "No policy-gate evaluation ran because the input mode was invalid."
+            ),
+        )
 
     if args.pr_body:
         return run_policy_gate(
             rel(args.pr_body),
             mode=args.mode or MERGE_DECISION_MODE,
             as_json=args.json,
+            evidence_source="supplied_pr_body_file",
         )
 
     if args.mode is not None:
         return print_policy_gate_routing_failure(
+            code="PG_EVENT_MODE_OVERRIDE_FORBIDDEN",
             field="mode",
             reason=(
                 "GitHub PR event validation must route from the durable "
@@ -1969,12 +2573,80 @@ def cmd_policy_gate(args: argparse.Namespace) -> int:
                 "modes only with `--pr-body`."
             ),
             as_json=args.json,
+            mechanically_checked=[
+                "policy-gate command input mode",
+                "GitHub event mode-override prohibition",
+            ],
+            not_checked=[
+                "GitHub event file readability, JSON syntax, or pull-request routing inputs",
+                "exact durable Merge Decision result token",
+                "PR body validation because routing failed",
+                "PR diff, CI, project tests, or evidence truth",
+                "human approval, low-risk status, or merge authority",
+            ],
         )
 
-    event = json.loads(rel(args.github_event).read_text(encoding="utf-8"))
+    try:
+        event = json.loads(rel(args.github_event).read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        return print_validation_input_failure(
+            code="PG_EVENT_JSON_INVALID",
+            reason=f"GitHub event is not valid JSON: {exc}",
+            path=args.github_event,
+            as_json=args.json,
+            evidence_source="supplied_github_event_file",
+            mechanically_checked=["GitHub event file readability and JSON syntax"],
+            not_checked=[
+                "pull-request event routing",
+                "PR body coherence or Merge Decision",
+                "human approval, low-risk status, or merge authority",
+            ],
+            proof_boundary=(
+                "No event routing or PR-body validation ran because the supplied "
+                "GitHub event was not valid JSON."
+            ),
+        )
+    except (OSError, UnicodeError) as exc:
+        return print_validation_input_failure(
+            code="PG_EVENT_FILE_UNREADABLE",
+            reason=f"could not read GitHub event file: {exc}",
+            path=args.github_event,
+            as_json=args.json,
+            evidence_source="supplied_github_event_file",
+            mechanically_checked=["GitHub event file readability"],
+            not_checked=[
+                "pull-request event routing",
+                "PR body coherence or Merge Decision",
+                "human approval, low-risk status, or merge authority",
+            ],
+            proof_boundary=(
+                "No event routing or PR-body validation ran because the supplied "
+                "GitHub event file could not be read."
+            ),
+        )
+    if not isinstance(event, dict):
+        return print_policy_gate_routing_failure(
+            code="PG_EVENT_SHAPE_INVALID",
+            field="event",
+            reason="GitHub event payload must be a JSON object.",
+            recommended_fix="Provide one complete pull_request event object.",
+            as_json=args.json,
+            mechanically_checked=[
+                "GitHub event file readability and JSON syntax",
+                "GitHub event top-level shape",
+            ],
+            not_checked=[
+                "pull-request event routing inputs",
+                "exact durable Merge Decision result token",
+                "PR body validation because routing failed",
+                "PR diff, CI, project tests, or evidence truth",
+                "human approval, low-risk status, or merge authority",
+            ],
+        )
     pull_request = event.get("pull_request")
     if not isinstance(pull_request, dict):
         return print_policy_gate_routing_failure(
+            code="PG_EVENT_PULL_REQUEST_MISSING",
             field="pull_request",
             reason="GitHub event payload does not contain a pull_request object.",
             recommended_fix=(
@@ -1982,6 +2654,17 @@ def cmd_policy_gate(args: argparse.Namespace) -> int:
                 "missing PR metadata as a successful skip."
             ),
             as_json=args.json,
+            mechanically_checked=[
+                "GitHub event file readability and JSON syntax",
+                "GitHub event top-level shape",
+                "pull_request object presence",
+            ],
+            not_checked=[
+                "exact durable Merge Decision result token",
+                "PR body validation because routing failed",
+                "PR diff, CI, project tests, or evidence truth",
+                "human approval, low-risk status, or merge authority",
+            ],
         )
 
     body = pull_request.get("body")
@@ -2001,6 +2684,7 @@ def cmd_policy_gate(args: argparse.Namespace) -> int:
                 selected_mode = BODY_COHERENCE_MODE
             else:
                 return print_policy_gate_routing_failure(
+                    code="PG_EVENT_RESULT_INVALID",
                     field="result",
                     reason=(
                         "GitHub event routing requires a declared "
@@ -2012,42 +2696,185 @@ def cmd_policy_gate(args: argparse.Namespace) -> int:
                     ),
                     declared_result=declared_result,
                     as_json=args.json,
+                    mechanically_checked=[
+                        "GitHub event file readability and JSON syntax",
+                        "GitHub pull-request event routing inputs",
+                        "exact durable Merge Decision result token",
+                    ],
+                    not_checked=[
+                        "PR body validation because routing failed",
+                        "PR diff, CI, project tests, or evidence truth",
+                        "human approval, low-risk status, or merge authority",
+                    ],
                 )
         return run_policy_gate(
             body_path,
             mode=selected_mode,
             as_json=args.json,
+            evidence_source="supplied_github_event_file",
         )
 
 
 def cmd_check_pr(args: argparse.Namespace) -> int:
     if bool(args.pr) == bool(args.json_file):
-        return print_failures(["provide exactly one of --pr or --json-file"])
+        return print_validation_input_failure(
+            code="PR_INPUT_MODE_INVALID",
+            reason="provide exactly one of --pr or --json-file",
+            field="input",
+            as_json=args.json,
+            evidence_source="command_arguments",
+            mechanically_checked=["check-pr command input mode"],
+            not_checked=[
+                "PR metadata, status checks, issue scope, or changed paths",
+                "human approval, low-risk status, or merge authority",
+            ],
+            proof_boundary=(
+                "No PR status evaluation ran because the input mode was invalid."
+            ),
+        )
 
     if args.json_file:
-        payload = json.loads(rel(args.json_file).read_text(encoding="utf-8"))
+        try:
+            payload = json.loads(rel(args.json_file).read_text(encoding="utf-8"))
+        except json.JSONDecodeError as exc:
+            return print_validation_input_failure(
+                code="PR_PAYLOAD_JSON_INVALID",
+                reason=f"PR status payload is not valid JSON: {exc}",
+                path=args.json_file,
+                as_json=args.json,
+                evidence_source="supplied_json_fixture_or_capture",
+                mechanically_checked=["PR status payload JSON syntax"],
+                not_checked=[
+                    "PR metadata, status checks, issue scope, or changed paths",
+                    "human approval, low-risk status, or merge authority",
+                ],
+                proof_boundary=(
+                    "No PR status evaluation ran because the supplied payload "
+                    "was not valid JSON."
+                ),
+            )
+        except (OSError, UnicodeError) as exc:
+            return print_validation_input_failure(
+                code="PR_PAYLOAD_FILE_UNREADABLE",
+                reason=f"could not read PR status payload: {exc}",
+                path=args.json_file,
+                as_json=args.json,
+                evidence_source="supplied_json_fixture_or_capture",
+                mechanically_checked=["PR status payload file readability"],
+                not_checked=[
+                    "PR metadata, status checks, issue scope, or changed paths",
+                    "human approval, low-risk status, or merge authority",
+                ],
+                proof_boundary=(
+                    "No PR status evaluation ran because the supplied payload "
+                    "file could not be read."
+                ),
+            )
     else:
         command = [
             "gh", "pr", "view", str(args.pr),
             "--json",
             "number,title,state,isDraft,mergeStateStatus,reviewDecision,statusCheckRollup,body,files,url,closingIssuesReferences",
         ]
-        result = subprocess.run(
-            command,
-            cwd=ROOT,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            text=True,
-        )
+        try:
+            result = run_live_gh(command)
+        except RuntimeError as exc:
+            return print_validation_input_failure(
+                code="PR_LIVE_LOOKUP_FAILED",
+                reason=str(exc),
+                field="pr",
+                as_json=args.json,
+                evidence_source="live_github",
+                mechanically_checked=["live GitHub PR lookup availability"],
+                not_checked=[
+                    "PR metadata, status checks, issue scope, or changed paths",
+                    "human approval, low-risk status, or merge authority",
+                ],
+                proof_boundary=(
+                    "No PR status evaluation ran because live GitHub metadata "
+                    "could not be retrieved."
+                ),
+                result="blocked",
+            )
         if result.returncode != 0:
-            print(result.stdout.strip() or "FAIL: gh pr view failed.")
-            return result.returncode
-        payload = json.loads(result.stdout)
+            return print_validation_input_failure(
+                code="PR_LIVE_LOOKUP_FAILED",
+                reason=result.stdout.strip() or "gh pr view failed",
+                field="pr",
+                as_json=args.json,
+                evidence_source="live_github",
+                mechanically_checked=["live GitHub PR lookup"],
+                not_checked=[
+                    "PR metadata, status checks, issue scope, or changed paths",
+                    "human approval, low-risk status, or merge authority",
+                ],
+                proof_boundary=(
+                    "No PR status evaluation ran because live GitHub metadata "
+                    "could not be retrieved."
+                ),
+                result="blocked",
+            )
+        try:
+            payload = json.loads(result.stdout)
+        except json.JSONDecodeError as exc:
+            return print_validation_input_failure(
+                code="PR_LIVE_PAYLOAD_INVALID",
+                reason=f"gh pr view returned invalid JSON: {exc}",
+                field="pr",
+                as_json=args.json,
+                evidence_source="live_github",
+                mechanically_checked=["live GitHub PR lookup response JSON"],
+                not_checked=[
+                    "PR metadata, status checks, issue scope, or changed paths",
+                    "human approval, low-risk status, or merge authority",
+                ],
+                proof_boundary=(
+                    "No PR status evaluation ran because the live lookup response "
+                    "was not valid JSON."
+                ),
+                result="blocked",
+            )
         if isinstance(payload, dict):
             payload["_asgk_live_lookup"] = True
 
     if not isinstance(payload, dict):
-        return print_failures(["PR status payload must be a JSON object"])
+        if args.pr:
+            return print_validation_input_failure(
+                code="PR_LIVE_PAYLOAD_INVALID",
+                reason="live PR status payload must be a JSON object",
+                field="pr",
+                as_json=args.json,
+                evidence_source="live_github",
+                mechanically_checked=["live GitHub PR lookup response top-level shape"],
+                not_checked=[
+                    "PR metadata, status checks, issue scope, or changed paths",
+                    "human approval, low-risk status, or merge authority",
+                ],
+                proof_boundary=(
+                    "No PR status evaluation ran because the live lookup response "
+                    "shape was invalid."
+                ),
+                result="blocked",
+            )
+        return print_validation_input_failure(
+            code="PR_PAYLOAD_SHAPE_INVALID",
+            reason="PR status payload must be a JSON object",
+            field="payload",
+            as_json=args.json,
+            evidence_source=(
+                "supplied_json_fixture_or_capture"
+                if args.json_file
+                else "live_github"
+            ),
+            mechanically_checked=["PR status payload top-level shape"],
+            not_checked=[
+                "PR metadata, status checks, issue scope, or changed paths",
+                "human approval, low-risk status, or merge authority",
+            ],
+            proof_boundary=(
+                "No PR status evaluation ran because the payload shape was invalid."
+            ),
+        )
 
     result, findings = check_pr_status_payload(payload)
     evidence_source = (
@@ -2075,16 +2902,21 @@ def load_pr_payload(args: argparse.Namespace) -> dict[str, object]:
             "--json",
             "number,title,state,isDraft,mergeStateStatus,reviewDecision,statusCheckRollup,body,files,url,closingIssuesReferences",
         ]
-        result = subprocess.run(
-            command,
-            cwd=ROOT,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            text=True,
-        )
+        result = run_live_gh(command)
         if result.returncode != 0:
             raise RuntimeError(result.stdout.strip() or "gh pr view failed")
-        payload = json.loads(result.stdout)
+        try:
+            payload = json.loads(result.stdout)
+        except json.JSONDecodeError as exc:
+            raise LivePayloadError(
+                f"gh pr view returned invalid JSON: {exc}",
+                checked_stage="json",
+            ) from exc
+        if not isinstance(payload, dict):
+            raise LivePayloadError(
+                "live PR payload must be a JSON object",
+                checked_stage="shape",
+            )
         if isinstance(payload, dict):
             payload["_asgk_live_lookup"] = True
     if not isinstance(payload, dict):
@@ -2093,22 +2925,174 @@ def load_pr_payload(args: argparse.Namespace) -> dict[str, object]:
 
 
 def cmd_compact_pr_report(args: argparse.Namespace) -> int:
+    if bool(args.pr) == bool(args.json_file):
+        return print_validation_input_failure(
+            code="CPR_INPUT_MODE_INVALID",
+            reason="provide exactly one of --pr or --json-file",
+            field="input",
+            as_json=args.json,
+            evidence_source="command_arguments",
+            mechanically_checked=["compact PR report command input mode"],
+            not_checked=[
+                "PR metadata, issue scope, status checks, or restricted boundaries",
+                "human approval, low-risk status, or merge authority",
+            ],
+            proof_boundary=(
+                "No compact PR report was compiled because the input mode was invalid."
+            ),
+        )
     try:
         payload = load_pr_payload(args)
-    except (RuntimeError, ValueError, json.JSONDecodeError) as exc:
-        return print_failures([str(exc)])
+    except json.JSONDecodeError as exc:
+        return print_validation_input_failure(
+            code="CPR_INPUT_JSON_INVALID",
+            reason=str(exc),
+            path=args.json_file,
+            as_json=args.json,
+            evidence_source="supplied_json_fixture_or_capture",
+            mechanically_checked=["PR payload readability and JSON syntax"],
+            not_checked=[
+                "PR metadata, issue scope, status checks, or restricted boundaries",
+                "human approval, low-risk status, or merge authority",
+            ],
+            proof_boundary=(
+                "No compact PR report was compiled because the supplied payload "
+                "was not valid JSON."
+            ),
+        )
+    except (OSError, UnicodeError) as exc:
+        return print_validation_input_failure(
+            code="CPR_INPUT_FILE_UNREADABLE",
+            reason=str(exc),
+            path=args.json_file,
+            as_json=args.json,
+            evidence_source="supplied_json_fixture_or_capture",
+            mechanically_checked=["PR payload file readability"],
+            not_checked=[
+                "PR metadata, issue scope, status checks, or restricted boundaries",
+                "human approval, low-risk status, or merge authority",
+            ],
+            proof_boundary=(
+                "No compact PR report was compiled because the supplied payload "
+                "could not be read."
+            ),
+        )
+    except LivePayloadError as exc:
+        live_checked = (
+            ["live GitHub PR lookup response JSON syntax"]
+            if exc.checked_stage == "json"
+            else ["live GitHub PR lookup response top-level shape"]
+        )
+        live_not_checked = [
+            *(
+                ["live GitHub PR lookup response top-level shape"]
+                if exc.checked_stage == "json"
+                else []
+            ),
+            "PR metadata, issue scope, status checks, or restricted boundaries",
+            "human approval, low-risk status, or merge authority",
+        ]
+        return print_validation_input_failure(
+            code="CPR_LIVE_PAYLOAD_INVALID",
+            reason=str(exc),
+            field="pr",
+            as_json=args.json,
+            evidence_source="live_github",
+            mechanically_checked=live_checked,
+            not_checked=live_not_checked,
+            proof_boundary=(
+                "No compact PR report was compiled because live GitHub metadata "
+                "was invalid."
+            ),
+            result="blocked",
+        )
+    except RuntimeError as exc:
+        return print_validation_input_failure(
+            code="CPR_LIVE_LOOKUP_FAILED",
+            reason=str(exc),
+            field="pr",
+            as_json=args.json,
+            evidence_source="live_github",
+            mechanically_checked=["live GitHub PR lookup"],
+            not_checked=[
+                "PR metadata, issue scope, status checks, or restricted boundaries",
+                "human approval, low-risk status, or merge authority",
+            ],
+            proof_boundary=(
+                "No compact PR report was compiled because live GitHub metadata "
+                "could not be retrieved."
+            ),
+            result="blocked",
+        )
+    except ValueError as exc:
+        return print_validation_input_failure(
+            code="CPR_PAYLOAD_TYPE_INVALID",
+            reason=str(exc),
+            field="payload",
+            as_json=args.json,
+            evidence_source=(
+                "supplied_json_fixture_or_capture"
+                if args.json_file
+                else "live_github"
+            ),
+            mechanically_checked=["PR payload top-level shape"],
+            not_checked=[
+                "PR metadata, issue scope, status checks, or restricted boundaries",
+                "human approval, low-risk status, or merge authority",
+            ],
+            proof_boundary=(
+                "No compact PR report was compiled because the payload shape "
+                "was invalid."
+            ),
+        )
 
-    result, output = compact_pr_report_from_payload(payload)
+    domain_result, output = compact_pr_report_from_payload(payload)
+    restricted_boundaries = output.get("restricted_boundaries")
+    human_gate_required = (
+        isinstance(restricted_boundaries, list)
+        and bool(restricted_boundaries)
+    )
+    result_map = {
+        "requires_human": "blocked",
+        "fail_closed": "blocked",
+    }
+    if human_gate_required:
+        result_map["fail"] = "blocked"
+    output = checked_validation_result(
+        output,
+        evidence_source=(
+            "supplied_json_fixture_or_capture"
+            if args.json_file
+            else "live_github"
+        ),
+        mechanically_checked=list(output.get("mechanically_checked", [])),
+        not_checked=list(output.get("not_checked", [])),
+        proof_boundary=str(output.get("proof_boundary") or ""),
+        human_gate_status=(
+            "required" if human_gate_required else "not_checked"
+        ),
+        human_gate_reason=(
+            "A restricted changed-path boundary requires durable human review; "
+            "the validator does not establish that approval."
+            if human_gate_required
+            else "This mechanical validator does not establish or infer human approval."
+        ),
+        result_map=result_map,
+    )
+    result = str(output["result"])
     if args.json:
         print(json.dumps(output, indent=2, sort_keys=True))
-    elif result == "pass":
+    elif domain_result == "pass":
         print(f"Compact PR report passed for PR #{output.get('pr', {}).get('number')}.")
-    elif result == "requires_human":
+    elif domain_result == "requires_human":
         boundaries = ", ".join(output.get("restricted_boundaries", []))
         print(f"Compact PR report requires human review for restricted boundary: {boundaries}")
     else:
         for finding in output.get("findings", []):
-            print(f"FAIL: {finding['field']} - {finding['reason']}")
+            print(
+                f"FAIL: {finding_display_location(finding)} - "
+                f"{finding['reason']}"
+            )
         print("Compact PR report failed. No low-risk status was inferred.")
     return 0 if result == "pass" else 1
 
@@ -2116,33 +3100,38 @@ def cmd_compact_pr_report(args: argparse.Namespace) -> int:
 def print_work_unit_input_failure(
     reason: str,
     *,
+    code: str,
     authority_only: bool,
     as_json: bool,
+    evidence_source: str = "command_arguments",
+    field: str | None = "input",
+    path: str | None = None,
+    result: str = "fail",
 ) -> int:
-    finding = {
-        "code": "WU_INPUT_MODE_INVALID",
-        "severity": "FAIL",
-        "field": "input",
-        "reason": reason,
-        "recommended_fix": (
-            "Use --authority-only without changed-path options, or provide exactly "
-            "one post-diff source: --paths-file or --git-base with --git-head."
+    return print_validation_input_failure(
+        code=code,
+        reason=reason,
+        field=field,
+        path=path,
+        as_json=as_json,
+        evidence_source=evidence_source,
+        mechanically_checked=["work-unit command input or source availability"],
+        not_checked=[
+            "work-unit authority fields and execution gates",
+            "changed paths, path hygiene, or implementation",
+            "human approval or merge authority",
+        ],
+        proof_boundary=(
+            "No work-unit evaluation ran because its command input, durable "
+            "source, or changed-path source was invalid."
         ),
-        "blocking": True,
-    }
-    if as_json:
-        print(json.dumps({
-            "result": "fail",
-            "low_risk_inferred": False,
-            "authority_only": authority_only,
-            "findings": [finding],
-        }, indent=2, sort_keys=True))
-    else:
-        print(
-            f"FAIL: [{finding['code']}] {finding['field']} - "
-            f"{finding['reason']} Fix: {finding['recommended_fix']}"
-        )
-    return 1
+        recommended_fix=(
+            "Provide one readable issue/PR source and use --authority-only "
+            "without diff options, or one complete post-diff path source."
+        ),
+        extra_payload={"authority_only": authority_only},
+        result=result,
+    )
 
 
 def cmd_work_unit_check(args: argparse.Namespace) -> int:
@@ -2151,24 +3140,82 @@ def cmd_work_unit_check(args: argparse.Namespace) -> int:
     if args.authority_only and (using_paths_file or using_git_range):
         return print_work_unit_input_failure(
             "--authority-only cannot be combined with changed-path inputs",
+            code="WU_INPUT_MODE_INVALID",
             authority_only=args.authority_only,
             as_json=args.json,
         )
     if not args.authority_only and using_paths_file == using_git_range:
         return print_work_unit_input_failure(
             "post-diff mode requires exactly one of --paths-file or --git-base/--git-head",
+            code="WU_INPUT_MODE_INVALID",
             authority_only=args.authority_only,
             as_json=args.json,
         )
     if using_git_range and not (args.git_base and args.git_head):
         return print_work_unit_input_failure(
             "--git-base and --git-head must be provided together",
+            code="WU_INPUT_MODE_INVALID",
             authority_only=args.authority_only,
             as_json=args.json,
         )
 
     try:
         payload = load_work_unit_payload(args)
+    except json.JSONDecodeError as exc:
+        return print_work_unit_input_failure(
+            str(exc),
+            code="WU_INPUT_JSON_INVALID",
+            authority_only=args.authority_only,
+            as_json=args.json,
+            evidence_source="supplied_json_fixture_or_capture",
+            field=None,
+            path=args.json_file,
+        )
+    except (OSError, UnicodeError) as exc:
+        return print_work_unit_input_failure(
+            str(exc),
+            code="WU_INPUT_FILE_UNREADABLE",
+            authority_only=args.authority_only,
+            as_json=args.json,
+            evidence_source="supplied_json_fixture_or_capture",
+            field=None,
+            path=args.json_file,
+        )
+    except LivePayloadError as exc:
+        return print_work_unit_input_failure(
+            str(exc),
+            code="WU_LIVE_PAYLOAD_INVALID",
+            authority_only=args.authority_only,
+            as_json=args.json,
+            evidence_source="live_github",
+            field="work_unit",
+            result="blocked",
+        )
+    except RuntimeError as exc:
+        return print_work_unit_input_failure(
+            str(exc),
+            code="WU_LIVE_LOOKUP_FAILED",
+            authority_only=args.authority_only,
+            as_json=args.json,
+            evidence_source="live_github",
+            field="work_unit",
+            result="blocked",
+        )
+    except ValueError as exc:
+        return print_work_unit_input_failure(
+            str(exc),
+            code="WU_PAYLOAD_SHAPE_INVALID",
+            authority_only=args.authority_only,
+            as_json=args.json,
+            evidence_source=(
+                "supplied_json_fixture_or_capture"
+                if args.json_file
+                else "live_github"
+            ),
+            field="work_unit",
+        )
+
+    try:
         if args.authority_only:
             changed_paths = []
         else:
@@ -2177,11 +3224,20 @@ def cmd_work_unit_check(args: argparse.Namespace) -> int:
                 if args.paths_file
                 else load_git_changed_paths(args.git_base, args.git_head)
             )
-    except (RuntimeError, ValueError, json.JSONDecodeError) as exc:
+    except (OSError, UnicodeError, RuntimeError) as exc:
         return print_work_unit_input_failure(
             str(exc),
+            code="WU_GIT_DIFF_FAILED" if using_git_range else "WU_INPUT_FILE_UNREADABLE",
             authority_only=args.authority_only,
             as_json=args.json,
+            evidence_source=(
+                "git_diff"
+                if using_git_range
+                else "supplied_changed_paths_file"
+            ),
+            field="changed_paths" if using_git_range else None,
+            path=None if using_git_range else args.paths_file,
+            result="blocked" if using_git_range else "fail",
         )
 
     result, findings, allowed_paths = check_work_unit_payload(
@@ -2196,6 +3252,11 @@ def cmd_work_unit_check(args: argparse.Namespace) -> int:
         allowed_paths,
         changed_paths,
         authority_only=args.authority_only,
+        evidence_source=(
+            "supplied_json_fixture_or_capture"
+            if args.json_file
+            else "live_github"
+        ),
         as_json=args.json,
     )
 
@@ -2203,26 +3264,166 @@ def cmd_work_unit_check(args: argparse.Namespace) -> int:
 def cmd_compact_issue_scope(args: argparse.Namespace) -> int:
     sources = [bool(args.issue), bool(args.json_file)]
     if sum(sources) != 1:
-        return print_failures(["provide exactly one of --issue or --json-file"])
+        return print_validation_input_failure(
+            code="CIS_INPUT_MODE_INVALID",
+            reason="provide exactly one of --issue or --json-file",
+            field="input",
+            as_json=args.json,
+            evidence_source="command_arguments",
+            mechanically_checked=["compact issue-scope command input mode"],
+            not_checked=[
+                "issue authority fields or allowed_paths",
+                "implementation, human approval, or merge authority",
+            ],
+            proof_boundary=(
+                "No canonical issue-scope projection ran because the input mode "
+                "was invalid."
+            ),
+        )
     try:
         payload = (
             load_live_work_unit("issue", str(args.issue).lstrip("#"))
             if args.issue
             else json.loads(read_text(args.json_file))
         )
-    except (RuntimeError, json.JSONDecodeError) as exc:
-        return print_failures([str(exc)])
+    except json.JSONDecodeError as exc:
+        return print_validation_input_failure(
+            code="CIS_INPUT_JSON_INVALID",
+            reason=str(exc),
+            path=args.json_file,
+            as_json=args.json,
+            evidence_source="supplied_json_fixture_or_capture",
+            mechanically_checked=["issue payload readability and JSON syntax"],
+            not_checked=[
+                "issue authority fields or allowed_paths",
+                "implementation, human approval, or merge authority",
+            ],
+            proof_boundary=(
+                "No canonical issue-scope projection ran because the supplied "
+                "payload was not valid JSON."
+            ),
+        )
+    except (OSError, UnicodeError) as exc:
+        return print_validation_input_failure(
+            code="CIS_INPUT_FILE_UNREADABLE",
+            reason=str(exc),
+            path=args.json_file,
+            as_json=args.json,
+            evidence_source="supplied_json_fixture_or_capture",
+            mechanically_checked=["issue payload file readability"],
+            not_checked=[
+                "issue authority fields or allowed_paths",
+                "implementation, human approval, or merge authority",
+            ],
+            proof_boundary=(
+                "No canonical issue-scope projection ran because the supplied "
+                "payload file could not be read."
+            ),
+        )
+    except LivePayloadError as exc:
+        live_checked = (
+            ["live issue lookup response JSON syntax"]
+            if exc.checked_stage == "json"
+            else ["live issue lookup response top-level shape"]
+        )
+        live_not_checked = [
+            *(
+                ["live issue lookup response top-level shape"]
+                if exc.checked_stage == "json"
+                else []
+            ),
+            "issue authority fields or allowed_paths",
+            "implementation, human approval, or merge authority",
+        ]
+        return print_validation_input_failure(
+            code="CIS_LIVE_PAYLOAD_INVALID",
+            reason=str(exc),
+            field="issue",
+            as_json=args.json,
+            evidence_source="live_github",
+            mechanically_checked=live_checked,
+            not_checked=live_not_checked,
+            proof_boundary=(
+                "No canonical issue-scope projection ran because the live issue "
+                "payload was invalid."
+            ),
+            result="blocked",
+        )
+    except RuntimeError as exc:
+        return print_validation_input_failure(
+            code="CIS_LIVE_LOOKUP_FAILED",
+            reason=str(exc),
+            field="issue",
+            as_json=args.json,
+            evidence_source="live_github",
+            mechanically_checked=["live issue lookup"],
+            not_checked=[
+                "issue authority fields or allowed_paths",
+                "implementation, human approval, or merge authority",
+            ],
+            proof_boundary=(
+                "No canonical issue-scope projection ran because the issue "
+                "payload was unavailable or invalid."
+            ),
+            result="blocked",
+        )
     if not isinstance(payload, dict):
-        return print_failures(["compact issue-scope payload must be a JSON object"])
+        return print_validation_input_failure(
+            code="CIS_PAYLOAD_SHAPE_INVALID",
+            reason="compact issue-scope payload must be a JSON object",
+            field="payload",
+            as_json=args.json,
+            evidence_source=(
+                "live_github"
+                if args.issue
+                else "supplied_json_fixture_or_capture"
+            ),
+            mechanically_checked=["issue payload top-level shape"],
+            not_checked=[
+                "issue authority fields or allowed_paths",
+                "implementation, human approval, or merge authority",
+            ],
+            proof_boundary=(
+                "No canonical issue-scope projection ran because the payload "
+                "shape was invalid."
+            ),
+        )
 
     result, output = canonical_issue_scope_from_payload(payload)
+    output = checked_validation_result(
+        output,
+        evidence_source=(
+            "live_github"
+            if args.issue
+            else "supplied_json_fixture_or_capture"
+        ),
+        mechanically_checked=[
+            "issue payload kind",
+            "visible canonical 13-field task identity",
+            "allowed_paths projection",
+        ],
+        not_checked=[
+            "context_read_set or project_specific_validation execution gates",
+            "implementation correctness or diff contents",
+            "human approval, low-risk status, or merge authority",
+        ],
+        proof_boundary=(
+            "The compact issue-scope projection checks only the supplied issue's "
+            "visible canonical task fields and allowed_paths. It does not grant "
+            "authority or prove implementation, approval, or merge readiness."
+        ),
+    )
+    result = str(output["result"])
     if args.json:
         print(json.dumps(output, indent=2, sort_keys=True))
     elif result == "pass":
         print(f"Canonical issue scope passed for issue #{output.get('issue')}.")
     else:
         for finding in output.get("findings", []):
-            print(f"FAIL: {finding['field']} - {finding['reason']}")
+            print(
+                f"FAIL: {finding_display_location(finding)} - "
+                f"{finding['reason']}"
+            )
         print("Canonical issue scope failed. No low-risk status was inferred.")
     return 0 if result == "pass" else 1
 
@@ -2230,39 +3431,252 @@ def cmd_compact_issue_scope(args: argparse.Namespace) -> int:
 def cmd_compact_scope_lock(args: argparse.Namespace) -> int:
     sources = [bool(args.issue), bool(args.json_file)]
     if sum(sources) != 1:
-        return print_failures(["provide exactly one of --issue or --json-file"])
+        return print_validation_input_failure(
+            code="CSL_INPUT_MODE_INVALID",
+            reason="provide exactly one of --issue or --json-file",
+            field="input",
+            as_json=args.json,
+            evidence_source="command_arguments",
+            mechanically_checked=["compact scope-lock command input mode"],
+            not_checked=[
+                "issue scope or deterministic hash",
+                "implementation, human approval, or merge authority",
+            ],
+            proof_boundary=(
+                "No scope lock ran because the input mode was invalid."
+            ),
+        )
     try:
         payload = (
             load_live_work_unit("issue", str(args.issue).lstrip("#"))
             if args.issue
             else json.loads(read_text(args.json_file))
         )
-    except (RuntimeError, json.JSONDecodeError) as exc:
-        return print_failures([str(exc)])
+    except json.JSONDecodeError as exc:
+        return print_validation_input_failure(
+            code="CSL_INPUT_JSON_INVALID",
+            reason=str(exc),
+            path=args.json_file,
+            as_json=args.json,
+            evidence_source="supplied_json_fixture_or_capture",
+            mechanically_checked=["issue payload readability and JSON syntax"],
+            not_checked=[
+                "issue scope or deterministic hash",
+                "implementation, human approval, or merge authority",
+            ],
+            proof_boundary=(
+                "No scope lock ran because the supplied payload was not valid JSON."
+            ),
+        )
+    except (OSError, UnicodeError) as exc:
+        return print_validation_input_failure(
+            code="CSL_INPUT_FILE_UNREADABLE",
+            reason=str(exc),
+            path=args.json_file,
+            as_json=args.json,
+            evidence_source="supplied_json_fixture_or_capture",
+            mechanically_checked=["issue payload file readability"],
+            not_checked=[
+                "issue scope or deterministic hash",
+                "implementation, human approval, or merge authority",
+            ],
+            proof_boundary=(
+                "No scope lock ran because the supplied payload file could not be read."
+            ),
+        )
+    except LivePayloadError as exc:
+        live_checked = (
+            ["live issue lookup response JSON syntax"]
+            if exc.checked_stage == "json"
+            else ["live issue lookup response top-level shape"]
+        )
+        live_not_checked = [
+            *(
+                ["live issue lookup response top-level shape"]
+                if exc.checked_stage == "json"
+                else []
+            ),
+            "issue scope or deterministic hash",
+            "implementation, human approval, or merge authority",
+        ]
+        return print_validation_input_failure(
+            code="CSL_LIVE_PAYLOAD_INVALID",
+            reason=str(exc),
+            field="issue",
+            as_json=args.json,
+            evidence_source="live_github",
+            mechanically_checked=live_checked,
+            not_checked=live_not_checked,
+            proof_boundary=(
+                "No scope lock ran because the live issue payload was invalid."
+            ),
+            result="blocked",
+        )
+    except RuntimeError as exc:
+        return print_validation_input_failure(
+            code="CSL_LIVE_LOOKUP_FAILED",
+            reason=str(exc),
+            field="issue",
+            as_json=args.json,
+            evidence_source="live_github",
+            mechanically_checked=["live issue lookup"],
+            not_checked=[
+                "issue scope or deterministic hash",
+                "implementation, human approval, or merge authority",
+            ],
+            proof_boundary=(
+                "No scope lock ran because the issue payload was unavailable or invalid."
+            ),
+            result="blocked",
+        )
     if not isinstance(payload, dict):
-        return print_failures(["compact scope-lock payload must be a JSON object"])
+        return print_validation_input_failure(
+            code="CSL_PAYLOAD_SHAPE_INVALID",
+            reason="compact scope-lock payload must be a JSON object",
+            field="payload",
+            as_json=args.json,
+            evidence_source=(
+                "live_github"
+                if args.issue
+                else "supplied_json_fixture_or_capture"
+            ),
+            mechanically_checked=["issue payload top-level shape"],
+            not_checked=[
+                "issue scope or deterministic hash",
+                "implementation, human approval, or merge authority",
+            ],
+            proof_boundary=(
+                "No scope lock ran because the payload shape was invalid."
+            ),
+        )
 
     result, output = compact_scope_lock_from_payload(payload)
+    captured_hash_presence_checked = False
+    comparison_checked = False
     if result == "pass" and args.compare_file:
         try:
             captured = json.loads(read_text(args.compare_file))
         except json.JSONDecodeError as exc:
-            return print_failures([str(exc)])
+            return print_validation_input_failure(
+                code="CSL_COMPARE_JSON_INVALID",
+                reason=f"captured scope lock is not valid JSON: {exc}",
+                path=args.compare_file,
+                as_json=args.json,
+                evidence_source="supplied_scope_lock_capture",
+                mechanically_checked=["captured scope-lock readability and JSON syntax"],
+                not_checked=[
+                    "current and captured scope-hash equality",
+                    "implementation, human approval, or merge authority",
+                ],
+                proof_boundary=(
+                    "The current scope projection may have run, but no comparison "
+                    "proof exists because the captured lock was not valid JSON."
+                ),
+            )
+        except (OSError, UnicodeError) as exc:
+            return print_validation_input_failure(
+                code="CSL_COMPARE_FILE_UNREADABLE",
+                reason=f"could not read captured scope lock: {exc}",
+                path=args.compare_file,
+                as_json=args.json,
+                evidence_source="supplied_scope_lock_capture",
+                mechanically_checked=["captured scope-lock file readability"],
+                not_checked=[
+                    "current and captured scope-hash equality",
+                    "implementation, human approval, or merge authority",
+                ],
+                proof_boundary=(
+                    "The current scope projection may have run, but no comparison "
+                    "proof exists because the captured lock file could not be read."
+                ),
+            )
         if not isinstance(captured, dict):
-            return print_failures(["captured scope-lock payload must be a JSON object"])
+            return print_validation_input_failure(
+                code="CSL_COMPARE_SHAPE_INVALID",
+                reason="captured scope-lock payload must be a JSON object",
+                field="compare_file",
+                as_json=args.json,
+                evidence_source="supplied_scope_lock_capture",
+                mechanically_checked=["captured scope-lock top-level shape"],
+                not_checked=[
+                    "current and captured scope-hash equality",
+                    "implementation, human approval, or merge authority",
+                ],
+                proof_boundary=(
+                    "No scope-lock comparison proof exists because the captured "
+                    "payload shape was invalid."
+                ),
+            )
+        captured_hash_presence_checked = True
+        captured_hash = extract_scope_hash(captured)
+        comparison_checked = bool(output.get("scope_hash")) and bool(
+            isinstance(captured_hash, str) and captured_hash.strip()
+        )
         compare_findings = compare_scope_lock(output, captured)
         if compare_findings:
             output["result"] = "fail"
             output["findings"] = compare_findings
             result = "fail"
 
+    scope_hash_checked = bool(output.get("scope_hash"))
+    mechanically_checked = ["canonical issue-scope projection"]
+    not_checked = [
+        "implementation correctness or diff contents",
+        "whether the issue scope is semantically sufficient",
+        "human approval, low-risk status, or merge authority",
+    ]
+    if scope_hash_checked:
+        mechanically_checked.append("deterministic SHA-256 scope hash")
+    else:
+        not_checked.append("deterministic SHA-256 scope hash")
+    if captured_hash_presence_checked:
+        mechanically_checked.append("captured scope-hash presence")
+    if comparison_checked:
+        mechanically_checked.append("captured scope-hash equality")
+    elif args.compare_file:
+        not_checked.append("captured scope-hash equality")
+    if not scope_hash_checked:
+        boundary = (
+            "Issue-scope projection failed; no deterministic scope lock or "
+            "comparison proof was produced. No authority, implementation, or "
+            "approval was established."
+        )
+    elif args.compare_file and not comparison_checked:
+        boundary = (
+            "The current issue scope and its deterministic hash were projected, "
+            "and the captured scope-hash presence was checked, but no equality "
+            "comparison proof was produced because the capture had no material "
+            "scope_hash. No authority, implementation, or approval was established."
+        )
+    else:
+        boundary = (
+            "The compact scope lock proves only a deterministic projection of "
+            "the supplied issue scope and, when requested, records the result of "
+            "one captured-hash equality comparison. It grants no authority and "
+            "proves no implementation or approval."
+        )
+    output = checked_validation_result(
+        output,
+        evidence_source=(
+            "live_github_and_optional_capture"
+            if args.issue
+            else "supplied_issue_payload_and_optional_capture"
+        ),
+        mechanically_checked=mechanically_checked,
+        not_checked=not_checked,
+        proof_boundary=boundary,
+    )
+    result = str(output["result"])
     if args.json:
         print(json.dumps(output, indent=2, sort_keys=True))
     elif result == "pass":
         print(f"Compact scope lock passed for issue #{output.get('issue')}: {output.get('scope_hash')}")
     else:
         for finding in output.get("findings", []):
-            print(f"FAIL: {finding['field']} - {finding['reason']}")
+            print(
+                f"FAIL: {finding_display_location(finding)} - "
+                f"{finding['reason']}"
+            )
         print("Compact scope lock failed. No low-risk status was inferred.")
     return 0 if result == "pass" else 1
 
@@ -2557,15 +3971,27 @@ def cmd_pr_body_check(args: argparse.Namespace) -> int:
     return policy_gate.returncode
 
 
+class TaskPacketInputModeError(ValueError):
+    pass
+
+
+class TaskPacketPayloadError(ValueError):
+    pass
+
+
 def load_task_packet_check_inputs(
     args: argparse.Namespace,
 ) -> tuple[dict[str, object], str, dict[str, object] | None]:
     if args.json_file:
         if args.file or args.issue or args.issue_json_file:
-            raise ValueError("use either --json-file or --file with --issue/--issue-json-file")
+            raise TaskPacketInputModeError(
+                "use either --json-file or --file with --issue/--issue-json-file"
+            )
         payload = json.loads(read_text(args.json_file))
         if not isinstance(payload, dict):
-            raise ValueError("task-packet fixture bundle must be a JSON object")
+            raise TaskPacketPayloadError(
+                "task-packet fixture bundle must be a JSON object"
+            )
         competing_packet_fields = [
             field
             for field in payload
@@ -2580,17 +4006,30 @@ def load_task_packet_check_inputs(
         issue_payload = payload.get("issue")
         packet = payload.get("task_packet")
         if not isinstance(packet, dict):
-            raise ValueError("task-packet fixture bundle must include task_packet object")
+            raise TaskPacketPayloadError(
+                "task-packet fixture bundle must include task_packet object"
+            )
         if issue_payload is not None and not isinstance(issue_payload, dict):
-            raise ValueError("task-packet fixture issue must be an object")
+            raise TaskPacketPayloadError(
+                "task-packet fixture issue must be an object"
+            )
         return packet, json.dumps(packet, sort_keys=True), issue_payload
 
     if not args.file:
-        raise ValueError("provide --file or --json-file")
+        raise TaskPacketInputModeError("provide --file or --json-file")
     if args.issue and args.issue_json_file:
-        raise ValueError("provide at most one of --issue or --issue-json-file")
+        raise TaskPacketInputModeError(
+            "provide at most one of --issue or --issue-json-file"
+        )
 
-    packet, source_text = load_task_packet_payload(args.file)
+    try:
+        packet, source_text = load_task_packet_payload(args.file)
+    except TaskFieldAmbiguityError:
+        raise
+    except json.JSONDecodeError:
+        raise
+    except ValueError as exc:
+        raise TaskPacketPayloadError(str(exc)) from exc
     if args.issue:
         issue_payload = load_live_work_unit("issue", str(args.issue).lstrip("#"))
     elif args.issue_json_file:
@@ -2598,28 +4037,45 @@ def load_task_packet_check_inputs(
     else:
         issue_payload = None
     if issue_payload is not None and not isinstance(issue_payload, dict):
-        raise ValueError("task-packet issue payload must be a JSON object")
+        raise TaskPacketPayloadError(
+            "task-packet issue payload must be a JSON object"
+        )
     return packet, source_text, issue_payload
 
 
-def print_task_packet_input_failure(reason: str, *, as_json: bool) -> int:
-    finding = {
-        "code": "TP_INPUT_MODE_INVALID",
-        "field": "input",
-        "reason": reason,
-        "blocking": True,
-    }
-    output = {
-        "result": "fail",
-        "low_risk_inferred": False,
-        "proof_boundary": "No task-packet evaluation ran because the input mode was invalid.",
-        "findings": [finding],
-    }
-    if as_json:
-        print(json.dumps(output, indent=2, sort_keys=True))
-    else:
-        print(f"FAIL: [{finding['code']}] {finding['field']} - {finding['reason']}")
-    return 1
+def print_task_packet_input_failure(
+    reason: str,
+    *,
+    code: str,
+    as_json: bool,
+    evidence_source: str,
+    field: str | None = "input",
+    path: str | None = None,
+    result: str = "fail",
+) -> int:
+    return print_validation_input_failure(
+        code=code,
+        reason=reason,
+        field=field,
+        path=path,
+        as_json=as_json,
+        evidence_source=evidence_source,
+        mechanically_checked=["task-packet command input or source availability"],
+        not_checked=[
+            "task-packet shape or authority mode",
+            "source issue authority and non-expansion",
+            "human approval, PR readiness, or merge authority",
+        ],
+        proof_boundary=(
+            "No task-packet evaluation ran because its command input or supplied "
+            "authority source was invalid."
+        ),
+        recommended_fix=(
+            "Provide one readable task packet and, for issue_refinement, one "
+            "readable live or captured issue authority."
+        ),
+        result=result,
+    )
 
 
 def print_task_packet_ambiguity_failure(
@@ -2636,7 +4092,7 @@ def print_task_packet_ambiguity_failure(
         }
         for reason in reasons
     ]
-    output = {
+    output = checked_validation_result({
         "result": "fail",
         "low_risk_inferred": False,
         "mode": None,
@@ -2655,18 +4111,33 @@ def print_task_packet_ambiguity_failure(
             "implementation correctness",
             "PR readiness, human approval, merge authority, or issue completion",
         ],
-        "proof_boundary": (
+        "findings": findings,
+    },
+        evidence_source="supplied_task_packet",
+        mechanically_checked=[
+            "visible top-level task-packet field uniqueness",
+        ],
+        not_checked=[
+            "packet mode and field shape",
+            "source issue authority",
+            "allowed_paths non-expansion",
+            "context_read_set exact-item non-expansion",
+            "project_specific_validation exact-item non-expansion",
+            "implementation correctness",
+            "PR readiness, human approval, merge authority, or issue completion",
+        ],
+        proof_boundary=(
             "No task-packet authority or comparison proof was established "
             "because the visible task-field source was ambiguous."
         ),
-        "findings": findings,
-    }
+    )
     if as_json:
         print(json.dumps(output, indent=2, sort_keys=True))
     else:
         for finding in findings:
             print(
-                f"FAIL: [{finding['code']}] {finding['field']} - "
+                f"FAIL: [{finding['code']}] "
+                f"{finding_display_location(finding)} - "
                 f"{finding['reason']}"
             )
     return 1
@@ -2680,10 +4151,71 @@ def cmd_task_packet_check(args: argparse.Namespace) -> int:
             exc.reasons,
             as_json=args.json,
         )
-    except (RuntimeError, ValueError, json.JSONDecodeError) as exc:
-        return print_task_packet_input_failure(str(exc), as_json=args.json)
+    except json.JSONDecodeError as exc:
+        return print_task_packet_input_failure(
+            str(exc),
+            code="TP_INPUT_JSON_INVALID",
+            as_json=args.json,
+            evidence_source="supplied_task_packet_or_issue_file",
+            field=None,
+            path=args.json_file or args.file or args.issue_json_file,
+        )
+    except (OSError, UnicodeError) as exc:
+        return print_task_packet_input_failure(
+            str(exc),
+            code="TP_INPUT_FILE_UNREADABLE",
+            as_json=args.json,
+            evidence_source="supplied_task_packet_or_issue_file",
+            field=None,
+            path=args.json_file or args.file or args.issue_json_file,
+        )
+    except LivePayloadError as exc:
+        return print_task_packet_input_failure(
+            str(exc),
+            code="TP_LIVE_PAYLOAD_INVALID",
+            as_json=args.json,
+            evidence_source="live_github_and_supplied_task_packet",
+            field="issue",
+            result="blocked",
+        )
+    except RuntimeError as exc:
+        return print_task_packet_input_failure(
+            str(exc),
+            code="TP_LIVE_LOOKUP_FAILED",
+            as_json=args.json,
+            evidence_source="live_github_and_supplied_task_packet",
+            field="issue",
+            result="blocked",
+        )
+    except TaskPacketInputModeError as exc:
+        return print_task_packet_input_failure(
+            str(exc),
+            code="TP_INPUT_MODE_INVALID",
+            as_json=args.json,
+            evidence_source="command_arguments_or_supplied_file",
+        )
+    except TaskPacketPayloadError as exc:
+        return print_task_packet_input_failure(
+            str(exc),
+            code="TP_PAYLOAD_SHAPE_INVALID",
+            as_json=args.json,
+            evidence_source="supplied_task_packet_or_issue_file",
+            field="payload",
+        )
 
     result, output = evaluate_task_packet(packet, source_text, issue_payload)
+    output = checked_validation_result(
+        output,
+        evidence_source=(
+            "live_github_and_supplied_task_packet"
+            if args.issue
+            else "supplied_task_packet_or_fixture"
+        ),
+        mechanically_checked=list(output.get("mechanically_checked", [])),
+        not_checked=list(output.get("not_checked", [])),
+        proof_boundary=str(output.get("proof_boundary") or ""),
+    )
+    result = str(output["result"])
     if args.json:
         print(json.dumps(output, indent=2, sort_keys=True))
     elif result == "pass":
@@ -2696,7 +4228,7 @@ def cmd_task_packet_check(args: argparse.Namespace) -> int:
         for finding in output.get("findings", []):
             print(
                 f"FAIL: [{finding.get('code', 'TP_UNKNOWN')}] "
-                f"{finding['field']} - {finding['reason']}"
+                f"{finding_display_location(finding)} - {finding['reason']}"
             )
         print("Task packet check failed. No low-risk status was inferred.")
     return 0 if result == "pass" else 1
@@ -2704,13 +4236,24 @@ def cmd_task_packet_check(args: argparse.Namespace) -> int:
 
 def cmd_compact_pr_body_check(args: argparse.Namespace) -> int:
     result, output = compact_pr_body_check(args.body_file, args.report_json)
+    output = checked_validation_result(
+        output,
+        evidence_source="supplied_pr_body_and_compiled_report_files",
+        mechanically_checked=list(output.get("mechanically_checked", [])),
+        not_checked=list(output.get("not_checked", [])),
+        proof_boundary=str(output.get("proof_boundary") or ""),
+    )
+    result = str(output["result"])
     if args.json:
         print(json.dumps(output, indent=2, sort_keys=True))
     elif result == "pass":
         print("Compact PR body check passed. No low-risk status was inferred.")
     else:
         for finding in output.get("findings", []):
-            print(f"FAIL: {finding['field']} - {finding['reason']}")
+            print(
+                f"FAIL: {finding_display_location(finding)} - "
+                f"{finding['reason']}"
+            )
         print("Compact PR body check failed. No low-risk status was inferred.")
     return 0 if result == "pass" else 1
 
@@ -2723,13 +4266,24 @@ def cmd_compact_handoff_check(args: argparse.Namespace) -> int:
         completed_prs=args.completed_pr,
         completed_branches=args.completed_branch,
     )
+    output = checked_validation_result(
+        output,
+        evidence_source="supplied_handoff_and_current_status_files",
+        mechanically_checked=list(output.get("mechanically_checked", [])),
+        not_checked=list(output.get("not_checked", [])),
+        proof_boundary=str(output.get("proof_boundary") or ""),
+    )
+    result = str(output["result"])
     if args.json:
         print(json.dumps(output, indent=2, sort_keys=True))
     elif result == "pass":
         print("Compact handoff check passed. No low-risk status was inferred.")
     else:
         for finding in output.get("findings", []):
-            print(f"FAIL: {finding['field']} - {finding['reason']}")
+            print(
+                f"FAIL: {finding_display_location(finding)} - "
+                f"{finding['reason']}"
+            )
         print("Compact handoff check failed. No low-risk status was inferred.")
     return 0 if result == "pass" else 1
 
@@ -2742,7 +4296,10 @@ def cmd_compact_target_upgrade_check(args: argparse.Namespace) -> int:
         print("Compact target upgrade check passed. No low-risk status was inferred.")
     else:
         for finding in output.get("findings", []):
-            print(f"FAIL: {finding['field']} - {finding['reason']}")
+            print(
+                f"FAIL: {finding_display_location(finding)} - "
+                f"{finding['reason']}"
+            )
         print("Compact target upgrade check failed. No low-risk status was inferred.")
     return 0 if result == "pass" else 1
 
@@ -2751,19 +4308,142 @@ def cmd_context_budget_measure(args: argparse.Namespace) -> int:
     try:
         packet, source_text = load_task_packet_payload(args.task_packet)
     except TaskFieldAmbiguityError as exc:
-        return print_task_packet_ambiguity_failure(
-            exc.reasons,
-            as_json=args.json,
+        findings = [
+            make_finding(
+                "TP_TASK_FIELD_AMBIGUOUS",
+                reason,
+                field="task_packet",
+                blocking=True,
+            )
+            for reason in exc.reasons
+        ]
+        output = checked_validation_result(
+            {
+                "result": "fail",
+                "measurement_performed": False,
+                "findings": findings,
+            },
+            evidence_source="supplied_task_packet_file",
+            mechanically_checked=["visible top-level task-packet field uniqueness"],
+            not_checked=[
+                "task-packet shape and context_read_set",
+                "repo-file byte, character, or token estimates",
+                "semantic necessity or sufficiency of selected context",
+            ],
+            proof_boundary=(
+                "No context measurement ran because the task-packet field source "
+                "was ambiguous."
+            ),
         )
-    except (json.JSONDecodeError, ValueError) as exc:
-        return print_failures([f"invalid task packet format: {exc}"])
+        if args.json:
+            print(json.dumps(output, indent=2, sort_keys=True))
+        else:
+            for finding in findings:
+                print(
+                    f"FAIL: [{finding['code']}] "
+                    f"{finding_display_location(finding)} - "
+                    f"{finding['reason']}"
+                )
+        return 1
+    except json.JSONDecodeError as exc:
+        return print_validation_input_failure(
+            code="CBM_INPUT_JSON_INVALID",
+            reason=f"invalid task packet JSON: {exc}",
+            path=args.task_packet,
+            as_json=args.json,
+            evidence_source="supplied_task_packet_file",
+            mechanically_checked=["task-packet file readability and JSON syntax"],
+            not_checked=[
+                "task-packet shape and context_read_set",
+                "repo-file byte, character, or token estimates",
+                "semantic necessity or sufficiency of selected context",
+            ],
+            proof_boundary=(
+                "No context measurement ran because the task packet was not valid JSON."
+            ),
+        )
+    except (OSError, UnicodeError) as exc:
+        return print_validation_input_failure(
+            code="CBM_INPUT_FILE_UNREADABLE",
+            reason=f"could not read task packet: {exc}",
+            path=args.task_packet,
+            as_json=args.json,
+            evidence_source="supplied_task_packet_file",
+            mechanically_checked=["task-packet file readability"],
+            not_checked=[
+                "task-packet shape and context_read_set",
+                "repo-file byte, character, or token estimates",
+                "semantic necessity or sufficiency of selected context",
+            ],
+            proof_boundary=(
+                "No context measurement ran because the task packet was unreadable."
+            ),
+        )
+    except ValueError as exc:
+        return print_validation_input_failure(
+            code="CBM_INPUT_FORMAT_INVALID",
+            reason=f"invalid task packet format: {exc}",
+            field="task_packet",
+            as_json=args.json,
+            evidence_source="supplied_task_packet_file",
+            mechanically_checked=["task-packet top-level format"],
+            not_checked=[
+                "task-packet shape and context_read_set",
+                "repo-file byte, character, or token estimates",
+                "semantic necessity or sufficiency of selected context",
+            ],
+            proof_boundary=(
+                "No context measurement ran because the task-packet format was invalid."
+            ),
+        )
     result, findings = validate_task_packet_shape(packet, source_text)
     if result != "pass":
-        for finding in findings:
-            print(
-                f"FAIL: [{finding.get('code', 'TP_UNKNOWN')}] "
-                f"{finding['field']} - {finding['reason']}"
+        raw_mode = packet.get("mode")
+        mode = raw_mode.strip() if isinstance(raw_mode, str) else ""
+        supported_mode = mode in {
+            "issue_refinement",
+            "github_unavailable_fallback",
+        }
+        mechanically_checked = [
+            "task-packet mode presence, scalar type, and supported token",
+        ]
+        not_checked = [
+            "context_read_set item syntax, repository-file existence, and containment",
+            "repo-file byte, character, or token estimates",
+            "semantic necessity or sufficiency of selected context",
+            "human approval, low-risk status, or merge authority",
+        ]
+        if supported_mode:
+            mechanically_checked.append(
+                "mode-specific task-packet field presence and type shape"
             )
+        else:
+            not_checked.insert(
+                0,
+                "mode-specific task-packet field presence and type shape",
+            )
+        output = checked_validation_result(
+            {
+                "result": "fail",
+                "measurement_performed": False,
+                "findings": findings,
+            },
+            evidence_source="supplied_task_packet_file",
+            mechanically_checked=mechanically_checked,
+            not_checked=not_checked,
+            proof_boundary=(
+                "No context measurement ran because the task packet failed the "
+                "canonical shape evaluator."
+            ),
+        )
+        if args.json:
+            print(json.dumps(output, indent=2, sort_keys=True))
+        else:
+            for finding in findings:
+                print(
+                    f"FAIL: [{finding.get('code', 'TP_UNKNOWN')}] "
+                    f"{finding_display_location(finding)} - {finding['reason']}"
+                )
         return 1
     measurement = context_budget_measurement(packet)
     return print_context_budget_measurement(measurement, as_json=args.json)
@@ -2773,6 +4453,14 @@ def cmd_handoff_check(args: argparse.Namespace) -> int:
     result, output, _packet = evaluate_handoff_file(
         args.file,
     )
+    output = checked_validation_result(
+        output,
+        evidence_source="supplied_handoff_file",
+        mechanically_checked=list(output.get("mechanically_checked", [])),
+        not_checked=list(output.get("not_checked", [])),
+        proof_boundary=str(output.get("proof_boundary") or ""),
+    )
+    result = str(output["result"])
     if args.json:
         print(json.dumps(output, indent=2, sort_keys=True))
     elif result == "pass":
@@ -2782,7 +4470,7 @@ def cmd_handoff_check(args: argparse.Namespace) -> int:
         for finding in output.get("findings", []):
             print(
                 f"FAIL: [{finding.get('code', 'HP_UNKNOWN')}] "
-                f"{finding['field']} - {finding['reason']}"
+                f"{finding_display_location(finding)} - {finding['reason']}"
             )
         print("Handoff check failed. No approval or completion was inferred.")
     return 0 if result == "pass" else 1
@@ -2866,9 +4554,59 @@ def cmd_release_state_check(args: argparse.Namespace) -> int:
 
 def cmd_workspace_state_check(args: argparse.Namespace) -> int:
     if args.json_file:
-        payload = json.loads(read_text(args.json_file))
+        try:
+            payload = json.loads(read_text(args.json_file))
+        except json.JSONDecodeError as exc:
+            return print_validation_input_failure(
+                code="WS_INPUT_JSON_INVALID",
+                reason=f"invalid workspace-state JSON: {exc}",
+                path=args.json_file,
+                as_json=args.json,
+                evidence_source="supplied_workspace_state_fixture",
+                mechanically_checked=["workspace-state file readability and JSON syntax"],
+                not_checked=[
+                    "workspace branch, upstream, merged-state, or paths",
+                    "issue authority, human approval, or merge readiness",
+                ],
+                proof_boundary=(
+                    "No workspace-state evaluation ran because the supplied "
+                    "fixture was not valid JSON."
+                ),
+            )
+        except (OSError, UnicodeError) as exc:
+            return print_validation_input_failure(
+                code="WS_INPUT_FILE_UNREADABLE",
+                reason=f"could not read workspace-state JSON: {exc}",
+                path=args.json_file,
+                as_json=args.json,
+                evidence_source="supplied_workspace_state_fixture",
+                mechanically_checked=["workspace-state file readability"],
+                not_checked=[
+                    "workspace branch, upstream, merged-state, or paths",
+                    "issue authority, human approval, or merge readiness",
+                ],
+                proof_boundary=(
+                    "No workspace-state evaluation ran because the supplied "
+                    "fixture could not be read."
+                ),
+            )
         if not isinstance(payload, dict):
-            return print_failures(["workspace-state JSON fixture must be an object"])
+            return print_validation_input_failure(
+                code="WS_PAYLOAD_TYPE_INVALID",
+                reason="workspace-state JSON fixture must be an object",
+                field="payload",
+                as_json=args.json,
+                evidence_source="supplied_workspace_state_fixture",
+                mechanically_checked=["workspace-state payload top-level shape"],
+                not_checked=[
+                    "workspace branch, upstream, merged-state, or paths",
+                    "issue authority, human approval, or merge readiness",
+                ],
+                proof_boundary=(
+                    "No workspace-state evaluation ran because the payload shape "
+                    "was invalid."
+                ),
+            )
     else:
         payload = live_workspace_state(args.base_ref)
     findings = workspace_state_findings(payload, main_branch=args.main_branch)
@@ -2878,6 +4616,11 @@ def cmd_workspace_state_check(args: argparse.Namespace) -> int:
         as_json=args.json,
         strict=args.strict,
         expect_warnings=args.expect_warnings,
+        evidence_source=(
+            "supplied_workspace_state_fixture"
+            if args.json_file
+            else "live_local_git_workspace"
+        ),
     )
 
 

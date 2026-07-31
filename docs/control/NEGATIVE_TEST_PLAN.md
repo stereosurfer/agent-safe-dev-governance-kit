@@ -37,8 +37,11 @@ merge_decision_record: docs/control/MERGE_DECISION_RECORD.md
 
 If this plan conflicts with `docs/control/VALIDATION_STRATEGY.md`, prefer the
 validation strategy for validator proof boundaries, fail-closed behavior, and
-fixture rules. Prefer this plan for case IDs, expected outcomes, fixture paths,
-and implementation status. Open a follow-up issue when the two surfaces drift.
+fixture rules. Prefer this plan for human-readable case IDs, risk intent, review
+classification, and candidate fixture paths. Executable implementation status
+and exact command expectations belong only to
+`scripts/asgk_lib/scenario_registry.py`. Open a follow-up issue when the two
+surfaces drift.
 
 ## Outcome Types
 
@@ -55,6 +58,11 @@ negative_test_outcomes:
   warning:
     meaning: issue should be reported but does not block by itself
 ```
+
+These are human review classifications. They are not the common JSON `result`
+enum. In command output, an unavailable required check or a required human gate
+uses top-level `result: blocked`; `fail_closed` and `human_gated` remain domain
+meaning rather than alternate common result tokens.
 
 ## Fixture Strategy
 
@@ -74,6 +82,11 @@ fixture_strategy:
 Do not place malformed JSON, bad task packets, or intentionally unsafe paths in
 normal `examples/` or `schemas/` locations unless the validator is explicitly
 changed to treat them as expected failures.
+
+Fixture metadata explains intent only. It cannot override the exact result,
+exit, finding-code multiset, human-gate state, or proof boundary registered for
+an executable scenario. A `planned_unimplemented` row is a design gap, not
+validation evidence.
 
 ## Negative Case Matrix
 
@@ -109,14 +122,14 @@ changed to treat them as expected failures.
 | `NEG-029-missing-stop-conditions` | task packet lacks stop conditions | blocked | task packet validator | `examples/negative/task_packet.no-stop.yaml` | Agent may overrun scope. |
 | `NEG-030-issue-refinement-without-source-issue` | issue-refinement packet is evaluated without the live or captured source issue | blocked | task packet validator | `examples/negative/task_packet.executable-no-github-issue.yaml` | An issue refinement cannot create or replace its own authority. |
 | `NEG-031-doc-map-not-updated` | new canonical doc added but `docs/DOCUMENT_MAP.md` not updated | request_changes | PR review / document map | `planned_unimplemented: stale document map PR fixture` | Prevent ownership drift. |
-| `NEG-032-compact-pr-outside-issue-scope` | compact PR references an issue but changes paths outside issue `allowed_paths` | blocked | compact governance red-team checker | `examples/negative/compact_governance/changed-path-outside-allowed.json` | Reference-only PR prose is not enough. |
-| `NEG-033-compact-scope-lock-stale` | issue scope changes after a compact scope lock is captured | blocked | compact governance red-team checker | `examples/negative/compact_governance/issue-scope-lock-changed.json` | Scope lock mismatch must block. |
-| `NEG-034-compact-task-packet-expands-scope` | issue-refinement packet adds paths outside the source issue scope | blocked | compact red-team caller delegating to task-packet-check | `examples/negative/compact_governance/task-packet-expands-scope.json` | The red-team runner owns no packet-comparison semantics. |
-| `NEG-035-compact-self-attested-claim-conflict` | PR prose claims merge readiness while tool-derived state is blocked | blocked | compact governance red-team checker | `examples/negative/compact_governance/self-attested-claim-overrides-tool-state.json` | Agent claims cannot create eligibility. |
-| `NEG-036-compact-ci-pending-claimed-eligible` | CI is pending while compact PR prose implies merge eligibility | blocked | compact governance red-team checker | `examples/negative/compact_governance/ci-pending-claimed-eligible.json` | CI state must be tool-derived. |
-| `NEG-037-compact-current-status-impact-mismatch` | `CURRENT_STATUS.md` changed while impact says `not_applicable` | blocked | compact governance red-team checker | `examples/negative/compact_governance/current-status-impact-mismatch.json` | Compact handoff cannot hide state drift. |
-| `NEG-038-compact-restricted-boundary-human-gate` | compact report touches protected governance boundary | human_gated | compact governance red-team checker | `examples/negative/compact_governance/restricted-boundary-human-gate.json` | Human-gated state is not merge eligibility. |
-| `NEG-039-compact-metadata-unavailable` | issue/PR metadata is unavailable | blocked | compact governance red-team checker | `examples/negative/compact_governance/github-metadata-unavailable.json` | Compact governance must fail closed. |
+| `NEG-032-compact-pr-outside-issue-scope` | compact PR references an issue but changes paths outside issue `allowed_paths` | blocked | compact PR report / check-pr | `examples/negative/compact_governance/changed-path-outside-allowed.json` | Reference-only PR prose is not enough. |
+| `NEG-033-compact-scope-lock-stale` | issue scope changes after a compact scope lock is captured | blocked | compact-scope-lock | `examples/negative/compact_governance/issue-scope-lock-changed.json` | Scope lock mismatch must block. |
+| `NEG-034-compact-task-packet-expands-scope` | issue-refinement packet adds paths outside the source issue scope | blocked | canonical task-packet evaluator | `examples/negative/compact_governance/task-packet-expands-scope.json` | The legacy red-team caller owns no packet-comparison semantics. |
+| `NEG-035-compact-self-attested-claim-conflict` | PR prose claims merge readiness while tool-derived state is blocked | blocked | compact-pr-report | `examples/negative/compact_governance/self-attested-claim-overrides-tool-state.json` | Agent claims cannot create eligibility. |
+| `NEG-036-compact-ci-pending-claimed-eligible` | CI is pending while compact PR prose implies merge eligibility | blocked | compact-pr-report / check-pr | `examples/negative/compact_governance/ci-pending-claimed-eligible.json` | CI state must be tool-derived. |
+| `NEG-037-compact-current-status-impact-mismatch` | `CURRENT_STATUS.md` changed while impact says `not_applicable` | blocked | compact-handoff-check | `examples/negative/compact_governance/current-status-impact-mismatch.json` | Compact handoff cannot hide state drift. |
+| `NEG-038-compact-restricted-boundary-human-gate` | compact report touches protected governance boundary | human_gated | compact-pr-report | `examples/negative/compact_governance/restricted-boundary-human-gate.json` | Common result is `blocked`; human-gate status is `required`; neither is merge eligibility. |
+| `NEG-039-compact-metadata-unavailable` | issue/PR metadata is unavailable | blocked | compact-pr-report | `examples/negative/compact_governance/github-metadata-unavailable.json` | Domain state fails closed and common result is `blocked`; no metadata is guessed. |
 | `NEG-040-compact-scope-lock-missing-allowed-paths` | issue scope-lock input lacks material `allowed_paths` | blocked | compact scope-lock command | `examples/negative/compact_governance/scope-lock.missing-allowed-paths.json` | Scope lock cannot be generated without path authority. |
 | `NEG-041-compact-issue-scope-missing-allowed-paths` | canonical issue scope input lacks material `allowed_paths` | blocked | compact issue-scope command | `examples/negative/compact_governance/issue-scope.missing-allowed-paths.json` | Canonical scope cannot be generated without path authority. |
 | `NEG-042-compact-scope-lock-stale-capture` | captured scope lock hash does not match current canonical issue scope | blocked | compact scope-lock command | `examples/negative/compact_governance/scope-lock.stale-capture.json` | Captured scope locks must not survive issue-scope changes. |
@@ -184,13 +197,19 @@ changed to treat them as expected failures.
 ## Current Execution Surface
 
 Negative fixtures are active opt-in expected-failure inputs. The executable
-runner surface is split across:
+owner and its projections are:
 
 ```yaml
 negative_runner_surface:
+  exact_scenario_owner: scripts/asgk_lib/scenario_registry.py
+  exact_execution_verifier: scripts/asgk_lib/scenario_runner.py
   facade: scripts/asgk_lib/negative.py
-  case_registry: scripts/asgk_lib/negative_cases.py
-  command_runner: scripts/asgk_lib/negative_runner.py
+  compatibility_wrappers:
+    - scripts/asgk_lib/negative_cases.py
+    - scripts/asgk_lib/negative_runner.py
+  composed_by:
+    - python3 scripts/asgk.py doctor
+    - .github/workflows/bootstrap-validation.yml
 ```
 
 ```bash
@@ -202,6 +221,17 @@ python3 scripts/asgk.py negative --help
 Positive validation must not load negative fixtures as valid repository state.
 Default startup must not read `examples/` unless the current issue, PR,
 validator, or documentation reference names a specific example or fixture.
+
+For each retained JSON behavior, the registry owns at least one positive and one
+negative scenario. It records the exact owner command, polarity, exit, common
+result, finding-code multiset, human-gate state, and proof boundary. The runner
+also checks task-packet alias parity, controlled input failures, and rejects
+false evidence such as signals, tracebacks, stderr, mixed output, malformed
+JSON, wrong results, wrong code multiplicity, wrong proof boundaries, wrong
+human-gate or domain states, and wrong checked/unchecked claims. Branch-specific
+scenarios lock exact checked/unchecked lists when an early failure could
+otherwise overclaim work. Controlled live scenarios cover both a nonzero tool
+response and an executable that is absent from `PATH`.
 
 Positive lifecycle coverage must separately prove:
 
@@ -216,7 +246,8 @@ positive_pr_lifecycle:
 
 ## Rules For Negative Fixtures
 
-Each negative fixture should either be registered in a runner group or be named
+Each negative fixture should either be referenced by an executable registry
+scenario, retained by one explicitly bounded legacy regression group, or named
 by a scoped future validation issue. When practical, include metadata or front
 matter:
 
@@ -231,14 +262,26 @@ negative_case:
   should_block_positive_validation: false
 ```
 
-Do not add a negative fixture without an expected outcome.
+Do not add a negative fixture without an expected outcome. Metadata remains
+descriptive and never overrides the registry.
 
 ## Blocking vs Human-Gated Distinction
 
-`blocked` means the work is invalid under current policy.
+In this human matrix, `blocked` means the work is invalid or cannot proceed
+under current policy. It is not automatically identical to a validator's
+top-level result token.
 
 `human_gated` means the work may be valid only with explicit durable human
 approval. Human-gated work should not be hidden inside low-risk PRs.
+
+When a retained JSON command mechanically detects that boundary, it reports
+`result: blocked` with `human_gate.status: required`; it never reports that
+approval passed.
+
+A simultaneous mechanical failure does not erase the gate. The common result
+stays `blocked`, the restricted-boundary and mechanical finding codes both
+remain present, and a command-specific `domain_result: fail` may describe the
+mechanical branch.
 
 `human_gates_checked: true` is not approval evidence by itself. When a human
 gate applies, the durable record must identify the reviewed current head or
@@ -280,8 +323,8 @@ delete failed-attempt evidence or treat a closed-unmerged PR as a change to
 ```yaml
 known_gaps:
   - not every planned negative case has an implemented fixture
-  - some fixture classes are opt-in local checks rather than default CI checks
-  - fixture ownership is executable in runner groups, not yet mechanically checked for every file
+  - legacy text-oriented regression groups remain for non-retained surfaces until their separately scoped cutovers
+  - not every fixture file is independently registered; the registry owns behavior scenarios, not a permanent fixture inventory
   - PR-body fixtures intentionally preserve markdown parser coverage and should not be converted wholesale to JSON
 ```
 

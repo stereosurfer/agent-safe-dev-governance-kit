@@ -168,9 +168,9 @@ separately scoped cleanup.
 | `docs/control/FAILURE_THRESHOLDS.md` | canonical | stop thresholds and notification conditions | no | repeated failures, blockers | `lane_00_controller` |
 | `docs/control/CONTEXT_BUDGET_POLICY.md` | canonical | exact context-read gate, advisory read-set classifications, handoff recovery read set, and recorded expansion rules | no | context selection, handoff recovery, token-budget review | `lane_00_controller` |
 | `docs/control/AGENT_CAPABILITY_MATRIX.md` | canonical | task risk and minimum capability, including the frontier-capability floor for target adoption and material-upgrade assessment; low-risk merge compatibility, human gates, escalation/downscope, and context binding | no | task risk review, target adoption or material-upgrade assessment, escalation, downscoping, merge eligibility review | `lane_00_controller` |
-| `docs/control/VALIDATION_STRATEGY.md` | canonical | validation proof boundary, validation layer responsibilities, blocking vs warning, negative-fixture ownership rules, fail-closed policy-gate validation, validator change requirements | no | validation/tooling work, policy-gate checker review | `lane_06_ci_github` |
+| `docs/control/VALIDATION_STRATEGY.md` | canonical | common JSON evidence envelope, validation proof boundaries, result and human-gate semantics, validation-layer responsibilities, negative-fixture ownership rules, fail-closed policy-gate validation, and validator change requirements | no | validation/tooling work, policy-gate checker review | `lane_06_ci_github` |
 | `docs/control/PR_REVIEW_CHECKLIST.md` | canonical | repeatable PR review sequence, current-status freshness review, and outcomes | no | PR review, current-status impact review, merge readiness | `lane_00_controller` |
-| `docs/control/NEGATIVE_TEST_PLAN.md` | canonical | negative test matrix, expected outcomes, implementation phases | no | negative fixture or validator work | `lane_00_controller` |
+| `docs/control/NEGATIVE_TEST_PLAN.md` | canonical | human-readable negative-case intent, risk classification, candidate fixture paths, and planned gaps; not executable scenario expectations | no | negative fixture or validator work | `lane_00_controller` |
 | `docs/control/UNCONTROLLED_DOCUMENT_AUDIT.md` | canonical | uncontrolled-document growth-risk classification and audit record | no | uncontrolled-document audit or status-like document growth review | `lane_07_docs_handoff` |
 | `docs/control/HISTORICAL_ASGK_READINESS_EVIDENCE.md` | historical_evidence | archived ASGK source-only readiness evidence and first-release decision trail | no | auditing old ASGK readiness decisions or target source-state isolation | `lane_07_docs_handoff` |
 | `docs/control/HISTORICAL_ASGK_STABILIZATION_EVIDENCE.md` | historical_evidence | archived ASGK early stabilization evidence and field-test lesson record | no | auditing old ASGK stabilization decisions or target source-state isolation | `lane_07_docs_handoff` |
@@ -301,6 +301,8 @@ compact_task_packet_command: delegates to scope_comparison_engine
 |---|---|---|---:|---|---|
 | `contracts/*.yaml` | contract | semantic contract rules and invariants | no | contract, schema, validation, artifact work | `lane_02_schema_contracts` |
 | `schemas/*.json` | schema | machine-readable validation structures | no | schema validation, fixtures, tooling | `lane_02_schema_contracts` |
+| `contracts/validation_result.contract.yaml` | contract | common validation-result meaning, invariants, and proof limit | no | retained JSON validator or evidence-envelope changes | `lane_02_schema_contracts` |
+| `schemas/validation_result.schema.json` | schema | machine-readable common validation-result envelope and finding shape | no | retained JSON validator, scenario, or schema changes | `lane_02_schema_contracts` |
 
 Contracts explain intent and invariants. Schemas enforce structure. If they
 disagree, stop and open a schema/contract alignment issue.
@@ -313,10 +315,16 @@ disagree, stop and open a schema/contract alignment issue.
 | `scripts/validate_bootstrap.py` | script | bootstrap governance validation behavior | no | CI/tooling/debug validation | `lane_06_ci_github` |
 | `scripts/governance_hygiene.py` | script | changed-path and protected-path hygiene | no | path hygiene, negative changed-path checks, future CLI work | `lane_06_ci_github` |
 | `scripts/policy_gate_check.py` | script | read-only fail-closed PR-body policy gate check without low-risk inference | no | policy-gate validation, PR-body gate coherence review | `lane_06_ci_github` |
-| `scripts/asgk.py` | script | ASGK CLI wrapper for governance checks plus legacy fixed-shape target-install diagnostics; target-install output is not fit, readiness, architecture, or recommendation proof | no | local validation, status/closeout/handoff/PR checks, policy-gate checks, or optional mechanical target-install observations | `lane_06_ci_github` |
+| `scripts/asgk_lib/validation_result.py` | script | dependency-free common envelope construction and fail-closed self-validation | no | retained JSON command, finding, result, or proof-boundary changes | `lane_06_ci_github` |
+| `scripts/asgk_lib/scenario_registry.py` | script | sole executable owner of retained JSON owner commands, polarity, exact exits, results, finding-code multisets, human-gate states, proof boundaries, optional branch-specific checked/unchecked claims, and alias parity cases | no | validator behavior, negative coverage, doctor, or CI scenario changes | `lane_06_ci_github` |
+| `scripts/asgk_lib/scenario_runner.py` | script | exact scenario execution, one-JSON-object verification, alias parity, and false-evidence self-tests | no | validator evidence or scenario-runner changes | `lane_06_ci_github` |
+| `scripts/asgk_lib/negative.py` | script | thin public negative-command facade over the canonical scenario owner and legacy bounded groups | no | negative CLI routing or compatibility review | `lane_06_ci_github` |
+| `scripts/asgk_lib/negative_cases.py` | script | compatibility projection to `scenario_registry.py`; owns no expectation | no | bounded compatibility removal or regression review | `lane_06_ci_github` |
+| `scripts/asgk_lib/negative_runner.py` | script | compatibility projection to `scenario_runner.py`; owns no execution semantics | no | bounded compatibility removal or regression review | `lane_06_ci_github` |
+| `scripts/asgk.py` | script | ASGK CLI wrapper, common retained-JSON projections, and legacy fixed-shape target-install diagnostics; target-install output is not fit, readiness, architecture, recommendation, or W3C evidence proof | no | local validation, status/closeout/handoff/PR checks, policy-gate checks, or optional legacy mechanical target-install observations | `lane_06_ci_github` |
 | `scripts/pr_governance_preflight.py` | script | thin file-backed PR body preflight before `gh pr create` or `gh pr edit` | no | PR body create/edit, local preflight before GitHub Actions, target adoption of ASGK CLI tooling | `lane_06_ci_github` |
 | `scripts/target_install_plan.py` | script | standalone legacy fixed-shape target-install observation plan; not an adoption recommendation or readiness proof | no | optional mechanical target-install observation or future replacement planning | `lane_06_ci_github` |
-| `.github/workflows/bootstrap-validation.yml` | template/script | GitHub Actions bootstrap validation workflow | no | CI/workflow changes | `lane_06_ci_github` |
+| `.github/workflows/bootstrap-validation.yml` | template/script | GitHub Actions projection of doctor plus dynamic PR-event policy routing and changed-path hygiene; owns no duplicate fixture list | no | CI/workflow changes | `lane_06_ci_github` |
 | `.github/PULL_REQUEST_TEMPLATE.md` | template | required PR body sections, Current Status Impact, and Merge Decision Record surface | no | PR creation/review, current-status impact classification, template changes, `asgk.py pr-body-check` | `lane_06_ci_github` |
 
 ## Examples And Fixtures
@@ -327,7 +335,7 @@ disagree, stop and open a schema/contract alignment issue.
 | `examples/*.json` | example/fixture | valid sample payloads or machine fixtures | no | onboarding, validator examples, fixture design | `lane_07_docs_handoff` |
 | `examples/*.yaml` | example/fixture | valid sample task packets or machine fixtures | no | onboarding, task packet examples, fixture design | `lane_07_docs_handoff` |
 | `examples/*.md` | example/fixture | report, PR-body, or documentation examples and fixtures | no | onboarding, report examples, parser fixture design | `lane_07_docs_handoff` |
-| `examples/negative/*` | fixture | opt-in expected-failure fixtures | no | negative validation work, `asgk.py negative`, governance hygiene tests | `lane_02_schema_contracts` |
+| `examples/negative/*` | fixture | opt-in expected-failure inputs whose executable expectations belong to `scenario_registry.py` or an explicitly bounded legacy group | no | negative validation work, `asgk.py negative`, governance hygiene tests | `lane_02_schema_contracts` |
 | `examples/negative/policy_gate/*` | fixture | opt-in expected-failure PR-body policy-gate fixtures | no | policy-gate negative validation work | `lane_06_ci_github` |
 | `examples/negative/target_install/*` | fixture | legacy target-install shape-check expected-failure fixtures | no | maintaining current mechanical diagnostics or planning their replacement | `lane_06_ci_github` |
 

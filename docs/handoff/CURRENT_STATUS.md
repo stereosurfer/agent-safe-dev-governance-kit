@@ -4,7 +4,7 @@ This is the repository recovery snapshot. It is overwritten, not appended.
 Historical evidence and completed-work detail belong in GitHub issues, PRs,
 comments, releases, and merge commits.
 
-Last updated: `2026-07-31T09:07:48Z`
+Last updated: `2026-07-31T15:48:20Z`
 
 ## Durable source of truth
 
@@ -23,6 +23,14 @@ The source contract now has one 13-field work-unit identity, two separate
 execution gates, and two bounded task-packet modes. Work-unit handoff uses one
 typed core for both the normal packet and compact projection. Compact handoff
 must pass the core evaluator before CURRENT_STATUS freshness is checked.
+
+Retained core JSON validators use one common evidence envelope with explicit
+checked and unchecked claims, stable finding codes, human-gate state, and a
+proof boundary. `scripts/asgk_lib/scenario_registry.py` owns exact retained
+scenario expectations; doctor and CI execute the same registry rather than
+maintaining duplicate fixture lists. Early failures name only checks that ran,
+missing live-tool executables emit controlled envelopes, and a mechanical
+failure cannot hide a simultaneous required human gate.
 
 CURRENT_STATUS is only a recovery snapshot. It does not own completed-work or
 decision history.
@@ -53,6 +61,7 @@ python3 scripts/asgk.py doctor
 
 Additional focused checks:
 
+- Exact registered scenarios: `python3 scripts/asgk.py negative all`
 - PR body: `python3 scripts/pr_governance_preflight.py check --body-file <body-file>`
 - PR readiness: `python3 scripts/asgk.py check-pr --pr <number>`
 - Work-unit authority: `python3 scripts/asgk.py work-unit-check --issue <number> --authority-only --json`
@@ -74,9 +83,10 @@ model cache, or external preparation outputs are authorized by this status.
 
 ## Next safe action
 
-Create the separately scoped W3C child issue from current `main` after W3B
-close-out. W3C owns the shared validation-result envelope and scenario registry;
-do not preempt W4 source/target validation work or resume superseded plans.
+Create the separately scoped W4A child issue from current `main` after W3C
+close-out. W4A owns the source reference-superset validator split; do not
+preempt W4B target claim checking, W4C legacy-tool removal, or resume superseded
+plans.
 
 ```yaml
 reference_scope:

@@ -16,6 +16,7 @@ from asgk_lib.common import (
     strip_html_comments,
 )
 from asgk_lib.status_policy import CURRENT_STATUS_IMPACT_REQUIRED_FIELDS
+from asgk_lib.validation_result import checked_validation_result, make_finding
 
 PR_REQUIRED_HEADINGS = [
     "Summary",
@@ -101,6 +102,7 @@ def normalized_bool_text(value: str | None) -> str:
 def add_finding(
     findings: list[dict[str, Any]],
     severity: str,
+    code: str,
     category: str,
     field: str,
     reason: str,
@@ -111,11 +113,13 @@ def add_finding(
     findings.append(
         {
             "severity": severity,
+            "code": code,
             "category": category,
             "field": field,
             "reason": reason,
             "recommended_fix": recommended_fix,
             "blocks_merge_eligibility": blocks_merge_eligibility,
+            "blocking": blocks_merge_eligibility,
         }
     )
 
@@ -146,6 +150,7 @@ def required_field_shape(
             add_finding(
                 findings,
                 "FAIL",
+                "PG_REQUIRED_FIELD_MISSING",
                 category,
                 field,
                 f"Required {record_name} field is missing.",
@@ -155,6 +160,7 @@ def required_field_shape(
             add_finding(
                 findings,
                 "FAIL",
+                "PG_REQUIRED_FIELD_DUPLICATE",
                 category,
                 field,
                 f"Required {record_name} field appears more than once.",
@@ -178,6 +184,7 @@ def check_exact_true_gate(
         add_finding(
             findings,
             "FAIL",
+            "PG_GATE_NOT_TRUE",
             "policy_gate",
             field,
             f"`{field}` is not exactly true.",
@@ -201,6 +208,7 @@ def check_declared_gate_state(
         add_finding(
             findings,
             "FAIL",
+            "PG_BLOCKED_GATE_STATE_INVALID",
             "policy_gate",
             field,
             reason,
@@ -237,6 +245,7 @@ def check_merge_decision(
             add_finding(
                 findings,
                 "FAIL",
+                "PG_REASON_NON_MATERIAL",
                 "merge_decision_record",
                 field,
                 "Merge Decision reason is generic decision-state text, not judgment.",
@@ -253,6 +262,7 @@ def check_merge_decision(
             add_finding(
                 findings,
                 "FAIL",
+                "PG_REQUIRED_FIELD_NON_MATERIAL",
                 "merge_decision_record",
                 field,
                 "Required Merge Decision field is empty, unknown, pending, or false-like.",
@@ -265,6 +275,7 @@ def check_merge_decision(
             add_finding(
                 findings,
                 "FAIL",
+                "PG_VALIDATION_SOURCE_NOT_OBJECT",
                 "merge_decision_record",
                 "validation_claim_source",
                 "Validation claim source must be a nested object, not a scalar.",
@@ -291,6 +302,7 @@ def check_merge_decision(
             add_finding(
                 findings,
                 "FAIL",
+                "PG_VALIDATION_SOURCE_SHAPE_INVALID",
                 "merge_decision_record",
                 "validation_claim_source",
                 "Validation claim source nested object has an invalid shape.",
@@ -306,6 +318,7 @@ def check_merge_decision(
                 add_finding(
                     findings,
                     "FAIL",
+                    "PG_VALIDATION_SOURCE_FIELD_CARDINALITY",
                     "merge_decision_record",
                     f"validation_claim_source.{field}",
                     (
@@ -325,6 +338,7 @@ def check_merge_decision(
                 add_finding(
                     findings,
                     "FAIL",
+                    "PG_VALIDATION_SOURCE_VALUE_INVALID",
                     "merge_decision_record",
                     f"validation_claim_source.{field}",
                     "Validation claim source is missing or unsupported.",
@@ -345,6 +359,7 @@ def check_merge_decision(
             add_finding(
                 findings,
                 "FAIL",
+                "PG_RESULT_INVALID",
                 "merge_decision_record",
                 "result",
                 "Merge Decision result is not one of the allowed values.",
@@ -364,6 +379,7 @@ def check_merge_decision(
             add_finding(
                 findings,
                 "FAIL",
+                "PG_STRICT_RESULT_NOT_ALLOWED",
                 "policy_gate",
                 "result",
                 "Strict Merge Decision validation requires `result: merge_allowed`.",
@@ -418,6 +434,7 @@ def check_current_status_impact(text: str, findings: list[dict[str, Any]]) -> No
         add_finding(
             findings,
             "FAIL",
+            "PG_STATUS_IMPACT_STATUS_INVALID",
             "current_status_impact",
             "status",
             "Current Status Impact status is missing or invalid.",
@@ -436,6 +453,7 @@ def check_current_status_impact(text: str, findings: list[dict[str, Any]]) -> No
         add_finding(
             findings,
             "FAIL",
+            "PG_STATUS_IMPACT_REASON_INVALID",
             "current_status_impact",
             "reason",
             "Current Status Impact reason is missing or non-specific.",
@@ -457,6 +475,7 @@ def check_current_status_impact(text: str, findings: list[dict[str, Any]]) -> No
         add_finding(
             findings,
             "FAIL",
+            "PG_STATUS_IMPACT_UPDATE_FALSE",
             "current_status_impact",
             "current_status_updated_in_this_pr",
             "Current Status Impact says updated, but update confirmation is not true.",
@@ -476,6 +495,7 @@ def check_current_status_impact(text: str, findings: list[dict[str, Any]]) -> No
         add_finding(
             findings,
             "FAIL",
+            "PG_STATUS_IMPACT_NOT_POST_MERGE_SAFE",
             "current_status_impact",
             "post_merge_safe",
             "Current Status Impact says updated, but does not confirm the status is post-merge-safe.",
@@ -495,6 +515,7 @@ def check_current_status_impact(text: str, findings: list[dict[str, Any]]) -> No
         add_finding(
             findings,
             "FAIL",
+            "PG_STATUS_IMPACT_FOLLOWUP_MISSING",
             "current_status_impact",
             "follow_up_issue",
             "Current Status Impact is deferred without a durable follow-up path.",
@@ -507,6 +528,7 @@ def check_chat_authority(text: str, findings: list[dict[str, Any]]) -> None:
         add_finding(
             findings,
             "FAIL",
+            "PG_CHAT_AUTHORITY_FORBIDDEN",
             "source_of_truth",
             "see chat",
             "PR body uses chat-only authority.",
@@ -523,6 +545,7 @@ def check_pr_body(text: str, *, mode: str) -> list[dict[str, Any]]:
             add_finding(
                 findings,
                 "FAIL",
+                "PG_SECTION_MISSING",
                 "pr_structure",
                 required,
                 f"Required PR section `{required}` is missing.",
@@ -532,6 +555,7 @@ def check_pr_body(text: str, *, mode: str) -> list[dict[str, Any]]:
             add_finding(
                 findings,
                 "FAIL",
+                "PG_SECTION_DUPLICATE",
                 "pr_structure",
                 required,
                 f"Required PR section `{required}` appears more than once.",
@@ -564,21 +588,40 @@ def output_findings(
     *,
     mode: str,
     declared_result: str,
+    evidence_source: str,
     as_json: bool,
+    mechanically_checked: list[str] | None = None,
+    not_checked: list[str] | None = None,
+    boundary: str | None = None,
 ) -> int:
     blocking = [finding for finding in findings if finding["blocks_merge_eligibility"]]
     result = "fail" if blocking else "pass"
-    boundary = proof_boundary(mode)
-    payload = {
+    boundary = boundary or proof_boundary(mode)
+    checked_surfaces = mechanically_checked or [
+        "required PR body sections",
+        "Current Status Impact field shape and consistency",
+        f"{mode} Merge Decision field shape and gate tokens",
+        "chat-only authority phrase rejection",
+    ]
+    unchecked_surfaces = not_checked or [
+        "PR diff or changed-path scope",
+        "CI, project tests, or evidence truth",
+        "human approval, current-head approval, or merge authority",
+    ]
+    payload = checked_validation_result({
         "result": result,
         "mode": mode,
         "declared_merge_decision": declared_result,
-        "proof_boundary": boundary,
         "merge_eligibility_inferred": False,
         "low_risk_inferred": False,
         "human_approval_inferred": False,
         "findings": findings,
-    }
+    },
+        evidence_source=evidence_source,
+        mechanically_checked=checked_surfaces,
+        not_checked=unchecked_surfaces,
+        proof_boundary=boundary,
+    )
     if as_json:
         print(json.dumps(payload, indent=2, sort_keys=True))
     else:
@@ -588,8 +631,13 @@ def output_findings(
                 print("The declared Merge Decision remains merge_blocked.")
         else:
             for finding in findings:
+                location = (
+                    finding.get("field")
+                    or finding.get("path")
+                    or "finding"
+                )
                 print(
-                    f"{finding['severity']}: [{finding['category']}] {finding['field']} - "
+                    f"{finding['severity']}: [{finding['category']}] {location} - "
                     f"{finding['reason']} Fix: {finding['recommended_fix']}"
                 )
             print(f"Policy gate {mode} result: {result}. {boundary}")
@@ -597,7 +645,7 @@ def output_findings(
             "Full PR merge eligibility, low-risk status, and human approval "
             "were not inferred."
         )
-    return 1 if blocking else 0
+    return 0 if payload["result"] == "pass" else 1
 
 
 def main() -> int:
@@ -618,9 +666,47 @@ def main() -> int:
         ),
     )
     parser.add_argument("--json", action="store_true", help="Emit JSON output.")
+    parser.add_argument(
+        "--evidence-source",
+        choices=["supplied_pr_body_file", "supplied_github_event_file"],
+        default="supplied_pr_body_file",
+        help=argparse.SUPPRESS,
+    )
     args = parser.parse_args()
 
-    text = Path(args.pr_body).read_text(encoding="utf-8")
+    try:
+        text = Path(args.pr_body).read_text(encoding="utf-8")
+    except (OSError, UnicodeError) as exc:
+        finding = make_finding(
+            "PG_BODY_READ_FAILED",
+            f"could not read PR body file: {exc}",
+            path=args.pr_body,
+            blocking=True,
+            severity="FAIL",
+            category="input",
+            recommended_fix="Provide one readable UTF-8 PR body file.",
+            blocks_merge_eligibility=True,
+        )
+        return output_findings(
+            [finding],
+            mode=args.mode,
+            declared_result="",
+            evidence_source=args.evidence_source,
+            as_json=args.json,
+            mechanically_checked=["PR body file readability"],
+            not_checked=[
+                "required PR body sections",
+                "Current Status Impact field shape and consistency",
+                f"{args.mode} Merge Decision field shape and gate tokens",
+                "chat-only authority phrase rejection",
+                "PR diff, CI, project tests, or evidence truth",
+                "human approval, current-head approval, or merge authority",
+            ],
+            boundary=(
+                "Only PR body file readability was checked; no PR-body policy "
+                "evaluation ran because the supplied file could not be read."
+            ),
+        )
     findings = check_pr_body(text, mode=args.mode)
     merge_section = section(text, "Merge Decision")
     declared_result = (raw_field_value(merge_section, "result") or "").strip()
@@ -628,6 +714,7 @@ def main() -> int:
         findings,
         mode=args.mode,
         declared_result=declared_result,
+        evidence_source=args.evidence_source,
         as_json=args.json,
     )
 
