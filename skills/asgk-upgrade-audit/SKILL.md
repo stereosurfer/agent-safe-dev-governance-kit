@@ -122,11 +122,14 @@ lineage, and validation claims unknown.
 ### 7. Produce The Next Safe Plan
 
 Record the assessment in the target repository's existing issue, PR, or handoff
-lineage. If changes are recommended, draft the minimum bounded target-owned
-issue or PR plan with objective, discovered allowed paths, expected output,
-non-goals, validation, stop conditions, rollback expectations, and any exact
-existing human-gate trigger. Separate a tooling correction or unrelated
-high-risk action when the current durable scope does not authorize it.
+lineage. If changes are recommended, use the target's own issue-scoping policy
+to draft the minimum complete target-owned issue or PR; do not invent a smaller
+parallel field set in this Skill. For an ASGK-governed target, that means all 13
+canonical fields from `AGENTS.md` plus separate `context_read_set` and
+`project_specific_validation` gates. Allowed paths must come from target
+evidence, and any exact existing human-gate trigger must be named. Separate a
+tooling correction or unrelated high-risk action when the current durable
+scope does not authorize it.
 
 If no change is recommended, record the rationale, evidence limits, and the
 future condition that would justify reassessment. Do not create work merely to

@@ -11,6 +11,7 @@ under `examples/` as an adoption template.
 human_examples:
   purpose: small positive examples that humans and agents may inspect for shape
   authority: not policy authority
+  task_packet_boundary: examples show one mode; fallback local-work authority is conditional on verified GitHub unavailability and never grants PR or merge authority
   examples:
     - examples/task_packet.example.yaml
     - examples/merge_decision.example.json
@@ -18,6 +19,7 @@ human_examples:
 machine_fixtures:
   purpose: validator inputs used by local checks, CI, or focused commands
   authority: test input only
+  work_unit_boundary: valid work-unit fixtures carry the 13 canonical fields plus both execution gates
   examples:
     - examples/pr_status.valid.json
     - examples/work_unit.valid-issue.json

@@ -29,7 +29,7 @@ agent-authored claims must never override tool-derived state
 This work does not authorize:
 
 - reference-first PR bodies as the default;
-- delta-only task packets as the default;
+- issue-refinement task packets as the default;
 - compact handoff as the default;
 - removal of Merge Decision Record or Current Status Impact sections;
 - low-risk merge inference from compact artifacts;
@@ -42,10 +42,13 @@ work unit.
 
 ```yaml
 issue_scope:
-  role: "The single full task scope."
+  role: "A projection of the 13-field task identity."
   required_tool_state:
     - allowed_paths
     - scope_hash_or_lock_equivalent
+  not_checked:
+    - context_read_set
+    - project_specific_validation
 
 scope_lock:
   role: "A captured view of the issue scope used by the PR."
@@ -63,8 +66,8 @@ pr_state:
     - metadata_available
 
 task_packet:
-  role: "Optional execution capsule."
-  invariant: "May narrow issue scope, never expand it."
+  role: "Optional projection of one issue."
+  invariant: "May narrow issue paths, read set, and validation; never expands or routes work."
 
 agent_claims:
   role: "PR prose or chat-authored claims."
@@ -76,7 +79,7 @@ agent_claims:
 The opt-in checker covers these hazards:
 
 1. PR changed paths exceed issue `allowed_paths`.
-2. Issue scope changes after the PR captured a scope lock.
+2. The captured 13-field task identity changes after scope-lock capture.
 3. Task packet adds allowed paths not present in the source issue.
 4. Agent-authored gate claims conflict with tool-derived blocking state.
 5. CI is pending while prose implies merge eligibility.
@@ -138,10 +141,12 @@ python3 scripts/asgk.py compact-issue-scope --issue <number> --json
 python3 scripts/asgk.py compact-issue-scope --json-file examples/compact_governance/issue_scope.valid-issue.json --json
 ```
 
-The command compiles the issue fields already required by issue-first work into
-a stable `canonical_issue_scope` object. It normalizes `allowed_paths`, reports
-missing material fields as findings, and always emits `low_risk_inferred:
-false`.
+The command compiles the 13 task-identity fields into a stable
+`canonical_issue_scope` object. It normalizes `allowed_paths`, reports missing
+material fields as findings, and always emits `low_risk_inferred: false`.
+It does not capture or validate the separate `context_read_set` and
+`project_specific_validation` execution gates; use `work-unit-check
+--authority-only` for that authority proof.
 
 This object is not a task packet, PR report, merge decision, or handoff. Later
 compact-governance work may reference it, hash it, or compare it to live issue
@@ -159,7 +164,8 @@ python3 scripts/asgk.py compact-scope-lock --issue <number> --compare-file captu
 
 The command derives the lock from `asgk.compact_issue_scope.v1`, normalizes
 `allowed_paths`, and emits a deterministic `scope_hash`. With `--compare-file`,
-it fails when a captured lock no longer matches the current issue scope.
+it fails when a captured lock no longer matches the current 13-field task
+identity. It does not lock the two execution gates.
 
 This scope lock is not a merge decision. It does not make a PR low risk and
 does not let a task packet expand issue scope. Later compact-report work must
@@ -187,20 +193,31 @@ claim says the PR is merge-ready while the tool-derived report has blocking
 findings, the report fails with a claim-conflict finding instead of allowing PR
 prose to override live state.
 
-## Delta-Only Task Packet Primitive
+## Task Packet Compatibility Command
 
-The delta task-packet check is opt-in:
+The compact command remains opt-in and delegates to the canonical
+`task-packet-check` evaluator:
 
 ```bash
 python3 scripts/asgk.py compact-task-packet-check --issue <number> --file task_packet.yaml --json
 python3 scripts/asgk.py compact-task-packet-check --json-file examples/compact_governance/task_packet_delta.valid.json --json
 ```
 
-The command runs the existing task-packet schema checks, derives the canonical
-issue scope, and compares packet `allowed_paths` to issue `allowed_paths`.
-Packets may narrow issue scope, but any packet path outside the issue scope
-fails. The packet remains a routing/execution artifact; it does not replace the
-GitHub issue as primary authorization and never infers low-risk status.
+Both command names use the same loader, evaluator, stable finding codes, and
+proof boundary. The evaluator compares `allowed_paths`, exact
+`context_read_set` items, and exact `project_specific_validation` items.
+The retained red-team runner calls that evaluator instead of implementing a
+second packet oracle. A compact issue-refinement packet is never work routing,
+executable authority, or low-risk evidence. A
+GitHub-unavailable fallback's conditional local-work boundary does not
+contribute compact-governance evidence or PR/merge authority.
+
+Some pre-v2 fixtures still contain an untyped `task_packet.allowed_paths`
+snapshot used by other compact-state tests. The runner does not interpret that
+member as a v2 packet or as passing packet evidence; W6D owns removal of those
+fixtures. Any packet submitted to `task-packet-check`, or any red-team packet
+that declares `mode`, goes through the canonical evaluator. A mode-less legacy
+snapshot must never be cited as task-packet validation.
 
 ## Compact PR Body Profile
 

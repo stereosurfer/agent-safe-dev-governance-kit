@@ -1,53 +1,28 @@
 {
   "expected_result": "fail",
+  "expected_codes": [
+    "TP_ALLOWED_PATH_EXPANSION"
+  ],
   "issue": {
     "number": 1002,
     "state": "open",
-    "title": "Expanding delta-only task packet fixture",
-    "body": "## Required Task Fields\n\n```yaml\nlane: validation_tooling\nintelligence_level: frontier\nreason: \"Negative fixture keeps issue scope narrower than the task packet.\"\ndurable_source_of_truth: \"GitHub issue #1002\"\nobjective: \"Reject task packet scope expansion.\"\nallowed_paths:\n  - scripts/asgk.py\nexpected_output:\n  - compact task packet check fails\nplan:\n  - compare packet to issue scope\nchecklist:\n  - command fails\nacceptance_sheet:\n  - expansion is rejected\nnon_goals:\n  - no compact governance default\nstop_conditions:\n  - packet expands scope\nrollback_expectations:\n  - revert PR\n```"
+    "title": "Reject issue-refinement path expansion",
+    "body": "## Required Task Fields\n\n```yaml\nlane: validation_tooling\nintelligence_level: frontier\nreason: \"Fixture keeps issue scope narrower than the packet.\"\ndurable_source_of_truth: \"GitHub issue #1002\"\nobjective: \"Reject packet path expansion.\"\nplan:\n  - compare packet with issue\nchecklist:\n  - command fails\nacceptance_sheet:\n  - exact expansion code is reported\nallowed_paths:\n  - scripts/asgk.py\nexpected_output:\n  - task packet check fails\nnon_goals:\n  - no compact governance default\nstop_conditions:\n  - expansion is accepted\nrollback_expectations:\n  - revert fixture\ncontext_read_set:\n  - AGENTS.md\n  - scripts/asgk.py\nproject_specific_validation:\n  - python3 scripts/asgk.py task-packet-check\n```\n"
   },
   "task_packet": {
-    "task_id": "fixture-delta-expands-scope",
-    "lane": "validation_tooling",
-    "intelligence_level": "frontier",
-    "intelligence_level_reason": "Fixture covers compact governance expansion rejection.",
+    "mode": "issue_refinement",
     "durable_source_of_truth": "GitHub issue #1002",
-    "objective": "Reject task packet scope expansion.",
-    "product_context": "ASGK compact governance fixture.",
-    "current_repository_context": "Fixture only.",
-    "files_to_inspect_first": [
-      "scripts/asgk.py"
-    ],
     "allowed_paths": [
       "scripts/asgk.py",
       "README.md"
     ],
-    "expected_changes": [
-      "Attempt to expand scope."
+    "context_read_set": [
+      "AGENTS.md",
+      "scripts/asgk.py"
     ],
-    "expected_output": "compact task packet check fails",
-    "non_goals": [
-      "No compact governance default."
-    ],
-    "constraints": [
-      "Do not expand issue scope."
-    ],
-    "plan": [
-      "Compare packet allowed paths to issue allowed paths."
-    ],
-    "checklist": [
-      "Expansion is rejected."
-    ],
-    "acceptance_sheet": [
-      "expansion rejected"
-    ],
-    "validation_commands": [
-      "python3 scripts/asgk.py compact-task-packet-check --json-file examples/negative/compact_governance/task-packet-delta-expands-scope.json"
-    ],
-    "stop_conditions": [
-      "Packet expands issue scope."
-    ],
-    "rollback_expectations": "Revert fixture."
+    "project_specific_validation": [
+      "python3 scripts/asgk.py task-packet-check"
+    ]
   },
   "issue_scope": {
     "scope_hash": "delta-expands-scope",

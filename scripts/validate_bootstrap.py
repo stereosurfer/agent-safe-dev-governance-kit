@@ -16,6 +16,13 @@ from asgk_lib.common import (
     markdown_section,
 )
 from asgk_lib.negative_runner import run_expected_failures
+from asgk_lib.task_packet import (
+    CANONICAL_TASK_FIELDS,
+    TASK_PACKET_FALLBACK_FIELDS,
+    TASK_PACKET_REFINEMENT_FIELDS,
+    WORK_UNIT_EXECUTION_GATES,
+    evaluate_task_packet,
+)
 from policy_gate_check import (
     MERGE_DECISION_REQUIRED_FIELDS,
     PR_REQUIRED_HEADINGS,
@@ -57,8 +64,8 @@ REQUIRED_TERMS = {
 }
 
 CONTROL_REQUIRED_SECTIONS = ['Purpose','Durable Control Surfaces','Work Unit State Model','Task Packet Format','Agent Report Format','Operating Loop','Anti-drift Rules','Human Gates','Definition of Done']
-TASK_PACKET_FIELDS = ['task_id','lane','intelligence_level','durable_source_of_truth','objective','allowed_paths','expected_output','plan','checklist','acceptance_sheet','stop_conditions','rollback_expectations']
-ISSUE_FIELDS = ['objective','durable_source_of_truth','lane','intelligence_level','allowed_paths','expected_output','acceptance_sheet','stop_conditions']
+TASK_PACKET_FIELDS = list(TASK_PACKET_REFINEMENT_FIELDS)
+ISSUE_FIELDS = [*CANONICAL_TASK_FIELDS, *WORK_UNIT_EXECUTION_GATES]
 MERGE_DECISION_ALWAYS_TRUE_FIELDS = [
     'allowed_paths_checked','expected_output_checked','validation_evidence_checked',
 ]
@@ -273,7 +280,7 @@ def check_pr_workflow_projection(root):
     if forbidden_auto_flag in workflow:
         fail('bootstrap-validation.yml must not introduce a third automatic proof mode')
 
-def run_json_command(root, args, *, expected_returncode):
+def run_json_command(root, args, *, expected_returncode, label=None):
     result = subprocess.run(
         [sys.executable, *args],
         cwd=root,
@@ -283,13 +290,21 @@ def run_json_command(root, args, *, expected_returncode):
     )
     if result.returncode != expected_returncode:
         detail = result.stdout.strip() or result.stderr.strip() or 'no output'
-        fail(f'command returned {result.returncode}, expected {expected_returncode}: {" ".join(args)}: {detail}')
+        prefix = f'{label}: ' if label else ''
+        fail(f'{prefix}command returned {result.returncode}, expected {expected_returncode}: {" ".join(args)}: {detail}')
     try:
         return json.loads(result.stdout)
     except json.JSONDecodeError as error:
         fail(f'command did not emit JSON: {" ".join(args)}: {error}')
 
-def run_json_payload_command(root, args, payload, *, expected_returncode):
+def run_json_payload_command(
+    root,
+    args,
+    payload,
+    *,
+    expected_returncode,
+    label=None,
+):
     with tempfile.TemporaryDirectory() as tmpdir:
         payload_path = Path(tmpdir) / 'payload.json'
         payload_path.write_text(
@@ -304,7 +319,60 @@ def run_json_payload_command(root, args, payload, *, expected_returncode):
             root,
             resolved,
             expected_returncode=expected_returncode,
+            label=label,
         )
+
+
+def run_text_payload_command(root, args, payload, *, expected_returncode):
+    with tempfile.TemporaryDirectory() as tmpdir:
+        payload_path = Path(tmpdir) / 'payload.yaml'
+        payload_path.write_text(payload, encoding='utf-8')
+        resolved = [
+            str(payload_path) if arg == '{payload}' else arg
+            for arg in args
+        ]
+        return run_json_command(
+            root,
+            resolved,
+            expected_returncode=expected_returncode,
+        )
+
+
+def run_json_payload_and_paths_command(
+    root,
+    args,
+    payload,
+    changed_paths,
+    *,
+    expected_returncode,
+):
+    with tempfile.TemporaryDirectory() as tmpdir:
+        payload_path = Path(tmpdir) / 'payload.json'
+        paths_path = Path(tmpdir) / 'changed-paths.txt'
+        payload_path.write_text(
+            json.dumps(payload, indent=2, sort_keys=True),
+            encoding='utf-8',
+        )
+        paths_path.write_text(
+            ''.join(f'{path}\n' for path in changed_paths),
+            encoding='utf-8',
+        )
+        resolved = [
+            (
+                str(payload_path)
+                if arg == '{payload}'
+                else str(paths_path)
+                if arg == '{paths}'
+                else arg
+            )
+            for arg in args
+        ]
+        return run_json_command(
+            root,
+            resolved,
+            expected_returncode=expected_returncode,
+        )
+
 
 def check_policy_gate_routing_fixtures(root):
     positive_cases = {
@@ -641,6 +709,1742 @@ def check_pr_status_projection(root):
         {'statusCheckRollup.ordering'},
     )
 
+
+def finding_codes(payload):
+    return [
+        finding.get('code')
+        for finding in payload.get('findings', [])
+        if isinstance(finding, dict)
+    ]
+
+
+def check_w3a_work_unit_and_task_packet_projection(root):
+    schema = json.loads(read(root, 'schemas/task_packet.schema.json'))
+    schema_refs = {
+        entry.get('$ref')
+        for entry in schema.get('oneOf', [])
+        if isinstance(entry, dict)
+    }
+    expected_refs = {
+        '#/$defs/issue_refinement',
+        '#/$defs/github_unavailable_fallback',
+    }
+    if schema_refs != expected_refs:
+        fail(f'task packet schema mode refs drifted: {sorted(schema_refs)}')
+
+    definitions = schema.get('$defs', {})
+    refinement = definitions.get('issue_refinement', {})
+    fallback = definitions.get('github_unavailable_fallback', {})
+    if set(refinement.get('required', [])) != set(TASK_PACKET_REFINEMENT_FIELDS):
+        fail('task packet schema issue_refinement required fields drifted')
+    if set(fallback.get('required', [])) != set(TASK_PACKET_FALLBACK_FIELDS):
+        fail('task packet schema github_unavailable_fallback required fields drifted')
+    if refinement.get('additionalProperties') is not False:
+        fail('task packet issue_refinement must reject additional properties')
+    if fallback.get('additionalProperties') is not False:
+        fail('task packet github_unavailable_fallback must reject additional properties')
+
+    schema_text = read(root, 'schemas/task_packet.schema.json')
+    template_text = read(root, 'templates/task_packet.template.yaml')
+    issue_form = read(root, '.github/ISSUE_TEMPLATE/agent_task.yml')
+    if 'intelligence_level_reason' in schema_text or 'intelligence_level_reason' in template_text:
+        fail('v2 task packet projections must not retain intelligence_level_reason')
+    if 'type: textarea\n    id: context_read_set' not in issue_form:
+        fail('agent task form must capture exact context_read_set content in a textarea')
+
+    authority = run_json_command(
+        root,
+        [
+            'scripts/asgk.py', 'work-unit-check',
+            '--json-file', 'examples/work_unit.valid-issue.json',
+            '--authority-only', '--json',
+        ],
+        expected_returncode=0,
+    )
+    if (
+        authority.get('authority_only') is not True
+        or authority.get('changed_paths_checked') is not False
+        or authority.get('canonical_task_fields') != list(CANONICAL_TASK_FIELDS)
+        or authority.get('execution_gates') != list(WORK_UNIT_EXECUTION_GATES)
+    ):
+        fail('authority-only work-unit proof boundary drifted')
+
+    unlabeled_fence_work_unit = json.loads(
+        read(root, 'examples/work_unit.valid-issue.json')
+    )
+    unlabeled_fence_work_unit['body'] = unlabeled_fence_work_unit[
+        'body'
+    ].replace('```yaml', '```', 1)
+    run_json_payload_command(
+        root,
+        [
+            'scripts/asgk.py', 'work-unit-check',
+            '--json-file', '{payload}', '--authority-only', '--json',
+        ],
+        unlabeled_fence_work_unit,
+        expected_returncode=0,
+    )
+
+    post_diff = run_json_command(
+        root,
+        [
+            'scripts/asgk.py', 'work-unit-check',
+            '--json-file', 'examples/work_unit.valid-issue.json',
+            '--paths-file', 'examples/work_unit.changed-paths.valid.txt',
+            '--json',
+        ],
+        expected_returncode=0,
+    )
+    if post_diff.get('changed_paths_checked') is not True:
+        fail('post-diff work-unit check must report changed_paths_checked true')
+
+    fallback_result = run_json_command(
+        root,
+        [
+            'scripts/asgk.py', 'task-packet-check',
+            '--file', 'examples/task_packet.valid.json',
+            '--json',
+        ],
+        expected_returncode=0,
+    )
+    if (
+        fallback_result.get('mode') != 'github_unavailable_fallback'
+        or fallback_result.get('task_packet', {}).get('github_issue_required_before_pr') is not True
+        or fallback_result.get('task_packet', {}).get('temporary_local_execution_authority')
+        != (
+            'conditional_on_verified_github_unavailability_'
+            'and_no_escalation_trigger'
+        )
+        or fallback_result.get('task_packet', {}).get('pr_or_merge_authority') is not False
+    ):
+        fail('fallback packet proof boundary drifted')
+
+    canonical = run_json_command(
+        root,
+        [
+            'scripts/asgk.py', 'task-packet-check',
+            '--json-file', 'examples/compact_governance/task_packet_delta.valid.json',
+            '--json',
+        ],
+        expected_returncode=0,
+    )
+    compact = run_json_command(
+        root,
+        [
+            'scripts/asgk.py', 'compact-task-packet-check',
+            '--json-file', 'examples/compact_governance/task_packet_delta.valid.json',
+            '--json',
+        ],
+        expected_returncode=0,
+    )
+    if canonical != compact:
+        fail('compact-task-packet-check must be output-identical to task-packet-check')
+    canonical_projection = canonical.get('task_packet', {})
+    if (
+        canonical_projection.get('projection_within_issue_scope') is not True
+        or canonical_projection.get('may_narrow_effective_execution_scope')
+        is not True
+        or canonical_projection.get('cannot_modify_issue_authority') is not True
+        or 'may_narrow_issue_authority' in canonical_projection
+        or 'must_not_expand_issue_authority' in canonical_projection
+    ):
+        fail('issue-refinement output must describe scope projection, not authority')
+
+    same_repo_url_bundle = json.loads(
+        read(root, 'examples/compact_governance/task_packet_delta.valid.json')
+    )
+    same_repo_url = (
+        'https://github.com/stereosurfer/'
+        'agent-safe-dev-governance-kit/issues/1001'
+    )
+    same_repo_url_bundle['issue']['html_url'] = same_repo_url
+    same_repo_url_bundle['task_packet']['durable_source_of_truth'] = same_repo_url
+    run_json_payload_command(
+        root,
+        [
+            'scripts/asgk.py', 'task-packet-check',
+            '--json-file', '{payload}', '--json',
+        ],
+        same_repo_url_bundle,
+        expected_returncode=0,
+    )
+
+    negative_cases = [
+        (
+            'work-unit reason alias',
+            [
+                'scripts/asgk.py', 'work-unit-check',
+                '--json-file', 'examples/negative/work_unit.reason-alias-only.json',
+                '--authority-only', '--json',
+            ],
+            {'WU_REASON_ALIAS_FORBIDDEN', 'WU_REQUIRED_FIELD_MISSING'},
+        ),
+        (
+            'work-unit missing context gate',
+            [
+                'scripts/asgk.py', 'work-unit-check',
+                '--json-file', 'examples/negative/work_unit.missing-context-read-set.json',
+                '--authority-only', '--json',
+            ],
+            {'WU_EXECUTION_GATE_MISSING'},
+        ),
+        (
+            'work-unit missing project validation gate',
+            [
+                'scripts/asgk.py', 'work-unit-check',
+                '--json-file', 'examples/negative/work_unit.missing-project-specific-validation.json',
+                '--authority-only', '--json',
+            ],
+            {'WU_EXECUTION_GATE_MISSING'},
+        ),
+        (
+            'work-unit outside allowed path',
+            [
+                'scripts/asgk.py', 'work-unit-check',
+                '--json-file', 'examples/work_unit.valid-issue.json',
+                '--paths-file', 'examples/negative/work_unit.changed-paths.outside-allowed.txt',
+                '--json',
+            ],
+            {'WU_PATH_OUTSIDE_SCOPE'},
+        ),
+        (
+            'work-unit post-diff input missing',
+            [
+                'scripts/asgk.py', 'work-unit-check',
+                '--json-file', 'examples/work_unit.valid-issue.json',
+                '--json',
+            ],
+            {'WU_INPUT_MODE_INVALID'},
+        ),
+        (
+            'task packet chat authority',
+            [
+                'scripts/asgk.py', 'task-packet-check',
+                '--file', 'examples/negative/task_packet.see-chat.yaml', '--json',
+            ],
+            {'TP_CHAT_AUTHORITY_FORBIDDEN'},
+        ),
+        (
+            'task packet missing stop',
+            [
+                'scripts/asgk.py', 'task-packet-check',
+                '--file', 'examples/negative/task_packet.no-stop.yaml', '--json',
+            ],
+            {'TP_REQUIRED_FIELD_MISSING'},
+        ),
+        (
+            'task packet empty list',
+            [
+                'scripts/asgk.py', 'task-packet-check',
+                '--file', 'examples/negative/task_packet.empty-list.yaml', '--json',
+            ],
+            {'TP_LIST_EMPTY'},
+        ),
+        (
+            'task packet issue required',
+            [
+                'scripts/asgk.py', 'task-packet-check',
+                '--file', 'examples/negative/task_packet.executable-no-github-issue.yaml',
+                '--json',
+            ],
+            {'TP_ISSUE_REQUIRED'},
+        ),
+        (
+            'task packet overbroad read set',
+            [
+                'scripts/asgk.py', 'task-packet-check',
+                '--file', 'examples/negative/task_packet.overbroad-context-read-set.yaml',
+                '--json',
+            ],
+            {'TP_READ_SET_OVERBROAD'},
+        ),
+        (
+            'task packet reason alias',
+            [
+                'scripts/asgk.py', 'task-packet-check',
+                '--file', 'examples/negative/task_packet.reason-alias.yaml', '--json',
+            ],
+            {'TP_LEGACY_FIELD_FORBIDDEN', 'TP_REQUIRED_FIELD_MISSING'},
+        ),
+        (
+            'task packet fallback status',
+            [
+                'scripts/asgk.py', 'task-packet-check',
+                '--file', 'examples/negative/task_packet.fallback-status.yaml', '--json',
+            ],
+            {'TP_FALLBACK_STATUS_INVALID'},
+        ),
+        (
+            'task packet path expansion',
+            [
+                'scripts/asgk.py', 'task-packet-check',
+                '--json-file', 'examples/negative/compact_governance/task-packet-delta-expands-scope.json',
+                '--json',
+            ],
+            {'TP_ALLOWED_PATH_EXPANSION'},
+        ),
+        (
+            'task packet authority mismatch',
+            [
+                'scripts/asgk.py', 'task-packet-check',
+                '--json-file', 'examples/negative/compact_governance/task-packet-authority-mismatch.json',
+                '--json',
+            ],
+            {'TP_AUTHORITY_MISMATCH'},
+        ),
+        (
+            'task packet read-set expansion',
+            [
+                'scripts/asgk.py', 'task-packet-check',
+                '--json-file', 'examples/negative/compact_governance/task-packet-read-set-expands.json',
+                '--json',
+            ],
+            {'TP_READ_SET_EXPANSION'},
+        ),
+        (
+            'task packet validation expansion',
+            [
+                'scripts/asgk.py', 'task-packet-check',
+                '--json-file', 'examples/negative/compact_governance/task-packet-validation-expands.json',
+                '--json',
+            ],
+            {'TP_VALIDATION_EXPANSION'},
+        ),
+    ]
+    for label, command, expected_codes in negative_cases:
+        payload = run_json_command(
+            root,
+            command,
+            expected_returncode=1,
+        )
+        actual_codes = set(finding_codes(payload))
+        if actual_codes != expected_codes:
+            fail(
+                f'{label} finding codes {sorted(actual_codes)} != '
+                f'{sorted(expected_codes)}'
+            )
+
+    def replace_list_field(body, field, values):
+        replacement = field + ':\n' + ''.join(
+            f'  - {value}\n' for value in values
+        )
+        updated, count = re.subn(
+            rf'(?m)^{re.escape(field)}:\n(?:  - .*\n)+',
+            replacement,
+            body,
+            count=1,
+        )
+        if count != 1:
+            fail(f'could not mutate fixture list field: {field}')
+        return updated
+
+    def assert_mutation(label, command, payload, expected_codes):
+        result = run_json_payload_command(
+            root,
+            command,
+            payload,
+            expected_returncode=1,
+            label=label,
+        )
+        actual_codes = set(finding_codes(result))
+        if actual_codes != expected_codes:
+            fail(
+                f'{label} finding codes {sorted(actual_codes)} != '
+                f'{sorted(expected_codes)}'
+            )
+        return result
+
+    valid_work_unit = json.loads(read(root, 'examples/work_unit.valid-issue.json'))
+    valid_field_values = json.loads(read(root, 'examples/task_packet.valid.json'))
+
+    def individual_task_field_body(
+        values,
+        *,
+        heading_level=2,
+        heading_style='atx',
+    ):
+        sections = []
+        for field in [*CANONICAL_TASK_FIELDS, *WORK_UNIT_EXECUTION_GATES]:
+            value = values[field]
+            if isinstance(value, list):
+                content = '\n'.join(f'- {item}' for item in value)
+            else:
+                content = str(value)
+            if heading_style == 'setext':
+                marker = '=' if heading_level == 1 else '-'
+                heading = f'{field}\n{marker * max(3, len(field))}'
+            else:
+                heading = f'{"#" * heading_level} {field}'
+            sections.append(f'{heading}\n\n{content}')
+        return '\n\n'.join(sections) + '\n'
+
+    individual_work_unit = json.loads(json.dumps(valid_work_unit))
+    individual_work_unit['body'] = individual_task_field_body(valid_field_values)
+    run_json_payload_command(
+        root,
+        [
+            'scripts/asgk.py', 'work-unit-check',
+            '--json-file', '{payload}', '--authority-only', '--json',
+        ],
+        individual_work_unit,
+        expected_returncode=0,
+    )
+
+    setext_work_unit = json.loads(json.dumps(valid_work_unit))
+    setext_work_unit['body'] = individual_task_field_body(
+        valid_field_values,
+        heading_style='setext',
+    )
+    run_json_payload_command(
+        root,
+        [
+            'scripts/asgk.py', 'work-unit-check',
+            '--json-file', '{payload}', '--authority-only', '--json',
+        ],
+        setext_work_unit,
+        expected_returncode=0,
+    )
+    setext_phantom_path = '-' * len('allowed_paths')
+    setext_phantom_result = run_json_payload_and_paths_command(
+        root,
+        [
+            'scripts/asgk.py', 'work-unit-check',
+            '--json-file', '{payload}', '--paths-file', '{paths}', '--json',
+        ],
+        setext_work_unit,
+        [setext_phantom_path],
+        expected_returncode=1,
+    )
+    if set(finding_codes(setext_phantom_result)) != {
+        'WU_PATH_OUTSIDE_SCOPE'
+    }:
+        fail('Setext underline must not become executable allowed-path data')
+
+    nested_setext_work_unit = json.loads(json.dumps(valid_work_unit))
+    nested_setext_work_unit['body'] = individual_task_field_body(
+        valid_field_values,
+        heading_level=1,
+    )
+    nested_setext_label = 'docs/QUICKSTART.md'
+    nested_setext_underline = '-' * len(nested_setext_label)
+    nested_setext_work_unit['body'] = nested_setext_work_unit['body'].replace(
+        '\n\n# expected_output',
+        (
+            f'\n{nested_setext_label}\n'
+            f'{nested_setext_underline}\n\n'
+            '# expected_output'
+        ),
+        1,
+    )
+    nested_setext_authority = run_json_payload_command(
+        root,
+        [
+            'scripts/asgk.py', 'work-unit-check',
+            '--json-file', '{payload}', '--authority-only', '--json',
+        ],
+        nested_setext_work_unit,
+        expected_returncode=0,
+    )
+    if nested_setext_underline in set(
+        nested_setext_authority.get('allowed_paths', [])
+    ):
+        fail('nested Setext underline must not enter allowed_paths projection')
+    nested_setext_phantom_result = run_json_payload_and_paths_command(
+        root,
+        [
+            'scripts/asgk.py', 'work-unit-check',
+            '--json-file', '{payload}', '--paths-file', '{paths}', '--json',
+        ],
+        nested_setext_work_unit,
+        [nested_setext_underline],
+        expected_returncode=1,
+    )
+    if set(finding_codes(nested_setext_phantom_result)) != {
+        'WU_PATH_OUTSIDE_SCOPE'
+    }:
+        fail('nested Setext underline must not authorize a changed path')
+
+    unicode_validation_work_unit = json.loads(json.dumps(valid_work_unit))
+    unicode_validation_work_unit['body'] = replace_list_field(
+        unicode_validation_work_unit['body'],
+        'project_specific_validation',
+        ['not_applicable：純文件變更'],
+    )
+    run_json_payload_command(
+        root,
+        [
+            'scripts/asgk.py', 'work-unit-check',
+            '--json-file', '{payload}', '--authority-only', '--json',
+        ],
+        unicode_validation_work_unit,
+        expected_returncode=0,
+    )
+
+    issue_form_h3_work_unit = json.loads(json.dumps(valid_work_unit))
+    issue_form_h3_work_unit['body'] = individual_task_field_body(
+        valid_field_values,
+        heading_level=3,
+    )
+    run_json_payload_command(
+        root,
+        [
+            'scripts/asgk.py', 'work-unit-check',
+            '--json-file', '{payload}', '--authority-only', '--json',
+        ],
+        issue_form_h3_work_unit,
+        expected_returncode=0,
+    )
+
+    fenced_example_work_unit = json.loads(json.dumps(individual_work_unit))
+    fenced_example_work_unit['body'] += (
+        '\n## Non-authoritative example\n\n'
+        '```markdown\n'
+        '## objective\n\n'
+        'fenced examples do not grant authority\n\n'
+        '## allowed_paths\n\n'
+        '- ../outside\n'
+        '```\n'
+    )
+    run_json_payload_command(
+        root,
+        [
+            'scripts/asgk.py', 'work-unit-check',
+            '--json-file', '{payload}', '--authority-only', '--json',
+        ],
+        fenced_example_work_unit,
+        expected_returncode=0,
+    )
+
+    canonical_fenced_example = json.loads(json.dumps(valid_work_unit))
+    canonical_fenced_example['body'] += (
+        '\n# Non-authoritative example\n\n'
+        '```yaml\n'
+        'objective: fenced examples do not grant authority\n'
+        'allowed_paths:\n'
+        '  - ../outside\n'
+        '```\n'
+    )
+    run_json_payload_command(
+        root,
+        [
+            'scripts/asgk.py', 'work-unit-check',
+            '--json-file', '{payload}', '--authority-only', '--json',
+        ],
+        canonical_fenced_example,
+        expected_returncode=0,
+    )
+
+    canonical_same_level_example = json.loads(json.dumps(valid_work_unit))
+    canonical_same_level_example['body'] += (
+        '\n## Non-authoritative example\n\n'
+        '```markdown\n'
+        '## objective\n\n'
+        'fenced example after the canonical section\n'
+        '```\n'
+    )
+    run_json_payload_command(
+        root,
+        [
+            'scripts/asgk.py', 'work-unit-check',
+            '--json-file', '{payload}', '--authority-only', '--json',
+        ],
+        canonical_same_level_example,
+        expected_returncode=0,
+    )
+
+    noncanonical_h3_section = json.loads(json.dumps(valid_work_unit))
+    noncanonical_h3_section['body'] = noncanonical_h3_section['body'].replace(
+        '## Required Task Fields',
+        '### Required Task Fields',
+        1,
+    )
+    assert_mutation(
+        'work-unit noncanonical H3 task-field section',
+        [
+            'scripts/asgk.py', 'work-unit-check',
+            '--json-file', '{payload}', '--authority-only', '--json',
+        ],
+        noncanonical_h3_section,
+        {'WU_TASK_FIELD_AMBIGUOUS'},
+    )
+
+    for label, heading in [
+        ('hyphenated', '## Required-Task-Fields'),
+        ('uppercase underscore', '## REQUIRED_TASK_FIELDS'),
+        ('punctuated', '## Required Task Fields!'),
+    ]:
+        nonexact_canonical = json.loads(json.dumps(valid_work_unit))
+        nonexact_canonical['body'] = nonexact_canonical['body'].replace(
+            '## Required Task Fields',
+            heading,
+            1,
+        )
+        assert_mutation(
+            f'work-unit {label} canonical task-field section',
+            [
+                'scripts/asgk.py', 'work-unit-check',
+                '--json-file', '{payload}', '--authority-only', '--json',
+            ],
+            nonexact_canonical,
+            {'WU_TASK_FIELD_AMBIGUOUS'},
+        )
+
+    duplicate_heading_work_unit = json.loads(json.dumps(individual_work_unit))
+    duplicate_heading_work_unit['body'] += (
+        '\n## objective\n\n'
+        'A second visible objective is ambiguous.\n'
+    )
+    assert_mutation(
+        'work-unit duplicate task-field heading',
+        [
+            'scripts/asgk.py', 'work-unit-check',
+            '--json-file', '{payload}', '--authority-only', '--json',
+        ],
+        duplicate_heading_work_unit,
+        {'WU_TASK_FIELD_AMBIGUOUS'},
+    )
+
+    duplicate_h1_heading = json.loads(json.dumps(individual_work_unit))
+    duplicate_h1_heading['body'] += (
+        '\n# objective\n\n'
+        'A competing H1 objective is ambiguous.\n'
+    )
+    assert_mutation(
+        'work-unit competing H1 task-field heading',
+        [
+            'scripts/asgk.py', 'work-unit-check',
+            '--json-file', '{payload}', '--authority-only', '--json',
+        ],
+        duplicate_h1_heading,
+        {'WU_TASK_FIELD_AMBIGUOUS'},
+    )
+
+    duplicate_setext_heading = json.loads(json.dumps(individual_work_unit))
+    duplicate_setext_heading['body'] += (
+        '\nobjective\n'
+        '=========\n\n'
+        'A competing Setext objective is ambiguous.\n'
+    )
+    assert_mutation(
+        'work-unit competing Setext task-field heading',
+        [
+            'scripts/asgk.py', 'work-unit-check',
+            '--json-file', '{payload}', '--authority-only', '--json',
+        ],
+        duplicate_setext_heading,
+        {'WU_TASK_FIELD_AMBIGUOUS'},
+    )
+
+    mixed_work_unit = json.loads(json.dumps(valid_work_unit))
+    mixed_work_unit['body'] += (
+        '\n## objective\n\n'
+        'An individual field cannot accompany Required Task Fields.\n'
+    )
+    assert_mutation(
+        'work-unit mixed task-field representations',
+        [
+            'scripts/asgk.py', 'work-unit-check',
+            '--json-file', '{payload}', '--authority-only', '--json',
+        ],
+        mixed_work_unit,
+        {'WU_TASK_FIELD_AMBIGUOUS'},
+    )
+
+    quoted_yaml_key_work_unit = json.loads(json.dumps(valid_work_unit))
+    quoted_yaml_key_work_unit['body'] = (
+        quoted_yaml_key_work_unit['body'].replace(
+            '\n```\n',
+            '\n"objective": quoted duplicate\n'
+            '```\n',
+            1,
+        )
+    )
+    assert_mutation(
+        'work-unit quoted canonical YAML key',
+        [
+            'scripts/asgk.py', 'work-unit-check',
+            '--json-file', '{payload}', '--authority-only', '--json',
+        ],
+        quoted_yaml_key_work_unit,
+        {'WU_TASK_FIELD_AMBIGUOUS'},
+    )
+
+    quoted_field_outside_fence = json.loads(json.dumps(valid_work_unit))
+    quoted_field_outside_fence['body'] = (
+        quoted_field_outside_fence['body'].replace(
+            '```yaml\n',
+            '"allowed_paths":\n'
+            '  - AGENTS.md\n\n'
+            '```yaml\n',
+            1,
+        )
+    )
+    assert_mutation(
+        'work-unit quoted task field outside canonical fence',
+        [
+            'scripts/asgk.py', 'work-unit-check',
+            '--json-file', '{payload}', '--authority-only', '--json',
+        ],
+        quoted_field_outside_fence,
+        {'WU_TASK_FIELD_AMBIGUOUS'},
+    )
+
+    duplicate_yaml_key_work_unit = json.loads(json.dumps(valid_work_unit))
+    duplicate_yaml_key_work_unit['body'] = (
+        duplicate_yaml_key_work_unit['body'].replace(
+            '\n```\n',
+            '\nallowed_paths:\n'
+            '  - scripts/asgk.py\n'
+            '```\n',
+            1,
+        )
+    )
+    assert_mutation(
+        'work-unit duplicate canonical YAML key',
+        [
+            'scripts/asgk.py', 'work-unit-check',
+            '--json-file', '{payload}', '--authority-only', '--json',
+        ],
+        duplicate_yaml_key_work_unit,
+        {'WU_TASK_FIELD_AMBIGUOUS'},
+    )
+
+    nested_context_heading = json.loads(json.dumps(individual_work_unit))
+    nested_context_heading['body'] = nested_context_heading['body'].replace(
+        '\n\n## project_specific_validation',
+        '\n\n### Additional reads\n\n- entire repo'
+        '\n\n## project_specific_validation',
+        1,
+    )
+    assert_mutation(
+        'work-unit nested context heading cannot hide broad read',
+        [
+            'scripts/asgk.py', 'work-unit-check',
+            '--json-file', '{payload}', '--authority-only', '--json',
+        ],
+        nested_context_heading,
+        {'WU_READ_SET_INVALID', 'WU_READ_SET_OVERBROAD'},
+    )
+
+    multiple_yaml_blocks_work_unit = json.loads(json.dumps(valid_work_unit))
+    multiple_yaml_blocks_work_unit['body'] = (
+        multiple_yaml_blocks_work_unit['body'].replace(
+            '\n```\n',
+            '\n```\n\n```yaml\nobjective: second candidate\n```\n',
+            1,
+        )
+    )
+    assert_mutation(
+        'work-unit multiple canonical YAML blocks',
+        [
+            'scripts/asgk.py', 'work-unit-check',
+            '--json-file', '{payload}', '--authority-only', '--json',
+        ],
+        multiple_yaml_blocks_work_unit,
+        {'WU_TASK_FIELD_AMBIGUOUS'},
+    )
+
+    multiple_canonical_sections = json.loads(json.dumps(valid_work_unit))
+    multiple_canonical_sections['body'] += (
+        '\n## Required Task Fields\n\n'
+        '```yaml\n'
+        'objective: second canonical section\n'
+        '```\n'
+    )
+    assert_mutation(
+        'work-unit multiple canonical task-field sections',
+        [
+            'scripts/asgk.py', 'work-unit-check',
+            '--json-file', '{payload}', '--authority-only', '--json',
+        ],
+        multiple_canonical_sections,
+        {'WU_TASK_FIELD_AMBIGUOUS'},
+    )
+
+    hidden_work_unit = json.loads(json.dumps(valid_work_unit))
+    hidden_work_unit['body'] = '<!--\n' + hidden_work_unit['body'] + '\n-->'
+    assert_mutation(
+        'hidden work-unit authority',
+        [
+            'scripts/asgk.py', 'work-unit-check',
+            '--json-file', '{payload}', '--authority-only', '--json',
+        ],
+        hidden_work_unit,
+        {'WU_REQUIRED_FIELD_MISSING', 'WU_EXECUTION_GATE_MISSING'},
+    )
+
+    work_unit_mutations = [
+        (
+            'work-unit overbroad read set',
+            'context_read_set',
+            ['entire repo'],
+            {'WU_READ_SET_OVERBROAD'},
+        ),
+        (
+            'work-unit absolute read set',
+            'context_read_set',
+            ['/etc/hosts'],
+            {'WU_READ_SET_OUTSIDE_REPO'},
+        ),
+        (
+            'work-unit pseudo-reference broad suffix',
+            'context_read_set',
+            ['GitHub issue #176 and entire repo'],
+            {'WU_READ_SET_OVERBROAD'},
+        ),
+        (
+            'work-unit arbitrary prose read set',
+            'context_read_set',
+            ['read whatever is useful'],
+            {'WU_READ_SET_INVALID'},
+        ),
+        (
+            'work-unit task-packet self reference',
+            'context_read_set',
+            ['this task packet'],
+            {'WU_READ_SET_INVALID'},
+        ),
+        (
+            'work-unit bare not_applicable validation',
+            'project_specific_validation',
+            ['not_applicable'],
+            {'WU_PROJECT_VALIDATION_REASON_MISSING'},
+        ),
+        (
+            'work-unit punctuation-only not_applicable validation',
+            'project_specific_validation',
+            ['not applicable -'],
+            {'WU_PROJECT_VALIDATION_REASON_MISSING'},
+        ),
+        (
+            'work-unit traversal allowed path',
+            'allowed_paths',
+            ['docs/../README.md'],
+            {'WU_ALLOWED_PATH_INVALID'},
+        ),
+    ]
+    for label, field, values, expected_codes in work_unit_mutations:
+        mutation = json.loads(json.dumps(valid_work_unit))
+        mutation['body'] = replace_list_field(mutation['body'], field, values)
+        assert_mutation(
+            label,
+            [
+                'scripts/asgk.py', 'work-unit-check',
+                '--json-file', '{payload}', '--authority-only', '--json',
+            ],
+            mutation,
+            expected_codes,
+        )
+
+    pr_shape = json.loads(json.dumps(valid_work_unit))
+    pr_shape.pop('kind', None)
+    pr_shape['html_url'] = (
+        'https://github.com/stereosurfer/agent-safe-dev-governance-kit/pull/176'
+    )
+    pr_result = run_json_payload_command(
+        root,
+        [
+            'scripts/asgk.py', 'work-unit-check',
+            '--json-file', '{payload}', '--authority-only', '--json',
+        ],
+        pr_shape,
+        expected_returncode=0,
+    )
+    if pr_result.get('work_unit', {}).get('kind') != 'pr':
+        fail('captured PR URL must be classified as a PR')
+
+    conflicting_issue_request = json.loads(json.dumps(valid_work_unit))
+    conflicting_issue_request['_asgk_requested_kind'] = 'issue'
+    conflicting_issue_request['pull_request'] = {
+        'url': 'https://api.github.com/repos/example/repo/pulls/176',
+    }
+    assert_mutation(
+        'work-unit issue request with PR markers',
+        [
+            'scripts/asgk.py', 'work-unit-check',
+            '--json-file', '{payload}', '--authority-only', '--json',
+        ],
+        conflicting_issue_request,
+        {'WU_KIND_INVALID'},
+    )
+
+    fallback_packet = json.loads(read(root, 'examples/task_packet.valid.json'))
+    fallback_pseudo = json.loads(json.dumps(fallback_packet))
+    fallback_pseudo['context_read_set'] = ['this task packet']
+    pseudo_measurement = run_json_payload_command(
+        root,
+        [
+            'scripts/asgk.py', 'context-budget-measure',
+            '--task-packet', '{payload}', '--json',
+        ],
+        fallback_pseudo,
+        expected_returncode=0,
+    )
+    if pseudo_measurement.get('pseudo_refs') != ['this task packet']:
+        fail('this task packet must be a non-file context pseudo-reference')
+
+    fallback_mutations = [
+        (
+            'task-packet non-string list item',
+            'plan',
+            [1],
+            {'TP_LIST_ITEM_TYPE_INVALID'},
+        ),
+        (
+            'task-packet blank list item',
+            'plan',
+            ['   '],
+            {'TP_LIST_ITEM_EMPTY'},
+        ),
+        (
+            'task-packet absolute read set',
+            'context_read_set',
+            ['/etc/hosts'],
+            {'TP_READ_SET_OUTSIDE_REPO'},
+        ),
+        (
+            'task-packet everything read set',
+            'context_read_set',
+            ['everything'],
+            {'TP_READ_SET_OVERBROAD'},
+        ),
+        (
+            'task-packet URL broad suffix',
+            'context_read_set',
+            ['https://example.invalid plus whole repository'],
+            {'TP_READ_SET_OVERBROAD'},
+        ),
+        (
+            'task-packet arbitrary prose read set',
+            'context_read_set',
+            ['read the relevant files'],
+            {'TP_READ_SET_INVALID'},
+        ),
+        (
+            'task-packet bare not_applicable validation',
+            'project_specific_validation',
+            ['not_applicable'],
+            {'TP_PROJECT_VALIDATION_REASON_MISSING'},
+        ),
+        (
+            'task-packet punctuation-only not_applicable validation',
+            'project_specific_validation',
+            ['N/A ( )'],
+            {'TP_PROJECT_VALIDATION_REASON_MISSING'},
+        ),
+        (
+            'task-packet protected fallback scope',
+            'allowed_paths',
+            ['AGENTS.md'],
+            {'TP_FALLBACK_ESCALATION_REQUIRED'},
+        ),
+        (
+            'task-packet traversal allowed path',
+            'allowed_paths',
+            ['docs/../README.md'],
+            {'TP_ALLOWED_PATH_INVALID'},
+        ),
+    ]
+    for label, field, value, expected_codes in fallback_mutations:
+        mutation = json.loads(json.dumps(fallback_packet))
+        mutation[field] = value
+        mutation_result = assert_mutation(
+            label,
+            [
+                'scripts/asgk.py', 'task-packet-check',
+                '--file', '{payload}', '--json',
+            ],
+            mutation,
+            expected_codes,
+        )
+        if (
+            label == 'task-packet protected fallback scope'
+            and mutation_result.get('task_packet', {}).get(
+                'temporary_local_execution_authority'
+            )
+            is not False
+        ):
+            fail('failed fallback must not emit conditional local-work authority')
+
+    hidden_packet = '<!--\n' + read(
+        root,
+        'examples/task_packet.example.yaml',
+    ) + '\n-->'
+    hidden_result = run_text_payload_command(
+        root,
+        [
+            'scripts/asgk.py', 'task-packet-check',
+            '--file', '{payload}', '--json',
+        ],
+        hidden_packet,
+        expected_returncode=1,
+    )
+    if set(finding_codes(hidden_result)) != {'TP_MODE_MISSING'}:
+        fail('hidden task packet must fail with TP_MODE_MISSING')
+
+    duplicate_raw_packet = (
+        read(root, 'examples/task_packet.example.yaml')
+        + '\nallowed_paths:\n'
+        + '  - examples/task_packet.example.yaml\n'
+    )
+    duplicate_raw_result = run_text_payload_command(
+        root,
+        [
+            'scripts/asgk.py', 'task-packet-check',
+            '--file', '{payload}', '--json',
+        ],
+        duplicate_raw_packet,
+        expected_returncode=1,
+    )
+    if set(finding_codes(duplicate_raw_result)) != {
+        'TP_TASK_FIELD_AMBIGUOUS'
+    }:
+        fail('duplicate raw packet key must fail with exact ambiguity code')
+    duplicate_context_result = run_text_payload_command(
+        root,
+        [
+            'scripts/asgk.py', 'context-budget-measure',
+            '--task-packet', '{payload}', '--json',
+        ],
+        duplicate_raw_packet,
+        expected_returncode=1,
+    )
+    if set(finding_codes(duplicate_context_result)) != {
+        'TP_TASK_FIELD_AMBIGUOUS'
+    }:
+        fail('context budget must preserve raw packet ambiguity code')
+
+    def indent_yaml(text, spaces):
+        prefix = ' ' * spaces
+        return '\n'.join(
+            prefix + line if line else line
+            for line in text.splitlines()
+        )
+
+    valid_raw_packet = read(root, 'examples/task_packet.example.yaml')
+
+    def assert_packet_source_ambiguity(label, result):
+        if set(finding_codes(result)) != {'TP_TASK_FIELD_AMBIGUOUS'}:
+            fail(f'{label} must fail with exact ambiguity code')
+        if 'temporary_local_execution_authority' in json.dumps(
+            result,
+            sort_keys=True,
+        ):
+            fail(f'{label} must not emit temporary local-work authority')
+
+    competing_wrapper_packet = (
+        valid_raw_packet
+        + '\ntask_packet:\n'
+        + indent_yaml(valid_raw_packet, 2)
+        + '\n'
+    )
+    competing_wrapper_result = run_text_payload_command(
+        root,
+        [
+            'scripts/asgk.py', 'task-packet-check',
+            '--file', '{payload}', '--json',
+        ],
+        competing_wrapper_packet,
+        expected_returncode=1,
+    )
+    assert_packet_source_ambiguity(
+        'raw-plus-wrapper packet',
+        competing_wrapper_result,
+    )
+
+    nested_wrapper_packet = (
+        valid_raw_packet
+        + '\ncontainer:\n'
+        + '  bad_input:\n'
+        + indent_yaml(valid_raw_packet, 4)
+        + '\n'
+    )
+    nested_wrapper_result = run_text_payload_command(
+        root,
+        [
+            'scripts/asgk.py', 'task-packet-check',
+            '--file', '{payload}', '--json',
+        ],
+        nested_wrapper_packet,
+        expected_returncode=1,
+    )
+    assert_packet_source_ambiguity(
+        'nested packet wrapper',
+        nested_wrapper_result,
+    )
+
+    wrapper_inside_wrapper_packet = (
+        'task_packet:\n'
+        '  bad_input:\n'
+        + indent_yaml(valid_raw_packet, 4)
+        + '\n'
+    )
+    wrapper_inside_result = run_text_payload_command(
+        root,
+        [
+            'scripts/asgk.py', 'task-packet-check',
+            '--file', '{payload}', '--json',
+        ],
+        wrapper_inside_wrapper_packet,
+        expected_returncode=1,
+    )
+    assert_packet_source_ambiguity(
+        'wrapper-inside-wrapper',
+        wrapper_inside_result,
+    )
+
+    competing_yaml_wrappers = (
+        'bad_input:\n'
+        + indent_yaml(valid_raw_packet, 2)
+        + '\ntask_packet:\n'
+        + indent_yaml(valid_raw_packet, 2)
+        + '\n'
+    )
+    competing_yaml_result = run_text_payload_command(
+        root,
+        [
+            'scripts/asgk.py', 'task-packet-check',
+            '--file', '{payload}', '--json',
+        ],
+        competing_yaml_wrappers,
+        expected_returncode=1,
+    )
+    assert_packet_source_ambiguity(
+        'competing YAML packet wrappers',
+        competing_yaml_result,
+    )
+
+    wrapper_with_unrelated_field = (
+        'task_packet:\n'
+        + indent_yaml(valid_raw_packet, 2)
+        + '\nunrelated_fixture_field: unexpected\n'
+    )
+    unrelated_wrapper_result = run_text_payload_command(
+        root,
+        [
+            'scripts/asgk.py', 'task-packet-check',
+            '--file', '{payload}', '--json',
+        ],
+        wrapper_with_unrelated_field,
+        expected_returncode=1,
+    )
+    assert_packet_source_ambiguity(
+        'wrapper plus unrelated top-level field',
+        unrelated_wrapper_result,
+    )
+
+    yaml_source_cases = [
+        (
+            'raw-plus-wrapper packet',
+            competing_wrapper_packet,
+            competing_wrapper_result,
+        ),
+        (
+            'nested packet wrapper',
+            nested_wrapper_packet,
+            nested_wrapper_result,
+        ),
+        (
+            'wrapper-inside-wrapper',
+            wrapper_inside_wrapper_packet,
+            wrapper_inside_result,
+        ),
+        (
+            'competing YAML packet wrappers',
+            competing_yaml_wrappers,
+            competing_yaml_result,
+        ),
+        (
+            'wrapper plus unrelated top-level field',
+            wrapper_with_unrelated_field,
+            unrelated_wrapper_result,
+        ),
+    ]
+    for label, source, canonical_result in yaml_source_cases:
+        compact_result = run_text_payload_command(
+            root,
+            [
+                'scripts/asgk.py', 'compact-task-packet-check',
+                '--file', '{payload}', '--json',
+            ],
+            source,
+            expected_returncode=1,
+        )
+        if canonical_result != compact_result:
+            fail(f'{label} must have canonical/compact output parity')
+        context_result = run_text_payload_command(
+            root,
+            [
+                'scripts/asgk.py', 'context-budget-measure',
+                '--task-packet', '{payload}', '--json',
+            ],
+            source,
+            expected_returncode=1,
+        )
+        assert_packet_source_ambiguity(
+            f'{label} context-budget projection',
+            context_result,
+        )
+
+    competing_json_wrappers = {
+        'bad_input': fallback_packet,
+        'task_packet': json.loads(json.dumps(fallback_packet)),
+    }
+    competing_json_result = run_json_payload_command(
+        root,
+        [
+            'scripts/asgk.py', 'task-packet-check',
+            '--file', '{payload}', '--json',
+        ],
+        competing_json_wrappers,
+        expected_returncode=1,
+    )
+    assert_packet_source_ambiguity(
+        'competing JSON packet wrappers',
+        competing_json_result,
+    )
+
+    json_raw_plus_wrapper = {
+        'task_packet': json.loads(json.dumps(fallback_packet)),
+        'mode': 'github_unavailable_fallback',
+    }
+    json_raw_plus_wrapper_result = run_json_payload_command(
+        root,
+        [
+            'scripts/asgk.py', 'task-packet-check',
+            '--file', '{payload}', '--json',
+        ],
+        json_raw_plus_wrapper,
+        expected_returncode=1,
+    )
+    assert_packet_source_ambiguity(
+        'JSON raw-plus-wrapper packet',
+        json_raw_plus_wrapper_result,
+    )
+    for label, source, canonical_result in [
+        (
+            'competing JSON packet wrappers',
+            competing_json_wrappers,
+            competing_json_result,
+        ),
+        (
+            'JSON raw-plus-wrapper packet',
+            json_raw_plus_wrapper,
+            json_raw_plus_wrapper_result,
+        ),
+    ]:
+        compact_result = run_json_payload_command(
+            root,
+            [
+                'scripts/asgk.py', 'compact-task-packet-check',
+                '--file', '{payload}', '--json',
+            ],
+            source,
+            expected_returncode=1,
+        )
+        if canonical_result != compact_result:
+            fail(f'{label} must have canonical/compact output parity')
+        context_result = run_json_payload_command(
+            root,
+            [
+                'scripts/asgk.py', 'context-budget-measure',
+                '--task-packet', '{payload}', '--json',
+            ],
+            source,
+            expected_returncode=1,
+        )
+        assert_packet_source_ambiguity(
+            f'{label} context-budget projection',
+            context_result,
+        )
+
+    for wrapper in ('task_packet', 'bad_input'):
+        valid_wrapped_yaml = (
+            f'{wrapper}:\n'
+            + indent_yaml(valid_raw_packet, 2)
+            + '\n'
+        )
+        canonical_wrapped_result = run_text_payload_command(
+            root,
+            [
+                'scripts/asgk.py', 'task-packet-check',
+                '--file', '{payload}', '--json',
+            ],
+            valid_wrapped_yaml,
+            expected_returncode=0,
+        )
+        compact_wrapped_result = run_text_payload_command(
+            root,
+            [
+                'scripts/asgk.py', 'compact-task-packet-check',
+                '--file', '{payload}', '--json',
+            ],
+            valid_wrapped_yaml,
+            expected_returncode=0,
+        )
+        if canonical_wrapped_result != compact_wrapped_result:
+            fail(f'valid YAML {wrapper} wrapper must have compact parity')
+
+        valid_wrapped_json = {
+            wrapper: json.loads(json.dumps(fallback_packet)),
+            'negative_case': 'valid wrapper compatibility fixture',
+        }
+        canonical_json_result = run_json_payload_command(
+            root,
+            [
+                'scripts/asgk.py', 'task-packet-check',
+                '--file', '{payload}', '--json',
+            ],
+            valid_wrapped_json,
+            expected_returncode=0,
+        )
+        compact_json_result = run_json_payload_command(
+            root,
+            [
+                'scripts/asgk.py', 'compact-task-packet-check',
+                '--file', '{payload}', '--json',
+            ],
+            valid_wrapped_json,
+            expected_returncode=0,
+        )
+        if canonical_json_result != compact_json_result:
+            fail(f'valid JSON {wrapper} wrapper must have compact parity')
+
+    typed_yaml_packet = re.sub(
+        r'(?m)^reason:.*$',
+        'reason: null',
+        valid_raw_packet,
+        count=1,
+    )
+    typed_yaml_packet = re.sub(
+        r'(?m)^objective:.*$',
+        'objective: true',
+        typed_yaml_packet,
+        count=1,
+    )
+    typed_yaml_packet = re.sub(
+        r'(?m)^  - "Retry GitHub issue creation before any PR\."$',
+        '  - false',
+        typed_yaml_packet,
+        count=1,
+    )
+    typed_yaml_result = run_text_payload_command(
+        root,
+        [
+            'scripts/asgk.py', 'task-packet-check',
+            '--file', '{payload}', '--json',
+        ],
+        typed_yaml_packet,
+        expected_returncode=1,
+    )
+    if set(finding_codes(typed_yaml_result)) != {
+        'TP_FIELD_TYPE_INVALID',
+        'TP_LIST_ITEM_TYPE_INVALID',
+    }:
+        fail('raw YAML implicit scalar types must match JSON schema types')
+
+    for numeric_token in ('0x10', '0o10', '0b10'):
+        base_numeric_packet = re.sub(
+            r'(?m)^reason:.*$',
+            f'reason: {numeric_token}',
+            valid_raw_packet,
+            count=1,
+        )
+        base_numeric_result = run_text_payload_command(
+            root,
+            [
+                'scripts/asgk.py', 'task-packet-check',
+                '--file', '{payload}', '--json',
+            ],
+            base_numeric_packet,
+            expected_returncode=1,
+        )
+        if set(finding_codes(base_numeric_result)) != {
+            'TP_FIELD_TYPE_INVALID'
+        }:
+            fail(
+                f'YAML base-prefixed numeric {numeric_token} must retain type'
+            )
+
+    unicode_validation_packet = json.loads(json.dumps(fallback_packet))
+    unicode_validation_packet['project_specific_validation'] = [
+        'not_applicable because 純文件變更'
+    ]
+    run_json_payload_command(
+        root,
+        [
+            'scripts/asgk.py', 'task-packet-check',
+            '--file', '{payload}', '--json',
+        ],
+        unicode_validation_packet,
+        expected_returncode=0,
+    )
+
+    refinement_bundle = json.loads(
+        read(root, 'examples/compact_governance/task_packet_delta.valid.json')
+    )
+    competing_bundle_source = json.loads(json.dumps(refinement_bundle))
+    competing_bundle_source['mode'] = 'github_unavailable_fallback'
+    competing_bundle_source['allowed_paths'] = ['AGENTS.md']
+    canonical_bundle_result = run_json_payload_command(
+        root,
+        [
+            'scripts/asgk.py', 'task-packet-check',
+            '--json-file', '{payload}', '--json',
+        ],
+        competing_bundle_source,
+        expected_returncode=1,
+    )
+    compact_bundle_result = run_json_payload_command(
+        root,
+        [
+            'scripts/asgk.py', 'compact-task-packet-check',
+            '--json-file', '{payload}', '--json',
+        ],
+        competing_bundle_source,
+        expected_returncode=1,
+    )
+    assert_packet_source_ambiguity(
+        'fixture bundle with competing raw packet fields',
+        canonical_bundle_result,
+    )
+    if canonical_bundle_result != compact_bundle_result:
+        fail('competing fixture bundle source must have compact parity')
+
+    refinement_mutations = [
+        (
+            'task-packet refinement traversal shape',
+            ('task_packet', 'allowed_paths'),
+            ['scripts/../AGENTS.md'],
+            {'TP_ALLOWED_PATH_INVALID'},
+        ),
+        (
+            'task-packet glob containment',
+            ('task_packet', 'allowed_paths'),
+            ['scripts/*.py'],
+            {'TP_ALLOWED_PATH_EXPANSION'},
+        ),
+        (
+            'task-packet read-set case mismatch',
+            ('task_packet', 'context_read_set'),
+            ['agents.md'],
+            {'TP_READ_SET_EXPANSION'},
+        ),
+        (
+            'task-packet validation case mismatch',
+            ('task_packet', 'project_specific_validation'),
+            ['Python3 scripts/asgk.py task-packet-check'],
+            {'TP_VALIDATION_EXPANSION'},
+        ),
+        (
+            'task-packet unrelated repository issue URL',
+            ('task_packet', 'durable_source_of_truth'),
+            'https://github.com/unrelated/repository/issues/1001',
+            {'TP_AUTHORITY_MISMATCH'},
+        ),
+        (
+            'task-packet conflicting repository qualifier',
+            ('task_packet', 'durable_source_of_truth'),
+            'unrelated/repository issue #1001',
+            {'TP_AUTHORITY_MISMATCH'},
+        ),
+    ]
+    for label, (parent, field), value, expected_codes in refinement_mutations:
+        mutation = json.loads(json.dumps(refinement_bundle))
+        mutation[parent][field] = value
+        if label == 'task-packet unrelated repository issue URL':
+            mutation['issue']['html_url'] = (
+                'https://github.com/stereosurfer/'
+                'agent-safe-dev-governance-kit/issues/1001'
+            )
+        result = assert_mutation(
+            label,
+            [
+                'scripts/asgk.py', 'task-packet-check',
+                '--json-file', '{payload}', '--json',
+            ],
+            mutation,
+            expected_codes,
+        )
+        if label == 'task-packet refinement traversal shape':
+            checked = set(result.get('mechanically_checked', []))
+            skipped = set(result.get('not_checked', []))
+            if 'allowed_paths non-expansion' in checked:
+                fail('invalid packet shape must not claim allowed-path comparison')
+            if 'allowed_paths non-expansion' not in skipped:
+                fail('skipped allowed-path comparison must be disclosed')
+
+    nonexact_source_heading = json.loads(json.dumps(refinement_bundle))
+    nonexact_source_heading['issue']['body'] = (
+        nonexact_source_heading['issue']['body'].replace(
+            '## Required Task Fields',
+            '## Required-Task-Fields',
+            1,
+        )
+    )
+    nonexact_source_result = assert_mutation(
+        'task-packet source issue nonexact canonical heading',
+        [
+            'scripts/asgk.py', 'task-packet-check',
+            '--json-file', '{payload}', '--json',
+        ],
+        nonexact_source_heading,
+        {'TP_ISSUE_TASK_FIELD_AMBIGUOUS'},
+    )
+    for comparison in (
+        'allowed_paths non-expansion',
+        'context_read_set exact-item non-expansion',
+        'project_specific_validation exact-item non-expansion',
+    ):
+        if (
+            comparison
+            in set(nonexact_source_result.get('mechanically_checked', []))
+            or comparison
+            not in set(nonexact_source_result.get('not_checked', []))
+        ):
+            fail(
+                'nonexact source canonical heading must skip '
+                f'{comparison}'
+            )
+
+    quoted_source_field_outside_fence = json.loads(
+        json.dumps(refinement_bundle)
+    )
+    quoted_source_field_outside_fence['issue']['body'] = (
+        quoted_source_field_outside_fence['issue']['body'].replace(
+            '```yaml\n',
+            '"allowed_paths":\n'
+            '  - AGENTS.md\n\n'
+            '```yaml\n',
+            1,
+        )
+    )
+    quoted_source_result = assert_mutation(
+        'task-packet source issue quoted field outside canonical fence',
+        [
+            'scripts/asgk.py', 'task-packet-check',
+            '--json-file', '{payload}', '--json',
+        ],
+        quoted_source_field_outside_fence,
+        {'TP_ISSUE_TASK_FIELD_AMBIGUOUS'},
+    )
+    for comparison in (
+        'allowed_paths non-expansion',
+        'context_read_set exact-item non-expansion',
+        'project_specific_validation exact-item non-expansion',
+    ):
+        if (
+            comparison
+            in set(quoted_source_result.get('mechanically_checked', []))
+            or comparison
+            not in set(quoted_source_result.get('not_checked', []))
+        ):
+            fail(
+                'quoted source field outside canonical fence must skip '
+                f'{comparison}'
+            )
+
+    refinement_pr_source = json.loads(json.dumps(refinement_bundle))
+    refinement_pr_source['issue']['html_url'] = (
+        'https://github.com/stereosurfer/'
+        'agent-safe-dev-governance-kit/pull/1001'
+    )
+    assert_mutation(
+        'task-packet PR payload cannot act as source issue',
+        [
+            'scripts/asgk.py', 'task-packet-check',
+            '--json-file', '{payload}', '--json',
+        ],
+        refinement_pr_source,
+        {'TP_ISSUE_SCOPE_INVALID'},
+    )
+
+    live_issue_api_pr_source = json.loads(json.dumps(refinement_bundle))
+    live_issue_api_pr_source['issue']['_asgk_requested_kind'] = 'issue'
+    live_issue_api_pr_source['issue']['pull_request'] = {
+        'url': (
+            'https://api.github.com/repos/stereosurfer/'
+            'agent-safe-dev-governance-kit/pulls/1001'
+        ),
+    }
+    assert_mutation(
+        'task-packet Issues API PR cannot act as source issue',
+        [
+            'scripts/asgk.py', 'task-packet-check',
+            '--json-file', '{payload}', '--json',
+        ],
+        live_issue_api_pr_source,
+        {'TP_ISSUE_SCOPE_INVALID'},
+    )
+
+    source_issue_reason_alias = json.loads(json.dumps(refinement_bundle))
+    source_issue_reason_alias['issue']['body'] = (
+        source_issue_reason_alias['issue']['body'].replace(
+            'reason: "Fixture supports task-packet non-expansion checks."',
+            'reason: "Fixture supports task-packet non-expansion checks."\n'
+            'intelligence_level_reason: "Legacy duplicate reason."',
+            1,
+        )
+    )
+    alias_source_result = assert_mutation(
+        'task-packet source issue legacy reason alias',
+        [
+            'scripts/asgk.py', 'task-packet-check',
+            '--json-file', '{payload}', '--json',
+        ],
+        source_issue_reason_alias,
+        {'TP_ISSUE_REASON_ALIAS_FORBIDDEN'},
+    )
+    if (
+        'allowed_paths non-expansion'
+        in set(alias_source_result.get('mechanically_checked', []))
+        or 'allowed_paths non-expansion'
+        not in set(alias_source_result.get('not_checked', []))
+    ):
+        fail('source issue legacy alias must skip non-expansion comparison')
+
+    mixed_source_issue = json.loads(json.dumps(refinement_bundle))
+    mixed_source_issue['issue']['body'] += (
+        '\n## objective\n\n'
+        'A source issue cannot mix task-field representations.\n'
+    )
+    mixed_source_result = assert_mutation(
+        'task-packet mixed source-issue task fields',
+        [
+            'scripts/asgk.py', 'task-packet-check',
+            '--json-file', '{payload}', '--json',
+        ],
+        mixed_source_issue,
+        {'TP_ISSUE_TASK_FIELD_AMBIGUOUS'},
+    )
+    if (
+        'allowed_paths non-expansion'
+        in set(mixed_source_result.get('mechanically_checked', []))
+        or 'allowed_paths non-expansion'
+        not in set(mixed_source_result.get('not_checked', []))
+    ):
+        fail('ambiguous source issue must disclose skipped non-expansion comparison')
+
+    duplicate_source_key = json.loads(json.dumps(refinement_bundle))
+    duplicate_source_key['issue']['body'] = (
+        duplicate_source_key['issue']['body'].replace(
+            '\n```\n',
+            '\nobjective: second candidate\n'
+            '```\n',
+            1,
+        )
+    )
+    assert_mutation(
+        'task-packet duplicate source-issue YAML key',
+        [
+            'scripts/asgk.py', 'task-packet-check',
+            '--json-file', '{payload}', '--json',
+        ],
+        duplicate_source_key,
+        {'TP_ISSUE_TASK_FIELD_AMBIGUOUS'},
+    )
+
+    source_issue_chat = json.loads(json.dumps(refinement_bundle))
+    source_issue_chat['issue']['body'] = source_issue_chat['issue']['body'].replace(
+        'reason: "Fixture supports task-packet non-expansion checks."',
+        'reason: "see chat"',
+        1,
+    )
+    invalid_issue_result = assert_mutation(
+        'task-packet invalid source issue chat authority',
+        [
+            'scripts/asgk.py', 'task-packet-check',
+            '--json-file', '{payload}', '--json',
+        ],
+        source_issue_chat,
+        {'TP_ISSUE_CHAT_AUTHORITY_FORBIDDEN'},
+    )
+    if (
+        'allowed_paths non-expansion'
+        in set(invalid_issue_result.get('mechanically_checked', []))
+        or 'allowed_paths non-expansion'
+        not in set(invalid_issue_result.get('not_checked', []))
+    ):
+        fail('invalid source issue must disclose skipped non-expansion comparison')
+
+    source_issue_mutations = [
+        (
+            'task-packet source issue traversal path',
+            'allowed_paths',
+            ['docs/../README.md'],
+            {'TP_ISSUE_ALLOWED_PATH_INVALID'},
+        ),
+        (
+            'task-packet source issue overbroad read set',
+            'context_read_set',
+            ['entire repo'],
+            {'TP_ISSUE_READ_SET_OVERBROAD'},
+        ),
+        (
+            'task-packet source issue invalid prose read set',
+            'context_read_set',
+            ['read the relevant files'],
+            {'TP_ISSUE_READ_SET_INVALID'},
+        ),
+        (
+            'task-packet source issue bare not_applicable validation',
+            'project_specific_validation',
+            ['not_applicable'],
+            {'TP_ISSUE_PROJECT_VALIDATION_REASON_MISSING'},
+        ),
+    ]
+    for label, field, values, expected_codes in source_issue_mutations:
+        mutation = json.loads(json.dumps(refinement_bundle))
+        mutation['issue']['body'] = replace_list_field(
+            mutation['issue']['body'],
+            field,
+            values,
+        )
+        assert_mutation(
+            label,
+            [
+                'scripts/asgk.py', 'task-packet-check',
+                '--json-file', '{payload}', '--json',
+            ],
+            mutation,
+            expected_codes,
+        )
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        temporary_root = Path(tmpdir) / 'repo'
+        temporary_root.mkdir()
+        outside = Path(tmpdir) / 'outside.txt'
+        outside.write_text('outside', encoding='utf-8')
+        (temporary_root / 'escape.txt').symlink_to(outside)
+        symlink_packet = json.loads(json.dumps(fallback_packet))
+        symlink_packet['context_read_set'] = ['escape.txt']
+        symlink_result, symlink_output = evaluate_task_packet(
+            symlink_packet,
+            json.dumps(symlink_packet, sort_keys=True),
+            repo_root=temporary_root,
+        )
+        if (
+            symlink_result != 'fail'
+            or set(finding_codes(symlink_output))
+            != {'TP_READ_SET_OUTSIDE_REPO'}
+        ):
+            fail('task-packet context symlink escape must fail with exact code')
+
+    relative_red_team = subprocess.run(
+        [
+            sys.executable,
+            'scripts/compact_governance_red_team_check.py',
+            'examples/compact_governance/task_packet_delta.valid.json',
+        ],
+        cwd=root,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    if relative_red_team.returncode != 0:
+        fail('compact red-team runner must accept a repo-relative fixture path')
+
+
 def check_negative_runner_projection():
     cases = [
         (
@@ -701,6 +2505,7 @@ def main():
     check_policy_gate_routing_fixtures(root)
     check_policy_gate_failure_projection(root)
     check_pr_status_projection(root)
+    check_w3a_work_unit_and_task_packet_projection(root)
     check_negative_runner_projection()
     check_control_sections(root)
     check_storage_profile(root)

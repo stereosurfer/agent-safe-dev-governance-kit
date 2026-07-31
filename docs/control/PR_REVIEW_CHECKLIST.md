@@ -38,22 +38,31 @@ required_review_inputs:
   - canonical policy files only when the PR touches their topic
 ```
 
-Do not read the whole repository by default. Use the `merge_decision` or
-appropriate task profile from `docs/control/CONTEXT_BUDGET_POLICY.md`.
+Do not read the whole repository by default. Follow the linked authority's exact
+`context_read_set`. Repo entries must be existing regular files and durable
+references must occupy whole items; use a named classification from
+`docs/control/CONTEXT_BUDGET_POLICY.md` only as advisory selection help.
 
 ## Step 1 — Source Of Truth Check
 
 Confirm:
 
-- [ ] PR links to a GitHub issue or durable repo document.
-- [ ] Linked source includes objective, allowed paths, expected output, checklist,
-      acceptance sheet, stop conditions, and rollback expectations.
+- [ ] Executable work links to a current GitHub issue or already-open PR.
+- [ ] Linked authority contains all 13 canonical fields from `AGENTS.md`.
+- [ ] `reason` is the formal field name; `intelligence_level_reason` is not used
+      as a substitute.
+- [ ] Linked authority separately contains material `context_read_set` and
+      `project_specific_validation` execution gates.
+- [ ] Pre-write `work-unit-check --authority-only` evidence exists when the
+      repository command is available.
 - [ ] The PR does not rely on `see chat` for scope, acceptance, or handoff.
 - [ ] The PR body names the durable source of truth.
 
 Block when:
 
-- [ ] No durable source of truth exists.
+- [ ] No valid GitHub authority exists for executable work.
+- [ ] A task packet or repo document is used as executable authority while
+      GitHub is available.
 - [ ] Scope or acceptance exists only in chat.
 - [ ] Linked issue appears stale or already satisfied.
 
@@ -102,7 +111,8 @@ Block or request changes when:
 
 Confirm:
 
-- [ ] PR or Agent Report records the selected context profile when non-trivial.
+- [ ] PR or Agent Report records the exact context read set when non-trivial.
+- [ ] Any named context classification is identified as advisory only.
 - [ ] Any context expansion is explained.
 - [ ] The agent did not read unrelated documents without a reason.
 - [ ] Summary documents were not treated as canonical when canonical docs exist.

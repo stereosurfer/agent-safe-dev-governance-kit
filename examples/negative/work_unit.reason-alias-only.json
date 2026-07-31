@@ -1,0 +1,6 @@
+{
+  "kind": "issue",
+  "number": 2073,
+  "state": "open",
+  "body": "## Required Task Fields\n\n```yaml\nlane: validation_tooling\nintelligence_level: advanced\nintelligence_level_reason: \"Legacy alias must not satisfy reason.\"\ndurable_source_of_truth: \"GitHub issue #2073\"\nobjective: \"Reject the legacy reason alias.\"\nplan:\n  - run authority check\nchecklist:\n  - alias is rejected\nacceptance_sheet:\n  - exact alias code is reported\nallowed_paths:\n  - scripts/asgk.py\nexpected_output:\n  - focused findings\nnon_goals:\n  - no compatibility alias\nstop_conditions:\n  - alias is accepted\nrollback_expectations:\n  - remove fixture\ncontext_read_set:\n  - AGENTS.md\n  - current GitHub issue\nproject_specific_validation:\n  - python3 scripts/asgk.py work-unit-check\n```\n"
+}

@@ -1,6 +1,6 @@
 negative_case:
-  id: NEG-001-see-chat-source
-  expected_code: TP_CHAT_AUTHORITY_FORBIDDEN
+  id: NEG-081-task-packet-overbroad-read-set
+  expected_code: TP_READ_SET_OVERBROAD
   should_block_positive_validation: false
 
 bad_input:
@@ -8,24 +8,24 @@ bad_input:
   github_issue_status: "pending_unavailable"
   lane: "validation_tooling"
   intelligence_level: "standard"
-  reason: "Fixture isolates chat-only authority."
-  durable_source_of_truth: "see chat"
-  objective: "Reject chat-only authority."
+  reason: "Fixture isolates an overbroad context_read_set."
+  durable_source_of_truth: "Repository task packet pending GitHub recovery."
+  objective: "Reject a whole-repository read request."
   plan:
     - "Run the negative check."
   checklist:
     - "The validator rejects this packet."
   acceptance_sheet:
-    - "TP_CHAT_AUTHORITY_FORBIDDEN is reported."
+    - "TP_READ_SET_OVERBROAD is reported."
   allowed_paths:
     - "examples/task_packet.example.yaml"
   context_read_set:
-    - "AGENTS.md"
+    - "whole repo"
   project_specific_validation:
     - "python3 scripts/asgk.py task-packet-check"
   expected_output: "A focused blocking finding."
   non_goals:
     - "No implementation."
   stop_conditions:
-    - "Chat-only authority is accepted."
+    - "Whole-repository reading is accepted."
   rollback_expectations: "Remove this negative fixture."

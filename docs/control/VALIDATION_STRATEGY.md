@@ -171,6 +171,19 @@ heading, while visible YAML fields inside the intended fenced record remain
 machine-checkable. Exact decision tokens are unquoted; quoted `"true"` is not
 the boolean `true`.
 
+Work-unit and source-issue task fields additionally require one unambiguous
+representation: unique visible recognized ATX or Setext task-field headings,
+including GitHub issue-form H3 headings, or one exact ATX H2
+`## Required Task Fields` section with raw YAML or one sole unlabeled, `yaml`,
+or `yml` fence. Exact includes label spelling, spacing, punctuation, and case.
+A Setext underline is syntax, not field content. A lower-level heading inside
+an individual field remains part of that field until the next heading at the
+same or a higher level. Duplicate headings or keys, a noncanonical
+`Required Task Fields` heading, multiple canonical sections or fences, and
+mixed representations fail before field completeness or containment is
+evaluated. Fenced examples outside the canonical section do not supply
+authority.
+
 For GitHub PR events, the durable `merge_decision.result` selects the
 body-level validation mode. File-backed preflight explicitly selects
 `body-coherence`; direct CLI and `check-pr` explicitly select strict
@@ -219,12 +232,14 @@ body_validation_modes:
 
 ```yaml
 owners:
+  - python3 scripts/asgk.py work-unit-check --authority-only
   - scripts/governance_hygiene.py
   - python3 scripts/asgk.py hygiene
   - python3 scripts/asgk.py check-pr
   - python3 scripts/asgk.py work-unit-check
   - python3 scripts/asgk.py workspace-state-check
 proves:
+  - authority-only mode checks an open work unit, one visible unambiguous field representation, exact 13 fields, reason naming, allowed paths, and both execution gates before a diff exists
   - supplied changed paths are inside allowed paths
   - protected paths and runtime artifact paths are detected
   - live or fixture issue/PR metadata is internally usable
@@ -236,11 +251,12 @@ proves:
   - fixture or captured metadata is labeled separately from live GitHub evidence
   - stale or merged local branches are surfaced as workspace observations
 does_not_prove:
+  - that authority-only mode checked any changed path or implementation
   - final merge approval
   - human-gated approval
   - security or privacy safety beyond checked path patterns
   - that warnings require automatic repair issues
-blocking_rule: path, authority, strict Merge Decision, live PR state, latest-check failure or pending, and ambiguous check ordering block; workspace observations warn unless strict mode or policy says otherwise
+blocking_rule: ambiguous task fields, path, authority, strict Merge Decision, live PR state, latest-check failure or pending, and ambiguous check ordering block; workspace observations warn unless strict mode or policy says otherwise
 ```
 
 ### Task, Context, And Target Adoption
@@ -251,17 +267,47 @@ owners:
   - python3 scripts/asgk.py context-budget-measure
   - python3 scripts/asgk.py target-install-check
 proves:
-  - task packets contain required fields and material values
-  - executable task packets use GitHub issue or PR authority when GitHub is available
-  - files_to_inspect_first avoids overbroad whole-repo read requests
+  - task packets use exactly one supported projection mode with material values
+  - raw YAML task packets reject duplicate or quoted top-level keys and retain implicit null, boolean, and numeric scalar types for schema-parity checks
+  - file-backed YAML rejects raw-plus-wrapper, nested, competing, or wrapper-plus-unrelated task-packet sources; file-backed JSON rejects competing top-level wrappers or wrapper-plus-unrelated fields
+  - fixture bundles reject bad_input or top-level raw packet fields competing with task_packet and emit no packet authority projection
+  - source issues use one visible unambiguous task-field representation before refinement comparison
+  - a source issue cannot use intelligence_level_reason as an additional or substitute canonical field
+  - issue_refinement packets do not mechanically expand supplied issue paths or exact read/validation items
+  - github_unavailable_fallback packets carry the 13 canonical fields, both execution gates, and exact pending_unavailable status
+  - packet list items match the schema's non-empty string type
+  - packet paths reject absolute paths, dot segments, and resolved root escape
+  - context_read_set accepts only whole-item durable references or existing in-root regular files and rejects appended broad-read clauses
+  - fallback allowed_paths reject mechanically recognizable protected governance boundaries
   - context-budget estimates are derived from concrete named files
   - target-install checks report copy, template, customize, and do-not-copy boundaries
 does_not_prove:
   - that a target repository has adopted ASGK correctly after manual edits
   - that a context estimate equals provider-billed tokens
-  - that a task packet expands issue authority
-blocking_rule: malformed authority or overbroad context requests block; target-install findings remain read-only until a target-owned issue authorizes changes
+  - semantic equivalence of context or validation items
+  - general glob-set containment beyond exact packet/issue glob equality
+  - that GitHub was actually unavailable
+  - every non-path escalation trigger or the semantic sufficiency of project-specific validation
+  - PR readiness, human approval, merge authority, or issue completion
+blocking_rule: task-field ambiguity, unsupported packet modes, legacy fields, scope/read/validation expansion, malformed authority, invalid context references, or recognized fallback escalation paths block; target-install findings remain read-only until a target-owned issue authorizes changes
 ```
+
+Material `not_applicable` reasons are Unicode-aware; punctuation and connector
+words alone fail, while concrete non-English reasons remain valid.
+
+Ambiguity maps to stable findings:
+
+- `WU_TASK_FIELD_AMBIGUOUS`: work-unit body;
+- `TP_ISSUE_TASK_FIELD_AMBIGUOUS`: source issue body;
+- `TP_TASK_FIELD_AMBIGUOUS`: raw task-packet YAML or competing packet source.
+
+After a task-field ambiguity finding, completeness, gate semantics, and downstream
+containment or non-expansion checks that depend on the ambiguous fields are
+reported as not checked.
+
+A legacy reason alias in a source issue maps to
+`TP_ISSUE_REASON_ALIAS_FORBIDDEN`; source parsing remains observable, but
+dependent non-expansion comparisons are reported as not checked.
 
 ### Current Status, Handoff, And Release State
 
@@ -291,15 +337,16 @@ owners:
   - python3 scripts/asgk.py compact-issue-scope
   - python3 scripts/asgk.py compact-scope-lock
   - python3 scripts/asgk.py compact-pr-report
-  - python3 scripts/asgk.py compact-task-packet-check
+  - python3 scripts/asgk.py task-packet-check
   - python3 scripts/asgk.py compact-target-upgrade-check
 proves:
-  - issue scope can be normalized into a canonical object
-  - scope locks detect material scope drift
-  - task packets narrow rather than expand issue scope
+  - the 13-field task identity can be normalized into a canonical object
+  - scope locks detect drift in that 13-field identity
+  - compact-task-packet-check delegates to the canonical task-packet evaluator rather than owning comparison semantics
   - PR reports preserve tool-derived state and blocking findings
   - target-upgrade manifests do not overwrite target-owned state by default
 does_not_prove:
+  - freshness or validity of context_read_set and project_specific_validation; work-unit-check owns those execution gates
   - low-risk eligibility by itself
   - adoption safety in a target repository without target-owned review
   - human approval for restricted boundaries

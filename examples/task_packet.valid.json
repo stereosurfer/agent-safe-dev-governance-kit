@@ -1,47 +1,37 @@
 {
-  "task_id": "TASK-JSON-001",
-  "lane": "lane_07_docs_handoff",
+  "mode": "github_unavailable_fallback",
+  "github_issue_status": "pending_unavailable",
+  "lane": "validation_tooling",
   "intelligence_level": "advanced",
-  "intelligence_level_reason": "Validation tooling changes require careful schema judgment.",
-  "durable_source_of_truth": "GitHub issue #157",
-  "github_issue_status": "available",
-  "work_unit_kind": "implementation",
-  "objective": "Validate a JSON task packet fixture.",
-  "product_context": "ASGK uses task packets for durable agent-executable work.",
-  "current_repository_context": "Validation tooling is present.",
-  "files_to_inspect_first": [
-    "AGENTS.md",
-    "current GitHub issue or PR",
-    "docs/control/TASK_PACKET_FORMAT.md"
+  "reason": "The fixture exercises the dependency-free fallback validator.",
+  "durable_source_of_truth": "Repository task packet pending GitHub recovery.",
+  "objective": "Validate one complete JSON fallback packet.",
+  "plan": [
+    "Run task-packet-check."
+  ],
+  "checklist": [
+    "Validator passes."
+  ],
+  "acceptance_sheet": [
+    "The fallback is structurally complete."
   ],
   "allowed_paths": [
     "scripts/asgk.py",
     "examples/task_packet.valid.json"
   ],
-  "expected_changes": [
-    "Add deterministic task-packet schema coverage."
+  "context_read_set": [
+    "AGENTS.md",
+    "examples/task_packet.valid.json"
   ],
-  "expected_output": "Task packet schema validation passes.",
-  "non_goals": [
-    "No dependency changes."
-  ],
-  "constraints": [
-    "No chat-only authority."
-  ],
-  "plan": [
-    "Run task-packet-check."
-  ],
-  "checklist": [
-    "[ ] Validator passes."
-  ],
-  "acceptance_sheet": [
-    "[ ] Fixture is accepted."
-  ],
-  "validation_commands": [
+  "project_specific_validation": [
     "python3 scripts/asgk.py task-packet-check --file examples/task_packet.valid.json"
   ],
-  "stop_conditions": [
-    "schema_validation_fails"
+  "expected_output": "Task packet check passes with only outage-bounded local scope.",
+  "non_goals": [
+    "No external action, protected-path exception, PR, or merge authority."
   ],
-  "rollback_expectations": "Remove this fixture and validator changes."
+  "stop_conditions": [
+    "GitHub issue is still unavailable before PR creation."
+  ],
+  "rollback_expectations": "Remove the fixture and its focused validator change."
 }

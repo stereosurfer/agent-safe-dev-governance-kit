@@ -28,7 +28,10 @@ does_not_control:
 
 All repository work still uses the generic repo-agent governance core in
 `AGENTS.md`. A context read set only decides which additional documents may be
-read for a bounded work unit.
+read for a bounded work unit. Each repository path must name one existing
+in-root regular file. Durable issue, PR, and URL references must be complete
+whole-item references; prose such as "whatever is useful" is not a read-set
+item.
 
 ## Core Rules
 
@@ -36,9 +39,10 @@ read for a bounded work unit.
 core_rules:
   - use_the_smallest_sufficient_context_set
   - do_not_read_the_whole_repository_by_default
-  - choose_one_primary_context_read_set_before_editing
+  - record_exact_context_read_set_before_editing
+  - use_named_read_set_only_as_advisory_classification
   - record_context_expansion_when_extra_files_are_read
-  - treat_files_to_inspect_first_as_the_task_level_file_gate
+  - treat_context_read_set_as_the_task_level_file_gate
   - keep_context_budget_notes_in_existing_PR_or_agent_report_surfaces
   - do_not_create_a_separate_context_pack_or_sidecar_context_artifact
 ```
@@ -77,9 +81,11 @@ to them.
 
 ## Selecting A Read Set
 
-Before changing files, classify the work unit into one primary read set. If more
-than one read set appears relevant, choose the narrowest one that covers the
-risk and record any expansion reason.
+Before changing files, record the smallest exact `context_read_set`. A named
+read-set classification may help choose those paths, but the classification
+never implies files, authority, or permission. If more than one classification
+appears relevant, record only the exact paths required and any expansion
+reason.
 
 ```yaml
 context_read_set_selection:
@@ -90,8 +96,8 @@ context_read_set_selection:
     - expected_output
     - risk_level
   output:
-    - selected_context_read_set
-    - files_to_read
+    - advisory_read_set_classification_when_useful
+    - exact_context_read_set
     - context_expansion_reason_when_applicable
   stop_if:
     - context_read_set_missing
@@ -187,12 +193,10 @@ read_sets:
       - AGENTS.md
       - docs/handoff/CURRENT_STATUS.md
       - current GitHub issue or PR
-      - docs/control/DECISION_POINT_REGISTRY.md
-      - templates/decision_packet.template.yaml when creating a packet
     optional_read:
       - docs/DOCUMENT_MAP.md
       - docs/DOCUMENT_REGISTRY.md
-      - canonical documents named by DECISION_POINT_REGISTRY.md for the selected decision_type
+      - canonical documents named by the current issue or DOCUMENT_MAP.md
     stop_if:
       - decision_type_unclear
       - durable_source_of_truth_missing
@@ -319,7 +323,6 @@ context_expansion_allowed_when:
   - target file references another canonical file
   - DOCUMENT_MAP.md routes to a relevant canonical source
   - DOCUMENT_REGISTRY.md says the related file is canonical for the current topic
-  - DECISION_POINT_REGISTRY.md names canonical documents for the selected decision_type
   - validation failure points to a specific file
   - PR diff touches a file outside the expected group
   - issue acceptance criteria name an additional file
@@ -373,7 +376,8 @@ existing PR or report surface:
 ```md
 ## Context Budget
 
-Context read set: <read-set-name>
+Exact context read set source: <issue or PR>
+Advisory read-set classification: <name or not_used>
 Initial files read:
 - <path>
 Expanded files read:
@@ -425,10 +429,10 @@ If the document map, document registry, and this policy disagree:
 
 ```yaml
 maintenance_rules:
-  - add_or_rename_context_read_sets_only_in_this_file
-  - update_the_GitHub_issue_template_when_a_read_set_name_changes
+  - add_or_rename_advisory_read_set_classifications_only_in_this_file
+  - do_not_make_issue_field_shape_depend_on_a_classification_name
   - update_DOCUMENT_MAP_or_DOCUMENT_REGISTRY_only_when_navigation_wording_becomes_stale
-  - do_not_duplicate_the_read_sets_as_a_second_task_type_guide
+  - do_not_duplicate_advisory_classifications_as_a_second_task_type_guide
   - do_not_use_future_CLI_wrapper_plans_to_expand_current_startup_context
 ```
 

@@ -1,22 +1,22 @@
 negative_case:
-  id: NEG-001-see-chat-source
-  expected_code: TP_CHAT_AUTHORITY_FORBIDDEN
+  id: NEG-077-task-packet-fallback-status
+  expected_code: TP_FALLBACK_STATUS_INVALID
   should_block_positive_validation: false
 
 bad_input:
   mode: "github_unavailable_fallback"
-  github_issue_status: "pending_unavailable"
+  github_issue_status: "available"
   lane: "validation_tooling"
   intelligence_level: "standard"
-  reason: "Fixture isolates chat-only authority."
-  durable_source_of_truth: "see chat"
-  objective: "Reject chat-only authority."
+  reason: "Fixture isolates the exact fallback-status token."
+  durable_source_of_truth: "Repository task packet pending GitHub recovery."
+  objective: "Reject a noncanonical fallback status."
   plan:
     - "Run the negative check."
   checklist:
     - "The validator rejects this packet."
   acceptance_sheet:
-    - "TP_CHAT_AUTHORITY_FORBIDDEN is reported."
+    - "TP_FALLBACK_STATUS_INVALID is reported."
   allowed_paths:
     - "examples/task_packet.example.yaml"
   context_read_set:
@@ -25,7 +25,7 @@ bad_input:
     - "python3 scripts/asgk.py task-packet-check"
   expected_output: "A focused blocking finding."
   non_goals:
-    - "No implementation."
+    - "No fallback authority."
   stop_conditions:
-    - "Chat-only authority is accepted."
+    - "The wrong status is accepted."
   rollback_expectations: "Remove this negative fixture."

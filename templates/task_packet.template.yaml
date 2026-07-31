@@ -1,35 +1,15 @@
-task_id: "TASK-000"
-lane: "lane_00_controller"
-intelligence_level: "frontier"
-intelligence_level_reason: "Architecture or governance work requires policy judgment."
+# Optional projection of one live GitHub issue. Every list item must already be
+# authorized by the referenced issue. Use github_unavailable_fallback only when
+# GitHub is verifiably unavailable and no escalation trigger applies; that mode
+# is temporary authority only for bounded local work, must carry the full 13
+# fields plus both execution gates, and must be replaced by an issue before PR
+# creation or merge.
+mode: "issue_refinement"
 durable_source_of_truth: "GitHub issue #000"
-github_issue_status: "available"
-work_unit_kind: "implementation"
-objective: "One concrete result."
-product_context: "Why this matters."
-current_repository_context: "Known files/state."
-files_to_inspect_first:
-  - "AGENTS.md"
-  - "docs/handoff/CURRENT_STATUS.md"
-  - "current GitHub issue or PR"
-  - "specific target file or canonical doc"
 allowed_paths:
-  - "docs/"
-expected_changes:
-  - "Specific bounded change."
-expected_output: "Observable output."
-non_goals:
-  - "Do not expand scope."
-constraints:
-  - "No protected paths."
-plan:
-  - "Step 1"
-checklist:
-  - "[ ] Check item"
-acceptance_sheet:
-  - "[ ] Acceptance condition"
-validation_commands:
-  - "python3 scripts/validate_bootstrap.py"
-stop_conditions:
-  - "protected_path_change_required"
-rollback_expectations: "Revert only this task's changes or open follow-up issue."
+  - "one/exact/authorized/path"
+context_read_set:
+  - "AGENTS.md"
+  - "current GitHub issue"
+project_specific_validation:
+  - "one exact check already required by issue #000"

@@ -1,0 +1,6 @@
+{
+  "kind": "issue",
+  "number": 2075,
+  "state": "open",
+  "body": "## Required Task Fields\n\n```yaml\nlane: validation_tooling\nintelligence_level: advanced\nreason: \"Fixture isolates the missing project validation gate.\"\ndurable_source_of_truth: \"GitHub issue #2075\"\nobjective: \"Reject a work unit without project_specific_validation.\"\nplan:\n  - run authority check\nchecklist:\n  - missing gate is rejected\nacceptance_sheet:\n  - exact gate code is reported\nallowed_paths:\n  - scripts/asgk.py\nexpected_output:\n  - focused finding\nnon_goals:\n  - no implementation\nstop_conditions:\n  - missing gate is accepted\nrollback_expectations:\n  - remove fixture\ncontext_read_set:\n  - AGENTS.md\n  - current GitHub issue\n```\n"
+}

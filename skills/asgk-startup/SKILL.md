@@ -55,8 +55,25 @@ Use `docs/DOCUMENT_MAP.md` only if the work unit points to additional context.
 7. If `CURRENT_STATUS.md` is stale but live GitHub state is clear, prefer live
    GitHub state and plan a status refresh only when repo-level recovery state
    would mislead the next session.
-8. If there is no active issue or PR, stop unless the user explicitly asks to
-   create a durable issue.
+8. If GitHub is available and there is no active issue or PR, stop unless the
+   user explicitly asks to create a durable issue. If GitHub is verifiably
+   unavailable, proceed only from a complete validated fallback after confirming
+   that no escalation trigger applies, and keep a hard stop before PR, merge,
+   protected-path exception, or external action.
+9. Before reporting `ready_for_work_unit`, confirm the authority contains the
+   canonical 13 task fields plus separate `context_read_set` and
+   `project_specific_validation` gates. When the repository provides the
+   command, run:
+
+   ```bash
+   python3 scripts/asgk.py work-unit-check --issue <number> --authority-only --json
+   ```
+
+   For an open PR follow-up, normally validate its still-open linked issue with
+   `--issue`. Use `--pr` only when the PR body itself visibly owns all 13 fields
+   and both gates. If a source-distributed target lacks this command, record
+   validation as unavailable and perform a bounded manual check; do not convert
+   command absence into a false validator failure.
 
 ## Stop States
 
@@ -64,15 +81,19 @@ Report exactly one state. Apply `blocked`, `requires_human`,
 `closed_unmerged_restart_ready`, `ready_for_work_unit`, then `no_active_work`
 in that precedence order.
 
-- `blocked`: startup docs are missing, GitHub state is unavailable, instructions
-  conflict, or validation/evidence is stale and the durable Merge Decision has
-  not yet returned to `merge_blocked`.
+- `blocked`: startup docs are missing, GitHub state is unavailable without both
+  independent outage evidence and a complete fallback, instructions conflict,
+  or validation/evidence is stale and the durable Merge Decision has not yet
+  returned to `merge_blocked`.
 - `requires_human`: no non-human blocker remains and a specific applicable
   human gate or issue/policy-required semantic decision remains unresolved, or
   canonical policy and the current issue do not explicitly authorize the
   escalated next action. Routine review requested by an ordinary
   ready-for-review PR does not by itself create this state.
-- `ready_for_work_unit`: one durable issue or PR is identified.
+- `ready_for_work_unit`: one durable issue or PR is identified and its
+  authority-only fields and execution gates are valid at the available proof
+  boundary, or a verified outage has a complete fallback for bounded local work
+  with the issue-before-PR stop condition recorded.
 - `closed_unmerged_restart_ready`: the failed attempt is preserved and the
   authorized issue permits a fresh branch from current `main`.
 - `no_active_work`: no current work exists; open a durable issue before editing.

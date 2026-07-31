@@ -48,7 +48,7 @@ auto_merge_forbidden_when:
   - private source data touched
   - CI is skipped
   - reviewer and implementer are the same agent for policy changes
-  - lane or task packet is missing from the PR
+  - canonical task identity or required execution-gate evidence is missing
   - objective, plan, checklist, or acceptance sheet exists only in chat
   - durable source of truth is missing or says see chat
   - executable work relies on a task packet or repo document instead of a GitHub issue or PR while GitHub is available

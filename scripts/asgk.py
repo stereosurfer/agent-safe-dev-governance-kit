@@ -2,7 +2,6 @@
 from __future__ import annotations
 import argparse
 from datetime import datetime, timezone
-import fnmatch
 import hashlib
 import json
 import re
@@ -28,6 +27,7 @@ from asgk_lib.common import (
     read_text,
     rel,
     same_repo_path,
+    strip_html_comments,
     yaml_quote,
 )
 from asgk_lib.compact_handoff import compact_handoff_check
@@ -44,11 +44,29 @@ from asgk_lib.target_install import (
     print_target_install_findings,
     target_install_findings,
 )
+from asgk_lib.task_packet import (
+    CANONICAL_TASK_FIELDS,
+    TASK_PACKET_FALLBACK_FIELDS,
+    TASK_PACKET_LEGACY_FIELDS,
+    TASK_PACKET_REFINEMENT_FIELDS,
+    WORK_UNIT_EXECUTION_GATES,
+    context_read_set_item_problem,
+    escalation_boundaries_for_path_scope,
+    evaluate_task_packet,
+    is_context_pseudo_ref,
+    list_items,
+    path_matches_allowed,
+    project_validation_item_problem,
+    repo_relative_path_problem,
+    validate_task_packet_shape,
+    work_unit_payload_kind,
+)
 from asgk_lib.text_fields import (
+    TaskFieldAmbiguityError,
     material_items,
-    parse_markdown_task_field_sections,
-    parse_simple_task_packet_yaml,
-    task_packet_yaml_source,
+    parse_simple_task_packet_yaml_checked,
+    parse_visible_task_fields,
+    task_packet_yaml_source_checked,
 )
 from asgk_lib.negative import (
     NEGATIVE_CASE_CHOICES,
@@ -64,66 +82,17 @@ from asgk_lib.workspace_state import (
 
 BODY_COHERENCE_MODE = "body-coherence"
 MERGE_DECISION_MODE = "merge-decision"
-TASK_PACKET_REQUIRED_FIELDS = [
-    "task_id",
-    "lane",
-    "intelligence_level",
+WORK_UNIT_REQUIRED_FIELDS = list(CANONICAL_TASK_FIELDS)
+WORK_UNIT_EXECUTION_GATE_FIELDS = list(WORK_UNIT_EXECUTION_GATES)
+WORK_UNIT_PARSE_FIELDS = [
+    *WORK_UNIT_REQUIRED_FIELDS,
+    *WORK_UNIT_EXECUTION_GATE_FIELDS,
     "intelligence_level_reason",
-    "durable_source_of_truth",
-    "objective",
-    "product_context",
-    "current_repository_context",
-    "files_to_inspect_first",
-    "allowed_paths",
-    "expected_changes",
-    "expected_output",
-    "non_goals",
-    "constraints",
-    "plan",
-    "checklist",
-    "acceptance_sheet",
-    "validation_commands",
-    "stop_conditions",
-    "rollback_expectations",
 ]
-WORK_UNIT_REQUIRED_FIELDS = [
-    "lane",
-    "intelligence_level",
-    "reason",
-    "durable_source_of_truth",
-    "objective",
-    "plan",
-    "checklist",
-    "acceptance_sheet",
-    "allowed_paths",
-    "expected_output",
-    "non_goals",
-    "stop_conditions",
-    "rollback_expectations",
-]
-WORK_UNIT_FIELD_ALIASES = {
-    "reason": ["reason", "intelligence_level_reason"],
-}
-TASK_PACKET_LIST_FIELDS = [
-    "files_to_inspect_first",
-    "allowed_paths",
-    "expected_changes",
-    "non_goals",
-    "constraints",
-    "plan",
-    "checklist",
-    "acceptance_sheet",
-    "validation_commands",
-    "stop_conditions",
-]
-TASK_PACKET_SCALAR_FIELDS = [
-    field for field in TASK_PACKET_REQUIRED_FIELDS if field not in TASK_PACKET_LIST_FIELDS
-]
-TASK_PACKET_ALLOWED_INTELLIGENCE_LEVELS = {
-    "fast_basic",
-    "standard",
-    "advanced",
-    "frontier",
+TASK_PACKET_SOURCE_FIELDS = {
+    *TASK_PACKET_FALLBACK_FIELDS,
+    *TASK_PACKET_REFINEMENT_FIELDS,
+    *TASK_PACKET_LEGACY_FIELDS,
 }
 HANDOFF_REQUIRED_FIELDS = [
     "active_issue", "active_pr", "branch", "objective", "current_state",
@@ -153,58 +122,6 @@ CONTEXT_MEASUREMENT_METHOD = (
     "excludes issue/PR text, system prompt, chat, tool output, model completion, "
     "and provider billing usage."
 )
-CONTEXT_PSEUDO_REFS = {
-    "current github issue or pr",
-    "current issue or pr",
-    "current issue",
-    "current pr",
-    "open prs or current issue when relevant",
-    "target file",
-}
-DOCS_ONLY_PRIMARY_PATH_PREFIXES = (
-    "docs/control/",
-    "docs/bootstrap/",
-)
-DOCS_ONLY_PRIMARY_PATHS = {
-    "docs/control",
-    "docs/bootstrap",
-    "docs/DOCUMENT_MAP.md",
-    "docs/DOCUMENT_REGISTRY.md",
-    "docs/EVOLUTION_MODEL.md",
-    "docs/QUICKSTART.md",
-    "docs/INSTALL_SURFACE.md",
-    "docs/SKILL_PACK.md",
-}
-OVERBROAD_FILES_TO_INSPECT_REFS = {
-    ".",
-    "/",
-    "*",
-    "**",
-    "repo",
-    "repository",
-    "whole repo",
-    "whole repository",
-    "entire repo",
-    "entire repository",
-    "full repo",
-    "full repository",
-    "everything",
-    "all files",
-    "all docs",
-    "all documents",
-    "docs",
-    "docs/",
-    "docs/*",
-    "docs/**",
-    "docs/control",
-    "docs/control/",
-    "docs/control/*",
-    "docs/control/**",
-    "docs/bootstrap",
-    "docs/bootstrap/",
-    "docs/bootstrap/*",
-    "docs/bootstrap/**",
-}
 def run_command(args: list[str], *, cwd: Path = ROOT) -> int:
     print("+ " + " ".join(args))
     return subprocess.run(args, cwd=cwd).returncode
@@ -381,47 +298,30 @@ def load_work_unit_payload(args: argparse.Namespace) -> dict[str, object]:
 
 
 def work_unit_kind(payload: dict[str, object]) -> str:
-    explicit = str(payload.get("kind") or payload.get("_asgk_requested_kind") or "").lower()
-    if explicit in {"issue", "pr"}:
-        return explicit
-    if "pull_request" in payload or "merged" in payload or "mergeable" in payload:
-        return "pr"
-    return "issue"
+    return work_unit_payload_kind(payload)
 
 
-def path_matches_allowed(path: str, allowed_path: str) -> bool:
-    path = normalize_repo_path(path)
-    allowed = normalize_repo_path(allowed_path).strip('"').strip("'")
-    if not allowed or allowed in {"none", "none_for_source_only_release_execution"}:
-        return False
-    if allowed.endswith("/**"):
-        return path.startswith(allowed[:-3].rstrip("/") + "/")
-    if allowed.endswith("/"):
-        return path.startswith(allowed)
-    if any(char in allowed for char in "*?[]"):
-        return fnmatch.fnmatchcase(path, allowed)
-    return path == allowed
+def parse_work_unit_task_fields_checked(
+    body: str,
+) -> tuple[dict[str, object], list[str]]:
+    visible_body = strip_html_comments(body)
+    return parse_visible_task_fields(visible_body, WORK_UNIT_PARSE_FIELDS)
 
 
 def parse_work_unit_task_fields(body: str) -> dict[str, object]:
-    fields = parse_markdown_task_field_sections(body)
-    fields.update(parse_simple_task_packet_yaml(body))
-    return fields
+    fields, ambiguity_reasons = parse_work_unit_task_fields_checked(body)
+    return {} if ambiguity_reasons else fields
 
 
 def work_unit_field_value(fields: dict[str, object], field: str) -> object | None:
-    for candidate in WORK_UNIT_FIELD_ALIASES.get(field, [field]):
-        if candidate in fields:
-            return fields[candidate]
-    return None
+    return fields.get(field)
 
 
-def work_unit_required_field_failures(fields: dict[str, object]) -> list[str]:
+def work_unit_execution_gate_failures(fields: dict[str, object]) -> list[str]:
     failures: list[str] = []
-    for field in WORK_UNIT_REQUIRED_FIELDS:
-        value = work_unit_field_value(fields, field)
-        if not material_items(value):
-            failures.append(f"Work-unit body missing material required task field: {field}")
+    for field in WORK_UNIT_EXECUTION_GATE_FIELDS:
+        if not material_items(fields.get(field)):
+            failures.append(field)
     return failures
 
 
@@ -438,7 +338,9 @@ def canonical_issue_scope_from_payload(payload: dict[str, object]) -> tuple[str,
     number = payload.get("number")
     state = str(payload.get("state") or "").lower()
     title = str(payload.get("title") or "")
-    fields = parse_work_unit_task_fields(str(payload.get("body") or ""))
+    fields, ambiguity_reasons = parse_work_unit_task_fields_checked(
+        str(payload.get("body") or "")
+    )
     findings: list[dict[str, str]] = []
     canonical_fields: dict[str, list[str]] = {}
 
@@ -448,12 +350,19 @@ def canonical_issue_scope_from_payload(payload: dict[str, object]) -> tuple[str,
             "reason": f"canonical issue scope requires an issue payload, got {kind}",
         })
 
+    for reason in ambiguity_reasons:
+        findings.append({
+            "code": "WU_TASK_FIELD_AMBIGUOUS",
+            "field": "body",
+            "reason": reason,
+        })
+
     for field in WORK_UNIT_REQUIRED_FIELDS:
         value = work_unit_field_value(fields, field)
         items = material_items(value)
         if field == "allowed_paths":
             items = [normalize_repo_path(item) for item in items]
-        if not items:
+        if not items and not ambiguity_reasons:
             findings.append({
                 "field": field,
                 "reason": "missing material issue scope field",
@@ -555,22 +464,9 @@ def compare_scope_lock(current: dict[str, object], captured: dict[str, object]) 
 
 def compact_pr_report_restricted_boundaries(paths: list[str]) -> list[str]:
     boundaries: list[str] = []
-    boundary_patterns = [
-        "AGENTS.md",
-        "CLAUDE.md",
-        ".github/**",
-        ".codex/**",
-        ".claude/**",
-        "docs/control/**",
-        "schemas/**",
-        "contracts/**",
-    ]
     for path in paths:
         normalized = normalize_repo_path(path)
-        for pattern in boundary_patterns:
-            if path_matches_allowed(normalized, pattern):
-                boundaries.append(pattern)
-                break
+        boundaries.extend(escalation_boundaries_for_path_scope(normalized))
     return sorted(set(boundaries))
 
 
@@ -883,6 +779,9 @@ def compact_pr_report_from_payload(payload: dict[str, object]) -> tuple[str, dic
 
     pr_number = payload.get("number")
     body = str(payload.get("body") or "")
+    declared_kind = str(
+        payload.get("kind") or payload.get("_asgk_requested_kind") or ""
+    ).strip().lower()
     agent_claims = compact_pr_report_agent_claims(payload, body)
     changed_paths = pr_file_paths(payload.get("files"))
     issue_number = merge_decision_issue_number(body)
@@ -970,94 +869,191 @@ def compact_pr_report_from_payload(payload: dict[str, object]) -> tuple[str, dic
 def check_work_unit_payload(
     payload: dict[str, object],
     changed_paths: list[str],
+    *,
+    authority_only: bool = False,
 ) -> tuple[str, list[dict[str, object]], list[str]]:
     findings: list[dict[str, object]] = []
     kind = work_unit_kind(payload)
+    declared_kind = str(
+        payload.get("_asgk_requested_kind") or payload.get("kind") or ""
+    ).strip().lower()
     number = payload.get("number")
     state = str(payload.get("state") or "").lower()
     body = str(payload.get("body") or "")
 
-    def add(field: str, reason: str, fix: str) -> None:
+    def add(code: str, field: str, reason: str, fix: str) -> None:
         findings.append({
+            "code": code,
             "severity": "FAIL",
             "field": field,
             "reason": reason,
             "recommended_fix": fix,
+            "blocking": True,
         })
 
     if kind == "issue":
         if "pull_request" in payload:
             add(
+                "WU_KIND_INVALID",
                 "kind",
                 f"Work unit #{number or 'unknown'} is a pull request, not an issue.",
                 "Use --pr for PR follow-up work or select an open issue with allowed_paths.",
             )
         if state != "open":
             add(
+                "WU_STATE_NOT_OPEN",
                 "state",
                 f"Issue state is not open: {state or 'missing'}.",
                 "Select an open issue or create a new durable issue before changing files.",
             )
     elif kind == "pr":
+        if declared_kind == "issue":
+            add(
+                "WU_KIND_INVALID",
+                "kind",
+                "Work unit was requested or declared as an issue but has "
+                "pull-request markers.",
+                "Use --pr for PR follow-up work or select an actual open issue.",
+            )
         merged = payload.get("merged")
         if state not in {"open"} or merged is True:
             add(
+                "WU_STATE_NOT_OPEN",
                 "state",
                 f"PR state is not open or is already merged: state={state or 'missing'}, merged={merged}.",
                 "Use only an open PR that still needs follow-up fixes, or create a new issue.",
             )
     else:
-        add("kind", f"Unknown work-unit kind: {kind}", "Provide an issue or PR payload.")
-
-    if has_see_chat(body):
         add(
+            "WU_KIND_INVALID",
+            "kind",
+            f"Unknown work-unit kind: {kind}",
+            "Provide an issue or PR payload.",
+        )
+
+    visible_body = strip_html_comments(body)
+    if has_see_chat(visible_body):
+        add(
+            "WU_CHAT_AUTHORITY_FORBIDDEN",
             "body",
             "Work-unit body contains chat-only authority phrase: see chat.",
             "Move scope, acceptance, and handoff authority into the issue, PR, or repo docs.",
         )
 
-    task_fields = parse_work_unit_task_fields(body)
-    for failure in work_unit_required_field_failures(task_fields):
+    task_fields, task_field_ambiguity = parse_work_unit_task_fields_checked(
+        visible_body
+    )
+    for reason in task_field_ambiguity:
         add(
-            "required_task_fields",
-            failure,
-            "Add the missing field to the GitHub issue, PR, or task packet before changing files.",
+            "WU_TASK_FIELD_AMBIGUOUS",
+            "body",
+            reason,
+            "Use exactly one visible task-field representation with unique fields.",
         )
 
-    allowed_paths = extract_allowed_paths(body)
-    if not allowed_paths:
-        add(
-            "allowed_paths",
-            "Work-unit body does not include material allowed_paths.",
-            "Add explicit allowed_paths to the GitHub issue, PR, or task packet.",
-        )
+    if not task_field_ambiguity:
+        if "intelligence_level_reason" in task_fields:
+            add(
+                "WU_REASON_ALIAS_FORBIDDEN",
+                "intelligence_level_reason",
+                "Legacy intelligence_level_reason cannot substitute for canonical reason.",
+                "Rename the field to reason in the durable issue or PR.",
+            )
 
+        for field in WORK_UNIT_REQUIRED_FIELDS:
+            if material_items(work_unit_field_value(task_fields, field)):
+                continue
+            add(
+                "WU_REQUIRED_FIELD_MISSING",
+                field,
+                f"Work-unit body is missing material canonical task field: {field}.",
+                "Add the missing field to the durable GitHub issue or PR before continuing.",
+            )
+
+        for field in work_unit_execution_gate_failures(task_fields):
+            add(
+                "WU_EXECUTION_GATE_MISSING",
+                field,
+                f"Work-unit body is missing material execution gate: {field}.",
+                "Add the bounded read set or project-specific validation gate before continuing.",
+            )
+
+        for index, item in enumerate(material_items(task_fields.get("allowed_paths"))):
+            problem = repo_relative_path_problem(item, ROOT, allow_glob=True)
+            if problem:
+                add(
+                    "WU_ALLOWED_PATH_INVALID",
+                    f"allowed_paths[{index}]",
+                    f"{problem}: {item}",
+                    "Use a safe repository-relative path or an explicitly bounded glob.",
+                )
+
+        for index, item in enumerate(material_items(task_fields.get("context_read_set"))):
+            problem = context_read_set_item_problem(item, ROOT)
+            if not problem:
+                continue
+            kind, reason = problem
+            add(
+                {
+                    "overbroad": "WU_READ_SET_OVERBROAD",
+                    "outside_repo": "WU_READ_SET_OUTSIDE_REPO",
+                    "invalid": "WU_READ_SET_INVALID",
+                }[kind],
+                f"context_read_set[{index}]",
+                reason,
+                "Name the smallest safe repository-relative paths or durable references.",
+            )
+
+        for index, item in enumerate(
+            material_items(task_fields.get("project_specific_validation"))
+        ):
+            problem = project_validation_item_problem(item)
+            if problem:
+                add(
+                    "WU_PROJECT_VALIDATION_REASON_MISSING",
+                    f"project_specific_validation[{index}]",
+                    problem,
+                    "Add a concrete reason after not_applicable or name the required check.",
+                )
+
+    allowed_paths = (
+        [
+            normalize_repo_path(item)
+            for item in material_items(task_fields.get("allowed_paths"))
+        ]
+        if not task_field_ambiguity
+        else []
+    )
     normalized_changed_paths = [normalize_repo_path(path) for path in changed_paths if normalize_repo_path(path)]
-    if not normalized_changed_paths:
+    if not authority_only and not normalized_changed_paths:
         add(
+            "WU_CHANGED_PATHS_MISSING",
             "changed_paths",
             "No changed paths were provided or detected.",
             "Run this check with --paths-file or --git-base/--git-head after creating a bounded diff.",
         )
 
-    unauthorized = [
-        path for path in normalized_changed_paths
-        if allowed_paths and not any(path_matches_allowed(path, allowed) for allowed in allowed_paths)
-    ]
-    for path in unauthorized:
-        add(
-            "changed_paths",
-            f"Changed path is outside allowed_paths: {path}",
-            "Remove the change, update the durable issue before writing, or create a separate issue.",
-        )
+    if not authority_only:
+        unauthorized = [
+            path for path in normalized_changed_paths
+            if allowed_paths and not any(path_matches_allowed(path, allowed) for allowed in allowed_paths)
+        ]
+        for path in unauthorized:
+            add(
+                "WU_PATH_OUTSIDE_SCOPE",
+                "changed_paths",
+                f"Changed path is outside allowed_paths: {path}",
+                "Remove the change, update the durable issue before writing, or create a separate issue.",
+            )
 
-    hygiene = run_hygiene_capture(normalized_changed_paths)
-    if hygiene.returncode != 0:
-        add(
-            "changed_paths",
-            "Changed-path hygiene failed for the supplied paths.",
-            "Remove protected/runtime/private-source-like paths or keep the work human-gated.",
-        )
+        hygiene = run_hygiene_capture(normalized_changed_paths)
+        if hygiene.returncode != 0:
+            add(
+                "WU_PATH_HYGIENE_FAILED",
+                "changed_paths",
+                "Changed-path hygiene failed for the supplied paths.",
+                "Remove protected/runtime/private-source-like paths or keep the work human-gated.",
+            )
 
     return ("fail" if findings else "pass"), findings, allowed_paths
 
@@ -1069,8 +1065,57 @@ def print_work_unit_result(
     allowed_paths: list[str],
     changed_paths: list[str],
     *,
+    authority_only: bool,
     as_json: bool,
 ) -> int:
+    task_fields_ambiguous = any(
+        finding.get("code") == "WU_TASK_FIELD_AMBIGUOUS"
+        for finding in findings
+    )
+    mechanically_checked = [
+        "work-unit kind and open state",
+        "single visible task-field representation and field uniqueness",
+        "chat-only authority exclusion",
+    ]
+    if not task_fields_ambiguous:
+        mechanically_checked.extend([
+            "visible canonical 13-field task identity",
+            "context_read_set exact-reference syntax, existence, and repository containment",
+            "project_specific_validation bare-not_applicable reason",
+        ])
+    not_checked = [
+        "availability, content, or repository identity of durable pseudo-references",
+        "semantic necessity of context references",
+        "semantic sufficiency or executability of project_specific_validation",
+        "implementation correctness",
+        "human approval or protected-path authorization",
+        "PR readiness, merge authority, or issue completion",
+    ]
+    if task_fields_ambiguous:
+        not_checked.extend([
+            "canonical task-field completeness and execution-gate semantics",
+            "allowed_paths containment",
+        ])
+    if authority_only:
+        not_checked.insert(0, "changed paths, diff contents, and path hygiene")
+        proof_boundary = (
+            "Exit 0 in authority-only mode proves only that the supplied open "
+            "work-unit authority has the visible 13 fields, mechanically valid "
+            "execution-gate shape, and no checked chat-only authority. It checks no diff, "
+            "implementation, protected-path approval, human gate, or merge state."
+        )
+    else:
+        mechanically_checked.append("supplied changed-path presence")
+        if not task_fields_ambiguous:
+            mechanically_checked.append("allowed_paths containment")
+        mechanically_checked.append("changed-path hygiene patterns")
+        proof_boundary = (
+            "Exit 0 in post-diff mode proves only that the supplied open "
+            "work-unit authority and execution gates are structurally valid and "
+            "the supplied changed paths pass mechanical containment and hygiene. "
+            "It does not prove implementation correctness, human approval, or "
+            "merge authority."
+        )
     output = {
         "result": result,
         "low_risk_inferred": False,
@@ -1080,8 +1125,15 @@ def print_work_unit_result(
             "state": payload.get("state"),
             "url": payload.get("html_url") or payload.get("url"),
         },
+        "authority_only": authority_only,
+        "changed_paths_checked": not authority_only,
+        "canonical_task_fields": WORK_UNIT_REQUIRED_FIELDS,
+        "execution_gates": WORK_UNIT_EXECUTION_GATE_FIELDS,
         "allowed_paths": allowed_paths,
         "changed_paths": changed_paths,
+        "mechanically_checked": mechanically_checked,
+        "not_checked": not_checked,
+        "proof_boundary": proof_boundary,
         "findings": findings,
     }
     if as_json:
@@ -1094,7 +1146,9 @@ def print_work_unit_result(
             )
         print("Work-unit check result: fail. No low-risk status was inferred.")
     else:
-        print("Work-unit check passed. No low-risk status was inferred.")
+        mode = "authority-only" if authority_only else "post-diff"
+        print(f"Work-unit {mode} check passed. No low-risk status was inferred.")
+        print(proof_boundary)
     return 1 if findings else 0
 
 
@@ -1105,108 +1159,50 @@ def load_task_packet_payload(path: str | Path) -> tuple[dict[str, object], str]:
             payload = json.loads(text)
             if not isinstance(payload, dict):
                 raise ValueError("task packet JSON must be an object")
-            candidate = payload.get("bad_input") or payload.get("task_packet") or payload
+            wrappers = [
+                field
+                for field in ("bad_input", "task_packet")
+                if field in payload
+            ]
+            if len(wrappers) > 1:
+                raise TaskFieldAmbiguityError([
+                    "multiple JSON task-packet wrapper fields: "
+                    + ", ".join(wrappers)
+                ])
+            if wrappers:
+                wrapper = wrappers[0]
+                unexpected = set(payload).difference(
+                    {wrapper, "negative_case"}
+                )
+                if unexpected:
+                    raise TaskFieldAmbiguityError([
+                        "JSON task-packet wrapper cannot accompany other "
+                        "top-level fields: "
+                        + ", ".join(sorted(unexpected))
+                    ])
+                candidate = payload.get(wrapper)
+            else:
+                candidate = payload
             if not isinstance(candidate, dict):
                 raise ValueError("bad_input or task_packet must be an object")
             return candidate, text
-    source = task_packet_yaml_source(text)
-    return parse_simple_task_packet_yaml(source), text
+    visible_text = strip_html_comments(text)
+    source, source_selection_reasons = task_packet_yaml_source_checked(
+        visible_text,
+        TASK_PACKET_SOURCE_FIELDS,
+    )
+    packet, source_reasons = parse_simple_task_packet_yaml_checked(source)
+    ambiguity_reasons = list(dict.fromkeys([
+        *source_selection_reasons,
+        *source_reasons,
+    ]))
+    if ambiguity_reasons:
+        raise TaskFieldAmbiguityError(ambiguity_reasons)
+    return packet, visible_text
 
 
-def context_ref_text(value: object) -> str:
-    return normalize_repo_path(str(value).strip().strip('"').strip("'"))
-
-
-def normalized_context_ref(value: object) -> str:
-    return context_ref_text(value).lower()
-
-
-def task_packet_files_to_inspect_first(packet: dict[str, object]) -> list[str]:
-    value = packet.get("files_to_inspect_first")
-    if not isinstance(value, list):
-        return []
-    return [context_ref_text(item) for item in value if str(item).strip().strip('"').strip("'")]
-
-
-def task_packet_allowed_paths(packet: dict[str, object]) -> list[str]:
-    value = packet.get("allowed_paths")
-    if not isinstance(value, list):
-        return []
-    return [context_ref_text(item) for item in value if str(item).strip().strip('"').strip("'")]
-
-
-def task_packet_scalar(packet: dict[str, object], field: str) -> str:
-    value = packet.get(field)
-    if isinstance(value, str):
-        return value.strip()
-    return ""
-
-
-def has_github_issue_or_pr_ref(value: object) -> bool:
-    text = str(value).strip().lower()
-    if not text:
-        return False
-    if re.search(r"github\.com/.+/(issues|pull)/\d+", text):
-        return True
-    if re.search(r"\b(github[ -]?)?(issue|pr|pull request)\s*#?\d+\b", text):
-        return True
-    return bool(re.search(r"^#\d+\b", text))
-
-
-def task_packet_github_issue_unavailable(packet: dict[str, object]) -> bool:
-    return task_packet_scalar(packet, "github_issue_status").lower() == "pending_unavailable"
-
-
-def task_packet_docs_only_primary_allowed(packet: dict[str, object]) -> bool:
-    kind = task_packet_scalar(packet, "work_unit_kind").lower().replace("-", "_").replace(" ", "_")
-    if kind not in {"docs_only_planning", "docs_only_control"}:
-        return False
-    allowed_paths = task_packet_allowed_paths(packet)
-    return bool(allowed_paths) and all(is_docs_only_primary_path(path) for path in allowed_paths)
-
-
-def is_docs_only_primary_path(path: object) -> bool:
-    normalized = normalize_repo_path(str(path).strip().strip('"').strip("'"))
-    return normalized in DOCS_ONLY_PRIMARY_PATHS or normalized.startswith(DOCS_ONLY_PRIMARY_PATH_PREFIXES)
-
-
-def task_packet_issue_first_failures(packet: dict[str, object]) -> list[str]:
-    source = task_packet_scalar(packet, "durable_source_of_truth")
-    if has_github_issue_or_pr_ref(source):
-        return []
-    if task_packet_github_issue_unavailable(packet):
-        return []
-    if task_packet_docs_only_primary_allowed(packet):
-        return []
-    return [
-        "executable task packet durable_source_of_truth must name a GitHub issue or PR when GitHub is available; "
-        "task packets may refine issue scope but must not replace it, except for docs-only planning/control paths"
-    ]
-
-
-def is_context_pseudo_ref(value: object) -> bool:
-    return normalized_context_ref(value) in CONTEXT_PSEUDO_REFS
-
-
-def is_overbroad_files_to_inspect_ref(value: object) -> bool:
-    ref = context_ref_text(value)
-    lowered = ref.lower()
-    if lowered in OVERBROAD_FILES_TO_INSPECT_REFS:
-        return True
-    if any(char in ref for char in "*?[]"):
-        return True
-    if is_context_pseudo_ref(ref):
-        return False
-    candidate = rel(ref)
-    return candidate.exists() and candidate.is_dir()
-
-
-def task_packet_context_ref_failures(packet: dict[str, object]) -> list[str]:
-    failures: list[str] = []
-    for item in task_packet_files_to_inspect_first(packet):
-        if is_overbroad_files_to_inspect_ref(item):
-            failures.append(f"files_to_inspect_first contains overbroad read request: {item}")
-    return failures
+def task_packet_context_read_set(packet: dict[str, object]) -> list[str]:
+    return list_items(packet.get("context_read_set"))
 
 
 def estimate_tokens_from_characters(characters: int) -> int:
@@ -1224,12 +1220,21 @@ def context_budget_measurement(packet: dict[str, object]) -> dict[str, object]:
     total_bytes = 0
     total_characters = 0
 
-    for ref in task_packet_files_to_inspect_first(packet):
-        if is_overbroad_files_to_inspect_ref(ref):
-            overbroad_refs.append(ref)
-            continue
-        if is_context_pseudo_ref(ref):
+    for ref in task_packet_context_read_set(packet):
+        if is_context_pseudo_ref(ref, allow_task_packet_ref=True):
             pseudo_refs.append(ref)
+            continue
+        problem = context_read_set_item_problem(
+            ref,
+            ROOT,
+            allow_task_packet_ref=True,
+        )
+        if problem:
+            kind, reason = problem
+            if kind == "overbroad":
+                overbroad_refs.append(ref)
+            else:
+                read_errors.append({"path": ref, "error": reason})
             continue
         path = rel(ref)
         if not path.exists():
@@ -1267,7 +1272,7 @@ def context_budget_measurement(packet: dict[str, object]) -> dict[str, object]:
         "overbroad_refs": overbroad_refs,
         "read_errors": read_errors,
         "limits": (
-            "Estimate covers UTF-8 text from repo files named in files_to_inspect_first only; "
+            "Estimate covers UTF-8 text from repo files named in context_read_set only; "
             "it does not include GitHub issue or PR body text, system/developer prompts, chat history, "
             "tool output, retrieved web/app content, or model completion tokens."
         ),
@@ -1298,99 +1303,6 @@ def print_context_budget_measurement(measurement: dict[str, object], *, as_json:
                 print(f"{field}: none")
         print(f"limits: {measurement['limits']}")
     return 1 if blocking else 0
-
-
-def task_packet_schema_failures(packet: dict[str, object], source_text: str) -> list[str]:
-    failures: list[str] = []
-    for field in TASK_PACKET_REQUIRED_FIELDS:
-        if field not in packet:
-            failures.append(f"missing task packet field: {field}")
-
-    for field in TASK_PACKET_SCALAR_FIELDS:
-        if field in packet:
-            value = packet[field]
-            if not isinstance(value, str) or not value.strip():
-                failures.append(f"{field} must be a non-empty scalar")
-
-    for field in TASK_PACKET_LIST_FIELDS:
-        if field in packet:
-            value = packet[field]
-            if not isinstance(value, list):
-                failures.append(f"{field} must be a list")
-            elif not any(isinstance(item, str) and item.strip() for item in value):
-                failures.append(f"{field} must contain at least one material item")
-
-    intelligence_level = str(packet.get("intelligence_level", "")).strip().strip('"').strip("'")
-    if intelligence_level and intelligence_level not in TASK_PACKET_ALLOWED_INTELLIGENCE_LEVELS:
-        failures.append(
-            "intelligence_level must be one of: "
-            + ", ".join(sorted(TASK_PACKET_ALLOWED_INTELLIGENCE_LEVELS))
-        )
-
-    if has_see_chat(source_text):
-        failures.append("task packet contains forbidden chat-only authority phrase: see chat")
-
-    failures.extend(task_packet_issue_first_failures(packet))
-    failures.extend(task_packet_context_ref_failures(packet))
-
-    return failures
-
-
-def compact_task_packet_compare(
-    issue_payload: dict[str, object],
-    packet: dict[str, object],
-    packet_source_text: str,
-) -> tuple[str, dict[str, object]]:
-    findings: list[dict[str, str]] = []
-    for failure in task_packet_schema_failures(packet, packet_source_text):
-        findings.append({
-            "field": "task_packet",
-            "reason": failure,
-        })
-
-    scope_result, scope_output = canonical_issue_scope_from_payload(issue_payload)
-    if scope_result != "pass":
-        for finding in scope_output.get("findings", []):
-            if isinstance(finding, dict):
-                findings.append({
-                    "field": f"issue_scope.{finding.get('field') or 'unknown'}",
-                    "reason": str(finding.get("reason") or "canonical issue scope failed"),
-                })
-
-    issue_scope = scope_output.get("canonical_issue_scope")
-    issue_allowed_paths: list[str] = []
-    if isinstance(issue_scope, dict):
-        raw_allowed = issue_scope.get("allowed_paths")
-        if isinstance(raw_allowed, list):
-            issue_allowed_paths = [
-                normalize_repo_path(str(item))
-                for item in raw_allowed
-                if normalize_repo_path(str(item))
-            ]
-
-    packet_allowed_paths = task_packet_allowed_paths(packet)
-    for path in packet_allowed_paths:
-        if issue_allowed_paths and not any(path_matches_allowed(path, allowed) for allowed in issue_allowed_paths):
-            findings.append({
-                "field": "task_packet.allowed_paths",
-                "reason": f"task packet expands issue allowed_paths: {path}",
-            })
-
-    result = "fail" if findings else "pass"
-    return result, {
-        "result": result,
-        "low_risk_inferred": False,
-        "issue": scope_output.get("issue"),
-        "issue_scope": issue_scope,
-        "task_packet": {
-            "allowed_paths": packet_allowed_paths,
-            "may_narrow_issue_scope": True,
-            "must_not_expand_issue_scope": True,
-            "narrows_scope": bool(packet_allowed_paths)
-            and sorted(packet_allowed_paths) != sorted(issue_allowed_paths),
-        },
-        "findings": findings,
-    }
 
 
 def compact_pr_body_check(body_file: str | Path, report_file: str | Path) -> tuple[str, dict[str, object]]:
@@ -2176,31 +2088,89 @@ def cmd_compact_pr_report(args: argparse.Namespace) -> int:
     return 0 if result == "pass" else 1
 
 
+def print_work_unit_input_failure(
+    reason: str,
+    *,
+    authority_only: bool,
+    as_json: bool,
+) -> int:
+    finding = {
+        "code": "WU_INPUT_MODE_INVALID",
+        "severity": "FAIL",
+        "field": "input",
+        "reason": reason,
+        "recommended_fix": (
+            "Use --authority-only without changed-path options, or provide exactly "
+            "one post-diff source: --paths-file or --git-base with --git-head."
+        ),
+        "blocking": True,
+    }
+    if as_json:
+        print(json.dumps({
+            "result": "fail",
+            "low_risk_inferred": False,
+            "authority_only": authority_only,
+            "findings": [finding],
+        }, indent=2, sort_keys=True))
+    else:
+        print(
+            f"FAIL: [{finding['code']}] {finding['field']} - "
+            f"{finding['reason']} Fix: {finding['recommended_fix']}"
+        )
+    return 1
+
+
 def cmd_work_unit_check(args: argparse.Namespace) -> int:
     using_paths_file = bool(args.paths_file)
     using_git_range = bool(args.git_base or args.git_head)
-    if using_paths_file == using_git_range:
-        return print_failures(["provide exactly one of --paths-file or --git-base/--git-head"])
+    if args.authority_only and (using_paths_file or using_git_range):
+        return print_work_unit_input_failure(
+            "--authority-only cannot be combined with changed-path inputs",
+            authority_only=args.authority_only,
+            as_json=args.json,
+        )
+    if not args.authority_only and using_paths_file == using_git_range:
+        return print_work_unit_input_failure(
+            "post-diff mode requires exactly one of --paths-file or --git-base/--git-head",
+            authority_only=args.authority_only,
+            as_json=args.json,
+        )
     if using_git_range and not (args.git_base and args.git_head):
-        return print_failures(["--git-base and --git-head must be provided together"])
+        return print_work_unit_input_failure(
+            "--git-base and --git-head must be provided together",
+            authority_only=args.authority_only,
+            as_json=args.json,
+        )
 
     try:
         payload = load_work_unit_payload(args)
-        changed_paths = (
-            read_changed_path_list(args.paths_file)
-            if args.paths_file
-            else load_git_changed_paths(args.git_base, args.git_head)
-        )
+        if args.authority_only:
+            changed_paths = []
+        else:
+            changed_paths = (
+                read_changed_path_list(args.paths_file)
+                if args.paths_file
+                else load_git_changed_paths(args.git_base, args.git_head)
+            )
     except (RuntimeError, ValueError, json.JSONDecodeError) as exc:
-        return print_failures([str(exc)])
+        return print_work_unit_input_failure(
+            str(exc),
+            authority_only=args.authority_only,
+            as_json=args.json,
+        )
 
-    result, findings, allowed_paths = check_work_unit_payload(payload, changed_paths)
+    result, findings, allowed_paths = check_work_unit_payload(
+        payload,
+        changed_paths,
+        authority_only=args.authority_only,
+    )
     return print_work_unit_result(
         payload,
         result,
         findings,
         allowed_paths,
         changed_paths,
+        authority_only=args.authority_only,
         as_json=args.json,
     )
 
@@ -2434,59 +2404,148 @@ def cmd_pr_body_check(args: argparse.Namespace) -> int:
     return policy_gate.returncode
 
 
-def cmd_task_packet_check(args: argparse.Namespace) -> int:
-    try:
-        packet, source_text = load_task_packet_payload(args.file)
-    except (json.JSONDecodeError, ValueError) as exc:
-        return print_failures([f"invalid task packet format: {exc}"])
-    return print_failures(task_packet_schema_failures(packet, source_text))
-
-
-def load_compact_task_packet_inputs(args: argparse.Namespace) -> tuple[dict[str, object], dict[str, object], str]:
+def load_task_packet_check_inputs(
+    args: argparse.Namespace,
+) -> tuple[dict[str, object], str, dict[str, object] | None]:
     if args.json_file:
         if args.file or args.issue or args.issue_json_file:
             raise ValueError("use either --json-file or --file with --issue/--issue-json-file")
         payload = json.loads(read_text(args.json_file))
         if not isinstance(payload, dict):
-            raise ValueError("compact task-packet fixture must be a JSON object")
+            raise ValueError("task-packet fixture bundle must be a JSON object")
+        competing_packet_fields = [
+            field
+            for field in payload
+            if field == "bad_input" or field in TASK_PACKET_SOURCE_FIELDS
+        ]
+        if "task_packet" in payload and competing_packet_fields:
+            raise TaskFieldAmbiguityError([
+                "task-packet fixture bundle cannot combine task_packet with "
+                "another packet source: "
+                + ", ".join(sorted(competing_packet_fields))
+            ])
         issue_payload = payload.get("issue")
         packet = payload.get("task_packet")
-        if not isinstance(issue_payload, dict):
-            raise ValueError("compact task-packet fixture must include issue object")
         if not isinstance(packet, dict):
-            raise ValueError("compact task-packet fixture must include task_packet object")
-        return issue_payload, packet, json.dumps(packet, sort_keys=True)
+            raise ValueError("task-packet fixture bundle must include task_packet object")
+        if issue_payload is not None and not isinstance(issue_payload, dict):
+            raise ValueError("task-packet fixture issue must be an object")
+        return packet, json.dumps(packet, sort_keys=True), issue_payload
 
     if not args.file:
-        raise ValueError("provide --file with --issue or --issue-json-file")
-    if bool(args.issue) == bool(args.issue_json_file):
-        raise ValueError("provide exactly one of --issue or --issue-json-file")
+        raise ValueError("provide --file or --json-file")
+    if args.issue and args.issue_json_file:
+        raise ValueError("provide at most one of --issue or --issue-json-file")
 
     packet, source_text = load_task_packet_payload(args.file)
     if args.issue:
         issue_payload = load_live_work_unit("issue", str(args.issue).lstrip("#"))
-    else:
+    elif args.issue_json_file:
         issue_payload = json.loads(read_text(args.issue_json_file))
-    if not isinstance(issue_payload, dict):
-        raise ValueError("compact task-packet issue payload must be a JSON object")
-    return issue_payload, packet, source_text
+    else:
+        issue_payload = None
+    if issue_payload is not None and not isinstance(issue_payload, dict):
+        raise ValueError("task-packet issue payload must be a JSON object")
+    return packet, source_text, issue_payload
 
 
-def cmd_compact_task_packet_check(args: argparse.Namespace) -> int:
+def print_task_packet_input_failure(reason: str, *, as_json: bool) -> int:
+    finding = {
+        "code": "TP_INPUT_MODE_INVALID",
+        "field": "input",
+        "reason": reason,
+        "blocking": True,
+    }
+    output = {
+        "result": "fail",
+        "low_risk_inferred": False,
+        "proof_boundary": "No task-packet evaluation ran because the input mode was invalid.",
+        "findings": [finding],
+    }
+    if as_json:
+        print(json.dumps(output, indent=2, sort_keys=True))
+    else:
+        print(f"FAIL: [{finding['code']}] {finding['field']} - {finding['reason']}")
+    return 1
+
+
+def print_task_packet_ambiguity_failure(
+    reasons: tuple[str, ...],
+    *,
+    as_json: bool,
+) -> int:
+    findings = [
+        {
+            "code": "TP_TASK_FIELD_AMBIGUOUS",
+            "field": "task_packet",
+            "reason": reason,
+            "blocking": True,
+        }
+        for reason in reasons
+    ]
+    output = {
+        "result": "fail",
+        "low_risk_inferred": False,
+        "mode": None,
+        "issue": None,
+        "issue_scope": None,
+        "task_packet": None,
+        "mechanically_checked": [
+            "visible top-level task-packet field uniqueness",
+        ],
+        "not_checked": [
+            "packet mode and field shape",
+            "source issue authority",
+            "allowed_paths non-expansion",
+            "context_read_set exact-item non-expansion",
+            "project_specific_validation exact-item non-expansion",
+            "implementation correctness",
+            "PR readiness, human approval, merge authority, or issue completion",
+        ],
+        "proof_boundary": (
+            "No task-packet authority or comparison proof was established "
+            "because the visible task-field source was ambiguous."
+        ),
+        "findings": findings,
+    }
+    if as_json:
+        print(json.dumps(output, indent=2, sort_keys=True))
+    else:
+        for finding in findings:
+            print(
+                f"FAIL: [{finding['code']}] {finding['field']} - "
+                f"{finding['reason']}"
+            )
+    return 1
+
+
+def cmd_task_packet_check(args: argparse.Namespace) -> int:
     try:
-        issue_payload, packet, source_text = load_compact_task_packet_inputs(args)
+        packet, source_text, issue_payload = load_task_packet_check_inputs(args)
+    except TaskFieldAmbiguityError as exc:
+        return print_task_packet_ambiguity_failure(
+            exc.reasons,
+            as_json=args.json,
+        )
     except (RuntimeError, ValueError, json.JSONDecodeError) as exc:
-        return print_failures([str(exc)])
+        return print_task_packet_input_failure(str(exc), as_json=args.json)
 
-    result, output = compact_task_packet_compare(issue_payload, packet, source_text)
+    result, output = evaluate_task_packet(packet, source_text, issue_payload)
     if args.json:
         print(json.dumps(output, indent=2, sort_keys=True))
     elif result == "pass":
-        print(f"Compact task packet check passed for issue #{output.get('issue')}.")
+        mode = output.get("mode")
+        issue = output.get("issue")
+        suffix = f" against issue #{issue}" if issue is not None else ""
+        print(f"Task packet check passed for {mode}{suffix}.")
+        print(output["proof_boundary"])
     else:
         for finding in output.get("findings", []):
-            print(f"FAIL: {finding['field']} - {finding['reason']}")
-        print("Compact task packet check failed. No low-risk status was inferred.")
+            print(
+                f"FAIL: [{finding.get('code', 'TP_UNKNOWN')}] "
+                f"{finding['field']} - {finding['reason']}"
+            )
+        print("Task packet check failed. No low-risk status was inferred.")
     return 0 if result == "pass" else 1
 
 
@@ -2538,11 +2597,21 @@ def cmd_compact_target_upgrade_check(args: argparse.Namespace) -> int:
 def cmd_context_budget_measure(args: argparse.Namespace) -> int:
     try:
         packet, source_text = load_task_packet_payload(args.task_packet)
+    except TaskFieldAmbiguityError as exc:
+        return print_task_packet_ambiguity_failure(
+            exc.reasons,
+            as_json=args.json,
+        )
     except (json.JSONDecodeError, ValueError) as exc:
         return print_failures([f"invalid task packet format: {exc}"])
-    failures = task_packet_schema_failures(packet, source_text)
-    if failures:
-        return print_failures(failures)
+    result, findings = validate_task_packet_shape(packet, source_text)
+    if result != "pass":
+        for finding in findings:
+            print(
+                f"FAIL: [{finding.get('code', 'TP_UNKNOWN')}] "
+                f"{finding['field']} - {finding['reason']}"
+            )
+        return 1
     measurement = context_budget_measurement(packet)
     return print_context_budget_measurement(measurement, as_json=args.json)
 
@@ -2704,13 +2773,19 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--json", action="store_true", help="Emit machine-readable JSON output.")
     p.set_defaults(func=cmd_compact_pr_report)
 
-    p = sub.add_parser("compact-task-packet-check", help="Check a task packet only narrows canonical issue scope.")
+    p = sub.add_parser(
+        "compact-task-packet-check",
+        help="Compatibility command that delegates to task-packet-check.",
+    )
     p.add_argument("--file", help="Task packet YAML/JSON file.")
     p.add_argument("--issue", help="GitHub issue number for live gh REST lookup.")
     p.add_argument("--issue-json-file", help="Fixture or captured issue JSON payload.")
-    p.add_argument("--json-file", help="Fixture bundle with issue and task_packet objects.")
+    p.add_argument(
+        "--json-file",
+        help="Fixture bundle with task_packet and optional issue objects.",
+    )
     p.add_argument("--json", action="store_true", help="Emit machine-readable JSON output.")
-    p.set_defaults(func=cmd_compact_task_packet_check)
+    p.set_defaults(func=cmd_task_packet_check)
 
     p = sub.add_parser("compact-pr-body-check", help="Check a compact PR body against a compiled report.")
     p.add_argument("--body-file", required=True, help="Compact PR body markdown file.")
@@ -2753,13 +2828,21 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--json", action="store_true", help="Emit machine-readable JSON output.")
     p.set_defaults(func=cmd_check_pr)
 
-    p = sub.add_parser("work-unit-check", help="Check live work-unit authority against changed paths.")
+    p = sub.add_parser(
+        "work-unit-check",
+        help="Check work-unit authority before writing or against a completed diff.",
+    )
     p.add_argument("--issue", help="GitHub issue number for live gh REST lookup.")
     p.add_argument("--pr", help="GitHub pull request number for live gh REST lookup.")
     p.add_argument("--json-file", help="Fixture or captured issue/PR JSON payload.")
     p.add_argument("--paths-file", help="Newline-delimited changed-path list.")
     p.add_argument("--git-base", help="Base revision for git diff --name-only.")
     p.add_argument("--git-head", help="Head revision for git diff --name-only.")
+    p.add_argument(
+        "--authority-only",
+        action="store_true",
+        help="Validate durable authority without requiring or checking changed paths.",
+    )
     p.add_argument("--json", action="store_true", help="Emit machine-readable JSON output.")
     p.set_defaults(func=cmd_work_unit_check)
 
@@ -2797,11 +2880,21 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--file", required=True)
     p.set_defaults(func=cmd_pr_body_check)
 
-    p = sub.add_parser("task-packet-check", help="Check required task packet fields.")
-    p.add_argument("--file", required=True)
+    p = sub.add_parser(
+        "task-packet-check",
+        help="Validate a task-packet mode and its non-expansion against issue authority.",
+    )
+    p.add_argument("--file", help="Task packet YAML/JSON file.")
+    p.add_argument("--issue", help="GitHub issue number for live gh REST lookup.")
+    p.add_argument("--issue-json-file", help="Fixture or captured issue JSON payload.")
+    p.add_argument("--json-file", help="Fixture bundle with task_packet and optional issue objects.")
+    p.add_argument("--json", action="store_true", help="Emit machine-readable JSON output.")
     p.set_defaults(func=cmd_task_packet_check)
 
-    p = sub.add_parser("context-budget-measure", help="Estimate repo-context tokens from task packet files_to_inspect_first.")
+    p = sub.add_parser(
+        "context-budget-measure",
+        help="Estimate repo-context tokens from a task packet context_read_set.",
+    )
     p.add_argument("--task-packet", required=True)
     p.add_argument("--json", action="store_true", help="Emit machine-readable JSON output.")
     p.set_defaults(func=cmd_context_budget_measure)

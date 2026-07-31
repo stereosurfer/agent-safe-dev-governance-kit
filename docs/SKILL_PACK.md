@@ -126,8 +126,11 @@ weekly_or_milestone_review:
 
 ## Design Constraints
 
-- A skill may guide or draft work, but durable scope must live in GitHub or repo
-  files.
+- A skill may guide or draft work, but executable scope normally lives in a
+  current GitHub issue or already-open PR. Repo files may own explicitly
+  docs-only planning/control work. Task packets are only issue refinements or,
+  during verified GitHub unavailability, complete fallbacks for bounded local
+  work that must be transferred to an issue before PR or merge.
 - A read-only assessment does not need implementation allowed paths or a new
   approval. Any later write still needs target-owned issue or PR authority,
   allowed paths, validation, and applicable existing human approval.
@@ -203,6 +206,9 @@ architecture_touchpoints:
   docs/control/TASK_PACKET_FORMAT.md:
     affected_skills:
       - asgk-issue-scoping
+      - asgk-startup
+      - asgk-target-install-audit
+      - asgk-upgrade-audit
 
   docs/control/TARGET_INSTALL_CHECKLIST.md:
     affected_skills:

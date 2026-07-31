@@ -72,9 +72,9 @@ roles:
 |---|---|---|---:|---|---|
 | `README.md` | summary | product positioning, durable human-AI handoff, target-assessment entry, and operating loop overview | yes | all new sessions | `lane_07_docs_handoff` |
 | `LICENSE` | canonical | Apache-2.0 license for ASGK source release and copied/adapted ASGK-derived material | no | source release review, target-repo license handling, install-surface review | `lane_07_docs_handoff` |
-| `AGENTS.md` | canonical | agent startup order, source-of-truth rule, work-unit rule, stop conditions | yes | all agent sessions | `lane_00_controller` |
+| `AGENTS.md` | canonical | agent startup order, generic operating profile, exactly 13 task-identity fields, execution-gate boundary, source-of-truth rule, work-unit rule, and stop conditions | yes | all agent sessions | `lane_00_controller` |
 | `docs/handoff/CURRENT_STATUS.md` | status | compact current repo snapshot and next safe work | yes | all new sessions, handoff recovery, handoff updates | `lane_07_docs_handoff` |
-| current GitHub issue or PR | canonical | active task objective, allowed paths, acceptance, validation, merge state | yes | every work unit | active task lane |
+| selected live GitHub issue, or a self-contained open PR | canonical | current executable authorization, 13 task fields, context read set, project-specific validation, acceptance, allowed paths, and merge state; an ordinary PR relies on its linked issue instead of duplicating authority | yes | every work unit | active task lane |
 | `docs/QUICKSTART.md` | summary | first-use workflow, onboarding, and frontier-guided target-assessment orientation | no | onboarding and first repository smoke test | `lane_07_docs_handoff` |
 | `docs/INSTALL_SURFACE.md` | canonical | frontier-guided read-only target assessment, evaluator/Skill/tool boundaries, invariants, license handling, and minimum sufficient adaptation | no | assessing ASGK adoption or a material upgrade, target evidence review, implementation planning after an assessment | `lane_07_docs_handoff` |
 | `docs/SKILL_PACK.md` | summary | ASGK skill usage modes, guided evidence and judgment contract, maintenance touchpoints, and no-new-gates constraint | no | installing or referencing ASGK skills, reviewing architecture-to-skill impact, field testing, target adoption or upgrade assessment | `lane_07_docs_handoff` |
@@ -88,7 +88,7 @@ roles:
 |---|---|---|---:|---|---|
 | `templates/DOCUMENT_MAP.template.md` | template | optional target-project navigation reference when assessment finds no equivalent surface | no | assessment recommends creating a target-owned compact router | `lane_07_docs_handoff` |
 | `templates/DOCUMENT_REGISTRY.template.md` | template | optional target-project ownership-registry reference when assessment finds no equivalent surface | no | assessment recommends creating a target-owned registry | `lane_07_docs_handoff` |
-| `templates/decision_packet.template.yaml` | template | reusable vertical-governance decision packet starting point | no | creating a decision packet for a major decision point | `lane_07_docs_handoff` |
+| `templates/decision_packet.template.yaml` | historical_evidence | superseded parallel decision-packet projection awaiting W6B removal; not current authority | no | bounded W6B migration lookup only | `lane_07_docs_handoff` |
 
 ## Source-Distributed Skills
 
@@ -114,13 +114,11 @@ reference_scope:
   asgk_repo_local_registry: docs/DOCUMENT_REGISTRY.md
   optional_target_router_reference: templates/DOCUMENT_MAP.template.md
   optional_target_registry_reference: templates/DOCUMENT_REGISTRY.template.md
-  decision_packet_template: templates/decision_packet.template.yaml
 rule:
   - do not copy ASGK's repo-local router or registry unchanged into a target project
   - reuse equivalent target-owned mechanisms when they already satisfy the need
   - use a template only when the assessment identifies a real gap
   - do not prescribe ASGK filenames or a universal document bundle
-  - decision packets remain optional existing-purpose artifacts, not adoption declarations
 ```
 
 ## Handoff And Recovery Documents
@@ -160,11 +158,11 @@ separately scoped cleanup.
 
 | Document | Role | Canonical for | Read by default | Read when | Owned by lane |
 |---|---|---|---:|---|---|
-| `docs/control/CONTROL_LAYER_V0.md` | canonical | durable control plane, work-unit states, operating loop, anti-drift rules | no | control-layer changes, onboarding, governance review | `lane_00_controller` |
-| `docs/control/WORK_UNIT_STATE_MODEL.md` | canonical | valid work-unit states and transitions | no | issue/PR state changes, workflow design | `lane_00_controller` |
+| `docs/control/CONTROL_LAYER_V0.md` | historical_evidence | superseded duplicate operating-rule surface awaiting W6B removal; cannot override `AGENTS.md` | no | bounded W6B migration lookup only | `lane_00_controller` |
+| `docs/control/WORK_UNIT_STATE_MODEL.md` | historical_evidence | superseded duplicate work-unit model awaiting W6B removal; cannot override live issue/PR authority | no | bounded W6B migration lookup only | `lane_00_controller` |
 | `docs/control/ISSUE_HYGIENE_GATE.md` | canonical | stale issue detection and issue-start gate | no | before selecting or closing issues | `lane_00_controller` |
 | `docs/control/FAILURE_THRESHOLDS.md` | canonical | stop thresholds and notification conditions | no | repeated failures, blockers | `lane_00_controller` |
-| `docs/control/CONTEXT_BUDGET_POLICY.md` | canonical | context read sets, handoff recovery read set, context expansion rules | no | context selection, handoff recovery, token-budget review | `lane_00_controller` |
+| `docs/control/CONTEXT_BUDGET_POLICY.md` | canonical | exact context-read gate, advisory read-set classifications, handoff recovery read set, and recorded expansion rules | no | context selection, handoff recovery, token-budget review | `lane_00_controller` |
 | `docs/control/AGENT_CAPABILITY_MATRIX.md` | canonical | task risk and minimum capability, including the frontier-capability floor for target adoption and material-upgrade assessment; low-risk merge compatibility, human gates, escalation/downscope, and context binding | no | task risk review, target adoption or material-upgrade assessment, escalation, downscoping, merge eligibility review | `lane_00_controller` |
 | `docs/control/VALIDATION_STRATEGY.md` | canonical | validation proof boundary, validation layer responsibilities, blocking vs warning, negative-fixture ownership rules, fail-closed policy-gate validation, validator change requirements | no | validation/tooling work, policy-gate checker review | `lane_06_ci_github` |
 | `docs/control/PR_REVIEW_CHECKLIST.md` | canonical | repeatable PR review sequence, current-status freshness review, and outcomes | no | PR review, current-status impact review, merge readiness | `lane_00_controller` |
@@ -174,7 +172,7 @@ separately scoped cleanup.
 | `docs/control/HISTORICAL_ASGK_STABILIZATION_EVIDENCE.md` | historical_evidence | archived ASGK early stabilization evidence and field-test lesson record | no | auditing old ASGK stabilization decisions or target source-state isolation | `lane_07_docs_handoff` |
 | `docs/control/SOURCE_ONLY_RELEASE_POLICY.md` | canonical | Source-only release gates, human-gated release execution boundary, distribution boundary, version applicability, and release-history source-of-truth boundary | no | source-only release planning, release execution review, release-state closeout, distribution-boundary review | `lane_07_docs_handoff` |
 | `docs/control/DOCUMENT_MAP_POLICY.md` | canonical | document-map router/registry split, size limits, and maintenance rules | no | document-map structure changes, registry split work, target-template navigation changes | `lane_07_docs_handoff` |
-| `docs/control/DECISION_POINT_REGISTRY.md` | canonical | vertical-governance decision point router, authority order, decision packet trigger conditions | no | major decision point, decision packet creation, vertical-governance planning | `lane_07_docs_handoff` |
+| `docs/control/DECISION_POINT_REGISTRY.md` | historical_evidence | superseded parallel decision router awaiting W6B removal; cannot expand the current issue read set or authority | no | bounded W6B migration lookup only | `lane_07_docs_handoff` |
 | `docs/control/TARGET_INSTALL_CHECKLIST.md` | canonical | target-assessment questions, existing-control comparison, minimum sufficient adaptation, evidence, uncertainty, and outcome conditions | no | target adoption or material-upgrade assessment, target issue preparation | `lane_07_docs_handoff` |
 | `docs/control/TARGET_INSTALL_VALIDATION_PLAN.md` | canonical | semantic-assessment versus mechanical-check proof boundaries, current legacy command limitations, and future checker constraints | no | target diagnostic review, checker/planner behavior review, future validation work | `lane_06_ci_github` |
 
@@ -270,11 +268,11 @@ storage_specialized_policies:
 
 | Document | Role | Canonical for | Read by default | Read when | Owned by lane |
 |---|---|---|---:|---|---|
-| `docs/control/TASK_PACKET_FORMAT.md` | canonical | human-readable task packet requirements | no | creating or validating task packets | `lane_00_controller` |
-| `schemas/task_packet.schema.json` | schema | machine-readable task packet structure | no | task packet validation changes | `lane_02_schema_contracts` |
-| `templates/task_packet.template.yaml` | template | reusable task packet starting point | no | creating repo task packets, `asgk.py task-packet-check` | `lane_00_controller` |
-| `.github/ISSUE_TEMPLATE/agent_task.yml` | template | GitHub issue capture form | no | issue-template changes | `lane_06_ci_github` |
-| `examples/task_packet.example.yaml` | example | sample task packet | no | onboarding, task packet examples | `lane_07_docs_handoff` |
+| `docs/control/TASK_PACKET_FORMAT.md` | canonical | the two optional task-packet modes and their projection/proof boundaries | no | creating or validating a task packet | `lane_00_controller` |
+| `schemas/task_packet.schema.json` | schema | machine-readable projection of the two task-packet modes | no | task-packet schema or validator changes | `lane_02_schema_contracts` |
+| `templates/task_packet.template.yaml` | template | optional issue-refinement starting point derived from the task-packet contract | no | creating an issue-refinement packet | `lane_00_controller` |
+| `.github/ISSUE_TEMPLATE/agent_task.yml` | template | GitHub issue authority-capture projection for the 13 fields plus two execution gates | no | issue-template or work-unit authority changes | `lane_06_ci_github` |
+| `examples/task_packet.example.yaml` | example | sample GitHub-unavailable fallback; conditional local-work scope only, never PR or merge authority | no | onboarding, task-packet examples | `lane_07_docs_handoff` |
 | `docs/control/AGENT_REPORT_FORMAT.md` | canonical | required agent report sections | no | PR handoff/reporting work | `lane_00_controller` |
 | `schemas/agent_report.schema.json` | schema | machine-readable report fields | no | report validation work | `lane_02_schema_contracts` |
 | `examples/agent_report.example.md` | example | sample report | no | onboarding, report examples | `lane_07_docs_handoff` |
@@ -282,12 +280,15 @@ storage_specialized_policies:
 Canonical ownership rule for task packets:
 
 ```yaml
-task_packet_canonical_human_spec: docs/control/TASK_PACKET_FORMAT.md
-task_packet_canonical_schema: schemas/task_packet.schema.json
-task_packet_machine_template: templates/task_packet.template.yaml
-task_packet_github_surface: .github/ISSUE_TEMPLATE/agent_task.yml
-task_packet_example: examples/task_packet.example.yaml
-decision_packet_template: templates/decision_packet.template.yaml
+task_identity_owner: AGENTS.md
+executable_authority_owner: current GitHub issue or PR
+task_packet_mode_owner: docs/control/TASK_PACKET_FORMAT.md
+task_packet_schema_projection: schemas/task_packet.schema.json
+task_packet_template_projection: templates/task_packet.template.yaml
+issue_capture_projection: .github/ISSUE_TEMPLATE/agent_task.yml
+task_packet_example_projection: examples/task_packet.example.yaml
+scope_comparison_engine: python3 scripts/asgk.py task-packet-check
+compact_task_packet_command: delegates to scope_comparison_engine
 ```
 
 ## Contracts And Schemas

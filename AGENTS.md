@@ -42,14 +42,23 @@ When GitHub is available, every executable implementation, validation, UI/test,
 runtime, storage-boundary, or handoff-changing work unit must start from a
 GitHub issue or an already-open pull request before file edits.
 
-A repo task packet may refine, route, or execute the issue/PR scope, but it must
-not replace the issue/PR as primary authorization for executable work.
+A task packet is optional and has only two modes:
 
-Repo task packets or repo documents may be the primary durable source only for
-explicit docs-only planning/control work, or when GitHub is unavailable. If
-GitHub is unavailable, the task packet must record
-`github_issue_status: pending_unavailable`, and the agent must retry issue
-creation before PR creation or merge.
+- `issue_refinement` may narrow one live issue's allowed paths, context read
+  set, and project-specific validation. It cannot route work, add authority, or
+  replace the issue.
+- `github_unavailable_fallback` may temporarily record the complete task while
+  GitHub is verifiably unavailable. During that outage it is bounded authority
+  only for local work inside its recorded scope and only when no escalation
+  trigger applies; it never authorizes a PR, merge, publication, or other
+  external action. It must record
+  `github_issue_status: pending_unavailable`, and the agent must create the
+  GitHub issue before PR creation or merge.
+
+A repository document may remain the durable source for explicitly docs-only
+planning/control work. An `issue_refinement` packet does not turn that document
+into executable authority; the outage fallback above is the sole temporary
+local-work exception.
 
 ## Chat Output Hygiene
 
@@ -73,10 +82,19 @@ Use this generic profile by default for all repository work.
 2. Identify one current work unit.
 3. Confirm durable source of truth.
 4. Confirm allowed paths.
-5. Confirm expected output, non-goals, validation, and stop conditions.
+5. Confirm the canonical task fields, bounded `context_read_set`,
+   `project_specific_validation`, expected output, non-goals, and stop
+   conditions. When available, run:
+
+   ```bash
+   python3 scripts/asgk.py work-unit-check --issue <number> --authority-only --json
+   ```
+
 6. Create or use a task branch.
-7. Modify only files allowed by the current issue or PR; a task packet may
-   narrow those paths but must not expand or replace them for executable work.
+7. Modify only files allowed by the current issue or PR; an
+   `issue_refinement` packet may narrow those paths but must not expand or
+   replace them. During the verified-outage exception, modify only the complete
+   fallback's allowed paths and stop before any PR, merge, or external action.
 8. Run the required validation.
 9. Before opening or updating a pull request body, write the body to a file and
    run local PR body governance preflight:
@@ -165,7 +183,7 @@ Do not start another issue after completing a PR unless a durable GitHub issue/c
 
 ## Required task fields
 
-Every agent task must have:
+The selected durable work-unit authority must have:
 
 - lane
 - intelligence_level
@@ -180,6 +198,38 @@ Every agent task must have:
 - non_goals
 - stop_conditions
 - rollback_expectations
+
+`reason` is the only formal field name. Do not substitute
+`intelligence_level_reason`.
+
+The 13 fields and the execution gates must use exactly one visible,
+unambiguous representation: individual recognized Markdown task-field
+headings, including the ATX heading levels emitted by GitHub issue forms and
+visible Setext headings, or one exact ATX H2 `## Required Task Fields` section
+with that exact spelling and case containing the supported YAML subset. A
+Setext underline is heading syntax, never field data. A lower-level heading
+inside an individual field remains part of that field until the next heading
+at the same or a higher level. Do not mix the two forms, repeat a task-field
+heading, repeat a top-level YAML key, or place multiple fenced records in the
+canonical section. Fenced examples outside that section are not authority.
+
+## Required execution gates
+
+The selected durable authority for executable work must additionally have:
+
+- `context_read_set`: the smallest exact paths and durable pseudo-references
+  required for the work;
+- `project_specific_validation`: the concrete project checks required in
+  addition to ASGK governance checks, or `not_applicable` with a material
+  reason.
+
+These two gates constrain execution. They are not additional task-identity
+fields and do not create another source of authority.
+
+Normally the linked open issue carries the complete 13 fields and two gates for
+both implementation and later PR follow-up. An open PR qualifies as the selected
+authority only when its body itself visibly carries the complete set. Ordinary
+PR bodies do not need to duplicate a valid linked issue.
 
 ## Low-risk merge boundary
 

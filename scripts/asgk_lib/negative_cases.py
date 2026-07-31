@@ -55,8 +55,10 @@ TEXTUAL_EXPECTED_FAILURES = (
     (*ASGK, "task-packet-check", "--file", "examples/negative/task_packet.see-chat.yaml"),
     (*ASGK, "task-packet-check", "--file", "examples/negative/task_packet.no-stop.yaml"),
     (*ASGK, "task-packet-check", "--file", "examples/negative/task_packet.empty-list.yaml"),
-    (*ASGK, "task-packet-check", "--file", "examples/negative/task_packet.overbroad-files-to-inspect.yaml"),
+    (*ASGK, "task-packet-check", "--file", "examples/negative/task_packet.overbroad-context-read-set.yaml"),
     (*ASGK, "task-packet-check", "--file", "examples/negative/task_packet.executable-no-github-issue.yaml"),
+    (*ASGK, "task-packet-check", "--file", "examples/negative/task_packet.reason-alias.yaml"),
+    (*ASGK, "task-packet-check", "--file", "examples/negative/task_packet.fallback-status.yaml"),
     (*ASGK, "handoff-check", "--file", "examples/negative/handoff.missing-active-issue.yaml"),
     (*ASGK, "handoff-check", "--file", "examples/negative/handoff.empty-next-safe-action.yaml"),
     (*ASGK, "handoff-check", "--file", "examples/negative/handoff.unknown-validation-status.yaml"),
@@ -109,6 +111,9 @@ WORK_UNIT_COMMANDS = (
     (*ASGK, "work-unit-check", "--json-file", "examples/negative/work_unit.merged-pr.json", "--paths-file", "examples/work_unit.changed-paths.valid.txt"),
     (*ASGK, "work-unit-check", "--json-file", "examples/work_unit.valid-issue.json", "--paths-file", "examples/negative/work_unit.changed-paths.outside-allowed.txt"),
     (*ASGK, "work-unit-check", "--json-file", "examples/negative/work_unit.missing-task-fields.json", "--paths-file", "examples/negative/work_unit.missing-task-fields.paths.txt"),
+    (*ASGK, "work-unit-check", "--json-file", "examples/negative/work_unit.reason-alias-only.json", "--authority-only"),
+    (*ASGK, "work-unit-check", "--json-file", "examples/negative/work_unit.missing-context-read-set.json", "--authority-only"),
+    (*ASGK, "work-unit-check", "--json-file", "examples/negative/work_unit.missing-project-specific-validation.json", "--authority-only"),
 )
 
 COMPACT_SCOPE_LOCK_CASES = (
@@ -232,7 +237,12 @@ NEGATIVE_CASE_GROUPS = {
     )),
     "compact-task-packet": NegativeCaseGroup(EXPECTED_FAILURE, _commands(
         (*ASGK, "compact-task-packet-check", "--json-file"),
-        ("examples/negative/compact_governance/task-packet-delta-expands-scope.json",),
+        (
+            "examples/negative/compact_governance/task-packet-delta-expands-scope.json",
+            "examples/negative/compact_governance/task-packet-authority-mismatch.json",
+            "examples/negative/compact_governance/task-packet-read-set-expands.json",
+            "examples/negative/compact_governance/task-packet-validation-expands.json",
+        ),
     )),
     "compact-pr-body": NegativeCaseGroup(EXPECTED_FAILURE, tuple(
         (*ASGK, "compact-pr-body-check", "--body-file", body, "--report-json", report)
