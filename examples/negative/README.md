@@ -52,7 +52,7 @@ fixture_classes:
   policy_gate:
     purpose: fail-closed policy-gate expected failures
   task_packet:
-    purpose: task-packet authority, scope, and stop-condition expected failures
+    purpose: task-packet mode, legacy-field, authority, path/read/validation expansion, and exact finding-code failures
   handoff:
     purpose: handoff packet and current-status stale-state expected failures
   compact_governance:

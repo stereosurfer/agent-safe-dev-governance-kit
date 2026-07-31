@@ -1,36 +1,26 @@
-task_id: "TASK-001"
-lane: "lane_00_controller"
+mode: "github_unavailable_fallback"
+github_issue_status: "pending_unavailable"
+lane: "validation_tooling"
 intelligence_level: "frontier"
-intelligence_level_reason: "Governance scaffold update requires architecture judgment."
-durable_source_of_truth: "GitHub issue #217"
-github_issue_status: "available"
-work_unit_kind: "implementation"
-objective: "Add a missing governance rule."
-product_context: "Prevents AI over-simplification."
-current_repository_context: "Bootstrap docs exist."
-files_to_inspect_first:
-  - "AGENTS.md"
-  - "current GitHub issue or PR"
-  - "docs/control/CONTROL_LAYER_V0.md"
-allowed_paths:
-  - "docs/control/"
-expected_changes:
-  - "Update one control doc."
-expected_output: "Control doc contains the new rule."
-non_goals:
-  - "No runtime code changes."
-constraints:
-  - "No protected paths."
+reason: "Fallback fixture requires contract and validator judgment."
+durable_source_of_truth: "Repository task packet pending GitHub recovery."
+objective: "Preserve one complete bounded work unit until an issue can be created."
 plan:
-  - "Read control doc."
-  - "Patch rule."
+  - "Retry GitHub issue creation before any PR."
 checklist:
-  - "[ ] Rule added."
-  - "[ ] Validation run."
+  - "[ ] All 13 fields and both execution gates are present."
 acceptance_sheet:
-  - "[ ] Required term appears."
-validation_commands:
-  - "python3 scripts/validate_bootstrap.py"
+  - "[ ] task-packet-check accepts the fallback shape."
+allowed_paths:
+  - "examples/task_packet.example.yaml"
+context_read_set:
+  - "AGENTS.md"
+  - "docs/control/TASK_PACKET_FORMAT.md"
+project_specific_validation:
+  - "python3 scripts/asgk.py task-packet-check --file examples/task_packet.example.yaml"
+expected_output: "A complete temporary local-work scope that cannot authorize a PR or merge."
+non_goals:
+  - "No external action, protected-path exception, PR creation, or merge under fallback authority."
 stop_conditions:
-  - "protected_path_change_required"
-rollback_expectations: "Revert the doc patch only."
+  - "GitHub issue remains unavailable before PR creation, merge, or external action."
+rollback_expectations: "Discard the fallback after transferring its full scope to GitHub."

@@ -12,7 +12,7 @@ body:
     id: durable_source_of_truth
     attributes:
       label: durable_source_of_truth
-      description: GitHub issue or PR for executable work; repo documents only for explicitly docs-only planning/control work or GitHub-unavailable fallback. Do not write see chat.
+      description: This GitHub issue or an already-open PR is executable authority. A repo document may own explicitly docs-only planning/control work. A task packet cannot replace GitHub authority. Do not write see chat.
     validations:
       required: true
   - type: input
@@ -39,22 +39,11 @@ body:
       description: Why the selected intelligence level and task scope are sufficient.
     validations:
       required: true
-  - type: dropdown
+  - type: textarea
     id: context_read_set
     attributes:
       label: context_read_set
-      description: Required context read set from docs/control/CONTEXT_BUDGET_POLICY.md.
-      options:
-        - startup
-        - docs_only
-        - control_policy
-        - decision_point
-        - schema_or_contract
-        - security_or_storage
-        - merge_decision
-        - tooling_or_validation
-        - promotion_or_output_readiness
-        - parallel_issue_or_pr
+      description: Smallest exact existing repo files and complete durable issue, PR, or URL references required for this work, one item per line. Prose shortcuts and named read-set classifications do not imply files or authority.
     validations:
       required: true
   - type: textarea

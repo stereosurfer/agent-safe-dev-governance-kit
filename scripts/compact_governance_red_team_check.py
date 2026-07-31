@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Run opt-in compact-governance red-team fixtures.
 
-This checker models the proposed reference-first / delta-only migration before
-ASGK changes any default PR template or operating rule. It treats fixture data as
-captured GitHub/PR/tool state and verifies that compact artifacts cannot replace
-tool-derived gates.
+This checker preserves the opt-in compact-governance red-team surface until its
+W6D removal. It treats fixture data as captured GitHub/PR/tool state, delegates
+v2 task-packet semantics to the canonical evaluator, and verifies that compact
+artifacts cannot replace tool-derived gates.
 """
 
 from __future__ import annotations
@@ -15,6 +15,8 @@ from fnmatch import fnmatchcase
 import json
 from pathlib import Path
 from typing import Any, Iterable
+
+from asgk_lib.task_packet import evaluate_task_packet
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -97,6 +99,7 @@ def evaluate_fixture(payload: dict[str, Any]) -> tuple[str, list[Finding]]:
     scope_lock = payload.get("scope_lock") or {}
     pr_state = payload.get("pr") or {}
     task_packet = payload.get("task_packet") or {}
+    issue = payload.get("issue")
     agent_claims = payload.get("agent_claims") or {}
 
     if not isinstance(issue_scope, dict):
@@ -132,10 +135,27 @@ def evaluate_fixture(payload: dict[str, Any]) -> tuple[str, list[Finding]]:
         for path in outside_allowed(changed_paths, issue_allowed_paths):
             findings.append(Finding("fail", f"changed path outside issue allowed_paths: {path}"))
 
-    packet_allowed_paths = task_packet.get("allowed_paths") or []
-    if packet_allowed_paths and issue_allowed_paths:
-        for path in outside_allowed(packet_allowed_paths, issue_allowed_paths):
-            findings.append(Finding("fail", f"task packet expands issue allowed_paths: {path}"))
+    # Pre-v2 compact fixtures may still carry an untyped task_packet member.
+    # W6D owns their deletion. This runner must not interpret that legacy shape
+    # as a second packet oracle; only a declared v2 mode is delegated.
+    if task_packet and "mode" in task_packet:
+        issue_payload = issue if isinstance(issue, dict) else None
+        packet_result, packet_output = evaluate_task_packet(
+            task_packet,
+            json.dumps(task_packet, sort_keys=True),
+            issue_payload,
+            repo_root=ROOT,
+        )
+        if packet_result != "pass":
+            for packet_finding in packet_output.get("findings", []):
+                findings.append(
+                    Finding(
+                        "fail",
+                        "task packet "
+                        f"{packet_finding.get('code', 'TP_UNKNOWN')}: "
+                        f"{packet_finding.get('reason', 'failed canonical evaluation')}",
+                    )
+                )
 
     ci_status = str(pr_state.get("ci_status", "")).lower()
     if ci_status not in PASSING_CI_STATES:
@@ -174,7 +194,10 @@ def evaluate_fixture(payload: dict[str, Any]) -> tuple[str, list[Finding]]:
 
 def fixture_paths(paths: list[str]) -> list[Path]:
     if paths:
-        return [Path(path) for path in paths]
+        return [
+            Path(path) if Path(path).is_absolute() else ROOT / path
+            for path in paths
+        ]
     return sorted(POSITIVE_FIXTURE_DIR.glob("*.json")) + sorted(NEGATIVE_FIXTURE_DIR.glob("*.json"))
 
 

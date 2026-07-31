@@ -3,50 +3,22 @@
   "issue": {
     "number": 1001,
     "state": "open",
-    "title": "Valid delta-only task packet fixture",
-    "body": "## Required Task Fields\n\n```yaml\nlane: validation_tooling\nintelligence_level: frontier\nreason: \"Fixture issue supports delta-only task packet checks.\"\ndurable_source_of_truth: \"GitHub issue #1001\"\nobjective: \"Validate task packet narrowing.\"\nallowed_paths:\n  - scripts/asgk.py\n  - docs/control/TASK_PACKET_FORMAT.md\nexpected_output:\n  - compact task packet check JSON\nplan:\n  - compare packet to issue scope\nchecklist:\n  - command passes\nacceptance_sheet:\n  - packet narrows issue scope\nnon_goals:\n  - no compact governance default\nstop_conditions:\n  - packet expands scope\nrollback_expectations:\n  - revert PR\n```"
+    "title": "Valid issue-refinement task packet fixture",
+    "body": "## Required Task Fields\n\n```yaml\nlane: validation_tooling\nintelligence_level: frontier\nreason: \"Fixture supports task-packet non-expansion checks.\"\ndurable_source_of_truth: \"GitHub issue #1001\"\nobjective: \"Validate task-packet narrowing.\"\nplan:\n  - compare packet with issue\nchecklist:\n  - command passes\nacceptance_sheet:\n  - packet stays within issue\nallowed_paths:\n  - scripts/asgk.py\n  - docs/control/TASK_PACKET_FORMAT.md\nexpected_output:\n  - task packet check JSON\nnon_goals:\n  - no compact governance default\nstop_conditions:\n  - packet expands authority\nrollback_expectations:\n  - revert fixture\ncontext_read_set:\n  - AGENTS.md\n  - scripts/asgk.py\n  - docs/control/TASK_PACKET_FORMAT.md\nproject_specific_validation:\n  - python3 scripts/asgk.py task-packet-check\n  - python3 scripts/asgk.py doctor\n```\n"
   },
   "task_packet": {
-    "task_id": "fixture-delta-valid",
-    "lane": "validation_tooling",
-    "intelligence_level": "frontier",
-    "intelligence_level_reason": "Fixture covers compact governance scope comparison.",
+    "mode": "issue_refinement",
     "durable_source_of_truth": "GitHub issue #1001",
-    "objective": "Validate task packet narrowing.",
-    "product_context": "ASGK compact governance fixture.",
-    "current_repository_context": "Fixture only.",
-    "files_to_inspect_first": [
-      "scripts/asgk.py"
-    ],
     "allowed_paths": [
       "scripts/asgk.py"
     ],
-    "expected_changes": [
-      "Add compact task packet comparison."
+    "context_read_set": [
+      "AGENTS.md",
+      "scripts/asgk.py"
     ],
-    "expected_output": "compact task packet check JSON",
-    "non_goals": [
-      "No compact governance default."
-    ],
-    "constraints": [
-      "Do not expand issue scope."
-    ],
-    "plan": [
-      "Compare packet allowed paths to issue allowed paths."
-    ],
-    "checklist": [
-      "Packet narrows scope."
-    ],
-    "acceptance_sheet": [
-      "narrowing accepted"
-    ],
-    "validation_commands": [
-      "python3 scripts/asgk.py compact-task-packet-check --json-file examples/compact_governance/task_packet_delta.valid.json"
-    ],
-    "stop_conditions": [
-      "Packet expands issue scope."
-    ],
-    "rollback_expectations": "Revert fixture."
+    "project_specific_validation": [
+      "python3 scripts/asgk.py task-packet-check"
+    ]
   },
   "issue_scope": {
     "scope_hash": "delta-valid-scope",

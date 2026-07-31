@@ -1,32 +1,40 @@
 {
-  "case_id": "compact-negative-task-packet-expands-scope",
-  "description": "A compact task packet tries to add an allowed path that the source issue did not authorize.",
   "expected_result": "fail",
+  "issue": {
+    "number": 1034,
+    "state": "open",
+    "body": "## Required Task Fields\n\n```yaml\nlane: validation_tooling\nintelligence_level: frontier\nreason: \"Red-team fixture isolates packet path expansion.\"\ndurable_source_of_truth: \"GitHub issue #1034\"\nobjective: \"Reject packet path expansion.\"\nplan:\n  - compare packet with issue\nchecklist:\n  - command fails\nacceptance_sheet:\n  - expansion is rejected\nallowed_paths:\n  - scripts/asgk.py\nexpected_output:\n  - failed task packet check\nnon_goals:\n  - no implementation\nstop_conditions:\n  - expansion is accepted\nrollback_expectations:\n  - remove fixture\ncontext_read_set:\n  - AGENTS.md\n  - scripts/asgk.py\nproject_specific_validation:\n  - python3 scripts/asgk.py task-packet-check\n```\n"
+  },
+  "task_packet": {
+    "mode": "issue_refinement",
+    "durable_source_of_truth": "GitHub issue #1034",
+    "allowed_paths": [
+      "README.md"
+    ],
+    "context_read_set": [
+      "AGENTS.md"
+    ],
+    "project_specific_validation": [
+      "python3 scripts/asgk.py task-packet-check"
+    ]
+  },
   "issue_scope": {
-    "issue": 225,
     "scope_hash": "scope-v1",
     "allowed_paths": [
-      "examples/compact_governance/**"
+      "scripts/asgk.py"
     ]
   },
   "scope_lock": {
-    "issue": 225,
     "scope_hash": "scope-v1"
   },
   "pr": {
     "metadata_available": true,
     "changed_paths": [
-      "examples/compact_governance/reference_delta.valid.json"
+      "scripts/asgk.py"
     ],
     "ci_status": "success",
     "current_status_changed": false,
-    "current_status_impact": "not_applicable",
-    "restricted_boundaries": []
-  },
-  "task_packet": {
-    "allowed_paths": [
-      "scripts/asgk.py"
-    ]
+    "current_status_impact": "not_applicable"
   },
   "agent_claims": {}
 }

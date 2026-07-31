@@ -136,7 +136,31 @@ The issue should name lane, intelligence level, reason, durable source of truth,
 objective, plan, checklist, acceptance sheet, allowed paths, expected output,
 non-goals, stop conditions, and rollback expectations.
 
+It must separately record the smallest exact `context_read_set` of existing
+repo files and complete durable references, plus concrete
+`project_specific_validation`. These are execution gates, not extra
+task-identity fields. Do not use prose shortcuts such as "whatever is needed."
+
 Never write `see chat` for scope, acceptance, handoff, or merge authority.
+
+Before creating a branch or editing files, validate the durable authority:
+
+```bash
+python3 scripts/asgk.py work-unit-check \
+  --issue <issue-number> \
+  --authority-only \
+  --json
+```
+
+Task packets are optional. `issue_refinement` may only narrow the issue.
+`github_unavailable_fallback` is temporary authority only for bounded local
+work during verified GitHub unavailability, only when no escalation trigger
+applies, and must be replaced by an issue before PR creation or merge. It
+cannot authorize protected or otherwise escalated work.
+
+During that outage only, validate the complete fallback with
+`task-packet-check` before local work. The validator does not prove the outage;
+record that evidence separately and retry issue creation before any PR action.
 
 ### 2. Create A Branch
 
@@ -153,7 +177,7 @@ main
 If a needed change is outside the issue's allowed paths, stop. Update the
 durable issue or create a new issue instead of silently expanding scope.
 
-### 3. Run Work-Unit Preflight
+### 3. Run Post-Diff Work-Unit Check
 
 Before committing or opening a PR, check that the selected work unit still
 authorizes the local diff:
@@ -165,11 +189,15 @@ python3 scripts/asgk.py work-unit-check \
   --git-head WORKTREE
 ```
 
-For existing PR follow-up work, use `--pr <pr-number>`. Use `WORKTREE` before
-committing so uncommitted and untracked local files are checked.
+For existing PR follow-up work, normally validate the PR's still-open linked
+issue with `--issue <issue-number>`. Use `--pr <pr-number>` only when that PR
+body itself is the complete current authority and visibly contains all 13
+fields plus both execution gates. Use `WORKTREE` before committing so
+uncommitted and untracked local files are checked.
 
-This guard blocks stale, wrong-type, closed, merged, or outside-allowed-path
-work when run. It does not intercept every editor write before it happens.
+This post-diff guard rechecks authority and changed paths. Unlike
+`--authority-only`, it requires a non-empty diff source and runs path containment
+and hygiene checks. Neither mode infers approval or low-risk status.
 
 ### 4. Change Only Allowed Paths
 

@@ -1,24 +1,137 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "type": "object",
-  "required": [
-    "task_id",
-    "lane",
-    "intelligence_level",
-    "durable_source_of_truth",
-    "objective",
-    "allowed_paths",
-    "expected_output",
-    "plan",
-    "checklist",
-    "acceptance_sheet",
-    "stop_conditions",
-    "rollback_expectations"
+  "$id": "https://github.com/stereosurfer/agent-safe-dev-governance-kit/schemas/task_packet.schema.json",
+  "title": "ASGK task packet projection",
+  "description": "A task packet is either a bounded refinement of one GitHub issue or a complete fallback whose local-work authority remains conditional on verified GitHub unavailability and no escalation trigger. It never grants PR, merge, or external-action authority.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/issue_refinement"
+    },
+    {
+      "$ref": "#/$defs/github_unavailable_fallback"
+    }
   ],
-  "properties": {
-    "task_id": {"type": "string"},
-    "intelligence_level": {"enum": ["fast_basic", "standard", "advanced", "frontier"]},
-    "durable_source_of_truth": {"type": "string"},
-    "allowed_paths": {"type": "array", "items": {"type": "string"}}
+  "$defs": {
+    "material_scalar": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "\\S"
+    },
+    "material_list": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/material_scalar"
+      }
+    },
+    "issue_refinement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "durable_source_of_truth",
+        "allowed_paths",
+        "context_read_set",
+        "project_specific_validation"
+      ],
+      "properties": {
+        "mode": {
+          "const": "issue_refinement"
+        },
+        "durable_source_of_truth": {
+          "$ref": "#/$defs/material_scalar"
+        },
+        "allowed_paths": {
+          "$ref": "#/$defs/material_list"
+        },
+        "context_read_set": {
+          "$ref": "#/$defs/material_list"
+        },
+        "project_specific_validation": {
+          "$ref": "#/$defs/material_list"
+        }
+      }
+    },
+    "github_unavailable_fallback": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "github_issue_status",
+        "lane",
+        "intelligence_level",
+        "reason",
+        "durable_source_of_truth",
+        "objective",
+        "plan",
+        "checklist",
+        "acceptance_sheet",
+        "allowed_paths",
+        "context_read_set",
+        "project_specific_validation",
+        "expected_output",
+        "non_goals",
+        "stop_conditions",
+        "rollback_expectations"
+      ],
+      "properties": {
+        "mode": {
+          "const": "github_unavailable_fallback"
+        },
+        "github_issue_status": {
+          "const": "pending_unavailable"
+        },
+        "lane": {
+          "$ref": "#/$defs/material_scalar"
+        },
+        "intelligence_level": {
+          "enum": [
+            "fast_basic",
+            "standard",
+            "advanced",
+            "frontier"
+          ]
+        },
+        "reason": {
+          "$ref": "#/$defs/material_scalar"
+        },
+        "durable_source_of_truth": {
+          "$ref": "#/$defs/material_scalar"
+        },
+        "objective": {
+          "$ref": "#/$defs/material_scalar"
+        },
+        "plan": {
+          "$ref": "#/$defs/material_list"
+        },
+        "checklist": {
+          "$ref": "#/$defs/material_list"
+        },
+        "acceptance_sheet": {
+          "$ref": "#/$defs/material_list"
+        },
+        "allowed_paths": {
+          "$ref": "#/$defs/material_list"
+        },
+        "context_read_set": {
+          "$ref": "#/$defs/material_list"
+        },
+        "project_specific_validation": {
+          "$ref": "#/$defs/material_list"
+        },
+        "expected_output": {
+          "$ref": "#/$defs/material_scalar"
+        },
+        "non_goals": {
+          "$ref": "#/$defs/material_list"
+        },
+        "stop_conditions": {
+          "$ref": "#/$defs/material_list"
+        },
+        "rollback_expectations": {
+          "$ref": "#/$defs/material_scalar"
+        }
+      }
+    }
   }
 }
