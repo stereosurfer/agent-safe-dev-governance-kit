@@ -77,6 +77,7 @@ from asgk_lib.negative import (
     NEGATIVE_CASE_CHOICES,
     run_negative_case,
 )
+from asgk_lib.source_validation import run_source_validation
 from asgk_lib.workspace_state import (
     live_workspace_state,
     print_workspace_state_result,
@@ -2448,8 +2449,7 @@ def print_pr_status_result(
 
 def cmd_doctor(_args: argparse.Namespace) -> int:
     commands = [
-        ["python3", "scripts/check_project.py"],
-        ["python3", "scripts/validate_bootstrap.py"],
+        ["python3", "scripts/asgk.py", "validate"],
         ["git", "diff", "--check"],
         ["python3", "scripts/asgk.py", "status-check"],
     ]
@@ -2458,8 +2458,12 @@ def cmd_doctor(_args: argparse.Namespace) -> int:
     return 1 if baseline or scenarios else 0
 
 
-def cmd_validate(_args: argparse.Namespace) -> int:
-    return run_many([["python3", "scripts/validate_bootstrap.py"]])
+def cmd_validate(args: argparse.Namespace) -> int:
+    return run_source_validation(
+        repo_root=args.repo_root,
+        source_inventory_file=args.source_inventory_file,
+        as_json=args.json,
+    )
 
 
 def cmd_hygiene(args: argparse.Namespace) -> int:
@@ -4631,7 +4635,29 @@ def build_parser() -> argparse.ArgumentParser:
     p = sub.add_parser("doctor", help="Run baseline positive and negative checks.")
     p.set_defaults(func=cmd_doctor)
 
-    p = sub.add_parser("validate", help="Run bootstrap governance validation.")
+    p = sub.add_parser(
+        "validate",
+        help="Validate the retained ASGK source reference superset.",
+    )
+    p.add_argument(
+        "--repo-root",
+        help=(
+            "Trusted ASGK source repository root; defaults to the current "
+            "directory. Encoded live checks may execute repository-local Python."
+        ),
+    )
+    p.add_argument(
+        "--source-inventory-file",
+        help=(
+            "Caller-supplied source path inventory for fixture/capture checks; "
+            "does not inspect listed files."
+        ),
+    )
+    p.add_argument(
+        "--json",
+        action="store_true",
+        help="Emit one common-envelope JSON object.",
+    )
     p.set_defaults(func=cmd_validate)
 
     p = sub.add_parser("hygiene", help="Run changed-path governance hygiene.")

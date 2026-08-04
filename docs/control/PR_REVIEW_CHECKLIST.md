@@ -163,10 +163,22 @@ Confirm:
 Current baseline validation:
 
 ```bash
-python3 scripts/check_project.py
+python3 scripts/asgk.py doctor
+python3 scripts/asgk.py validate
 python3 scripts/validate_bootstrap.py
 git diff --check
 ```
+
+`asgk validate` and the bootstrap wrapper must reach
+`scripts/asgk_lib/source_validation.py`. `doctor` composes that same source
+engine with status, diff, and registered scenario checks. Do not treat
+`scripts/check_project.py` as an active validation prerequisite; it remains only
+until its separately scoped W6D deletion.
+
+If validation used a non-default live `--repo-root`, confirm the report names
+both the inspected source and validator reference roots. Such validation may
+execute repository-local Python from the inspected root and therefore applies
+only to a trusted ASGK source tree, never an arbitrary target.
 
 Block merge readiness when:
 
