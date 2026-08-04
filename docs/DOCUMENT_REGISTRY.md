@@ -147,17 +147,6 @@ handoff_canonical_sources:
   source_of_truth_rule: AGENTS.md
 ```
 
-## Superseded Adapter Planning Artifacts
-
-| Document | Role | Canonical for | Read by default | Read when | Owned by lane |
-|---|---|---|---:|---|---|
-| `docs/adapters/README.md` | historical_evidence | superseded adapter-mechanism planning context; not current ASGK 2.0 direction | no | auditing or removing superseded adapter planning | `lane_01_architecture` |
-| `docs/adapters/ADAPTER_TEMPLATE.md` | historical_evidence | superseded runtime-adapter template context; not current ASGK 2.0 direction | no | auditing or removing superseded adapter planning | `lane_01_architecture` |
-
-The runtime-adapter/profile roadmap is superseded. These files are not product
-direction, adoption prerequisites, or default context; their later removal is a
-separately scoped cleanup.
-
 ## Control Documents
 
 | Document | Role | Canonical for | Read by default | Read when | Owned by lane |
@@ -171,9 +160,6 @@ separately scoped cleanup.
 | `docs/control/VALIDATION_STRATEGY.md` | canonical | common JSON evidence envelope, validation proof boundaries, result and human-gate semantics, validation-layer responsibilities, negative-fixture ownership rules, fail-closed policy-gate validation, and validator change requirements | no | validation/tooling work, policy-gate checker review | `lane_06_ci_github` |
 | `docs/control/PR_REVIEW_CHECKLIST.md` | canonical | repeatable PR review sequence, current-status freshness review, and outcomes | no | PR review, current-status impact review, merge readiness | `lane_00_controller` |
 | `docs/control/NEGATIVE_TEST_PLAN.md` | canonical | human-readable negative-case intent, risk classification, candidate fixture paths, and planned gaps; not executable scenario expectations | no | negative fixture or validator work | `lane_00_controller` |
-| `docs/control/UNCONTROLLED_DOCUMENT_AUDIT.md` | canonical | uncontrolled-document growth-risk classification and audit record | no | uncontrolled-document audit or status-like document growth review | `lane_07_docs_handoff` |
-| `docs/control/HISTORICAL_ASGK_READINESS_EVIDENCE.md` | historical_evidence | archived ASGK source-only readiness evidence and first-release decision trail | no | auditing old ASGK readiness decisions or target source-state isolation | `lane_07_docs_handoff` |
-| `docs/control/HISTORICAL_ASGK_STABILIZATION_EVIDENCE.md` | historical_evidence | archived ASGK early stabilization evidence and field-test lesson record | no | auditing old ASGK stabilization decisions or target source-state isolation | `lane_07_docs_handoff` |
 | `docs/control/SOURCE_ONLY_RELEASE_POLICY.md` | canonical | Source-only release gates, human-gated release execution boundary, distribution boundary, version applicability, and release-history source-of-truth boundary | no | source-only release planning, release execution review, release-state closeout, distribution-boundary review | `lane_07_docs_handoff` |
 | `docs/control/DOCUMENT_MAP_POLICY.md` | canonical | document-map router/registry split, size limits, and maintenance rules | no | document-map structure changes, registry split work, target-template navigation changes | `lane_07_docs_handoff` |
 | `docs/control/DECISION_POINT_REGISTRY.md` | historical_evidence | superseded parallel decision router awaiting W6B removal; cannot expand the current issue read set or authority | no | bounded W6B migration lookup only | `lane_07_docs_handoff` |
@@ -259,8 +245,6 @@ storage_specialized_policies:
 | `docs/bootstrap/07_contract_first.md` | canonical | contract-first rule | no | contract/schema/artifact work | `lane_02_schema_contracts` |
 | `docs/bootstrap/08_acceptance_criteria.md` | canonical | three-layer acceptance model and definition of done | no | issue/PR acceptance changes | `lane_00_controller` |
 | `docs/bootstrap/09_safety_checks.md` | summary | minimum safety check overview | no | safety orientation only | `lane_05_security` |
-| `docs/bootstrap/10_roadmap.md` | historical_evidence | v1 milestone history and superseded runtime-adapter roadmap framing; not current ASGK 2.0 authority | no | release-history audit or removal of superseded roadmap material | `lane_00_controller` |
-| `docs/bootstrap/12_productization_notes.md` | historical_evidence | superseded productization and v1.x/v2.0 roadmap framing; not current ASGK 2.0 authority | no | auditing or removing superseded roadmap material | `lane_07_docs_handoff` |
 | `docs/bootstrap/13_artifact_promotion_policy.md` | summary | promotion chain overview and status values | no | artifact/data/evidence-heavy work | `lane_02_schema_contracts` |
 | `docs/bootstrap/14_execution_lanes.md` | canonical | execution lanes and external-call boundaries | no | execution lane/API/provider discussions | `lane_05_security` |
 | `docs/bootstrap/15_source_or_input_class_matrix.md` | optional module | source/input class use boundaries | no | evidence, source, claim, or context-pack projects | `lane_02_schema_contracts` |
