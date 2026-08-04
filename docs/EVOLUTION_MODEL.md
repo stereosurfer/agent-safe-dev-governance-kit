@@ -1,337 +1,156 @@
-# Evolution Model
+# ASGK Evolution Model
 
-Status: active governance model.
+Status: active ASGK 2.0 governance model.
 
-This document explains how ASGK evolves from written rules into repeatable
-validation, runtime control, and productized governance. It also records the
-current maturity of PR auto-validation, framework self-consistency validation,
-and negative defense testing.
-
-## Snapshot Boundary
-
-This document is a governance model with bounded maturity snapshots. Update the
-model when the governance theory changes. Update maturity snapshots only through
-bounded readiness, audit, or stabilization work. Do not append chronological
-progress logs here; detailed history belongs in GitHub issues, PRs, comments,
-and merge commits.
+This document defines how ASGK improves itself as a document-driven system. It
+is a durable model, not a progress log, release plan, maturity ledger, or
+runtime-specific design.
 
 ## Core Thesis
 
-```text
-Agent runtimes will commoditize. Repo governance is the durable layer.
-```
+ASGK evolves when a durable rule becomes a bounded work unit, is projected into
+the repository, checked with explicit evidence, used independently later, and
+closed out with a traceable decision. The model must remain understandable to a
+new person or a different AI without access to the author’s prior conversation.
 
-ASGK v1.x focuses on a runtime-agnostic generic repo-agent governance core.
-Runtime-specific profiles are deferred to v2.0 as optimization adapters.
-
-## What Documentation-driven Evolution Means
-
-Documentation-driven evolution means that new governance behavior begins as a
-clear, durable rule in the repository before it becomes automation.
-
-The expected path is:
+## The Self-Evolution Loop
 
 ```text
-policy statement
-  -> checklist or template field
-  -> validation script or CI gate
-  -> CLI/runtime control
-  -> reusable product capability
+durable rule
+  -> bounded issue/PR
+  -> checked projection
+  -> independent later use
+  -> target evidence when applicable
+  -> release closeout
 ```
 
-This is intentionally conservative. It prevents agents from inventing runtime
-behavior before the policy boundary is explicit.
+### 1. Durable rule
 
-## What Self-governance Means
+The rule has one canonical owner and a clearly stated boundary. It says what
+the repository promises, what it does not promise, and which evidence can
+support the claim. A rule is not authoritative merely because a validator,
+Skill, example, or model repeats it.
 
-Self-governance means this repository uses its own rules to change itself.
+### 2. Bounded issue or PR
 
-A valid self-governed change should use:
+An executable work unit names its objective, plan, acceptance, allowed paths,
+expected output, non-goals, stop conditions, rollback expectation, bounded
+context read set, and project-specific validation. The live issue or a
+self-contained qualifying PR is the authority for that work unit. A task
+packet can narrow scope but cannot replace the issue or add authority.
 
-```text
-GitHub issue
-  -> branch
-  -> allowed-path change
-  -> PR template
-  -> validation evidence
-  -> Merge Decision Record
-  -> low-risk merge or human gate
-  -> issue result comment
-  -> issue close
-```
+### 3. Checked projection
 
-The repository has already used this pattern repeatedly for docs, control
-policies, negative fixtures, validation script hardening, and CI workflow
-hardening.
+The rule is projected into the smallest necessary document, template, schema,
+validator, fixture, or CLI surface. Mechanical checks report the exact claim
+they checked, what they did not check, findings, human-gate state, and proof
+boundary. A pass proves only the named mechanical claim; it does not prove
+semantic fit, approval, release readiness, or merge authority.
 
-## What Self-validation Means
+### 4. Independent later use
 
-Self-validation means repository rules are checked by repository-owned tools and
-GitHub Actions.
+The repository must be resumable by a person or a different agent/provider
+using durable state rather than a remembered conversation. A later user should
+be able to recover what to do, where to work, what is forbidden, which evidence
+exists, and what remains unknown. A cold reader or replacement agent is
+evidence of handoff quality, not a source of authority.
 
-Current self-validation includes:
+### 5. Target evidence
 
-```text
-scripts/check_project.py
-scripts/validate_bootstrap.py
-scripts/governance_hygiene.py
-.github/workflows/bootstrap-validation.yml
-examples/negative/changed-path fixtures
-```
+When ASGK is assessed in another repository, the assessment is read-only and
+target-owned. Mechanical tools check only caller-supplied path or text claims;
+frontier judgment decides fit, depth, and minimum sufficient change. ASGK does
+not impose a universal target layout, adoption declaration, or completion
+algorithm.
 
-Self-validation is not the same as full semantic proof. It checks specific
-invariants that have been encoded into scripts, templates, fixtures, or CI.
+### 6. Release closeout
 
-## Current Maturity Summary
+Source-only release preparation records the exact checked state and its proof
+limits. Release, tag, publication, and distribution decisions remain separate
+human-gated operations. Closeout records the decision and evidence in GitHub;
+CURRENT_STATUS keeps only the current recovery snapshot.
 
-| Area | Current state | Meaning |
-|---|---|---|
-| PR auto-validation | core complete | PRs run scaffold, bootstrap, whitespace, and changed-path negative checks. |
-| Framework logical self-consistency validation | partial | Required files/terms/templates/JSON/storage invariants are checked, but full semantic contradiction detection is not automated. |
-| Negative defense testing | partial | Changed-path, PR-body, task-packet, handoff, release-state, target-install, workspace-state, and compact-governance cases have opt-in or CI-backed checks; some matrix rows remain coverage backlog. |
-| Runtime control | active local CLI surface | `python3 scripts/asgk.py` is the current repo-local command surface; package/global executable distribution is not part of v1.x. |
-| Productized install/upgrade flow | early | Quickstart, read-only target-install check/plan, and compact target-upgrade manifest checks exist; package, installer, scaffold writes, and target-specific content checks are not implemented. |
+## What Counts As Improvement
 
-## Stage Model
-
-### Stage 0 — Docs-as-policy
-
-Rules are first captured as repository documents.
-
-Examples:
-
-```text
-docs/control/LOW_RISK_AUTONOMOUS_MERGE_POLICY.md
-docs/control/HUMAN_GATED_OPERATIONS.md
-docs/control/CONTEXT_BUDGET_POLICY.md
-docs/control/AGENT_CAPABILITY_MATRIX.md
-docs/control/NEGATIVE_TEST_PLAN.md
-```
-
-Success condition:
-
-```text
-A new agent session can read the rule without relying on chat history.
-```
-
-Risk:
-
-```text
-Rules may still be advisory unless connected to templates or validators.
-```
-
-### Stage 1 — Policy-as-checklist
-
-Policies become required issue fields, PR sections, handoff sections, review
-checklists, or task packet fields.
-
-Examples:
-
-```text
-.github/ISSUE_TEMPLATE/agent_task.yml
-.github/PULL_REQUEST_TEMPLATE.md
-docs/control/PR_REVIEW_CHECKLIST.md
-docs/control/MERGE_DECISION_RECORD.md
-docs/control/TASK_PACKET_FORMAT.md
-```
-
-Success condition:
-
-```text
-A reviewer can tell whether a PR attempted to satisfy the policy.
-```
-
-Risk:
-
-```text
-Humans or agents can still fill checklist fields incorrectly or incompletely.
-```
-
-### Stage 2 — Policy-as-validation
-
-Policies become executable checks.
-
-Examples:
-
-```text
-scripts/check_project.py
-scripts/validate_bootstrap.py
-scripts/governance_hygiene.py
-.github/workflows/bootstrap-validation.yml
-examples/negative/
-```
-
-Current Stage 2 coverage:
+An ASGK change should make at least one of these durable improvements:
 
 ```yaml
-stage_2_current:
-  positive_checks:
-    - required directory scaffold
-    - required files
-    - required terms
-    - JSON parse validity for schemas/examples
-    - YAML-like required task-packet fields
-    - PR template required headings
-    - issue template required fields
-    - storage-profile invariants
-    - whitespace diff check
-  negative_checks:
-    - runtime artifact changed-path fixture must be blocked
-    - protected path changed-path fixture must be blocked
-    - private/binary source-like changed-path fixture must be blocked
+improvement_modes:
+  clarify_rule: make the product boundary or canonical owner unambiguous
+  bound_work: make scope, forbidden paths, rollback, or context explicit
+  improve_evidence: make a mechanical claim, finding, or proof limit exact
+  improve_handoff: reduce the context needed for a safe replacement handoff
+  prove_transfer: demonstrate independent later use or a cold-start recovery
+  prove_target_claim: record caller-supplied target evidence without overclaiming
+  close_out: preserve a compact decision tree and current recovery state
+  remove_residue: delete or reclassify superseded material under its own scope
 ```
 
-Known gaps:
+More documents are not automatically more governance. A new projection must
+have one owner, one reason to exist, and a bounded consumer. Duplicate owners,
+unbounded reading, and historical plans presented as current instructions are
+regressions.
+
+## Evidence And Judgment Boundaries
 
 ```yaml
-stage_2_gaps:
-  - task-packet parser validation is not automated as full YAML/schema validation
-  - some negative case matrix rows remain coverage backlog
-  - target-specific content checks are not implemented
-  - human-gated operation detection is mostly review-policy based
-  - full semantic contradiction detection between documents is not automated
+durable_authority:
+  - selected live GitHub issue or qualifying self-contained PR
+  - canonical repository rule, contract, or decision record
+  - explicit human decision where the applicable policy requires one
+mechanical_evidence:
+  - named validator, CI check, fixture, inventory, or reference scan
+model_judgment:
+  - interpret evidence
+  - identify semantic risk or recommendation
+  - choose a bounded next action within the live work unit
+not_authorized_by_model_or_validator:
+  - create authority
+  - satisfy a human gate
+  - approve a release, publication, merge, or target change
 ```
 
-### Stage 3 — Policy-as-runtime-control
+This separation is the protection against model or provider lock-in. A capable
+agent can reason freely inside the work unit, while a replacement agent can
+audit the durable scope and evidence without inheriting hidden assumptions.
 
-Policies are automatically applied through CLI, Skills, Codex goals, or runtime
-profiles.
+## Current Implementation Map
 
-Planned examples:
-
-```bash
-asgk doctor
-asgk validate
-asgk hygiene --paths-file changed-paths.txt
-asgk negative changed-paths
-asgk check-pr <number>
-asgk merge-record
-asgk handoff-update
+```yaml
+product_owner: README.md
+operating_rules: AGENTS.md
+navigation: docs/DOCUMENT_MAP.md
+source_ownership: docs/DOCUMENT_REGISTRY.md
+recovery_snapshot: docs/handoff/CURRENT_STATUS.md
+work_unit_authority: live GitHub issue or qualifying PR
+mechanical_entrypoints:
+  - python3 scripts/asgk.py doctor
+  - python3 scripts/asgk.py validate
+  - python3 scripts/asgk.py negative all
+  - python3 scripts/asgk.py check-pr --pr <number>
+  - python3 scripts/asgk.py target-evidence-check ...
 ```
 
-Stage 3 should not invent new policy. It should wrap stable Stage 2 behavior and
-produce durable reports.
+The map is a navigation aid. It does not create a second authority layer.
 
-Current status:
+## Change And Recovery Rule
+
+Every evolution change is reversible through an ordinary Git revert unless an
+applicable human-gated policy says otherwise. If a merged change is wrong, open
+an authorized revert work unit; do not reset, force-push, or rewrite history.
+If a proposed improvement needs an unlisted path, external capability, target
+write, dependency, release, or publication, stop and obtain the required
+durable scope or human decision before proceeding.
+
+## Handoff Proof
+
+The evolution model is successful when a later person or AI can use the current
+startup set and canonical pointers to reconstruct the decision tree quickly:
 
 ```text
-active repo-local CLI surface exists through `python3 scripts/asgk.py`; package,
-installer, or global `asgk` executable distribution is not part of v1.x.
+what -> where -> not what -> forbidden -> evidence -> unknowns -> next safe action
 ```
 
-### Stage 4 — Governance-as-product
-
-The governance layer becomes installable, reusable, upgradeable, and portable to
-other repositories.
-
-Expected capabilities:
-
-```text
-install scaffold
-initialize repo-specific project brief
-validate installation
-run positive and negative test suite
-upgrade governance package
-generate task packets
-generate merge decision records
-generate handoff updates
-```
-
-Runtime-specific profiles belong after the core is stable:
-
-```text
-profiles/codex-app/
-profiles/chatgpt-web-github-connector/
-profiles/opengoat/
-profiles/claude-code/
-profiles/cursor/
-```
-
-These are v2.0 optimization adapters, not v1.x foundations.
-
-## What Is Already Automated
-
-```yaml
-automated_now:
-  - project scaffold check
-  - bootstrap governance validation
-  - JSON parse validation for schemas/examples
-  - PR template heading presence through bootstrap validation
-  - issue template field presence through bootstrap validation
-  - storage profile invariant checks for positive example
-  - changed-path governance hygiene checker
-  - changed-path negative fixture checks in GitHub Actions
-  - whitespace diff check
-```
-
-## What Still Requires Human Judgment
-
-```yaml
-requires_human_judgment:
-  - deciding whether a policy change is semantically safe
-  - deciding whether a runtime-specific profile is accurate
-  - approving human-gated operations
-  - resolving contradictions between canonical documents
-  - assessing product positioning and release readiness
-  - approving schema breaking changes
-  - deciding whether a PR should split high-risk and low-risk work
-  - reviewing ambiguous security/storage boundary changes
-```
-
-Human judgment should be durable. When used, it should be recorded in an issue,
-PR comment, approval record, or handoff document.
-
-## How Each PR Should Make The Framework Stronger
-
-Each governance PR should do at least one of these:
-
-```yaml
-strengthening_modes:
-  clarify_policy:
-    example: add or tighten a control document
-  improve_checklist:
-    example: add required issue or PR fields
-  add_validation:
-    example: encode a rule in a script or CI step
-  add_negative_case:
-    example: add an expected-failure fixture
-  improve_context_efficiency:
-    example: reduce default read set or clarify canonical ownership
-  improve_handoff:
-    example: make current state easier for a new agent to resume
-  narrow_scope:
-    example: defer unstable runtime-specific work to v2.0
-```
-
-A PR that only adds more prose without improving clarity, enforceability, or
-handoff quality should be questioned.
-
-## Current Strategic Boundary
-
-ASGK v1.x should continue hardening the generic governance core:
-
-```text
-task packet schema
-issue and PR templates
-validation scripts
-context budget policy
-negative test suite
-merge decision record
-handoff discipline
-repo-local CLI command surface
-PR-body/task-packet validation
-```
-
-ASGK v2.0 may add runtime-specific profiles, but only after the core is stable
-and only with vendor documentation plus observed behavior.
-
-## Open Evolution Questions
-
-```yaml
-open_questions:
-  - Should task-packet parsing remain dependency-free or allow PyYAML later?
-  - Which remaining negative case matrix rows deserve fixtures before becoming default CI checks?
-  - Should target-specific content checks stay warning-only or become scoped validator checks?
-  - Should handoff generation be a CLI command or template-first process?
-  - Should any packaged/global CLI wrapper wait until package distribution is explicitly approved?
-```
+Completed-work history belongs in the issue, PR, merge commit, and bounded
+close-out review. CURRENT_STATUS is overwritten as the recovery snapshot and is
+never an append-only history ledger.

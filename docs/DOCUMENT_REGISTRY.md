@@ -1,6 +1,6 @@
 # Document Registry
 
-Status: active ASGK repository-local document registry.
+Status: active ASGK 2.0 repository-local document registry.
 
 This file is the complete ASGK repository document registry and canonical
 ownership table.
@@ -80,7 +80,7 @@ roles:
 | `docs/SKILL_PACK.md` | summary | ASGK skill usage modes, guided evidence and judgment contract, maintenance touchpoints, and no-new-gates constraint | no | installing or referencing ASGK skills, reviewing architecture-to-skill impact, field testing, target adoption or upgrade assessment | `lane_07_docs_handoff` |
 | `docs/DOCUMENT_REGISTRY.md` | canonical | complete repo-local document registry | no | canonical ownership lookup, registry repair, document-map split work | `lane_07_docs_handoff` |
 | `docs/control/DOCUMENT_MAP_POLICY.md` | canonical | document-map router/registry split, size limits, and maintenance rules | no | document-map structure changes, registry split work, target-template navigation changes | `lane_07_docs_handoff` |
-| `docs/EVOLUTION_MODEL.md` | historical_evidence | superseded pre-2.0 evolution and maturity framing; not current ASGK 2.0 authority | no | auditing or removing superseded evolution material | `lane_07_docs_handoff` |
+| `docs/EVOLUTION_MODEL.md` | canonical | document-driven ASGK self-evolution loop, evidence boundaries, independent handoff proof, and recovery rules | no | evolution-model changes, self-evolution review, or handoff-proof review | `lane_07_docs_handoff` |
 
 ## Target Assessment And Optional References
 
