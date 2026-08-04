@@ -181,11 +181,11 @@ cannot disappear.
 
 The retained JSON surface is policy-gate, PR status, work unit, task packet,
 handoff, compact handoff, compact issue scope, compact scope lock, compact PR
-report, compact PR body, context budget, workspace state, and source validation.
-Legacy
-`target-install-*`, `compact-target-upgrade-check`, and the parallel compact
-red-team runner are not W3C envelope authority; their replacement or removal is
-separately scoped under ASGK 2.0.
+report, compact PR body, context budget, workspace state, source validation,
+and caller-supplied target evidence. Legacy `target-install-*`,
+`compact-target-upgrade-check`, and the parallel compact red-team runner are
+not common-envelope authority; their removal is separately scoped under ASGK
+2.0.
 
 ## Validation Layers
 
@@ -234,6 +234,45 @@ Live `--repo-root` mode names both `inspected_source_root` and the
 execute Python commands from the inspected root, including its scenario
 registry and runner. Use this mode only for a trusted ASGK source tree; it is not
 an arbitrary-target or untrusted-code inspection interface.
+
+### Caller-Supplied Target Evidence
+
+```yaml
+owner: scripts/asgk_lib/target_evidence.py
+public_entrypoint: python3 scripts/asgk.py target-evidence-check
+inputs:
+  - one explicit target root
+  - at least one caller-supplied expect/forbid path or literal-text claim
+proves:
+  - accepted claim paths are exact normalized target-relative paths contained by the resolved root
+  - accepted path claims match observed presence or absence
+  - accepted text claims match case-sensitive literal containment in in-root UTF-8 regular files
+  - the invocation performed no target write
+does_not_prove:
+  - unnamed target state or caller-claim completeness or sufficiency
+  - semantic correctness, security, privacy, or license sufficiency
+  - target fit, architecture or layout, governance depth, or minimum adaptation
+  - adoption or upgrade readiness, completeness, or recommendation
+  - human approval, implementation authority, PR readiness, or merge authority
+blocking_rule: unsafe, unavailable, unreadable, undecodable, or otherwise unevaluable evidence is incomplete and exits nonzero
+```
+
+The command contains no required target filename or directory. Domain state is
+`claims_match`, `claims_mismatch`, or `incomplete`, mapped to common `pass`,
+`fail`, or `blocked`. Only `claims_match` exits `0`. Literal values and target
+contents are not emitted; text records expose only literal length and digest.
+Claim traversal starts from an opened target-root directory descriptor and
+opens each component without following an unchecked pathname. This prevents a
+checked parent from being replaced with an outside-root symbolic-link lane; it
+does not make multiple observations an atomic snapshot or prove that the
+target was not concurrently changed.
+The frontier evaluator remains responsible for selecting material claims and
+for every fit, depth, adaptation, and recommendation judgment.
+
+The still-present `target-install-check`, `target-install-plan`, and
+`compact-target-upgrade-check` commands are legacy fixed-shape diagnostics.
+They are not target-fit, adoption, architecture, governance-depth, approval, or
+retained target-evidence proof. Their clean removal is separately scoped.
 
 ### PR Body And Merge Evidence
 
@@ -352,7 +391,7 @@ does_not_prove:
 blocking_rule: ambiguous task fields, path, authority, strict Merge Decision, live PR state, latest-check failure or pending, and ambiguous check ordering block; workspace observations warn unless strict mode or policy says otherwise
 ```
 
-### Task, Context, And Legacy Target Diagnostics
+### Task And Context
 
 ```yaml
 owners:
@@ -384,10 +423,6 @@ blocking_rule: task-field ambiguity, unsupported packet modes, legacy fields, sc
 
 Material `not_applicable` reasons are Unicode-aware; punctuation and connector
 words alone fail, while concrete non-English reasons remain valid.
-
-The still-present target-install commands are legacy fixed-shape diagnostics.
-They are not target fit, adoption, architecture, governance-depth, approval, or
-W3C retained-JSON evidence. W4 owns their clean replacement and removal.
 
 Ambiguity maps to stable findings:
 
@@ -468,6 +503,7 @@ proves:
   - registered commands match exact exit, result, finding-code multiset, human-gate state, and proof boundary
   - branch-specific scenarios may additionally lock exact mechanically_checked and not_checked lists
   - positive and negative retained scenarios remain paired
+  - target-evidence scenarios lock arbitrary-layout success, four distinct mismatch codes, and no-claim incompleteness
   - canonical and compact task-packet commands remain byte-for-byte equivalent
   - the canonical source command and bootstrap compatibility wrapper remain byte-for-byte equivalent for positive and negative inventory scenarios
   - controlled missing, malformed, unavailable, and missing-executable inputs emit exactly one JSON object

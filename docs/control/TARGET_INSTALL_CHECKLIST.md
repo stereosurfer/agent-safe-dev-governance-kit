@@ -89,9 +89,15 @@ For every material recommendation:
 - avoid claiming security, semantic correctness, privacy, API freshness, or
   completion unless separately evidenced.
 
-A current `target-install-check`, `target-install-plan`, compact-upgrade check,
-or source `doctor` result is supporting evidence only at its documented
-boundary.
+Use `target-evidence-check` only for explicit path or literal-text claims
+derived from the assessment. Its exit `0` means those accepted claims matched;
+it does not establish that the claim set is sufficient or decide fit, depth,
+adaptation, recommendation, approval, or completion.
+
+The legacy `target-install-check`, `target-install-plan`, compact-upgrade check,
+and source `doctor` remain supporting evidence only at their narrower
+documented boundaries. Never weaken a target-specific recommendation merely to
+make a fixed-shape legacy command pass.
 
 ## 7. License And External Boundaries
 

@@ -30,6 +30,12 @@ source_inventory_fixtures:
   positive: examples/source_validation/reference-superset.valid.json
   negative: examples/negative/source_validation/missing-required-path.json
   proof_limit: listed paths are not opened, read, or semantically evaluated in supplied-inventory mode
+target_evidence_fixtures:
+  purpose: exact caller-supplied path and literal-text claim scenarios
+  authority: target-evidence test input only; not a target layout or starter bundle
+  positive: examples/target_evidence/arbitrary_layout/notes/project.marker
+  mismatch: examples/negative/target_evidence/mismatched_claims/notes/project.marker
+  proof_limit: only named claims are checked; fixture success does not establish fit, depth, readiness, recommendation, or approval
 negative_expected_failures:
   purpose: inputs expected to trigger current opt-in mechanical checks
   authority: regression fixture only
@@ -59,6 +65,9 @@ compact_red_team_fixtures:
 - A passing source-inventory fixture proves only that the caller-supplied list
   contains the retained ASGK source paths. It does not prove those files exist,
   inspect their contents, prescribe a target layout, or decide adoption.
+- The target-evidence positive fixture intentionally contains no ASGK-named
+  target file. Its passing scenario proves only that four explicit caller
+  claims matched the named marker and absent path during a read-only run.
 - Target repositories must not copy this directory as an adoption bundle.
 - Negative fixtures must not be used as positive examples. Interpret each only
   at the registry's or bounded legacy check's proof boundary.

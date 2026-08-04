@@ -4,7 +4,7 @@ This is the repository recovery snapshot. It is overwritten, not appended.
 Historical evidence and completed-work detail belong in GitHub issues, PRs,
 comments, releases, and merge commits.
 
-Last updated: `2026-07-31T22:35:53Z`
+Last updated: `2026-08-04T08:13:03Z`
 
 ## Durable source of truth
 
@@ -40,17 +40,22 @@ fixed-storage/promotion, legacy-target, and directory-only checker
 prerequisites. Supplied source inventories prove path membership only; they do
 not inspect contents or describe a target installation shape.
 
+`target-evidence-check` checks only explicit caller-supplied expect/forbid path
+and literal-text claims against an arbitrary target layout. Its three domain
+states map to the common evidence envelope. Exit `0` proves only that accepted
+named claims matched, never target fit, governance depth, recommendation,
+approval, or readiness.
+
 CURRENT_STATUS is only a recovery snapshot. It does not own completed-work or
 decision history.
 
-Adoption and material-upgrade assessment remains read-only, target-specific,
-and guided by a human-selected frontier-capability model. Deterministic tools
-may collect evidence or check caller-supplied claims; they do not choose an
-Agent, prescribe target architecture, or decide governance depth.
+Adoption and material-upgrade assessment remains read-only and target-specific,
+guided by a human-selected frontier-capability model. Tools may check claims;
+they do not choose an Agent, prescribe architecture, or decide governance depth.
 
 Legacy target-install commands still retain fixed-shape assumptions. Their
-planned clean cutover belongs to later bounded work under #323 and must not be
-treated as target-fit or approval authority.
+clean cutover belongs to the separately scoped W4C work unit under #323 and
+must not be treated as target-fit or approval authority.
 
 ## Active work
 
@@ -92,10 +97,11 @@ model cache, or external preparation outputs are authorized by this status.
 
 ## Next safe action
 
-Create the separately scoped W4B child issue from current `main` after W4A
-close-out. W4B owns the new caller-supplied target mechanical-claim interface;
-do not preempt W4C legacy-tool removal, infer target governance depth, or resume
-superseded plans.
+From current `main`, create the separately scoped W4C child issue after the
+preceding work-unit closeout. W4C owns clean removal of the three fixed-shape
+legacy target commands and their misleading active references; do not infer
+target governance depth, restore compatibility aliases, or resume superseded
+plans.
 
 ```yaml
 reference_scope:

@@ -89,11 +89,17 @@ every source surface to appear in the target.
 
 ### 4. Use Deterministic Tools Only As Bounded Evidence
 
-Run a target-local or ASGK command only when it answers a material question.
-Apply `docs/control/TARGET_INSTALL_VALIDATION_PLAN.md`, state what was and was
-not proved, and treat any conflict with target evidence as a proof-limit
-finding. Do not weaken target-owned behavior to satisfy a legacy command or
-expand the assessment into a tool change without separate authorization.
+Use `target-evidence-check` only for explicit path or literal-text claims
+derived from the source-delta comparison and target evidence. The evaluator
+supplies every claim; the command does not select relevant source changes,
+decide claim sufficiency, or form an upgrade recommendation. Apply
+`docs/control/TARGET_INSTALL_VALIDATION_PLAN.md` and record both what matched and
+what remained unchecked.
+
+The three older target-install commands retain fixed-shape assumptions. Run one
+only when its narrower legacy observation is materially useful, label that
+proof limit, and never weaken target-owned behavior to make it pass. A tooling
+change requires separate durable authorization.
 
 ### 5. Exercise Frontier Judgment
 

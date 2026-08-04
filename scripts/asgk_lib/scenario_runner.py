@@ -2,12 +2,14 @@ from __future__ import annotations
 
 import contextlib
 from collections import Counter
+import hashlib
 import io
 import json
 import os
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 import shlex
 import shutil
+import stat
 import subprocess
 import sys
 import tempfile
@@ -48,6 +50,128 @@ TRACEBACK_MARKERS = (
     "ModuleNotFoundError:",
     "ImportError:",
 )
+
+
+class _DuplicateJsonKeyError(ValueError):
+    pass
+
+
+def _json_object_without_duplicate_keys(
+    pairs: list[tuple[str, object]],
+) -> dict[str, object]:
+    result: dict[str, object] = {}
+    for key, value in pairs:
+        if key in result:
+            raise _DuplicateJsonKeyError(key)
+        result[key] = value
+    return result
+
+
+def _scenario_tree_fingerprint(relative_path: str) -> str:
+    pure_path = PurePosixPath(relative_path)
+    if (
+        not relative_path
+        or pure_path.is_absolute()
+        or any(part in {"", ".", ".."} for part in relative_path.split("/"))
+        or pure_path.as_posix() != relative_path
+    ):
+        raise ValueError(
+            f"scenario unchanged path is not normalized repo-relative: {relative_path}"
+        )
+
+    target = ROOT.joinpath(*pure_path.parts)
+    digest = hashlib.sha256()
+
+    def update(value: str | bytes) -> None:
+        data = value if isinstance(value, bytes) else value.encode("utf-8")
+        digest.update(len(data).to_bytes(8, "big"))
+        digest.update(data)
+
+    def visit(path: Path, relative: PurePosixPath) -> None:
+        try:
+            path_stat = path.lstat()
+        except FileNotFoundError:
+            update("missing")
+            update(relative.as_posix())
+            return
+
+        update(relative.as_posix())
+        update(str(path_stat.st_mode))
+        update(str(path_stat.st_uid))
+        update(str(path_stat.st_gid))
+        update(str(path_stat.st_size))
+        update(str(path_stat.st_mtime_ns))
+        update(str(path_stat.st_ctime_ns))
+
+        if stat.S_ISLNK(path_stat.st_mode):
+            update("symlink")
+            update(os.readlink(path))
+            return
+        if stat.S_ISREG(path_stat.st_mode):
+            update("file")
+            with path.open("rb") as stream:
+                while True:
+                    chunk = stream.read(64 * 1024)
+                    if not chunk:
+                        break
+                    update(chunk)
+            return
+        if stat.S_ISDIR(path_stat.st_mode):
+            update("directory")
+            children = sorted(path.iterdir(), key=lambda child: child.name)
+            for child in children:
+                visit(child, relative / child.name)
+            return
+        update("special")
+
+    visit(target, pure_path)
+    return digest.hexdigest()
+
+
+def _scenario_unchanged_path_errors(
+    scenario: JsonScenario,
+    before: dict[str, str],
+    after: dict[str, str],
+) -> list[str]:
+    return [
+        f"scenario path changed during read-only command: {relative_path}"
+        for relative_path in scenario.unchanged_paths
+        if before.get(relative_path) != after.get(relative_path)
+    ]
+
+
+def _json_values_exact(actual: object, expected: object) -> bool:
+    if type(actual) is not type(expected):
+        return False
+    if isinstance(expected, dict):
+        if not isinstance(actual, dict) or set(actual) != set(expected):
+            return False
+        return all(
+            _json_values_exact(actual[key], expected_value)
+            for key, expected_value in expected.items()
+        )
+    if isinstance(expected, list):
+        if not isinstance(actual, list) or len(actual) != len(expected):
+            return False
+        return all(
+            _json_values_exact(actual_item, expected_item)
+            for actual_item, expected_item in zip(actual, expected)
+        )
+    return actual == expected
+
+
+def _json_string_contains(value: object, fragment: str) -> bool:
+    if isinstance(value, str):
+        return fragment in value
+    if isinstance(value, list):
+        return any(_json_string_contains(item, fragment) for item in value)
+    if isinstance(value, dict):
+        return any(
+            fragment in str(key)
+            or _json_string_contains(item, fragment)
+            for key, item in value.items()
+        )
+    return False
 
 
 def prepare_temp_input(
@@ -213,10 +337,21 @@ def scenario_output_errors(
     combined = stdout + "\n" + stderr
     if any(marker in combined for marker in TRACEBACK_MARKERS):
         errors.append("traceback or import/syntax crash marker was emitted")
+    raw_forbidden_output_detected = any(
+        fragment in combined
+        for fragment in scenario.forbidden_output_fragments
+    )
+    if raw_forbidden_output_detected:
+        errors.append("a registered forbidden output fragment was emitted")
 
     payload: dict[str, object] | None = None
     try:
-        decoded = json.loads(stdout)
+        decoded = json.loads(
+            stdout,
+            object_pairs_hook=_json_object_without_duplicate_keys,
+        )
+    except _DuplicateJsonKeyError:
+        errors.append("stdout JSON contains a duplicate object key")
     except json.JSONDecodeError as exc:
         errors.append(f"stdout is not exactly one JSON value: {exc}")
     else:
@@ -227,6 +362,18 @@ def scenario_output_errors(
 
     if payload is None:
         return errors, None
+
+    if (
+        not raw_forbidden_output_detected
+        and any(
+            _json_string_contains(payload, fragment)
+            for fragment in scenario.forbidden_output_fragments
+        )
+    ):
+        errors.append(
+            "a registered forbidden output fragment was emitted through "
+            "JSON string escaping"
+        )
 
     envelope_errors = validation_result_errors(payload)
     errors.extend(
@@ -291,6 +438,21 @@ def scenario_output_errors(
             f"derived_state {payload.get('derived_state')!r} != expected "
             f"{scenario.expected_domain_result!r}"
         )
+    for field, expected_value in scenario.expected_payload_fields:
+        if (
+            field not in payload
+            or not _json_values_exact(payload.get(field), expected_value)
+        ):
+            errors.append(
+                f"payload field {field!r} does not match the registered exact value"
+            )
+    if (
+        scenario.expected_top_level_keys is not None
+        and set(payload) != set(scenario.expected_top_level_keys)
+    ):
+        errors.append(
+            "top-level payload keys do not match the registered exact set"
+        )
     return errors, payload
 
 
@@ -309,6 +471,10 @@ def execute_json_scenario(
                 raise ValueError(
                     f"scenario {scenario.name} uses temp placeholder without input"
                 )
+            before = {
+                relative_path: _scenario_tree_fingerprint(relative_path)
+                for relative_path in scenario.unchanged_paths
+            }
             result = subprocess.run(
                 command,
                 cwd=ROOT,
@@ -316,6 +482,15 @@ def execute_json_scenario(
                 stderr=subprocess.PIPE,
                 text=True,
                 env=scenario_environment(scenario, temp_root),
+            )
+            after = {
+                relative_path: _scenario_tree_fingerprint(relative_path)
+                for relative_path in scenario.unchanged_paths
+            }
+            unchanged_path_errors = _scenario_unchanged_path_errors(
+                scenario,
+                before,
+                after,
             )
     except (OSError, UnicodeError, ValueError, json.JSONDecodeError) as exc:
         return [f"scenario preparation failed: {exc}"], None
@@ -325,6 +500,7 @@ def execute_json_scenario(
         stdout=result.stdout,
         stderr=result.stderr,
     )
+    errors.extend(unchanged_path_errors)
     return errors, result
 
 
@@ -436,6 +612,57 @@ def run_scenario_runner_self_tests() -> int:
         expected_mechanically_checked=("runner",),
         expected_not_checked=("domain truth",),
     )
+    guarded_claims = [
+        {
+            "index": 1,
+            "kind": "expect_text",
+            "path": "notes/example",
+            "literal_length": 14,
+            "literal_sha256": "digest",
+            "status": "matched",
+        }
+    ]
+    payload_scenario = JsonScenario(
+        "runner_payload_self_test",
+        "scenario-runner",
+        ("unused",),
+        "positive",
+        "pass",
+        0,
+        (),
+        "self-test boundary",
+        expected_mechanically_checked=("runner",),
+        expected_not_checked=("domain truth",),
+        expected_payload_fields=(
+            ("writes_performed", False),
+            ("claim_count", 1),
+            ("claims", guarded_claims),
+        ),
+        expected_top_level_keys=(
+            "claim_count",
+            "claims",
+            "evidence_source",
+            "findings",
+            "human_gate",
+            "mechanically_checked",
+            "not_checked",
+            "proof_boundary",
+            "result",
+            "writes_performed",
+        ),
+        forbidden_output_fragments=("secret-literal",),
+    )
+    immutability_scenario = JsonScenario(
+        "runner_immutability_self_test",
+        "scenario-runner",
+        ("unused",),
+        "positive",
+        "pass",
+        0,
+        (),
+        "self-test boundary",
+        unchanged_paths=("fixture",),
+    )
     valid_pass_payload = {
         "result": "pass",
         "evidence_source": "self_test",
@@ -470,7 +697,14 @@ def run_scenario_runner_self_tests() -> int:
         },
         "findings": [failure_finding],
     }
+    valid_payload_guard = {
+        **valid_pass_payload,
+        "writes_performed": False,
+        "claim_count": 1,
+        "claims": guarded_claims,
+    }
     valid_json = json.dumps(valid_pass_payload)
+    valid_payload_json = json.dumps(valid_payload_guard)
     mutations = {
         "wrong_exit": (pass_scenario, 1, valid_json, ""),
         "signal": (pass_scenario, -9, valid_json, ""),
@@ -564,8 +798,139 @@ def run_scenario_runner_self_tests() -> int:
             }),
             "",
         ),
+        "wrong_payload_field": (
+            payload_scenario,
+            0,
+            json.dumps({
+                **valid_payload_guard,
+                "writes_performed": True,
+            }),
+            "",
+        ),
+        "boolean_payload_field_as_integer": (
+            payload_scenario,
+            0,
+            json.dumps({
+                **valid_payload_guard,
+                "writes_performed": 0,
+            }),
+            "",
+        ),
+        "integer_payload_field_as_float": (
+            payload_scenario,
+            0,
+            json.dumps({
+                **valid_payload_guard,
+                "claim_count": 1.0,
+            }),
+            "",
+        ),
+        "claim_index_as_boolean": (
+            payload_scenario,
+            0,
+            json.dumps({
+                **valid_payload_guard,
+                "claims": [
+                    {
+                        **guarded_claims[0],
+                        "index": True,
+                    }
+                ],
+            }),
+            "",
+        ),
+        "literal_length_as_float": (
+            payload_scenario,
+            0,
+            json.dumps({
+                **valid_payload_guard,
+                "claims": [
+                    {
+                        **guarded_claims[0],
+                        "literal_length": 14.0,
+                    }
+                ],
+            }),
+            "",
+        ),
+        "wrong_exact_claim_records": (
+            payload_scenario,
+            0,
+            json.dumps({
+                **valid_payload_guard,
+                "claims": [
+                    {
+                        **guarded_claims[0],
+                        "literal": "secret-literal",
+                    }
+                ],
+            }),
+            "",
+        ),
+        "unexpected_top_level_payload_key": (
+            payload_scenario,
+            0,
+            json.dumps({
+                **valid_payload_guard,
+                "target_content": "redacted",
+            }),
+            "",
+        ),
+        "forbidden_output_fragment": (
+            payload_scenario,
+            0,
+            json.dumps({
+                **valid_payload_guard,
+                "human_gate": {
+                    "status": "not_checked",
+                    "reason": "secret-literal",
+                },
+            }),
+            "",
+        ),
+        "escaped_forbidden_output_fragment": (
+            payload_scenario,
+            0,
+            json.dumps({
+                **valid_payload_guard,
+                "human_gate": {
+                    "status": "not_checked",
+                    "reason": "secret-literal",
+                },
+            }).replace("secret-literal", "secret\\u002dliteral"),
+            "",
+        ),
+        "duplicate_top_level_json_key": (
+            payload_scenario,
+            0,
+            valid_payload_json.replace(
+                "{",
+                '{"writes_performed": true, ',
+                1,
+            ),
+            "",
+        ),
+        "duplicate_nested_json_key": (
+            payload_scenario,
+            0,
+            valid_payload_json.replace(
+                '"human_gate": {',
+                '"human_gate": {"status": "required", ',
+                1,
+            ),
+            "",
+        ),
     }
-    failures = [
+    failures: list[str] = []
+    baseline_errors, _payload = scenario_output_errors(
+        payload_scenario,
+        returncode=0,
+        stdout=json.dumps(valid_payload_guard),
+        stderr="",
+    )
+    if baseline_errors:
+        failures.append("valid_payload_baseline")
+    failures.extend(
         name
         for name, (scenario, returncode, stdout, stderr) in mutations.items()
         if not scenario_output_errors(
@@ -574,14 +939,30 @@ def run_scenario_runner_self_tests() -> int:
             stdout=stdout,
             stderr=stderr,
         )[0]
-    ]
+    )
+    if not _scenario_unchanged_path_errors(
+        immutability_scenario,
+        {"fixture": "before"},
+        {"fixture": "after"},
+    ):
+        failures.append("changed_path_fingerprint")
+    if _scenario_unchanged_path_errors(
+        immutability_scenario,
+        {"fixture": "same"},
+        {"fixture": "same"},
+    ):
+        failures.append("unchanged_path_fingerprint")
     if failures:
         print(
             "FAIL: scenario runner accepted mutation(s): "
             + ", ".join(failures)
         )
         return 1
-    print(f"Scenario runner self-tests passed: {len(mutations)} mutation(s) rejected.")
+    print(
+        "Scenario runner self-tests passed: "
+        f"{len(mutations) + 1} mutation(s) rejected; "
+        "payload and immutability baselines passed."
+    )
     return 0
 
 

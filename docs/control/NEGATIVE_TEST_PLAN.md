@@ -200,6 +200,13 @@ validation evidence.
 | `NEG-107-source-inventory-invalid-shape` | supplied inventory is not the exact normalized unique path-array object | blocked | source_validation.py | registered temporary input | Must emit only `SV_INVENTORY_SHAPE_INVALID`. |
 | `NEG-108-source-inventory-duplicate-key` | supplied inventory repeats a JSON object key and a later value would otherwise replace the earlier value | blocked | source_validation.py | registered transformed temporary input | Must emit only `SV_INVENTORY_SHAPE_INVALID`; JSON last-key-wins behavior cannot create evidence. |
 | `NEG-109-source-inventory-json-too-deep` | supplied inventory exceeds the explicit pre-parse JSON nesting bound | blocked | source_validation.py | registered generated temporary input | Must emit one envelope with only `SV_INVENTORY_JSON_INVALID`, never depend on interpreter recursion behavior or produce a traceback. |
+| `NEG-110-target-evidence-no-claims` | target evidence command receives no caller claim | blocked | target_evidence.py | registered `target_evidence_no_claims_incomplete` scenario | Must emit `TE_CLAIMS_MISSING`, domain `incomplete`, common `blocked`, and exit `1`; no target layout is inferred. |
+| `NEG-111-target-evidence-four-mismatches` | complete caller claims disagree on expected path, forbidden path, expected text, and forbidden text | blocked | target_evidence.py | `examples/negative/target_evidence/mismatched_claims/notes/project.marker` | Must emit the exact four mismatch-code multiset and domain `claims_mismatch`; mismatch is not a target-fit conclusion. |
+| `NEG-112-target-evidence-unsafe-path` | claim path is absolute, drive-prefixed, non-normalized, globbed, traversal-based, control-bearing, non-Unicode-scalar, resolves outside the root, or has a checked parent concurrently replaced by an outside-root symlink | blocked | target_evidence.py | direct bounded command and race probes | Unsafe syntax or symlink resolution must emit `TE_CLAIM_PATH_INVALID`; a replacement race may instead be incomplete or observe an in-root state, but must never read outside-root content. |
+| `NEG-113-target-evidence-root-unavailable` | target root is missing, unreadable, or not a directory | blocked | target_evidence.py | direct bounded command probe | Must emit `TE_TARGET_ROOT_UNAVAILABLE`, domain `incomplete`, and no traceback. |
+| `NEG-114-target-evidence-empty-literal` | text claim supplies an empty literal | blocked | target_evidence.py | direct bounded command probe | Must emit `TE_LITERAL_EMPTY`; an empty substring cannot manufacture a match. |
+| `NEG-115-target-evidence-non-text` | text claim names a non-file, unreadable file, or invalid UTF-8 evidence | blocked | target_evidence.py | direct bounded command probes | Must emit the corresponding stable incomplete code and never expose target contents or the caller literal. |
+| `NEG-116-target-evidence-invalid-literal` | text claim contains a non-Unicode-scalar value | blocked | target_evidence.py | direct bounded evaluator probe | Must emit `TE_LITERAL_INVALID`, domain `incomplete`, and no traceback. |
 
 ## Current Execution Surface
 
@@ -246,6 +253,17 @@ inventory with one inventory missing only `README.md`. Supplied-inventory
 success checks list membership only: it does not read named files or establish
 target fit, target layout, adoption readiness, human approval, or merge
 authority.
+
+The `target-evidence` group pairs an arbitrary-layout success containing no
+ASGK-named target file with a four-claim mismatch and a no-claim incomplete
+case. It locks exact domain/common results, exits, finding-code multisets,
+checked and unchecked claims, human-gate state, and proof boundary. These
+scenarios also lock the exact bounded claim records and literal metadata,
+`writes_performed: false`, the allowed top-level payload keys, forbidden raw
+literal or fixture-content output (including JSON-escaped forms), and unchanged
+target-fixture tree fingerprints. They validate only caller-supplied
+mechanical claims; they do not select claims or judge target fit, layout,
+governance depth, adaptation, readiness, recommendation, or approval.
 
 Positive lifecycle coverage must separately prove:
 

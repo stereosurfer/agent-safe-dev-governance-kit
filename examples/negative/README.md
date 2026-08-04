@@ -58,6 +58,9 @@ fixture_classes:
   source_validation:
     purpose: supplied source-inventory shape and required retained-path inclusion failures
     proof_limit: never target fit, target layout, adoption readiness, human approval, or merge authority
+  target_evidence:
+    purpose: exact caller-claim mismatches and incomplete claim-input behavior
+    proof_limit: mismatch means only that named mechanical claims disagreed; it is not a target defect, fit, depth, readiness, or approval judgment
   compact_governance:
     purpose: retained compact report, scope-lock, task-packet, and handoff cases plus inactive legacy target-upgrade/red-team inputs
   target_install:
