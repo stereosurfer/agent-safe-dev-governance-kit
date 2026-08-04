@@ -208,13 +208,20 @@ and hygiene checks. Neither mode infers approval or low-risk status.
 Use the issue as the boundary. If the issue says docs-only, do not change
 scripts, schemas, workflows, dependencies, or protected paths.
 
-Protected or human-gated areas include `.github/**`, `docs/control/**`,
-`schemas/**`, `contracts/**`, dependencies, credentials, release/tag/package
-operations, runtime artifacts, and private source material.
+Protected areas include `.github/**`, `docs/control/**`, `schemas/**`, and
+`contracts/**`. Human-gated areas include dependencies, credentials,
+release/tag/package operations, runtime-artifact or security/storage boundaries,
+private source material, external target writes, and destructive history or
+repository-setting changes.
 
 When a protected path is required, record the trigger in the PR and keep the
 merge human-gated unless canonical policy and the current issue explicitly allow
-otherwise.
+the program-scoped reversible path. That path requires an OWNER-approved exact
+scope source, a child issue no broader than that source, tracked source only, no external side
+effect beyond routine issue/PR metadata, ordinary-revert recovery, current-head
+no-gate/scope review, independent review, CI, and strict `check-pr`. It cannot
+cover a Human-Gated Operations item or a PR that changes the path itself,
+including by creating, removing, loosening, tightening, or reclassifying it.
 
 ### 5. Validate
 
@@ -262,8 +269,10 @@ match allowed paths, required local validation and CI passed, the PR is
 mergeable and not draft, unresolved requested changes are absent, runtime/private
 source boundaries are clean, and no human-gated operation is being bypassed.
 
-If any high-risk or protected trigger applies, merge only after explicit durable
-human approval.
+If any Human-Gated Operations item applies, merge only after explicit durable
+current-head human approval. A protected source path may avoid a repeated
+permission prompt only through the complete canonical program-scoped reversible
+path; a program grant alone is insufficient and is never current-head review.
 
 ## Close Out
 

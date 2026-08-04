@@ -111,6 +111,15 @@ Use this generic profile by default for all repository work.
 13. Merge only when the issue, policy, validation, CI, and merge boundary permit it.
 14. Comment on and close the issue after merge when closeout is authorized.
 
+For an OWNER-approved multi-PR program, do not repeatedly request permission
+for each already-named, exact-scope, repo-local, ordinary-revert-safe source
+work unit. Use the canonical program execution authorization only when the
+OWNER-approved exact path/action source predates the child issue, the current
+issue is no broader than that source and explicitly invokes it, current-head independent
+review and all checks pass, no external side effect beyond routine issue/PR
+metadata exists, and no Human-Gated Operations item applies. This is execution
+authority, not a claim that the OWNER reviewed the current head.
+
 ## Generic Purity Rule
 
 The Generic Operating Profile contains only repository-wide safety workflow.
@@ -145,7 +154,9 @@ Escalation means:
 
 1. Require explicit GitHub issue or PR authorization.
 2. Record the trigger in the PR.
-3. Do not auto-merge.
+3. Do not auto-merge unless canonical policy and the current issue explicitly
+   authorize the program-scoped reversible path and no Human-Gated Operations
+   item applies.
 4. Run stricter validation when available.
 5. Stop if authorization is missing or the boundary is unclear.
 
@@ -236,6 +247,15 @@ PR bodies do not need to duplicate a valid linked issue.
 Low-risk autonomous merge is allowed only when `docs/control/LOW_RISK_AUTONOMOUS_MERGE_POLICY.md` and `docs/bootstrap/11_auto_merge_policy.md` both pass. High-risk operations remain human-gated under `docs/control/HUMAN_GATED_OPERATIONS.md`.
 
 Escalated work is not auto-merge eligible unless a canonical policy and the current GitHub issue explicitly allow it.
+
+Program execution authorization may remove repeated permission prompts for an
+already-bounded reversible program unit. It never satisfies a current-head
+human gate. Use `docs/control/HUMAN_GATED_OPERATIONS.md` and
+`docs/control/LOW_RISK_AUTONOMOUS_MERGE_POLICY.md`.
+
+A PR changing those program-authorization, human-gate, merge-authority, or
+enforcement/non-inference rules cannot use the path it changes and remains
+current-head human-gated under the stricter baseline or proposed policy.
 
 ## Required checks
 

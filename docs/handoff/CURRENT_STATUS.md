@@ -4,7 +4,7 @@ This is the repository recovery snapshot. It is overwritten, not appended.
 Historical evidence and completed-work detail belong in GitHub issues, PRs,
 comments, releases, and merge commits.
 
-Last updated: `2026-08-04T09:03:17Z`
+Last updated: `2026-08-04T10:12:00Z`
 
 ## Durable source of truth
 
@@ -49,13 +49,12 @@ approval, or readiness.
 CURRENT_STATUS is only a recovery snapshot. It does not own completed-work or
 decision history.
 
-Adoption and material-upgrade assessment remains read-only and target-specific,
-guided by a human-selected frontier-capability model. Tools may check claims;
-they do not choose an Agent, prescribe architecture, or decide governance depth.
+Adoption and material-upgrade assessment is read-only, target-specific, and
+frontier-guided; tools do not choose Agents, architecture, or governance depth.
 
-The fixed-shape target tools and dedicated fixtures are removed.
-`target-evidence-check` is the sole target mechanical interface and checks
-explicit claims; frontier judgment owns fit, depth, minimum change, or no change.
+Fixed-shape target tools are removed; `target-evidence-check` checks explicit claims while frontier judgment owns fit.
+
+OWNER-approved programs may use bounded reversible execution without repeat prompts, never instead of an applicable current-head human gate.
 
 ## Active work
 
@@ -86,7 +85,8 @@ Additional focused checks:
 - prior chat, superseded roadmap, or historical plan as current task authority
 - automatic model selection, routing, switching, or price-tier dispatch
 - fixed target file shape, module picker, or adoption declaration as fit proof
-- validator success as semantic truth, human approval, or merge authority
+- validator success as semantic truth, or program authorization as current-head
+  human review or merge authority
 - cloud egress, API/model calls, MCP writes, dependencies, schema changes,
   publication, or visibility changes without their existing gates
 

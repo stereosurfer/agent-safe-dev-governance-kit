@@ -13,7 +13,11 @@ auto_merge_allowed_when:
   - objective, plan, checklist, and acceptance sheet are outside chat
   - changed files are inside allowed paths
   - expected output is declared and matches the issue
-  - protected paths are untouched
+  - protected paths are untouched, or canonical policy plus the current issue explicitly authorize a program-scoped reversible path
+  - no Human-Gated Operations item applies
+  - program execution authorization is complete when the reversible path is used
+  - any program scope source predates the child issue and names the exact path/action set
+  - program scope, no-gate review, independent review, CI, and check-pr are current-head evidence
   - storage-boundary evidence is present
   - tests pass
   - scaffold validation passes
@@ -34,7 +38,11 @@ auto_merge_allowed_when:
 
 ```yaml
 auto_merge_forbidden_when:
-  - protected path changed
+  - protected path changed without canonical and current-issue authorization for a program-scoped reversible path
+  - program authorization is used to bypass a Human-Gated Operations item
+  - program scope source, current child issue, tracked-source-only boundary, no-external-side-effect evidence, ordinary-revert recovery, or independent review is missing or contradicted
+  - PR changes the program path, Human-Gated Operations, merge authority, or gate enforcement/non-inference semantics, including by creating, removing, loosening, tightening, or reclassifying them, and attempts to use the path it changes
+  - current-head program-path evidence is stale after a commit
   - security boundary changed
   - storage boundary changed
   - schema breaking change

@@ -278,6 +278,25 @@ confirm the durable no-gate risk/path determination. New code commits
 invalidate review of an older head unless the human reaffirms it. Do not reuse
 review from a prior or closed-unmerged PR.
 
+When a program-scoped reversible merge path is claimed, also confirm:
+
+- [ ] The program issue contains durable OWNER execution authorization.
+- [ ] An OWNER-approved exact scope source predates the child issue.
+- [ ] The current child issue explicitly invokes it and is equal to or narrower
+      than the exact work-unit path/action set.
+- [ ] The PR carries the canonical `program_execution_authorization` record.
+- [ ] The work changes tracked source only, has no external side effect beyond
+      routine issue/PR metadata, is completely ordinary-revert-safe, and is
+      independently reviewed.
+- [ ] Current-head evidence confirms semantic scope match and that no
+      Human-Gated Operations item applies.
+- [ ] Scope/no-gate review, independent review, CI, and `check-pr` were
+      refreshed after the latest commit.
+- [ ] The record does not claim the OWNER reviewed the current head or diff.
+- [ ] The PR is not changing the program path, human gates, merge authority, or
+      enforcement/non-inference semantics, including by creating, removing,
+      loosening, tightening, or reclassifying them.
+
 Even with a durable approval record, the Agent reports `requires_human` for a
 human-gated merge unless canonical policy and the current issue explicitly
 authorize that escalated merge path.
@@ -390,6 +409,10 @@ Use when:
 - [ ] The human-gate boundary is clear: either no gate applies, or a durable
       current-head `decision: approved` record exists and canonical policy plus
       the current issue explicitly authorize the escalated merge path.
+- [ ] Any program-scoped reversible path has a complete canonical record,
+      OWNER-approved exact scope source, current-issue scope no broader than it,
+      tracked-source/no-external-side-effect boundary, current-head scope/no-gate
+      evidence, independent review, and no human-gated operation.
 - [ ] Strict `merge-decision` and live `check-pr` pass.
 - [ ] Runtime artifact and storage boundaries are clean.
 
@@ -407,6 +430,8 @@ Use when:
 - [ ] A specific human-gated decision or issue/policy-required semantic
       acceptance remains unresolved, or explicit canonical-policy/current-issue
       authority for an escalated merge path is absent.
+- [ ] A program grant is being used as a substitute for current-head human
+      review of an operation that remains human-gated.
 - [ ] Currently applicable non-human checks may be clear, but the named human
       decision or merge authority remains.
 - [ ] Required current-head human evidence is missing, stale, or awaiting
