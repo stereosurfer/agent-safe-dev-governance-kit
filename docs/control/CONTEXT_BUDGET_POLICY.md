@@ -72,7 +72,6 @@ default_startup_context:
     - docs/DOCUMENT_REGISTRY.md
     - docs/INSTALL_SURFACE.md
     - profiles/*
-    - docs/adapters/*
 ```
 
 Additional files are added only because the current issue, PR, handoff packet,
