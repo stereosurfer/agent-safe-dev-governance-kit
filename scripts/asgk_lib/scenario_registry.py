@@ -2,6 +2,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from asgk_lib.release_state import (
+    RELEASE_STATE_COMPLETE_CHECKED,
+    RELEASE_STATE_NOT_CHECKED,
+    RELEASE_STATE_PROOF_BOUNDARY,
+)
+
 COMMANDS_PASS = "commands_pass"
 EXPECTED_FAILURE = "expected_failure"
 EXPECTED_SUCCESS = "expected_success"
@@ -217,17 +223,6 @@ TEXTUAL_EXPECTED_FAILURES = (
         "--changed-paths-file", "examples/negative/current_status_impact/changed_paths.current-status.txt",
         "--file", "examples/negative/current_status_impact/current_status.self-stale.md",
     ),
-    (
-        *ASGK, "release-state-check",
-        "--tag", "v1.2.0",
-        "--release-title", "ASGK v1.2.0",
-        "--readme", "examples/negative/release_state/README.stale-v1-2-candidate.md",
-    ),
-)
-
-RELEASE_STATE_COMMANDS = (
-    (*ASGK, "release-state-check", "--tag", "v1.2.0", "--release-title", "ASGK v1.2.0", "--readme", "examples/negative/release_state/README.stale-v1-2-candidate.md"),
-    (*ASGK, "release-state-check", "--tag", "v1.6.0", "--release-title", "ASGK v1.6.0", "--release-policy", "examples/negative/release_state/SOURCE_ONLY_RELEASE_POLICY.ledger.md"),
 )
 
 WORK_UNIT_COMMANDS = (
@@ -330,7 +325,6 @@ NEGATIVE_CASE_GROUPS = {
             "examples/negative/pr_status.duplicate-check-missing-provider.json",
         ),
     )),
-    "release-state": NegativeCaseGroup(EXPECTED_FAILURE, RELEASE_STATE_COMMANDS),
     "work-unit": NegativeCaseGroup(EXPECTED_FAILURE, WORK_UNIT_COMMANDS),
     "workspace-state": NegativeCaseGroup(EXPECTED_SUCCESS, _commands_with_suffix(
         (*ASGK, "workspace-state-check", "--json-file"),
@@ -468,6 +462,18 @@ HANDOFF_BOUNDARY = (
     "does not prove that statements are true, GitHub references are live, paths "
     "are authorized, validation commands ran, work is complete, or a human gate "
     "or merge decision is satisfied."
+)
+RELEASE_STATE_EXPECTED_TOP_LEVEL_KEYS = (
+    "documents",
+    "evidence_source",
+    "findings",
+    "human_gate",
+    "mechanically_checked",
+    "not_checked",
+    "proof_boundary",
+    "release_title",
+    "result",
+    "tag",
 )
 COMPACT_HANDOFF_BOUNDARY = (
     HANDOFF_BOUNDARY
@@ -927,6 +933,144 @@ RETAINED_JSON_SCENARIOS = (
         1,
         ("HP_VALIDATION_STATUS_INVALID",),
         HANDOFF_BOUNDARY,
+    ),
+    JsonScenario(
+        "release_state_current_documents_match",
+        "release-state",
+        (
+            *ASGK,
+            "release-state-check",
+            "--tag",
+            "v1.2.0",
+            "--release-title",
+            "ASGK v1.2.0",
+            "--readme",
+            "examples/release_state/README.valid-v1-2.md",
+            "--current-status",
+            "examples/compact_governance/current_status.compact.clean.md",
+            "--release-policy",
+            "docs/control/SOURCE_ONLY_RELEASE_POLICY.md",
+            "--json",
+        ),
+        "positive",
+        "pass",
+        0,
+        (),
+        RELEASE_STATE_PROOF_BOUNDARY,
+        expected_mechanically_checked=RELEASE_STATE_COMPLETE_CHECKED,
+        expected_not_checked=RELEASE_STATE_NOT_CHECKED,
+        expected_payload_fields=(
+            (
+                "evidence_source",
+                "local_release_state_documents_and_command_arguments",
+            ),
+        ),
+        expected_top_level_keys=RELEASE_STATE_EXPECTED_TOP_LEVEL_KEYS,
+        unchanged_paths=(
+            "examples/release_state/README.valid-v1-2.md",
+            "examples/compact_governance/current_status.compact.clean.md",
+            "docs/control/SOURCE_ONLY_RELEASE_POLICY.md",
+        ),
+    ),
+    JsonScenario(
+        "release_state_stale_state",
+        "release-state",
+        (
+            *ASGK,
+            "release-state-check",
+            "--tag",
+            "v1.2.0",
+            "--release-title",
+            "ASGK v1.2.0",
+            "--readme",
+            "{temp_input}",
+            "--current-status",
+            "examples/compact_governance/current_status.compact.clean.md",
+            "--release-policy",
+            "docs/control/SOURCE_ONLY_RELEASE_POLICY.md",
+            "--json",
+        ),
+        "negative",
+        "fail",
+        1,
+        ("RS_STALE_RELEASE_STATE",),
+        RELEASE_STATE_PROOF_BOUNDARY,
+        temp_input=TempInput(
+            source=(
+                "examples/negative/release_state/"
+                "README.stale-v1-2-candidate.md"
+            ),
+            replacements=(
+                (
+                    "ASGK v1.1.0 is the latest completed",
+                    "ASGK v1.2.0 is the latest completed",
+                ),
+                (
+                    " A v1.2.0 tag or\nGitHub release requires a separate "
+                    "human-gated release execution issue.\n",
+                    "\n",
+                ),
+            ),
+            suffix=".md",
+        ),
+        expected_mechanically_checked=RELEASE_STATE_COMPLETE_CHECKED,
+        expected_not_checked=RELEASE_STATE_NOT_CHECKED,
+        expected_payload_fields=(
+            (
+                "evidence_source",
+                "local_release_state_documents_and_command_arguments",
+            ),
+        ),
+        expected_top_level_keys=RELEASE_STATE_EXPECTED_TOP_LEVEL_KEYS,
+        unchanged_paths=(
+            "examples/negative/release_state/README.stale-v1-2-candidate.md",
+            "examples/compact_governance/current_status.compact.clean.md",
+            "docs/control/SOURCE_ONLY_RELEASE_POLICY.md",
+        ),
+    ),
+    JsonScenario(
+        "release_state_duplicate_ledger",
+        "release-state",
+        (
+            *ASGK,
+            "release-state-check",
+            "--tag",
+            "v1.2.0",
+            "--release-title",
+            "ASGK v1.2.0",
+            "--readme",
+            "examples/release_state/README.valid-v1-2.md",
+            "--current-status",
+            "examples/compact_governance/current_status.compact.clean.md",
+            "--release-policy",
+            (
+                "examples/negative/release_state/"
+                "SOURCE_ONLY_RELEASE_POLICY.ledger.md"
+            ),
+            "--json",
+        ),
+        "negative",
+        "fail",
+        1,
+        ("RS_DUPLICATE_RELEASE_LEDGER",),
+        RELEASE_STATE_PROOF_BOUNDARY,
+        expected_mechanically_checked=RELEASE_STATE_COMPLETE_CHECKED,
+        expected_not_checked=RELEASE_STATE_NOT_CHECKED,
+        expected_payload_fields=(
+            (
+                "evidence_source",
+                "local_release_state_documents_and_command_arguments",
+            ),
+        ),
+        expected_top_level_keys=RELEASE_STATE_EXPECTED_TOP_LEVEL_KEYS,
+        unchanged_paths=(
+            "examples/release_state/README.valid-v1-2.md",
+            "examples/compact_governance/current_status.compact.clean.md",
+            (
+                "examples/negative/release_state/"
+                "SOURCE_ONLY_RELEASE_POLICY.ledger.md"
+            ),
+        ),
     ),
     JsonScenario(
         "compact_handoff_valid",

@@ -2,19 +2,20 @@
 
 Status: active source-only release policy.
 
-This document defines ASGK v1.x source-only release gates, release-execution
-boundaries, closeout requirements, and historical v1 release-scope exclusions.
-Those exclusions do not define current ASGK 2.0 direction. The version scope is
-an applicability boundary, not a file naming convention to copy into target
-repos. This policy does not execute tags, GitHub releases, packages, installers,
-or repository visibility changes.
+This document defines version-neutral execution and closeout rules for ASGK
+source-only GitHub releases, together with explicitly labeled historical v1.x
+release facts. Historical facts do not authorize or constrain current ASGK 2.0
+work. This policy and `release-state-check` do not execute or authorize tags,
+GitHub Releases, packages, publication, external distribution, installers, or
+repository-setting changes.
 
 ## Scope
 
 ```yaml
 source_only_release_policy_scope:
   applicability:
-    - ASGK v1.x source-only releases
+    - ASGK source-only GitHub release planning, execution, and closeout
+    - explicitly labeled historical v1.x release evidence
   allowed_in_this_policy:
     - final readiness review checklist
     - license-selection decision path
@@ -32,7 +33,7 @@ source_only_release_policy_scope:
     - schema or workflow changes
 ```
 
-## Preconditions
+## Historical V1 Preconditions
 
 ```yaml
 preconditions:
@@ -56,7 +57,7 @@ preconditions:
     source: "#120 / PR #121"
 ```
 
-## Source-Only Release Gates
+## Historical V1 Gate Evidence
 
 ```yaml
 source_only_release_gates:
@@ -92,7 +93,7 @@ source_only_release_gates:
     output: "issue #130 approved and executed source-only GitHub release v1.0.0"
 ```
 
-## License Decision
+## Historical V1 License Decision
 
 ```yaml
 license_decision:
@@ -105,7 +106,7 @@ license_decision:
   note: "The top-level LICENSE file contains the complete Apache License 2.0 text."
 ```
 
-## Distribution Path Decision
+## Historical V1 Distribution Path Decision
 
 ```yaml
 distribution_path_decision:
@@ -118,7 +119,7 @@ distribution_path_decision:
   note: "v1.0 release path should remain source-only unless a later human-gated issue approves broader distribution."
 ```
 
-## Final Readiness Review Result
+## Historical V1 Final Readiness Review Result
 
 ```yaml
 final_readiness_review_result:
@@ -195,7 +196,7 @@ historical_v1_0_scope_exclusions:
     - runtime-specific adapter testing
   rule:
     - these items were outside the v1.0 source-only release
-    - this historical exclusion is not current ASGK 2.0 roadmap authority
+    - this historical exclusion is not current ASGK 2.0 product authority
     - any future proposal requires a new durable issue and current justification
 ```
 
@@ -239,10 +240,10 @@ release_execution_boundary:
     - "Record the status-refresh issue, PR, or completed status update in the release execution closeout comment."
   product_entry_closeout_requires:
     - "README.md must identify the released version as the latest completed source-only GitHub release."
-    - "docs/bootstrap/10_roadmap.md must not describe the released version as an active candidate or pending release execution."
-    - "Run `python3 scripts/asgk.py release-state-check --tag <tag> --release-title \"<title>\"` after release-state docs are updated."
-    - "If product-entry docs required for the current release are intentionally deferred, record the bounded follow-up issue before claiming release closeout is complete."
-    - "Before v1.3 or later release execution begins, the release issue must name the exact product-entry and handoff docs that will be synchronized and the target `release-state-check` command."
+    - "docs/handoff/CURRENT_STATUS.md must be post-release accurate or have a bounded follow-up issue."
+    - "docs/control/SOURCE_ONLY_RELEASE_POLICY.md must identify the completed release in current_release_reference."
+    - "Run `python3 scripts/asgk.py release-state-check --tag <tag> --release-title \"<title>\"` after the three local release-state documents are updated."
+    - "Before release execution begins, the release issue must name these three documents and the exact target release-state-check command."
     - "Use `skills/asgk-release-prep/SKILL.md` when planning, executing, or closing out source-only releases."
   release_execution_not_fully_closed_until:
     - "tag and GitHub release are complete"
@@ -260,6 +261,12 @@ closeout comments, tags, and merge commits.
 
 This file keeps only the durable release rules and closeout requirements needed
 for future source-only releases.
+
+`release-state-check` mechanically checks only the named local files. A pass is
+not evidence that the tag or GitHub Release exists, that the target commit was
+human-approved, that publication is authorized, or that semantic release
+closeout is complete. Those claims require their separate durable GitHub and
+human evidence.
 
 Release closeout follow-up issues are for current release state. Apply
 `docs/control/ISSUE_HYGIENE_GATE.md` before turning observations into work.
