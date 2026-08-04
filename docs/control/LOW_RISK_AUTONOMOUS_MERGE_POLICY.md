@@ -41,4 +41,45 @@ All must pass:
 9. PR includes scope-boundary disclosures and Merge Decision Record.
 10. Handoff/state update is included when state changes.
 
+## Program-Scoped Reversible Merge Path
+
+An OWNER-approved program may authorize autonomous merge of a repo-local source
+work unit that is already named and bounded, including an explicitly authorized
+protected governance path. This is not a general low-risk classification and is
+not human approval of the current head.
+
+All low-risk merge gates above still apply, plus:
+
+1. `docs/control/HUMAN_GATED_OPERATIONS.md` defines the canonical program
+   execution boundary.
+2. The program issue contains durable OWNER execution authorization.
+3. A durable OWNER-approved scope source predates the child issue and names the
+   exact work-unit path/action set.
+4. The current child issue explicitly invokes that authorization, is equal to
+   or narrower than the scope source, and names exact allowed paths.
+5. The PR records a complete `program_execution_authorization` block bound to
+   the current head and diff.
+6. The change touches tracked source only, has no external side effect beyond
+   routine issue/PR metadata, and is recoverable completely by ordinary Git
+   revert.
+7. Independent current-head evidence confirms semantic scope match, reviewer
+   separation, and that no Human-Gated Operations item applies.
+8. Required current-head checks, CI, and strict `check-pr` pass before merge.
+
+Close-out remains mandatory after merge.
+
+Scope drift, an unlisted path, uncertain rollback, a missing independent review,
+or any human-gated operation makes this path ineligible. Program authorization
+must not be rewritten as current-head OWNER review. `doctor`, PR-body
+validation, CI, and `check-pr` do not infer that the path applies.
+
+The program grant may remain valid across commits. The scope/no-gate reviews,
+CI, and `check-pr` must be refreshed for every current head.
+
+A PR that changes this program path, Human-Gated Operations, merge authority,
+or enforcement/non-inference semantics—including by creating, removing,
+loosening, tightening, or reclassifying them—cannot use the path it changes.
+Evaluate it under the stricter baseline or proposed policy and require
+current-head human approval.
+
 After merge, update the linked issue/handoff and stop.

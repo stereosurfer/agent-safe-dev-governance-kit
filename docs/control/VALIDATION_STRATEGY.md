@@ -34,7 +34,18 @@ proof_layers:
 ```
 
 Passing one layer does not imply the next. None of these layers independently
-proves low-risk status, human approval, or permission to merge.
+proves program execution authorization, low-risk status, human approval, or
+permission to merge.
+
+Neither PR-body validation nor live `check-pr` establishes that a
+`program_execution_authorization` record is true, in scope, independently
+reviewed, or eligible. They do not infer OWNER intent, semantic scope match,
+rollback sufficiency, absence of external side effects, a no-human-gate
+conclusion, reviewer independence, or merge authority. Reviewers must inspect
+the parent program decision, OWNER-approved exact scope source, a current child
+issue no broader than that source, current head/diff, rollback boundary, independent review,
+and absence of every Human-Gated Operations item. Mechanical success must not
+turn a program grant into current-head human approval or merge authority.
 
 ## Document Boundary
 
@@ -577,6 +588,10 @@ not invalidate the current work unit.
 | Protected path or runtime artifact path appears in changed paths | blocking or human_gated | safety boundary touched |
 | Human-gated operation lacks a durable current-head `decision: approved` record | human_gated | approval cannot be inferred |
 | human_gates_checked is true without either the applicable approved record or a durable no-gate risk/path determination | blocking or human_gated | a boolean cannot self-certify human judgment or a no-gate conclusion |
+| Program execution authorization lacks current-issue invocation, exact scope, ordinary-revert recovery, independent review, or no-gate determination | blocking or requires_human | a parent program grant alone cannot authorize the reversible protected-path exception |
+| Program grant is described as current-head OWNER review | blocking | execution authority must not fabricate human review evidence |
+| PR changes the program path, human gates, merge authority, or enforcement/non-inference semantics, including by creating, removing, loosening, tightening, or reclassifying them, and invokes that path | human_gated | a policy cannot make its own current merge eligible |
+| Current-head program scope/no-gate review, independent review, CI, or check-pr is stale after a commit | blocking | only the OWNER program grant persists across heads |
 | Negative fixture unexpectedly passes | blocking | known-bad path is not stopped |
 | Negative fixture crashes for an unrelated reason | blocking for validation work | expected-failure evidence is untrustworthy |
 | Current issue closeout lacks required post-rule review evidence | blocking for current closeout | current closeout contract incomplete |

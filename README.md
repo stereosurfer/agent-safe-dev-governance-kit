@@ -180,13 +180,21 @@ ASGK separates ordinary bounded work from operations that must stop for explicit
 human review.
 
 Human-gated examples include release execution, repository visibility changes,
-credentials or secrets, protected paths, dependency changes, schema or contract
-changes, runtime artifact boundaries, private source material, cloud/API/model
-lanes, and unclear scope.
+credentials or secrets, dependency changes, schema or contract changes,
+runtime artifact boundaries, private source material, external target writes,
+cloud/API/model lanes, destructive history operations, and unclear scope.
 
 Low-risk merge is intentionally narrow. A PR must have the right issue, allowed
 paths, passing validation, complete evidence, clean runtime boundaries, and no
 human-gated trigger before it can be treated as low risk.
+
+An OWNER-approved program may separately authorize an exact-scope,
+tracked-source-only protected source change with no external side effect beyond
+routine issue/PR metadata and complete ordinary-revert recovery, when canonical
+policy and the current child issue both permit it. That program path requires
+current-head scope/no-gate review, independent review, CI, and strict
+`check-pr`; it is not current-head human review and cannot cover an operation
+that remains human-gated.
 
 ## Current Release State
 

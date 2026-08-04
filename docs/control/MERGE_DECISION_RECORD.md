@@ -99,8 +99,9 @@ rejects every `result: merge_blocked`.
 ```text
 draft + merge_blocked
   -> ready for review + merge_blocked
-  -> applicable current-head decision: approved
-     or durable no-gate risk/path determination
+  -> applicable current-head decision: approved,
+     or durable no-gate risk/path determination plus a complete program
+     execution record when the protected reversible path is used
   -> exact-true gates true + concrete boundary fields complete + merge_allowed
   -> strict merge-decision
   -> live check-pr
@@ -119,6 +120,22 @@ with `decision: approved`. `changes_requested` or `rejected` requires
 `human_gates_checked: false` and `result: merge_blocked`. When no human gate
 applies, cite the durable no-gate risk/path determination. Prior-PR review and
 review of a superseded head are not transferable.
+
+Program execution authorization is separate evidence. It may authorize an
+already-bounded repo-local reversible work unit without repeated OWNER prompts,
+but it does not prove `human_gates_checked: true`. That field remains supported
+by an independent current-head determination that no Human-Gated Operations
+item applies. When the program-scoped protected-path exception is used, cite the
+OWNER-approved exact scope source, complete record defined in
+`docs/control/HUMAN_GATED_OPERATIONS.md`, canonical merge policy, and a current
+child issue no broader than the scope source. The program grant may persist across commits; the
+scope/no-gate review, independent review, CI, and `check-pr` must be refreshed
+for every head. Never describe the program grant as current-head human review.
+
+A PR that changes the program path, human gates, merge authority, or
+enforcement/non-inference semantics—including by creating, removing, loosening,
+tightening, or reclassifying them—cannot use the path it changes. Apply the
+stricter baseline or proposed policy and require current-head human approval.
 
 The body checker validates structured field consistency; it does not establish
 that a cited review is real, current, or sufficient. The reviewer or gatekeeper

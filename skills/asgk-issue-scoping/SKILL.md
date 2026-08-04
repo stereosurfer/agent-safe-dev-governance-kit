@@ -90,7 +90,15 @@ identity or create another authority surface.
 
 - `blocked`: allowed paths or validation are unclear.
 - `blocked`: upgrade or adoption paths were proposed before read-only discovery.
-- `requires_human`: protected paths, releases, visibility, dependencies, workflows, schemas, secrets, or other human-gated surfaces are involved.
+- `requires_human`: a Human-Gated Operations item is involved, or a protected
+  path lacks canonical and current-issue authority for the complete
+  program-scoped reversible path. The program path requires an OWNER-approved
+  exact scope source that predates a child issue no broader than that source,
+  tracked source only, no external side effect beyond routine issue/PR metadata,
+  ordinary-revert recovery, current-head scope/no-gate evidence, independent
+  review, CI, and strict `check-pr`. It cannot authorize the PR that creates or
+  otherwise changes that path, including by removing, loosening, tightening, or
+  reclassifying it.
 - `fallback_ready_for_bounded_local_work`: GitHub unavailability is
   independently established, no escalation trigger applies, and a complete
   fallback passes its structural check; PR, merge, protected-path exceptions,

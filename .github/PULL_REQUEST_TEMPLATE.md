@@ -56,6 +56,38 @@ validation_evidence:
 
 ## Scope Boundaries
 
+## Program Execution Authorization
+
+Use `status: applicable` only when a durable OWNER-approved program and the
+current child issue explicitly authorize the canonical program-scoped
+reversible merge path. This record is execution authority, not current-head
+human review. Every field is mandatory when the path is invoked. Use
+`not_applicable` for ordinary or human-gated PRs. A PR that changes this path,
+including by creating, removing, loosening, tightening, or reclassifying it,
+cannot invoke it for its own merge.
+
+```yaml
+program_execution_authorization:
+  status: applicable | not_applicable
+  program_issue:
+  owner_authorization_source:
+  scope_source:
+  current_issue:
+  authorized_work_unit:
+  current_issue_scope_is_subset_or_equal: true | false | not_applicable
+  repo_local_only: true | false | not_applicable
+  external_side_effects: none_beyond_issue_pr_metadata | present | unknown | not_applicable
+  ordinary_git_revert_available: true | false | not_applicable
+  current_head:
+  current_diff:
+  semantic_scope_match_review:
+  no_human_gate_determination:
+  independent_review:
+  human_gated_operations: []
+  decision: authorized | not_authorized | not_applicable
+  reason:
+```
+
 ## Current Status Impact
 
 Default to `not_applicable` when this PR does not change active work, next safe
