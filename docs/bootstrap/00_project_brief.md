@@ -2,7 +2,7 @@
 
 ## Project Name
 
-Agent Safe Governance Kit (ASGK)
+Agent-Safe Development Governance Kit (ASGK)
 
 ## Mission
 
