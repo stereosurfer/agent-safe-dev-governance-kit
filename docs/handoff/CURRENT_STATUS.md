@@ -1,60 +1,50 @@
 # Current Status
 
 This is the repository recovery snapshot. It is overwritten, not appended.
-Historical evidence and completed-work detail belong in GitHub issues, PRs,
+Completed-work history and decision detail belong in GitHub issues, PRs,
 comments, releases, and merge commits.
 
-Last updated: `2026-08-04T10:12:00Z`
+Last updated: `2026-08-04T16:00:00Z`
 
 ## Durable source of truth
 
-- GitHub issues, PRs, comments, releases, and repository files are authoritative.
-- Chat memory and superseded roadmap documents are not current authority.
+- The selected live GitHub issue or qualifying PR is executable work-unit
+  authority.
+- Canonical repository documents define durable rules and ownership.
+- Validators and CI provide bounded mechanical evidence; they do not approve,
+  merge, release, or establish semantic truth.
+- Chat memory and superseded planning material are not current authority.
 - New sessions read `AGENTS.md`, `README.md`, this file, and the active issue or
   PR before expanding context through `docs/DOCUMENT_MAP.md`.
 
 ## Current snapshot
 
 ASGK v1.7.3 remains the latest completed source-only GitHub release under the
-Apache-2.0 license. ASGK 2.0 is an active docs-driven evolution coordinated by
-issue #323.
+Apache-2.0 license. ASGK 2.0 is an active document-driven evolution coordinated
+by issue #323.
 
-The source contract now has one 13-field work-unit identity, two separate
-execution gates, and two bounded task-packet modes. Work-unit handoff uses one
-typed core for both the normal packet and compact projection. Compact handoff
-must pass the core evaluator before CURRENT_STATUS freshness is checked.
+The product boundary is safe, smooth, traceable handoff between people and AI.
+The handoff remains independent of a specific model, provider, agent, or prior
+chat. People may replace the worker; the durable work unit tells the successor
+what to do, where to do it, what not to do, what is forbidden, what evidence
+exists, and what comes next.
 
-Retained core JSON validators use one common evidence envelope with explicit
-checked and unchecked claims, stable finding codes, human-gate state, and a
-proof boundary. `scripts/asgk_lib/scenario_registry.py` owns exact retained
-scenario expectations; doctor and CI execute the same registry rather than
-maintaining duplicate fixture lists. Early failures name only checks that ran,
-missing live-tool executables emit controlled envelopes, and a mechanical
-failure cannot hide a simultaneous required human gate.
+The source contract has one 13-field work-unit identity and two execution gates.
+Task packets can narrow an issue but cannot replace it. Retained JSON validators
+use one evidence envelope with explicit checked and unchecked claims, stable
+finding codes, human-gate state, and a proof boundary. `doctor`, `validate`, and
+the negative suite use the retained scenario registry and source-validation
+engine.
 
-ASGK source validation now has one engine:
-`scripts/asgk_lib/source_validation.py`. `asgk validate`, `doctor`, and the thin
-`validate_bootstrap.py` compatibility wrapper reach that engine. Its retained
-source-reference set excludes superseded Roadmap, duplicate-owner,
-fixed-storage/promotion, legacy-target, and directory-only checker
-prerequisites. Supplied source inventories prove path membership only; they do
-not inspect contents or describe a target installation shape.
+`target-evidence-check` checks only caller-supplied path and literal-text claims
+against an arbitrary target layout. A matching claim never proves target fit,
+governance depth, recommendation, approval, or readiness.
 
-`target-evidence-check` checks only explicit caller-supplied expect/forbid path
-and literal-text claims against an arbitrary target layout. Its three domain
-states map to the common evidence envelope. Exit `0` proves only that accepted
-named claims matched, never target fit, governance depth, recommendation,
-approval, or readiness.
-
-CURRENT_STATUS is only a recovery snapshot. It does not own completed-work or
-decision history.
-
-Adoption and material-upgrade assessment is read-only, target-specific, and
-frontier-guided; tools do not choose Agents, architecture, or governance depth.
-
-Fixed-shape target tools are removed; `target-evidence-check` checks explicit claims while frontier judgment owns fit.
-
-OWNER-approved programs may use bounded reversible execution without repeat prompts, never instead of an applicable current-head human gate.
+The W5 truth-layer owners now describe the current product meaning, the
+document-driven self-evolution loop, this recovery snapshot, and canonical
+document ownership. Superseded planning material is not current product
+authority. The separate five-path authority-wording follow-up remains a
+decision point in #323 and is not silently included here.
 
 ## Active work
 
@@ -63,6 +53,8 @@ issue: "#323 ASGK 2.0 program"
 pr: none
 branch: main
 state: active_program
+latest_completed_work_unit: "W5 truth-layer replacement"
+next_work_unit_decision: "#323 must record whether the separately scoped five-path authority-wording follow-up proceeds before W6."
 ```
 
 ## Current validation entrypoint
@@ -82,13 +74,15 @@ Additional focused checks:
 
 ## Closed gates
 
-- prior chat, superseded roadmap, or historical plan as current task authority
-- automatic model selection, routing, switching, or price-tier dispatch
-- fixed target file shape, module picker, or adoption declaration as fit proof
-- validator success as semantic truth, or program authorization as current-head
-  human review or merge authority
+- prior chat, superseded planning material, or historical evidence as current
+  task authority;
+- automatic model/provider/agent selection, routing, switching, or price-tier
+  dispatch;
+- fixed target file shape, module picker, or adoption declaration as fit proof;
+- validator success as semantic truth, human approval, release authority, or
+  merge authority;
 - cloud egress, API/model calls, MCP writes, dependencies, schema changes,
-  publication, or visibility changes without their existing gates
+  publication, or visibility changes without their existing gates.
 
 ## Runtime artifact status
 
@@ -97,10 +91,12 @@ model cache, or external preparation outputs are authorized by this status.
 
 ## Next safe action
 
-From current `main`, create W5 after the W4C close-out. W5 rewrites the Project
-Brief and Evolution Model and scans public/startup projections; do not revive a
-Roadmap, runtime-adapter stage, maturity ledger, fixed target shape, or automatic
-Agent routing.
+Continue from current `main` using the approved #323 graph. First resolve the
+explicit five-path authority-wording decision point if it is required for W5
+closure; otherwise create the next exact child issue from the current program
+scope. Then proceed to W6 only from a fresh current-main scan and exact allowed
+paths. Do not revive superseded planning material, reintroduce a runtime
+adapter/routing model, or read the excluded visual guide.
 
 ```yaml
 reference_scope:
