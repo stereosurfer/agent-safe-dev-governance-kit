@@ -75,8 +75,22 @@ skills
 
 Skills are not a new authority layer or a substitute for model judgment. They
 direct attention to relevant evidence, safety boundaries, uncertainty, and stop
-conditions while durable authority remains in GitHub issues, pull requests,
-repository files, ASGK validators, and existing human gates.
+conditions. Durable authority comes from the selected durable GitHub issue or
+qualifying pull request, applicable canonical repository rules, contracts, and
+decision records, and an explicit durable human decision when an existing gate
+requires one.
+
+Validators do not create scope, approve a decision, or satisfy a human gate.
+They produce bounded mechanical evidence and enforce only their declared
+contracts. When a validator is a required gate, a blocking finding or failed
+required check prevents the corresponding workflow claim from advancing. A
+validator pass means only that its named checks passed at their stated proof
+boundary; it is not semantic correctness, target fit, release approval, or
+merge authority.
+
+Model judgment interprets evidence and makes semantic recommendations within
+the durable work unit. It neither creates task authority nor satisfies an
+existing human gate.
 
 For target adoption and material upgrades, a human selects a
 frontier-capability evaluator outside ASGK. The Skill guides that
