@@ -39,7 +39,7 @@ target_evidence_fixtures:
 negative_expected_failures:
   purpose: inputs expected to trigger current opt-in mechanical checks
   authority: regression fixture only
-  expected_outcome_boundary: fixture metadata is descriptive; exact executable expectations live in the scenario registry or an explicitly bounded legacy group
+  expected_outcome_boundary: fixture metadata is descriptive; exact executable expectations live in the scenario registry
   proof_limit: not every mechanical failure establishes a semantic repository defect
   location: examples/negative/
 compact_red_team_fixtures:
@@ -70,10 +70,7 @@ compact_red_team_fixtures:
   claims matched the named marker and absent path during a read-only run.
 - Target repositories must not copy this directory as an adoption bundle.
 - Negative fixtures must not be used as positive examples. Interpret each only
-  at the registry's or bounded legacy check's proof boundary.
-- Target-install and compact target-upgrade fixtures preserve legacy checker
-  coverage pending their separately scoped cutover. They do not prove target
-  fit, adoption, architecture, governance depth, or approval.
+  at the scenario registry's proof boundary.
 - Historical issue, PR, CI, and release evidence belongs in GitHub, not as
   copied narrative inside this directory.
 - Agents should not read this directory during default startup; read only the

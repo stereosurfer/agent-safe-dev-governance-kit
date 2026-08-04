@@ -330,13 +330,6 @@ NEGATIVE_CASE_GROUPS = {
             "examples/negative/pr_status.duplicate-check-missing-provider.json",
         ),
     )),
-    "target-install": NegativeCaseGroup(EXPECTED_FAILURE, _commands(
-        (*ASGK, "target-install-check", "--repo-root"),
-        (
-            "examples/negative/target_install/missing_required_files",
-            "examples/negative/target_install/repo_local_historical_evidence_surface",
-        ),
-    )),
     "release-state": NegativeCaseGroup(EXPECTED_FAILURE, RELEASE_STATE_COMMANDS),
     "work-unit": NegativeCaseGroup(EXPECTED_FAILURE, WORK_UNIT_COMMANDS),
     "workspace-state": NegativeCaseGroup(EXPECTED_SUCCESS, _commands_with_suffix(
@@ -371,13 +364,6 @@ NEGATIVE_CASE_GROUPS = {
         for body, report in COMPACT_PR_BODY_CASES
     )),
     "compact-handoff": NegativeCaseGroup(EXPECTED_FAILURE, _case_commands((*ASGK, "compact-handoff-check"), COMPACT_HANDOFF_CASES)),
-    "compact-target-upgrade": NegativeCaseGroup(EXPECTED_FAILURE, _commands(
-        (*ASGK, "compact-target-upgrade-check", "--manifest"),
-        (
-            "examples/negative/compact_governance/target_upgrade/manifest.overwrites-current-status.json",
-            "examples/negative/compact_governance/target_upgrade/manifest.default-enabled.json",
-        ),
-    )),
 }
 
 

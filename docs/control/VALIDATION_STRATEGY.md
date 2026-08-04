@@ -182,10 +182,10 @@ cannot disappear.
 The retained JSON surface is policy-gate, PR status, work unit, task packet,
 handoff, compact handoff, compact issue scope, compact scope lock, compact PR
 report, compact PR body, context budget, workspace state, source validation,
-and caller-supplied target evidence. Legacy `target-install-*`,
-`compact-target-upgrade-check`, and the parallel compact red-team runner are
-not common-envelope authority; their removal is separately scoped under ASGK
-2.0.
+and caller-supplied target evidence. The fixed-shape target checker, install
+planner, and compact target-upgrade manifest checker were removed in the ASGK
+2.0 clean cutover. The parallel compact red-team runner remains outside common
+envelope authority pending its separately scoped removal.
 
 ## Validation Layers
 
@@ -269,10 +269,10 @@ target was not concurrently changed.
 The frontier evaluator remains responsible for selecting material claims and
 for every fit, depth, adaptation, and recommendation judgment.
 
-The still-present `target-install-check`, `target-install-plan`, and
-`compact-target-upgrade-check` commands are legacy fixed-shape diagnostics.
-They are not target-fit, adoption, architecture, governance-depth, approval, or
-retained target-evidence proof. Their clean removal is separately scoped.
+There is no retained fixed-shape target checker, install planner, or target
+upgrade manifest validator. `target-evidence-check` is the sole target
+mechanical interface; it owns only accepted caller claims and never target fit,
+adoption, architecture, governance depth, recommendation, or approval.
 
 ### PR Body And Merge Evidence
 
@@ -480,12 +480,10 @@ does_not_prove:
 blocking_rule: unavailable metadata or prose/tool conflicts fail closed
 ```
 
-`compact-target-upgrade-check` and
-`scripts/compact_governance_red_team_check.py` remain in the source tree only
-until their separately scoped cutover or deletion work. The red-team script is
-not part of `doctor`, `negative all`, or source-validation orchestration. Neither
-surface is a second compact-governance oracle or owns retained JSON
-expectations.
+`scripts/compact_governance_red_team_check.py` remains in the source tree only
+until its separately scoped deletion work. It is not part of `doctor`,
+`negative all`, or source-validation orchestration, is not a second
+compact-governance oracle, and owns no retained JSON expectations.
 
 ### Negative Validation
 

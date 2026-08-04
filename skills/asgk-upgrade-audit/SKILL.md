@@ -50,10 +50,10 @@ target equivalents, and durable assessment destination. Follow references only
 when a material comparison requires more evidence.
 
 Use `docs/control/TARGET_INSTALL_CHECKLIST.md` when comparison questions need
-expansion and `docs/control/TARGET_INSTALL_VALIDATION_PLAN.md` when
-deterministic commands or proof limits matter. Read a human-gate policy only
-when a proposed action could trigger it. Do not read or copy the full source
-tree by default.
+expansion and `docs/control/VALIDATION_STRATEGY.md` plus command help when
+deterministic claims or proof limits matter. Read a human-gate policy only when
+a proposed action could trigger it. Do not read or copy the full source tree by
+default.
 
 ## Assessment Procedure
 
@@ -92,14 +92,11 @@ every source surface to appear in the target.
 Use `target-evidence-check` only for explicit path or literal-text claims
 derived from the source-delta comparison and target evidence. The evaluator
 supplies every claim; the command does not select relevant source changes,
-decide claim sufficiency, or form an upgrade recommendation. Apply
-`docs/control/TARGET_INSTALL_VALIDATION_PLAN.md` and record both what matched and
-what remained unchecked.
-
-The three older target-install commands retain fixed-shape assumptions. Run one
-only when its narrower legacy observation is materially useful, label that
-proof limit, and never weaken target-owned behavior to make it pass. A tooling
-change requires separate durable authorization.
+decide claim sufficiency, or form an upgrade recommendation. Use command help
+for the exact four claim types, apply
+`docs/control/VALIDATION_STRATEGY.md`, and record both what matched and what
+remained unchecked. ASGK retains no target install planner, fixed-shape checker,
+or compact target-upgrade manifest.
 
 ### 5. Exercise Frontier Judgment
 

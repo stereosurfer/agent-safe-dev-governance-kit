@@ -62,9 +62,7 @@ fixture_classes:
     purpose: exact caller-claim mismatches and incomplete claim-input behavior
     proof_limit: mismatch means only that named mechanical claims disagreed; it is not a target defect, fit, depth, readiness, or approval judgment
   compact_governance:
-    purpose: retained compact report, scope-lock, task-packet, and handoff cases plus inactive legacy target-upgrade/red-team inputs
-  target_install:
-    purpose: current legacy shape-check failures plus source-state isolation violations
+    purpose: retained compact report, scope-lock, task-packet, and handoff cases plus inactive red-team inputs
 ```
 
 Do not add a negative fixture unless a validator, runner group, CI step, or

@@ -178,7 +178,6 @@ separately scoped cleanup.
 | `docs/control/DOCUMENT_MAP_POLICY.md` | canonical | document-map router/registry split, size limits, and maintenance rules | no | document-map structure changes, registry split work, target-template navigation changes | `lane_07_docs_handoff` |
 | `docs/control/DECISION_POINT_REGISTRY.md` | historical_evidence | superseded parallel decision router awaiting W6B removal; cannot expand the current issue read set or authority | no | bounded W6B migration lookup only | `lane_07_docs_handoff` |
 | `docs/control/TARGET_INSTALL_CHECKLIST.md` | canonical | target-assessment questions, existing-control comparison, minimum sufficient adaptation, evidence, uncertainty, and outcome conditions | no | target adoption or material-upgrade assessment, target issue preparation | `lane_07_docs_handoff` |
-| `docs/control/TARGET_INSTALL_VALIDATION_PLAN.md` | canonical | semantic-assessment versus mechanical-check proof boundaries, caller-supplied target claims, and legacy command limitations | no | target evidence review, checker behavior review, or legacy cutover work | `lane_06_ci_github` |
 
 Capability matrix boundary rule:
 
@@ -320,12 +319,11 @@ disagree, stop and open a schema/contract alignment issue.
 | `scripts/asgk_lib/validation_result.py` | script | dependency-free common envelope construction and fail-closed self-validation | no | retained JSON command, finding, result, or proof-boundary changes | `lane_06_ci_github` |
 | `scripts/asgk_lib/scenario_registry.py` | script | sole executable owner of retained JSON owner commands, including target evidence, polarity, exact exits, results, finding-code multisets, human-gate states, proof boundaries, optional branch-specific checked/unchecked claims, task-packet alias parity, and source-wrapper parity | no | validator behavior, negative coverage, doctor, or CI scenario changes | `lane_06_ci_github` |
 | `scripts/asgk_lib/scenario_runner.py` | script | exact scenario execution, one-JSON-object verification, alias parity, and false-evidence self-tests | no | validator evidence or scenario-runner changes | `lane_06_ci_github` |
-| `scripts/asgk_lib/negative.py` | script | thin public negative-command facade over the canonical scenario owner and legacy bounded groups | no | negative CLI routing or compatibility review | `lane_06_ci_github` |
+| `scripts/asgk_lib/negative.py` | script | thin public negative-command facade over the canonical registered scenario groups | no | negative CLI routing or compatibility review | `lane_06_ci_github` |
 | `scripts/asgk_lib/negative_cases.py` | script | compatibility projection to `scenario_registry.py`; owns no expectation | no | bounded compatibility removal or regression review | `lane_06_ci_github` |
 | `scripts/asgk_lib/negative_runner.py` | script | compatibility projection to `scenario_runner.py`; owns no execution semantics | no | bounded compatibility removal or regression review | `lane_06_ci_github` |
-| `scripts/asgk.py` | script | ASGK CLI facade for canonical source validation, caller-supplied target evidence, common retained-JSON projections, and legacy fixed-shape target-install diagnostics; no mechanical target command owns fit, depth, recommendation, or approval | no | local source validation, target evidence, status/closeout/handoff/PR checks, policy-gate checks, or bounded legacy diagnostics | `lane_06_ci_github` |
+| `scripts/asgk.py` | script | ASGK CLI facade for canonical source validation, caller-supplied target evidence, common retained-JSON projections, and repository-governance checks; no mechanical target command owns fit, depth, recommendation, or approval | no | local source validation, target evidence, status/closeout/handoff/PR checks, or policy-gate checks | `lane_06_ci_github` |
 | `scripts/pr_governance_preflight.py` | script | thin file-backed PR body preflight before `gh pr create` or `gh pr edit` | no | PR body create/edit, local preflight before GitHub Actions, target adoption of ASGK CLI tooling | `lane_06_ci_github` |
-| `scripts/target_install_plan.py` | script | standalone legacy fixed-shape target-install observation plan; not an adoption recommendation or readiness proof | no | bounded legacy regression or clean-cutover review | `lane_06_ci_github` |
 | `.github/workflows/bootstrap-validation.yml` | template/script | GitHub Actions projection of doctor plus dynamic PR-event policy routing and changed-path hygiene; owns no duplicate fixture list | no | CI/workflow changes | `lane_06_ci_github` |
 | `.github/PULL_REQUEST_TEMPLATE.md` | template | required PR body sections, Current Status Impact, and Merge Decision Record surface | no | PR creation/review, current-status impact classification, template changes, `asgk.py pr-body-check` | `lane_06_ci_github` |
 
@@ -337,13 +335,12 @@ disagree, stop and open a schema/contract alignment issue.
 | `examples/*.json` | example/fixture | valid sample payloads or machine fixtures | no | onboarding, validator examples, fixture design | `lane_07_docs_handoff` |
 | `examples/*.yaml` | example/fixture | valid sample task packets or machine fixtures | no | onboarding, task packet examples, fixture design | `lane_07_docs_handoff` |
 | `examples/*.md` | example/fixture | report, PR-body, or documentation examples and fixtures | no | onboarding, report examples, parser fixture design | `lane_07_docs_handoff` |
-| `examples/negative/*` | fixture | opt-in expected-failure inputs whose executable expectations belong to `scenario_registry.py` or an explicitly bounded legacy group | no | negative validation work, `asgk.py negative`, governance hygiene tests | `lane_02_schema_contracts` |
+| `examples/negative/*` | fixture | opt-in expected-failure inputs whose executable expectations belong to `scenario_registry.py` | no | negative validation work, `asgk.py negative`, governance hygiene tests | `lane_02_schema_contracts` |
 | `examples/negative/policy_gate/*` | fixture | opt-in expected-failure PR-body policy-gate fixtures | no | policy-gate negative validation work | `lane_06_ci_github` |
 | `examples/source_validation/reference-superset.valid.json` | fixture | positive caller-supplied retained source-path inventory; proves membership only and does not inspect listed files | no | source-validation scenario or required-set changes | `lane_06_ci_github` |
 | `examples/negative/source_validation/missing-required-path.json` | fixture | source inventory missing exactly one retained canonical path for exact `SV_REQUIRED_PATH_MISSING` coverage | no | source-validation negative scenario changes | `lane_06_ci_github` |
 | `examples/target_evidence/arbitrary_layout/notes/project.marker` | fixture | positive arbitrary-layout target marker for all four caller-claim kinds; contains no ASGK-named target surface | no | target-evidence positive scenario or proof-boundary review | `lane_06_ci_github` |
 | `examples/negative/target_evidence/mismatched_claims/notes/project.marker` | fixture | paired target marker producing the four exact target-evidence mismatch findings | no | target-evidence mismatch scenario changes | `lane_06_ci_github` |
-| `examples/negative/target_install/*` | fixture | legacy target-install shape-check expected-failure fixtures | no | maintaining current mechanical diagnostics or planning their replacement | `lane_06_ci_github` |
 
 Examples and fixtures are not policy authority. If an example or fixture
 conflicts with a canonical policy, contract, schema, validator, or current

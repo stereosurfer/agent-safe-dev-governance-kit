@@ -90,9 +90,9 @@ Use `skills/asgk-upgrade-audit/SKILL.md` when the target already contains
 ASGK-derived governance.
 
 The Skills own procedure. Use `docs/control/TARGET_INSTALL_CHECKLIST.md` only
-when questions or evidence quality need expansion, and
-`docs/control/TARGET_INSTALL_VALIDATION_PLAN.md` when mechanical proof limits
-matter.
+when questions or evidence quality need expansion. Use
+`docs/control/VALIDATION_STRATEGY.md` and command help when mechanical proof
+limits or exact claim syntax matter.
 
 ## Assessment Result
 
@@ -157,19 +157,19 @@ python3 scripts/asgk.py target-evidence-check \
   --json
 ```
 
-The exact four claim types and their proof boundary live in command help and
-`docs/control/TARGET_INSTALL_VALIDATION_PLAN.md`.
+The exact four claim types live in command help. Their mechanical proof boundary
+lives in `docs/control/VALIDATION_STRATEGY.md`.
 
-The current target-install checker, planner, and compact-upgrade checker retain
-legacy fixed-shape assumptions. Their outputs may provide bounded observations;
-their pass/fail result does not prove target fit, governance depth, adoption
-readiness, or upgrade completeness. Use
-`docs/control/TARGET_INSTALL_VALIDATION_PLAN.md` for the detailed proof boundary.
+`target-evidence-check` is the only retained target mechanical interface. ASGK
+does not retain a fixed-shape checker, install planner, or compact-upgrade
+manifest. The evaluator decides which explicit claims are material and owns
+every fit, governance-depth, minimum-change, or no-change judgment.
 
 When tool output conflicts with target evidence, record the conflict and proof
 limit. Continue the semantic assessment when a responsible recommendation can
-still be made. Changing checker, planner, fixture, or exit-code behavior
-requires separately authorized tooling work and its own validation evidence.
+still be made. Changing `target-evidence-check`, its fixtures, or exit-code
+behavior requires separately authorized tooling work and its own validation
+evidence.
 
 ## Stop Conditions
 
@@ -187,7 +187,7 @@ Stop the assessment and report the exact gap when:
 ## Maintenance Rule
 
 This document owns the adoption responsibility boundary. The checklist owns
-assessment questions. The validation plan owns mechanical proof limits. Skills
+assessment questions. Validation Strategy owns mechanical proof limits. Skills
 own procedure.
 
 Do not restore universal target file lists or duplicate the Skill procedure in

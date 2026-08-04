@@ -94,10 +94,10 @@ derived from the assessment. Its exit `0` means those accepted claims matched;
 it does not establish that the claim set is sufficient or decide fit, depth,
 adaptation, recommendation, approval, or completion.
 
-The legacy `target-install-check`, `target-install-plan`, compact-upgrade check,
-and source `doctor` remain supporting evidence only at their narrower
-documented boundaries. Never weaken a target-specific recommendation merely to
-make a fixed-shape legacy command pass.
+`target-evidence-check` may support only explicit caller-supplied path or
+literal-text claims. Source `doctor` validates the ASGK source repository and is
+not a target completion gate. Never weaken a target-specific recommendation
+merely to make a caller-selected claim or source-repository check pass.
 
 ## 7. License And External Boundaries
 
@@ -151,7 +151,8 @@ Use `blocked` only if:
 - source and target rules conflict;
 - the evaluator would otherwise need to guess.
 
-A legacy tool conflict is a proof-limit finding, not an assessment blocker when
-a responsible recommendation remains possible. A protected next action is
+A conflict between a caller-supplied mechanical claim result and independently
+observed target evidence is a proof-limit finding, not an assessment blocker
+when a responsible recommendation remains possible. A protected next action is
 recorded under its exact existing gate; it does not block the read-only
 assessment.
