@@ -4537,15 +4537,29 @@ def cmd_target_evidence_check(args: argparse.Namespace) -> int:
 
 
 def cmd_release_state_check(args: argparse.Namespace) -> int:
-    failures = check_release_state_docs(
+    report = check_release_state_docs(
         tag=args.tag,
         release_title=args.release_title,
-        readme_path=rel(args.readme),
-        roadmap_path=rel(args.roadmap),
-        current_status_path=rel(args.current_status),
-        release_policy_path=rel(args.release_policy),
+        readme_path=args.readme,
+        current_status_path=args.current_status,
+        release_policy_path=args.release_policy,
     )
-    return print_failures(failures)
+    if args.json:
+        print(json.dumps(report, indent=2, sort_keys=True))
+    elif report.get("findings"):
+        for finding in report["findings"]:
+            if not isinstance(finding, dict):
+                continue
+            location = finding.get("path") or finding.get("field") or "unknown"
+            print(
+                f"FAIL: [{finding.get('code')}] {location} - "
+                f"{finding.get('reason')}"
+            )
+        print(str(report.get("proof_boundary")))
+    else:
+        print("Release-state check passed.")
+        print(str(report.get("proof_boundary")))
+    return 0 if report.get("result") == "pass" else 1
 
 
 def cmd_workspace_state_check(args: argparse.Namespace) -> int:
@@ -4882,12 +4896,16 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--tag", required=True, help="Released tag, for example v1.2.0.")
     p.add_argument("--release-title", required=True, help="Released GitHub release title.")
     p.add_argument("--readme", default="README.md")
-    p.add_argument("--roadmap", default="docs/bootstrap/10_roadmap.md")
     p.add_argument("--current-status", default="docs/handoff/CURRENT_STATUS.md")
     p.add_argument(
         "--release-policy",
         default="docs/control/SOURCE_ONLY_RELEASE_POLICY.md",
-        help="Optional source-only release policy to scan for duplicated release ledgers when present.",
+        help="Source-only release policy to scan for duplicated release ledgers.",
+    )
+    p.add_argument(
+        "--json",
+        action="store_true",
+        help="Emit one common-envelope JSON object.",
     )
     p.set_defaults(func=cmd_release_state_check)
 

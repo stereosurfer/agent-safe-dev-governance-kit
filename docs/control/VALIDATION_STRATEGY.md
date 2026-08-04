@@ -462,13 +462,22 @@ owners:
 proves:
   - handoff and current-status surfaces avoid known stale active-work patterns
   - current-status impact values use the allowed vocabulary
-  - release-state closeout does not leave known candidate or pending residue
+  - the three caller-named local release-state documents match the mechanically checked release markers and contain no registered stale-state or duplicate-ledger pattern
 does_not_prove:
-  - historical issue completeness
-  - that old pre-rule work needs repair
-  - that a release should be executed
+  - historical issue completeness or that old pre-rule work needs repair
+  - tag or GitHub Release existence, the target commit, or live GitHub metadata
+  - semantic release readiness or closeout completeness
+  - human approval, release/publication authority, or merge authority
 blocking_rule: current work closeout can block; legacy observations must not become automatic repair work
 ```
+
+`release-state-check` returns the common JSON envelope with stable finding
+codes. Its `release-state` scenario group owns one positive document set plus
+isolated stale-state and duplicate-ledger negatives. The registry fixes each
+scenario's exit, result, finding-code multiset, checked and unchecked claims,
+human-gate state, proof boundary, and top-level keys. Local document coherence
+does not prove release existence, GitHub metadata, semantic readiness, human
+approval, publication authority, or merge authority.
 
 ### Compact Governance Reports
 

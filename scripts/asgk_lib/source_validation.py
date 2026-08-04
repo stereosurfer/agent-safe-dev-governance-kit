@@ -4486,6 +4486,7 @@ def check_scenario_registry_projection(root):
         'work-unit',
         'compact-task-packet',
         'handoff',
+        'release-state',
         'compact-handoff',
         'compact-issue-scope',
         'compact-scope-lock',
@@ -4553,6 +4554,9 @@ def check_scenario_registry_projection(root):
         'target_evidence_arbitrary_layout_matches',
         'target_evidence_four_claim_mismatch',
         'target_evidence_no_claims_incomplete',
+        'release_state_current_documents_match',
+        'release_state_stale_state',
+        'release_state_duplicate_ledger',
     }
     if not required_w3c_scenarios.issubset(set(names)):
         fail('scenario registry is missing W3C mixed-gate or executable-unavailable coverage')

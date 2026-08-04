@@ -36,6 +36,14 @@ target_evidence_fixtures:
   positive: examples/target_evidence/arbitrary_layout/notes/project.marker
   mismatch: examples/negative/target_evidence/mismatched_claims/notes/project.marker
   proof_limit: only named claims are checked; fixture success does not establish fit, depth, readiness, recommendation, or approval
+release_state_fixtures:
+  purpose: exact local release-state document-coherence scenarios
+  authority: release-state validator input only; not release evidence or publication authority
+  positive_readme: examples/release_state/README.valid-v1-2.md
+  stale_mutation_source: examples/negative/release_state/README.stale-v1-2-candidate.md
+  duplicate_ledger_policy: examples/negative/release_state/SOURCE_ONLY_RELEASE_POLICY.ledger.md
+  clean_current_status: examples/compact_governance/current_status.compact.clean.md
+  proof_limit: scenario success does not prove tag or GitHub Release existence, live metadata, semantic readiness, human approval, publication authority, or merge authority
 negative_expected_failures:
   purpose: inputs expected to trigger current opt-in mechanical checks
   authority: regression fixture only

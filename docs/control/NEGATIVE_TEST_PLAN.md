@@ -205,6 +205,8 @@ validation evidence.
 | `NEG-114-target-evidence-empty-literal` | text claim supplies an empty literal | blocked | target_evidence.py | direct bounded command probe | Must emit `TE_LITERAL_EMPTY`; an empty substring cannot manufacture a match. |
 | `NEG-115-target-evidence-non-text` | text claim names a non-file, unreadable file, or invalid UTF-8 evidence | blocked | target_evidence.py | direct bounded command probes | Must emit the corresponding stable incomplete code and never expose target contents or the caller literal. |
 | `NEG-116-target-evidence-invalid-literal` | text claim contains a non-Unicode-scalar value | blocked | target_evidence.py | direct bounded evaluator probe | Must emit `TE_LITERAL_INVALID`, domain `incomplete`, and no traceback. |
+| `NEG-117-release-state-stale-completed-tag` | one otherwise-valid release-state set still describes the completed tag as candidate or pending | blocked | release-state-check / scenario registry | `examples/negative/release_state/README.stale-v1-2-candidate.md` | Exit `1`; exact finding multiset is `RS_STALE_RELEASE_STATE`; all other inputs are positive. |
+| `NEG-118-release-state-duplicate-ledger` | one otherwise-valid release-state set contains a duplicate per-release ledger | blocked | release-state-check / scenario registry | `examples/negative/release_state/SOURCE_ONLY_RELEASE_POLICY.ledger.md` | Exit `1`; exact finding multiset is `RS_DUPLICATE_RELEASE_LEDGER`; all other inputs are positive. |
 
 ## Current Execution Surface
 
@@ -262,6 +264,14 @@ literal or fixture-content output (including JSON-escaped forms), and unchanged
 target-fixture tree fingerprints. They validate only caller-supplied
 mechanical claims; they do not select claims or judge target fit, layout,
 governance depth, adaptation, readiness, recommendation, or approval.
+
+The `release-state` group pairs one three-document positive set with isolated
+stale-state and duplicate-ledger negatives. It locks exact exit, common result,
+finding-code multiset, checked and unchecked claims, `human_gate.status:
+not_checked`, proof boundary, top-level keys, and unchanged input
+fingerprints. The group proves local document coherence only; release
+existence, tag existence, GitHub metadata, semantic readiness, human approval,
+publication authority, and merge authority remain unchecked.
 
 Positive lifecycle coverage must separately prove:
 

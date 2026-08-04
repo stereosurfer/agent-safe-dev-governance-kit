@@ -10,11 +10,19 @@ release-state closeout.
 
 ## Authority
 
-This skill does not authorize a release. Release execution requires a separate
-GitHub issue with explicit human approval. Tags, GitHub releases, packages,
-repository visibility changes, dependencies, workflows, schemas, runtime
-adapters, installer scaffold, and v2.0 work remain human-gated unless the
-release issue explicitly authorizes them.
+This Skill and `release-state-check` do not authorize a release. Any release or
+publication decision or execution—including tag creation, GitHub Release
+creation, package publication, or external distribution—requires a separate
+GitHub release-execution issue with explicit human approval for the exact tag,
+title, target commit, distribution path, and rollback or revoke plan. Other
+restricted operations remain governed by
+`docs/control/HUMAN_GATED_OPERATIONS.md`; a release issue authorizes only the
+exact actions it names.
+
+Program execution authorization for repo-local source maintenance is not
+release approval and is not current-head OWNER review. It must not be used as
+the `approval_source` for release execution or described as review of an unseen
+head or diff.
 
 If this skill conflicts with `AGENTS.md`, the release issue, a PR, or
 `docs/control/SOURCE_ONLY_RELEASE_POLICY.md`, stop and use the durable repo
@@ -24,11 +32,10 @@ authority.
 
 - Release target: tag, title, target commit, and source-only boundary.
 - Release issue with explicit human approval before execution.
-- Product-entry and handoff docs that must be synchronized, usually:
+- Local release-state documents mechanically checked for closeout:
   - `README.md`
-  - `docs/bootstrap/10_roadmap.md`
   - `docs/handoff/CURRENT_STATUS.md`
-  - any release-specific control or readiness docs named by the issue
+  - `docs/control/SOURCE_ONLY_RELEASE_POLICY.md`
 - Validation commands, including:
   - `python3 scripts/asgk.py doctor`
   - `python3 scripts/asgk.py release-state-check --tag <tag> --release-title "<title>"`
@@ -69,10 +76,10 @@ release_execution_evidence:
   target_commit:
   approval_source:
   final_doctor: freshly_rerun
-  release_state_docs_plan:
+  release_state_inputs:
     - README.md
-    - docs/bootstrap/10_roadmap.md
     - docs/handoff/CURRENT_STATUS.md
+    - docs/control/SOURCE_ONLY_RELEASE_POLICY.md
 ```
 
 Stop before tag or GitHub release creation if approval, target commit, release
@@ -100,6 +107,10 @@ python3 scripts/asgk.py release-state-check --tag <tag> --release-title "<title>
 python3 scripts/asgk.py doctor
 ```
 
+A passing `release-state-check` is local-document evidence only. It does not
+prove that a tag or GitHub Release exists, establish semantic release readiness,
+or satisfy human approval or publication authority.
+
 If `release-state-check` fails for the current release after release execution,
 do not weaken the checker. Repair only current release state; apply
 `docs/control/ISSUE_HYGIENE_GATE.md` before turning observations into work.
@@ -117,7 +128,9 @@ installed/global skill directories unless explicitly asked. Record
 ## Stop States
 
 - `blocked`: release target, release issue, approval, validation, or docs plan is missing.
-- `requires_human`: release execution, tag/release creation, publication, visibility, dependency, schema, workflow, runtime adapter, installer, or v2.0 work is requested.
+- `requires_human`: a release/publication decision or execution is requested,
+  including tag or GitHub Release creation, package publication, external
+  distribution, or any other operation named by Human-Gated Operations.
 - `ready_for_execution_issue`: planning is complete, but execution still needs explicit issue approval.
 - `ready_for_human_execution`: explicit release issue approval and final validation exist.
 - `closeout_required`: release exists but release-state docs or validation are not closed out.
