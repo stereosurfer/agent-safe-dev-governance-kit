@@ -120,14 +120,13 @@ The modeled states now have opt-in command surfaces:
 - task-packet narrowing check against issue scope;
 - compact PR body checks against compiled reports;
 - compact handoff checks against current-status freshness;
-- compact target-upgrade manifest checks;
 - fail-closed behavior when required metadata is unavailable;
 - explicit `requires_human` state for restricted boundaries.
 
 These commands do not make compact governance the default. Before compact
 governance can become the default PR or handoff profile, a separate issue-backed
-work unit must prove the default migration against real PR flow, target-upgrade
-flow, human-gated boundaries, and installed-skill behavior.
+work unit must prove the default migration against real PR and handoff flow,
+human-gated boundaries, and installed-skill behavior.
 
 Until default-profile migration is explicitly approved, verbose PR bodies remain
 the safer default.
@@ -252,20 +251,3 @@ The check validates compact recovery fields, `current_status_impact`, the
 current-status file, and completed issue/PR/branch references. It fails when a
 handoff says `not_applicable` while `CURRENT_STATUS.md` still points active work
 at completed work, and it never infers low-risk status.
-
-## Compact Target Upgrade Profile
-
-The compact target-upgrade profile is opt-in and non-default. It is documented
-in `docs/control/COMPACT_TARGET_UPGRADE_PROFILE.md` and checked with:
-
-```bash
-python3 scripts/asgk.py compact-target-upgrade-check \
-  --manifest examples/compact_governance/target_upgrade/manifest.valid.json
-```
-
-The check validates an upgrade manifest for an already ASGK-adopted target
-repository. It preserves the install-surface boundary: target-owned
-`CURRENT_STATUS.md`, document maps, registries, bootstrap docs, and license
-surfaces must be preserved or manually merged, never copied as ASGK source-repo
-truth. The manifest cannot enable compact governance by default and cannot infer
-low-risk status.

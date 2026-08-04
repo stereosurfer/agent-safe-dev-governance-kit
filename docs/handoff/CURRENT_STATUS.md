@@ -4,7 +4,7 @@ This is the repository recovery snapshot. It is overwritten, not appended.
 Historical evidence and completed-work detail belong in GitHub issues, PRs,
 comments, releases, and merge commits.
 
-Last updated: `2026-08-04T08:13:03Z`
+Last updated: `2026-08-04T09:03:17Z`
 
 ## Durable source of truth
 
@@ -53,9 +53,9 @@ Adoption and material-upgrade assessment remains read-only and target-specific,
 guided by a human-selected frontier-capability model. Tools may check claims;
 they do not choose an Agent, prescribe architecture, or decide governance depth.
 
-Legacy target-install commands still retain fixed-shape assumptions. Their
-clean cutover belongs to the separately scoped W4C work unit under #323 and
-must not be treated as target-fit or approval authority.
+The fixed-shape target tools and dedicated fixtures are removed.
+`target-evidence-check` is the sole target mechanical interface and checks
+explicit claims; frontier judgment owns fit, depth, minimum change, or no change.
 
 ## Active work
 
@@ -97,11 +97,10 @@ model cache, or external preparation outputs are authorized by this status.
 
 ## Next safe action
 
-From current `main`, create the separately scoped W4C child issue after the
-preceding work-unit closeout. W4C owns clean removal of the three fixed-shape
-legacy target commands and their misleading active references; do not infer
-target governance depth, restore compatibility aliases, or resume superseded
-plans.
+From current `main`, create W5 after the W4C close-out. W5 rewrites the Project
+Brief and Evolution Model and scans public/startup projections; do not revive a
+Roadmap, runtime-adapter stage, maturity ledger, fixed target shape, or automatic
+Agent routing.
 
 ```yaml
 reference_scope:

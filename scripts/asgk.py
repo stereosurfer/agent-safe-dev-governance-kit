@@ -34,7 +34,6 @@ from asgk_lib.compact_handoff import (
     numbered_ref_matches,
     valid_follow_up_issue,
 )
-from asgk_lib.compact_target_upgrade import compact_target_upgrade_check
 from asgk_lib.handoff import evaluate_handoff_file, is_material_handoff_text
 from asgk_lib.release_state import check_release_state_docs
 from asgk_lib.status_policy import (
@@ -43,10 +42,6 @@ from asgk_lib.status_policy import (
     CURRENT_STATUS_IMPACT_ALLOWED_VALUES,
     CURRENT_STATUS_IMPACT_REQUIRED_FIELDS,
     TRUE_VALUES,
-)
-from asgk_lib.target_install import (
-    print_target_install_findings,
-    target_install_findings,
 )
 from asgk_lib.target_evidence import (
     evaluate_target_evidence,
@@ -4302,22 +4297,6 @@ def cmd_compact_handoff_check(args: argparse.Namespace) -> int:
     return 0 if result == "pass" else 1
 
 
-def cmd_compact_target_upgrade_check(args: argparse.Namespace) -> int:
-    result, output = compact_target_upgrade_check(args.manifest)
-    if args.json:
-        print(json.dumps(output, indent=2, sort_keys=True))
-    elif result == "pass":
-        print("Compact target upgrade check passed. No low-risk status was inferred.")
-    else:
-        for finding in output.get("findings", []):
-            print(
-                f"FAIL: {finding_display_location(finding)} - "
-                f"{finding['reason']}"
-            )
-        print("Compact target upgrade check failed. No low-risk status was inferred.")
-    return 0 if result == "pass" else 1
-
-
 def cmd_context_budget_measure(args: argparse.Namespace) -> int:
     try:
         packet, source_text = load_task_packet_payload(args.task_packet)
@@ -4535,12 +4514,6 @@ def cmd_handoff_template(args: argparse.Namespace) -> int:
     return 0
 
 
-def cmd_target_install_check(args: argparse.Namespace) -> int:
-    root = Path(args.repo_root).resolve()
-    findings = target_install_findings(root)
-    return print_target_install_findings(findings, as_json=args.json, strict=args.strict)
-
-
 def cmd_target_evidence_check(args: argparse.Namespace) -> int:
     escaped_values = getattr(args, "_target_evidence_escaped_values", {})
 
@@ -4561,19 +4534,6 @@ def cmd_target_evidence_check(args: argparse.Namespace) -> int:
         ],
     )
     return print_target_evidence_result(report, as_json=args.json)
-
-
-def cmd_target_install_plan(args: argparse.Namespace) -> int:
-    from target_install_plan import build_plan as build_target_install_plan
-    from target_install_plan import print_plan_text as print_target_install_plan_text
-
-    root = Path(args.repo_root).resolve()
-    plan = build_target_install_plan(root)
-    if args.json:
-        print(json.dumps(plan, indent=2, sort_keys=True))
-    else:
-        print_target_install_plan_text(plan)
-    return 0
 
 
 def cmd_release_state_check(args: argparse.Namespace) -> int:
@@ -4751,11 +4711,6 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--json", action="store_true", help="Emit machine-readable JSON output.")
     p.set_defaults(func=cmd_compact_handoff_check)
 
-    p = sub.add_parser("compact-target-upgrade-check", help="Check a compact-governance target-upgrade manifest.")
-    p.add_argument("--manifest", required=True, help="Compact target-upgrade manifest JSON file.")
-    p.add_argument("--json", action="store_true", help="Emit machine-readable JSON output.")
-    p.set_defaults(func=cmd_compact_target_upgrade_check)
-
     p = sub.add_parser("policy-gate", help="Run PR-body policy gate checks.")
     p.add_argument("--pr-body", help="Path to a PR body markdown file.")
     p.add_argument("--github-event", help="Path to a GitHub Actions event payload JSON file.")
@@ -4922,17 +4877,6 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--branch", default=None)
     p.add_argument("--objective", default=None)
     p.set_defaults(func=cmd_handoff_template)
-
-    p = sub.add_parser("target-install-check", help="Read-only target ASGK installation check.")
-    p.add_argument("--repo-root", default=str(ROOT), help="Repository root to inspect. Defaults to this repository.")
-    p.add_argument("--strict", action="store_true", help="Return nonzero when warnings are present.")
-    p.add_argument("--json", action="store_true", help="Emit machine-readable JSON output.")
-    p.set_defaults(func=cmd_target_install_check)
-
-    p = sub.add_parser("target-install-plan", help="Emit a read-only ASGK target-install plan.")
-    p.add_argument("--repo-root", default=str(ROOT), help="Target repository root to inspect. Defaults to this repository.")
-    p.add_argument("--json", action="store_true", help="Emit machine-readable JSON output.")
-    p.set_defaults(func=cmd_target_install_plan)
 
     p = sub.add_parser("release-state-check", help="Check post-release docs are not stale candidate/pending surfaces.")
     p.add_argument("--tag", required=True, help="Released tag, for example v1.2.0.")

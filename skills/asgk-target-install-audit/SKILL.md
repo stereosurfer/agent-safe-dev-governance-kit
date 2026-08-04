@@ -47,8 +47,8 @@ assessment destination. Follow target references only when a material question
 requires more evidence.
 
 Use `docs/control/TARGET_INSTALL_CHECKLIST.md` when assessment questions need
-expansion and `docs/control/TARGET_INSTALL_VALIDATION_PLAN.md` when
-deterministic commands or proof limits matter. Never use an ASGK donor file list
+expansion and `docs/control/VALIDATION_STRATEGY.md` plus command help when
+deterministic claims or proof limits matter. Never use an ASGK donor file list
 as a required target shape.
 
 ## Assessment Procedure
@@ -91,14 +91,10 @@ relevant to this target. File presence alone is not semantic evidence.
 Use `target-evidence-check` only after the assessment produces an explicit,
 mechanically testable path or literal-text claim. The evaluator supplies every
 claim; the command does not select target files, decide whether the claim set is
-sufficient, or form a recommendation. Apply
-`docs/control/TARGET_INSTALL_VALIDATION_PLAN.md` and record both what matched and
-what remained unchecked.
-
-The three older target-install commands retain fixed-shape assumptions. Run one
-only when its narrower legacy observation is materially useful, label that
-proof limit, and never weaken the target recommendation to make it pass. A tool
-change requires separate durable authorization.
+sufficient, or form a recommendation. Use command help for the exact four claim
+types, apply `docs/control/VALIDATION_STRATEGY.md`, and record both what matched
+and what remained unchecked. ASGK retains no target install planner, fixed-shape
+checker, or compact target-upgrade manifest.
 
 ### 5. Exercise Frontier Judgment
 

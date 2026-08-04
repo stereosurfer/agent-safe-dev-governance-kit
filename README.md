@@ -111,9 +111,8 @@ governance model. ASGK v1.x deliberately keeps the default layer generic.
 - `docs/handoff/CURRENT_STATUS.md` as a compact recovery surface.
 - Current-status policy that makes status updates post-merge-safe by default.
 - Local validation through `python3 scripts/asgk.py doctor`.
-- Negative fixtures for governance hygiene, PR bodies, handoff packets, the
-  current legacy target-install shape checker, and stale current-status
-  patterns.
+- Negative fixtures for governance hygiene, PR bodies, handoff packets,
+  caller-supplied target evidence, and stale current-status patterns.
 - Explicit validation-boundary wording so `doctor` evidence is not treated as a
   substitute for project-specific tests, security review, privacy review, or API
   freshness checks.
@@ -125,9 +124,10 @@ governance model. ASGK v1.x deliberately keeps the default layer generic.
   handoff, evidence audit, target-install audit, and governance health checks.
 - Document map and context-budget guidance so agents read the smallest
   sufficient context instead of the whole repository.
-- Read-only target-install diagnostics for a legacy expected source shape.
-  These provide mechanical observations, not a target-fit decision,
-  minimum-change recommendation, or adoption-readiness proof.
+- Read-only `target-evidence-check` diagnostics for explicit caller-supplied
+  path and literal-text claims. These provide bounded mechanical observations,
+  not a target-fit decision, minimum-change recommendation, or
+  adoption-readiness proof.
 
 ## Quick Start
 

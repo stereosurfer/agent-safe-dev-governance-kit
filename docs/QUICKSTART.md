@@ -95,8 +95,8 @@ python3 scripts/asgk.py doctor
 
 Expected-failure output during `doctor` is intentional when followed by an
 expected-failure summary. It confirms that current encoded fixtures trigger
-their expected mechanical failures. Legacy target-install fixtures do not prove
-a semantic target-governance defect.
+their expected mechanical failures. Target-evidence fixtures prove only the
+registered caller-claim behavior, not a semantic target-governance defect.
 
 ## Assess Adoption In A Target Repository
 
@@ -111,16 +111,20 @@ Record the assessment in an existing target-owned issue, PR, or handoff lineage.
 The assessment itself adds no approval gate. Existing gates apply only when its
 implementation proposal touches a concrete protected or high-risk action.
 
-If the ASGK source checkout is available, this command may provide additional
-mechanical observations:
+If the ASGK source checkout is available, use explicit caller-supplied claims
+for any mechanical observation produced during the assessment:
 
 ```bash
-python3 scripts/asgk.py target-install-check --repo-root /path/to/target/repo
+python3 scripts/asgk.py target-evidence-check \
+  --repo-root /path/to/target/repo \
+  --expect-path <target-relative-path> \
+  --json
 ```
 
-The current command is a legacy fixed-shape diagnostic. It is read-only and
-does not prove semantic readiness, prescribe target architecture, or replace
-the evaluator's judgment.
+The command is read-only and assumes no target layout. Exit `0` means only that
+the accepted named claims matched; it does not prove claim sufficiency,
+semantic readiness, prescribe target architecture, or replace the evaluator's
+judgment.
 
 ## First Governed Change
 
