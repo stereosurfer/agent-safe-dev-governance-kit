@@ -11,12 +11,22 @@ skill_pack_rule:
   skills_do_not_add_new_gates: true
   skills_guide_reasoning_and_existing_boundaries: true
   skills_do_not_predetermine_assessment_outcomes: true
-  final_authority:
-    - GitHub issues
-    - GitHub pull requests
-    - repository files
+  durable_authority:
+    current_work:
+      - selected durable GitHub issue or qualifying pull request
+    rules_and_contracts:
+      - applicable canonical repository rules, contracts, and decision records
+    gated_decisions:
+      - explicit durable human decision when an existing gate requires one
+  mechanical_evidence_and_enforcement:
     - ASGK validators
-    - human gates where required
+  model_judgment:
+    - interprets evidence and makes semantic recommendations within the durable work unit
+    - does not create task authority or satisfy an existing human gate
+  validator_limits:
+    - validators do not create scope or decision authority
+    - validators do not approve work or satisfy a human gate
+    - a pass proves only the named checks at their stated proof boundary
 ```
 
 ## Frontier-Guided Assessment Contract
@@ -68,8 +78,11 @@ do not have native skill installation can read a specific `SKILL.md` only when a
 work unit needs that procedure.
 
 Use this mode for portability. The repository still works without client-native
-skill installation because `AGENTS.md`, GitHub issues, PRs, repository docs, and
-validators remain authoritative.
+skill installation because durable task and decision authority remains in the
+selected durable GitHub issue or qualifying pull request, applicable canonical
+repository rules, contracts, and decision records, and explicit durable human
+decisions when an existing gate requires one. Validators continue to produce
+bounded mechanical evidence and enforce only their declared contracts.
 
 ## Included Skills
 
@@ -133,10 +146,13 @@ weekly_or_milestone_review:
   work that must be transferred to an issue before PR or merge.
 - A read-only assessment does not need implementation allowed paths or a new
   approval. Any later write still needs target-owned issue or PR authority,
-  allowed paths, validation, and applicable existing human approval.
+  allowed paths, validation, and any explicit human approval required by an
+  existing gate.
 - A skill must stop when the authority, evidence, validation, or exact existing
   human gate required for its current action is missing.
 - A skill may call existing validators only at their documented proof boundary.
+  A validator result is evidence about the named checks, not task scope,
+  approval, semantic correctness, or merge authority.
 - Assessment skills should output `assessment_complete` or `blocked`, never
   `approved`. Record an exact existing gate separately as `next_action_gate`;
   semantic judgment alone does not trigger it.
@@ -148,7 +164,8 @@ weekly_or_milestone_review:
 ## Maintenance Touchpoints
 
 Architecture is canonical. Skills are downstream procedures. Validators check
-artifacts.
+artifacts and enforce configured mechanical contracts; they do not own task
+scope or decision authority.
 
 Do not add a separate skill-compliance checker. Keep skills synchronized by
 making architecture, policy, template, or validator PRs declare whether they
@@ -159,6 +176,7 @@ maintenance_rule:
   architecture_is_canonical: true
   skills_are_downstream: true
   validators_check_artifacts: true
+  validators_create_authority: false
   no_skill_compliance_checker: true
 ```
 
