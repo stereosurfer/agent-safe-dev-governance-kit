@@ -8,6 +8,129 @@ EXPECTED_SUCCESS = "expected_success"
 
 ASGK = ("python3", "scripts/asgk.py")
 
+TARGET_EVIDENCE_EXPECTED_PROOF_BOUNDARY = (
+    "Exit 0 proves only that every accepted caller-supplied mechanical claim "
+    "matched the named observable target paths or literal text during this "
+    "read-only run. It does not inspect unnamed target state or prove claim "
+    "completeness or sufficiency, semantic correctness, security, privacy, "
+    "license sufficiency, target fit, architecture or layout, governance "
+    "depth, minimum adaptation, adoption or upgrade readiness or completeness, "
+    "evaluator recommendation, human approval, implementation authority, PR "
+    "readiness, or merge authority."
+)
+TARGET_EVIDENCE_EXPECTED_DOMAIN_NOT_CHECKED = (
+    "unnamed target paths, text, or other repository state",
+    "completeness or sufficiency of caller-supplied claims",
+    "semantic correctness, security, privacy, or license sufficiency",
+    "target fit, architecture or layout, governance depth, or minimum adaptation",
+    "adoption or upgrade readiness or completeness",
+    "evaluator recommendation or implementation authority",
+    "human approval, PR readiness, or merge authority",
+    "concurrent target mutation during the read-only observation",
+)
+TARGET_EVIDENCE_EXPECTED_COMPLETE_CHECKED = (
+    "caller claim presence",
+    "target root availability and directory shape",
+    "claim path syntax, normalization, and resolved-root containment",
+    "explicit path presence or absence for accepted path claims",
+    "absent-path handling or case-sensitive literal containment for accepted "
+    "in-root UTF-8 regular-file text claims",
+    "aggregate target-evidence domain/common result mapping",
+)
+TARGET_EVIDENCE_EXPECTED_NO_CLAIMS_CHECKED = (
+    "caller claim presence",
+    "target root availability and directory shape",
+    "aggregate target-evidence domain/common result mapping",
+)
+TARGET_EVIDENCE_EXPECTED_NO_CLAIMS_NOT_CHECKED = (
+    "claim path syntax, normalization, and resolved-root containment because "
+    "no claims were supplied",
+    "target path or literal-text state because no claims were supplied",
+    *TARGET_EVIDENCE_EXPECTED_DOMAIN_NOT_CHECKED,
+)
+TARGET_EVIDENCE_EXPECTED_TOP_LEVEL_KEYS = (
+    "claim_count",
+    "claims",
+    "derived_state",
+    "domain_result",
+    "evidence_source",
+    "findings",
+    "human_gate",
+    "mechanically_checked",
+    "not_checked",
+    "proof_boundary",
+    "result",
+    "writes_performed",
+)
+TARGET_EVIDENCE_EXPECTED_MATCH_CLAIMS = [
+    {
+        "index": 1,
+        "kind": "expect_path",
+        "path": "notes/project.marker",
+        "status": "matched",
+    },
+    {
+        "index": 2,
+        "kind": "forbid_path",
+        "path": "notes/missing.marker",
+        "status": "matched",
+    },
+    {
+        "index": 3,
+        "kind": "expect_text",
+        "literal_length": 18,
+        "literal_sha256": (
+            "4bf7423a2115122639f3dce58591bf1dbfe1a2880896ec0016a43b5ee5e27d1f"
+        ),
+        "path": "notes/project.marker",
+        "status": "matched",
+    },
+    {
+        "index": 4,
+        "kind": "forbid_text",
+        "literal_length": 6,
+        "literal_sha256": (
+            "2903d237c8474e8b1ba520a3d8f8c0eebf8c56ad068fb851d178cf6131354d70"
+        ),
+        "path": "notes/project.marker",
+        "status": "matched",
+    },
+]
+TARGET_EVIDENCE_EXPECTED_MISMATCH_CLAIMS = [
+    {
+        "index": 1,
+        "kind": "expect_path",
+        "path": "notes/missing.marker",
+        "status": "mismatched",
+    },
+    {
+        "index": 2,
+        "kind": "forbid_path",
+        "path": "notes/project.marker",
+        "status": "mismatched",
+    },
+    {
+        "index": 3,
+        "kind": "expect_text",
+        "literal_length": 18,
+        "literal_sha256": (
+            "4bf7423a2115122639f3dce58591bf1dbfe1a2880896ec0016a43b5ee5e27d1f"
+        ),
+        "path": "notes/project.marker",
+        "status": "mismatched",
+    },
+    {
+        "index": 4,
+        "kind": "forbid_text",
+        "literal_length": 11,
+        "literal_sha256": (
+            "1b419c0dd2697b72ba67f469acb4f2b7708f5df932df6dd9c321937c0386f5d2"
+        ),
+        "path": "notes/project.marker",
+        "status": "mismatched",
+    },
+]
+
 
 @dataclass(frozen=True)
 class NegativeCaseGroup:
@@ -287,6 +410,10 @@ class JsonScenario:
     environment: str | None = None
     expected_mechanically_checked: tuple[str, ...] | None = None
     expected_not_checked: tuple[str, ...] | None = None
+    expected_payload_fields: tuple[tuple[str, object], ...] = ()
+    expected_top_level_keys: tuple[str, ...] | None = None
+    forbidden_output_fragments: tuple[str, ...] = ()
+    unchanged_paths: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -1370,6 +1497,117 @@ RETAINED_JSON_SCENARIOS = (
         SOURCE_INVENTORY_PROOF_BOUNDARY,
         expected_mechanically_checked=SOURCE_INVENTORY_CHECKED,
         expected_not_checked=SOURCE_INVENTORY_NOT_CHECKED,
+    ),
+    JsonScenario(
+        "target_evidence_arbitrary_layout_matches",
+        "target-evidence",
+        (
+            *ASGK,
+            "target-evidence-check",
+            "--repo-root",
+            "examples/target_evidence/arbitrary_layout",
+            "--expect-path",
+            "notes/project.marker",
+            "--forbid-path",
+            "notes/missing.marker",
+            "--expect-text",
+            "notes/project.marker",
+            "mode=collaborative",
+            "--forbid-text",
+            "notes/project.marker",
+            "--json",
+            "--json",
+        ),
+        "positive",
+        "pass",
+        0,
+        (),
+        TARGET_EVIDENCE_EXPECTED_PROOF_BOUNDARY,
+        expected_domain_result="claims_match",
+        expected_mechanically_checked=TARGET_EVIDENCE_EXPECTED_COMPLETE_CHECKED,
+        expected_not_checked=TARGET_EVIDENCE_EXPECTED_DOMAIN_NOT_CHECKED,
+        expected_payload_fields=(
+            ("evidence_source", "live_target_tree_and_caller_claims"),
+            ("writes_performed", False),
+            ("claim_count", 4),
+            ("claims", TARGET_EVIDENCE_EXPECTED_MATCH_CLAIMS),
+        ),
+        expected_top_level_keys=TARGET_EVIDENCE_EXPECTED_TOP_LEVEL_KEYS,
+        forbidden_output_fragments=("mode=collaborative", "--json"),
+        unchanged_paths=("examples/target_evidence/arbitrary_layout",),
+    ),
+    JsonScenario(
+        "target_evidence_four_claim_mismatch",
+        "target-evidence",
+        (
+            *ASGK,
+            "target-evidence-check",
+            "--repo-root",
+            "examples/negative/target_evidence/mismatched_claims",
+            "--expect-path",
+            "notes/missing.marker",
+            "--forbid-path",
+            "notes/project.marker",
+            "--expect-text",
+            "notes/project.marker",
+            "mode=collaborative",
+            "--forbid-text",
+            "notes/project.marker",
+            "mode=opaque",
+            "--json",
+        ),
+        "negative",
+        "fail",
+        1,
+        (
+            "TE_EXPECT_PATH_MISSING",
+            "TE_FORBID_PATH_PRESENT",
+            "TE_EXPECT_TEXT_NOT_FOUND",
+            "TE_FORBID_TEXT_FOUND",
+        ),
+        TARGET_EVIDENCE_EXPECTED_PROOF_BOUNDARY,
+        expected_domain_result="claims_mismatch",
+        expected_mechanically_checked=TARGET_EVIDENCE_EXPECTED_COMPLETE_CHECKED,
+        expected_not_checked=TARGET_EVIDENCE_EXPECTED_DOMAIN_NOT_CHECKED,
+        expected_payload_fields=(
+            ("evidence_source", "live_target_tree_and_caller_claims"),
+            ("writes_performed", False),
+            ("claim_count", 4),
+            ("claims", TARGET_EVIDENCE_EXPECTED_MISMATCH_CLAIMS),
+        ),
+        expected_top_level_keys=TARGET_EVIDENCE_EXPECTED_TOP_LEVEL_KEYS,
+        forbidden_output_fragments=("mode=collaborative", "mode=opaque"),
+        unchanged_paths=(
+            "examples/negative/target_evidence/mismatched_claims",
+        ),
+    ),
+    JsonScenario(
+        "target_evidence_no_claims_incomplete",
+        "target-evidence",
+        (
+            *ASGK,
+            "target-evidence-check",
+            "--repo-root",
+            "examples/target_evidence/arbitrary_layout",
+            "--json",
+        ),
+        "negative",
+        "blocked",
+        1,
+        ("TE_CLAIMS_MISSING",),
+        TARGET_EVIDENCE_EXPECTED_PROOF_BOUNDARY,
+        expected_domain_result="incomplete",
+        expected_mechanically_checked=TARGET_EVIDENCE_EXPECTED_NO_CLAIMS_CHECKED,
+        expected_not_checked=TARGET_EVIDENCE_EXPECTED_NO_CLAIMS_NOT_CHECKED,
+        expected_payload_fields=(
+            ("evidence_source", "live_target_tree_and_caller_claims"),
+            ("writes_performed", False),
+            ("claim_count", 0),
+            ("claims", []),
+        ),
+        expected_top_level_keys=TARGET_EVIDENCE_EXPECTED_TOP_LEVEL_KEYS,
+        forbidden_output_fragments=("mode=collaborative",),
+        unchanged_paths=("examples/target_evidence/arbitrary_layout",),
     ),
     JsonScenario(
         "source_inventory_missing_required_path",

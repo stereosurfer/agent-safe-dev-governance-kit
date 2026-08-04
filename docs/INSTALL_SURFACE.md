@@ -141,6 +141,25 @@ human-gated policy. No additional approval gate is created by the assessment.
 
 ## Current Deterministic Tool Boundary
 
+`target-evidence-check` is the layout-agnostic mechanical interface. The
+evaluator supplies every path or literal-text claim; the command contains no
+required target filename or directory. A passing result means only that all
+accepted named claims matched during that read-only run. It does not decide
+whether the claims are complete, whether ASGK fits the target, what governance
+depth is appropriate, or what should be implemented.
+
+Use it only after target evidence makes a concrete claim worth checking:
+
+```bash
+python3 scripts/asgk.py target-evidence-check \
+  --repo-root <target> \
+  --expect-path <target-relative-path> \
+  --json
+```
+
+The exact four claim types and their proof boundary live in command help and
+`docs/control/TARGET_INSTALL_VALIDATION_PLAN.md`.
+
 The current target-install checker, planner, and compact-upgrade checker retain
 legacy fixed-shape assumptions. Their outputs may provide bounded observations;
 their pass/fail result does not prove target fit, governance depth, adoption

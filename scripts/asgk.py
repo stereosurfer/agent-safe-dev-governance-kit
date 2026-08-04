@@ -48,6 +48,10 @@ from asgk_lib.target_install import (
     print_target_install_findings,
     target_install_findings,
 )
+from asgk_lib.target_evidence import (
+    evaluate_target_evidence,
+    print_target_evidence_result,
+)
 from asgk_lib.task_packet import (
     CANONICAL_TASK_FIELDS,
     TASK_PACKET_FALLBACK_FIELDS,
@@ -114,6 +118,12 @@ STATUS_FORBIDDEN_HISTORY_HEADINGS = [
 STATUS_FORBIDDEN_PHRASES = [
     "full PR body", "raw CI log", "chat transcript", "see chat",
 ]
+TARGET_EVIDENCE_CLAIM_VALUE_ARITY = {
+    "--expect-path": 1,
+    "--forbid-path": 1,
+    "--expect-text": 2,
+    "--forbid-text": 2,
+}
 CONTEXT_TOKEN_ESTIMATE_CHARS_PER_TOKEN = 4
 CONTEXT_MEASUREMENT_METHOD = (
     "estimated_repo_context_tokens = ceil(characters / 4); repo files only; "
@@ -4531,6 +4541,28 @@ def cmd_target_install_check(args: argparse.Namespace) -> int:
     return print_target_install_findings(findings, as_json=args.json, strict=args.strict)
 
 
+def cmd_target_evidence_check(args: argparse.Namespace) -> int:
+    escaped_values = getattr(args, "_target_evidence_escaped_values", {})
+
+    def restored(value: str) -> str:
+        return escaped_values.get(value, value)
+
+    report = evaluate_target_evidence(
+        args.repo_root,
+        expect_paths=[restored(value) for value in args.expect_path],
+        forbid_paths=[restored(value) for value in args.forbid_path],
+        expect_texts=[
+            (restored(path), restored(literal))
+            for path, literal in args.expect_text
+        ],
+        forbid_texts=[
+            (restored(path), restored(literal))
+            for path, literal in args.forbid_text
+        ],
+    )
+    return print_target_evidence_result(report, as_json=args.json)
+
+
 def cmd_target_install_plan(args: argparse.Namespace) -> int:
     from target_install_plan import build_plan as build_target_install_plan
     from target_install_plan import print_plan_text as print_target_install_plan_text
@@ -4826,6 +4858,64 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--json", action="store_true", help="Emit machine-readable JSON output.")
     p.set_defaults(func=cmd_handoff_check)
 
+    p = sub.add_parser(
+        "target-evidence-check",
+        help="Check only caller-supplied path and literal-text claims in a target tree.",
+    )
+    p.add_argument(
+        "--repo-root",
+        required=True,
+        help="Target root to inspect read-only; no target layout is assumed.",
+    )
+    p.add_argument(
+        "--expect-path",
+        action="append",
+        default=[],
+        metavar="PATH",
+        help=(
+            "Require this exact normalized target-relative path to be present; "
+            "the next token is consumed as the value even when it begins with '-'."
+        ),
+    )
+    p.add_argument(
+        "--forbid-path",
+        action="append",
+        default=[],
+        metavar="PATH",
+        help=(
+            "Require this exact normalized target-relative path to be absent; "
+            "the next token is consumed as the value even when it begins with '-'."
+        ),
+    )
+    p.add_argument(
+        "--expect-text",
+        action="append",
+        default=[],
+        nargs=2,
+        metavar=("PATH", "LITERAL"),
+        help=(
+            "Require a UTF-8 regular file to contain this case-sensitive "
+            "literal; the next two tokens are always the claim values."
+        ),
+    )
+    p.add_argument(
+        "--forbid-text",
+        action="append",
+        default=[],
+        nargs=2,
+        metavar=("PATH", "LITERAL"),
+        help=(
+            "Require an absent path or UTF-8 regular file without this "
+            "literal; the next two tokens are always the claim values."
+        ),
+    )
+    p.add_argument(
+        "--json",
+        action="store_true",
+        help="Emit one common-envelope JSON object.",
+    )
+    p.set_defaults(func=cmd_target_evidence_check)
+
     p = sub.add_parser("handoff-template", help="Print an AI-fillable handoff packet draft.")
     p.add_argument("--issue", default=None)
     p.add_argument("--pr", default=None)
@@ -4860,9 +4950,48 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def prepare_target_evidence_cli_args(
+    argv: list[str],
+) -> tuple[list[str], dict[str, str]]:
+    if not argv or argv[0] != "target-evidence-check":
+        return argv, {}
+
+    prepared = list(argv)
+    escaped_values: dict[str, str] = {}
+    index = 1
+    placeholder_index = 0
+    while index < len(prepared):
+        arity = TARGET_EVIDENCE_CLAIM_VALUE_ARITY.get(prepared[index])
+        if arity is None:
+            index += 1
+            continue
+        for offset in range(1, arity + 1):
+            value_index = index + offset
+            if value_index >= len(prepared):
+                break
+            value = prepared[value_index]
+            if not value.startswith("-"):
+                continue
+            placeholder = (
+                f"__asgk_target_evidence_option_value_{placeholder_index}__"
+            )
+            while placeholder in prepared or placeholder in escaped_values:
+                placeholder_index += 1
+                placeholder = (
+                    f"__asgk_target_evidence_option_value_{placeholder_index}__"
+                )
+            escaped_values[placeholder] = value
+            prepared[value_index] = placeholder
+            placeholder_index += 1
+        index += arity + 1
+    return prepared, escaped_values
+
+
 def main() -> int:
     parser = build_parser()
-    args = parser.parse_args()
+    prepared_argv, escaped_values = prepare_target_evidence_cli_args(sys.argv[1:])
+    args = parser.parse_args(prepared_argv)
+    args._target_evidence_escaped_values = escaped_values
     return args.func(args)
 
 

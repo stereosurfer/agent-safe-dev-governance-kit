@@ -129,6 +129,7 @@ STATIC_REQUIRED_SOURCE_PATHS_BY_ROLE = {
         "scripts/asgk_lib/scenario_runner.py",
         "scripts/asgk_lib/source_validation.py",
         "scripts/asgk_lib/status_policy.py",
+        "scripts/asgk_lib/target_evidence.py",
         "scripts/asgk_lib/task_packet.py",
         "scripts/asgk_lib/text_fields.py",
         "scripts/asgk_lib/validation_result.py",
@@ -136,6 +137,10 @@ STATIC_REQUIRED_SOURCE_PATHS_BY_ROLE = {
         "scripts/governance_hygiene.py",
         "scripts/policy_gate_check.py",
         "scripts/pr_governance_preflight.py",
+    ),
+    "source_target_evidence_fixtures": (
+        "examples/target_evidence/arbitrary_layout/notes/project.marker",
+        "examples/negative/target_evidence/mismatched_claims/notes/project.marker",
     ),
     "source_distributed_skills": (
         "skills/asgk-current-status-handoff/SKILL.md",
@@ -4489,6 +4494,7 @@ def check_scenario_registry_projection(root):
         'context-budget',
         'workspace-state',
         'source-validation',
+        'target-evidence',
     }
     actual_behaviors = {
         scenario.get("group") for scenario in retained_scenarios
@@ -4544,6 +4550,9 @@ def check_scenario_registry_projection(root):
         'source_inventory_shape_invalid',
         'source_inventory_duplicate_key',
         'source_inventory_json_too_deep',
+        'target_evidence_arbitrary_layout_matches',
+        'target_evidence_four_claim_mismatch',
+        'target_evidence_no_claims_incomplete',
     }
     if not required_w3c_scenarios.issubset(set(names)):
         fail('scenario registry is missing W3C mixed-gate or executable-unavailable coverage')

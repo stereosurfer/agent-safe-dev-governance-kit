@@ -1,7 +1,7 @@
 # Target Install Validation Plan
 
-Status: active mechanical proof-boundary contract with documented legacy-tool
-limitations.
+Status: active mechanical proof-boundary contract with a caller-supplied claim
+interface and documented legacy-tool limitations.
 
 This document defines what deterministic target-install tooling may and may not
 prove.
@@ -80,30 +80,81 @@ A deterministic tool must not claim:
 
 ## Required Output Boundary
 
-Mechanical output should separate:
+`target-evidence-check` uses the common validation envelope and separates:
 
 ```yaml
+result: pass | fail | blocked
+domain_result: claims_match | claims_mismatch | incomplete
+derived_state: claims_match | claims_mismatch | incomplete
+writes_performed: false
 mechanically_checked:
-  - check performed
-  - observed result
-  - input or evidence location
-  - command/version when relevant
-
+  - checks actually completed for this invocation
 not_checked:
-  - semantic or unavailable question
-  - reason it was not mechanically checked
-
-existing_human_gate:
-  - concrete proposed action
-  - existing policy source
+  - unnamed, semantic, unavailable, or otherwise unchecked state
+human_gate:
+  status: not_checked
+  reason: mechanical target evidence does not establish human approval
+proof_boundary: exact claim limit
+findings:
+  - stable code, one field or path, material reason, and blocking state
 ```
 
-`existing_human_gate` reports an already-defined gate. It must not invent a new
-approval requirement.
+An assessment may separately name an already-defined gate for a proposed next
+action. Mechanical target evidence must not invent that gate or report it as
+approved.
 
-Tool output should also state `writes_performed: false` for read-only
-assessment commands and avoid an aggregate label that can be mistaken for
-semantic adoption completion.
+## Current Caller-Supplied Claim Interface
+
+```text
+python3 scripts/asgk.py target-evidence-check \
+  --repo-root <target> \
+  [--expect-path <path>]... \
+  [--forbid-path <path>]... \
+  [--expect-text <path> <literal>]... \
+  [--forbid-text <path> <literal>]... \
+  --json
+```
+
+The caller owns every claim. The command has no built-in target required-file
+set and accepts an arbitrary directory layout. Paths must be exact normalized
+target-relative paths and must remain inside the resolved root. Text claims use
+case-sensitive literal containment in in-root UTF-8 regular files.
+Each claim flag consumes its fixed one or two following values before later
+options are parsed, so an exact path or literal may begin with `-`; place a
+later `--json` after all values for that claim.
+
+Claim meaning:
+
+- `expect-path` matches when the named path is present.
+- `forbid-path` matches when the named path is absent.
+- `expect-text` matches when the named readable file contains the literal.
+- `forbid-text` matches when the path is absent or the named readable file does
+  not contain the literal. Pair it with `expect-path` when existence is also
+  required.
+
+Accepted claims are evaluated independently. A contradictory set does not gain
+authority or become a recommendation; any complete observable disagreement is
+reported as `claims_mismatch`. The evaluator remains responsible for whether
+the claim set is coherent and sufficient for its assessment question.
+
+At least one claim is required. Complete all-match evidence produces
+`claims_match`, common `pass`, and exit `0`. Complete observable disagreement
+produces `claims_mismatch`, common `fail`, one stable blocking finding per
+mismatched claim, and exit `1`. Missing, unsafe, unreadable, undecodable, or
+otherwise unevaluable input produces `incomplete`, common `blocked`, and exit
+`1`.
+
+Literal values and target contents are never emitted. Text claim records expose
+only the literal length and SHA-256 digest. That digest is an evidence
+fingerprint, not a secrecy guarantee; do not publish it when even equality or
+dictionary confirmation would expose sensitive information. Exit `0` proves
+only that accepted caller claims matched named observable paths or text during
+a read-only run. It does
+not inspect unnamed state or prove claim sufficiency, semantic correctness,
+security, privacy, license sufficiency, target fit, architecture or layout,
+governance depth, minimum adaptation, readiness, completeness,
+recommendation, approval, implementation authority, PR readiness, or merge
+authority.
 
 ## Current Command Limitations
 
@@ -121,8 +172,8 @@ Therefore:
   governance-depth evidence;
 - a blocking legacy fixed-shape finding must not override a frontier
   assessment;
-- the mismatch must be reported until a separately scoped tooling change
-  corrects it.
+- the mismatch must be reported until separately scoped clean-cutover work
+  removes or corrects the command.
 
 ### `target-install-plan`
 
@@ -171,20 +222,21 @@ Review should confirm that:
 - next work is bounded in existing issue/PR governance;
 - no unsupported completion, portability, security, or approval claim is made.
 
-## Future Tooling Direction
+## Legacy Cutover Boundary
 
-A future separately authorized tooling issue may replace fixed-shape behavior
-with:
+The caller-supplied claim interface replaces fixed target shape as the retained
+mechanical direction. Separately authorized cleanup may remove the three legacy
+commands and their fixed fixtures. Unless another issue explicitly changes the
+contract, cleanup preserves only the implemented `target-evidence-check`
+boundary: read-only execution, caller-owned claims, root containment, explicit
+checked/unchecked evidence, and no fit, depth, recommendation, approval, or
+readiness inference. It need not preserve legacy required shapes, planners,
+categories, or manifests.
 
-- read-only target observation collection;
-- evidence-pointer validation;
-- source-only reference and donor-state scans;
-- universal invariant checks;
-- comparison between explicit assessment claims and observable target state;
-- accurate `mechanically_checked` and `not_checked` reporting.
-
-Future tooling must not encode the frontier evaluator's expected conclusion or
-recreate a universal target bundle under a new name.
+Cleanup must not turn any source-repository surface into a target requirement,
+encode the frontier evaluator's expected conclusion, or recreate a universal
+target bundle under a new name. Evidence-pointer tooling, donor-state scans, or
+other new claim types require their own durable authorization.
 
 ## License Boundary
 

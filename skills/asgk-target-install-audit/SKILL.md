@@ -88,11 +88,17 @@ relevant to this target. File presence alone is not semantic evidence.
 
 ### 4. Use Deterministic Tools Only As Bounded Evidence
 
-Run a target-install command only when it answers a material question. Apply
-`docs/control/TARGET_INSTALL_VALIDATION_PLAN.md`, state what was and was not
-proved, and treat any conflict with target evidence as a proof-limit finding.
-Do not weaken the target recommendation to satisfy a legacy command or expand
-the assessment into a tool change without separate authorization.
+Use `target-evidence-check` only after the assessment produces an explicit,
+mechanically testable path or literal-text claim. The evaluator supplies every
+claim; the command does not select target files, decide whether the claim set is
+sufficient, or form a recommendation. Apply
+`docs/control/TARGET_INSTALL_VALIDATION_PLAN.md` and record both what matched and
+what remained unchecked.
+
+The three older target-install commands retain fixed-shape assumptions. Run one
+only when its narrower legacy observation is materially useful, label that
+proof limit, and never weaken the target recommendation to make it pass. A tool
+change requires separate durable authorization.
 
 ### 5. Exercise Frontier Judgment
 
