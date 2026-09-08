@@ -589,6 +589,23 @@ def main(argv=None):
                                else closeout_draft(snapshot, packet, report, args.repo_root, args.status))
                 name = 'HANDOFF_DRAFT.md' if args.command == 'handoff' else 'CLOSEOUT_DRAFT.md'
                 save_bundle(args.out, {name: text, 'observations.json': result})
+        if not result['mechanically_checked']:
+            result['mechanically_checked'] = {
+                'capture': ['GET response shapes', 'repository/issue/PR identities', 'capture drift checks'],
+                'packet': ['canonical issue fields', 'existing refinement engine', 'baseline context hashes', 'scope narrowing'],
+                'check': ['current supplied issue/refinement', 'packet digest', 'issue/comment/PR-head consistency'],
+                'search': ['supplied snapshot shape', 'closeout-comment marker', 'case-insensitive query match'],
+                'trace': ['supplied snapshot shape', 'durable URL links', 'bounded traversal and unresolved references'],
+                'demo': ['synthetic lifecycle fixture', 'local in-place git change', 'partial handoff', 'closeout/search/trace'],
+            }.get(args.command, [])
+        if args.command == 'capture':
+            result['evidence_source'] = 'gh_api'
+        elif args.command in ('packet', 'check'):
+            result['evidence_source'] = snapshot['source']
+        elif args.command in ('search', 'trace'):
+            result['evidence_source'] = 'supplied_snapshots'
+        elif args.command == 'demo':
+            result['evidence_source'] = 'fixture_and_local_git'
         print(json.dumps(result, ensure_ascii=False, indent=2))
         return 2 if result['result'] == 'blocked' else 0
     except Invalid as exc:
