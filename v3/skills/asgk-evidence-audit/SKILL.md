@@ -1,0 +1,23 @@
+---
+name: asgk-evidence-audit
+description: Evaluate validation and completion claims by source, concrete evidence and limits; semantic judgment alone does not create a human gate.
+---
+
+# Evidence audit
+
+Audit claims in their existing GitHub issue, PR or release record. Do not add another
+evidence authority. For each material claim identify source, concrete evidence and limits:
+freshly_rerun, github_actions, fixture, repo_file, inferred_from_merged_pr or not_run.
+
+Differentiate claimed command execution, observed bytes, observed CI and semantic
+judgment. A matching hash is not a test attestation; a snapshot is not live approval;
+a synthetic Bot/PR/merge is not independent real-world evidence. Tie head-sensitive
+claims to the exact head and invalidate stale claims.
+
+Flag unsupported completion/merge/release claims. Missing evidence is blocked or
+explicitly unknown. Semantic or product judgment may be performed by the authorized
+evaluator; it does not by itself create requires_human. Name the exact existing
+operation/policy when a human gate actually applies.
+
+Return compact claim/evidence/limit findings in the record being audited. Do not
+manufacture approval, widen work, reroute models or begin corrective writes without scope.

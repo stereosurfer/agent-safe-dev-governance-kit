@@ -1,102 +1,118 @@
-# ASGK 3.0 preview — design contract
+# ASGK 3.0 — GitHub-native design contract
 
-Status: experimental; authority: [issue #357](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/357).
+Experimental branch contract; [correction #358](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/358).
+Supersedes the local-only preview in #357, not current v2 repository policies.
+
+## Product invariants
 
 ASGK 是一套讓人與 AI 能安全、順利交接工作的規則與工具。
-目標是看得懂、接得下去、查得清楚，避免工作依賴特定模型、供應商、Agent 或既有對話。
+看得懂、接得下去、查得清楚；避免工作依賴特定模型、供應商、Agent 或既有對話。
 
-## Design boundary
+GitHub is the durable work ledger:
 
-This preview explores centrally maintained rules compiled into a small work-specific
-packet. It does not replace the repository's current governance or migrate v2.
-The design precedes the implementation; changes to either remain reviewable on an
-isolated branch. Passing tests is checked projection evidence, not independent later
-use, target adoption evidence, or proof of successful self-evolution.
+```text
+issue authority → branch / bounded change → validation → PR / MDR / review
+→ policy-permitted merge → issue closeout review → compact recovery
+```
 
-Role describes reusable capabilities; actor identifies the person or persistent Bot;
-run identifies one execution. A new actor/run must receive a newly compiled packet.
-Memory, chat, role membership, and a previous packet never grant new authority.
+The graph includes failed attempts, rejected choices, replacement issues and authorized
+reverts. Closeout reviews are its searchable index, linking issue, PR, CI, decisions,
+commits and corrections. Local JSON cannot replace this graph.
 
-## Input contract
+## Ownership and control layer
 
-The single JSON input has a version, work/run/actor/role identifiers, objective,
-authority reference and UTC expiry, requested reads/writes/tools, three ceilings
-(`role`, `repo`, `environment`), explicit forbidden paths, non-goals, context entries,
-validation requirements and a next step. All keys are required, unknown keys fail.
+| Responsibility | Canonical owner | 3.0 projection |
+| --- | --- | --- |
+| Objective, plan, acceptance, write scope, non-goals, stops, rollback | Live issue / qualifying PR, existing 13 fields | Parsed, never re-authored as local authority |
+| Read scope and validation | Same issue's two execution gates | Bounded context; all issue-required checks stay visible |
+| Rules and human gates | Existing canonical repository policies | Relevant constraints and pointers, never inferred approval |
+| Role/capability maximum | Centrally maintained evidence-linked role description | Optional narrowing, not a new grant or scheduler |
+| Persistent identity / execution | Actor ID / run ID recorded with work | Replace receiver without transferring old approval |
+| Changes and merge evidence | Branch, PR, exact head, checks, MDR, reviews | Snapshot and local diff observations |
+| Decisions and closeout | GitHub issue comments | Rebuildable search/trace cache, no permanent second ledger |
+| Repo recovery | CURRENT_STATUS | Snapshot, not history |
+| Adoption and upgrade | Target-owned Skill-guided assessment | Frontier judgment; minimum change or no change |
 
-Paths are exact POSIX repo-relative file paths. There are no globs or implied directory
-grants in this prototype. Each requested path/tool must be in all three ceilings;
-forbidden paths win. A denied request fails the entire compilation, never silently
-shrinks the task. Empty write/tool sets support read-only work.
+Controller invokes the relevant Skills and checks live authority. Workers receive the
+objective, exact selected paths, bounded context pointers, non-goals, prohibited actions,
+expected output, checks and handoff destination. They do not need the whole governance
+corpus, all tool schemas, release rules or unrelated work history.
 
-Every context entry names one requested read path, a reason and an expected SHA-256.
-Every requested read has exactly one entry. Context remains data, not instructions
-that may expand authority. Compilation emits pointers, not the contents of the repo.
-Validation requirements are named claims, not executable shell commands.
+Effective write scope = issue scope ∩ selected paths ∩ optional role ceiling. Read context
+is an exact-item narrowing of the issue read set. Repository and
+environment restrictions can narrow it further. This compiler does not enforce runtime
+access or authenticate supplied input. Forbidden paths can only narrow scope; prose
+non-goals/stops remain visible because automatically extracting every prohibition would
+overclaim. Memory never authorizes.
 
-This first slice uses immutable input files and separate output files. Read/write
-overlap is rejected explicitly: in-place editing needs a baseline/current evidence
-model and is not implemented here. Interrupted work with missing required receipts
-fails verification; a complete partial-work recovery protocol remains future work.
-The JSON is a reference input format, not a mandatory form that every worker should
-fill in. It represents centrally supplied ceilings plus a task-specific request;
-persistent central storage and authoring interfaces are not implemented.
+Hermes persistent Bots, humans and temporary agents use the same durable work lineage.
+Runtime messaging, orchestration and model selection remain external. Message receipt
+is not acceptance/completion. Receivers recheck current issue/head and packet digest.
 
-The authority reference is caller-supplied. Its authenticity is **not verified**.
-Expiry and the explicit revoked flag are mechanical checks against the current input;
-there is no revocation service, signature, atomic lease or security sandbox.
+## Executable candidate contract
 
-## Compilation and verification
+1. Capture GET-only GitHub issue/comments and explicitly selected PR observations.
+   Preserve source, timestamp, URLs, head, files, reviews and check observations.
+2. Require an issue-backed packet using the existing issue parser and scope-comparison
+   engine. Bind issue/comment/PR content and assignment. A saved snapshot is not live
+   authority; importing JSON does not authenticate it.
+3. Preserve actor/run, local base/head, remaining work, gaps, validation source/limits,
+   durable links and decisions in handoff. Missing evidence yields a blocked handoff,
+   never invented success. A successor gets a newly compiled packet.
+4. Generate a draft GitHub issue closeout comment using the existing quality floor:
+   reasons, rejected alternatives, applicability, evidence, known limits; maximum five
+   decisions and 400 words. Reject overflow instead of truncating reasoning.
+5. Search explicit snapshots for closeout comments and trace durable links with bounded
+   hops. Missing records remain unresolved; do not read the entire repo or invent links.
 
-The effective scope is requested scope ∩ role ceiling ∩ repo ceiling ∩ environment
-ceiling, minus forbidden paths. Packets include per-claim inclusion reasons, rejected
-context outside the selected read set fails, and non-goals/forbidden paths stay visible.
+Committed in-place changes use exact git base/head. Partial work can be handed off with
+missing receipts/checks recorded as blockers. Local checks do not cover ignored files,
+untrusted test execution, runtime side effects or credential exfiltration.
 
-Canonical sorted JSON hashes bind the entire input and compiled projection. Packet
-verification recompiles against the separately supplied current input; a self-consistent
-packet hash alone is not trusted. Changing scope, actor, run, expiry or policy invalidates
-the old packet. Identical input yields identical output, with no timestamp noise.
+Capture is not an atomic transaction. Issue/head changes require refresh. No preview
+command posts comments, opens PRs, merges, closes issues or publishes. Generated PR
+evidence is a fragment; existing PR template/preflight/MDR/strict check-pr still applies.
+Completed closeout claims require merged PR evidence and complete checks, but even that
+does not authorize closing the issue. Non-merge outcomes preserve their own reasons.
 
-## Evidence and handoff
+## All eleven Skills — full-content review
 
-A report binds to the packet ID and actor/run/work IDs. Each declared write requires
-exactly one file receipt (path + SHA-256). Every required validation has exactly one
-status (`pass`, `fail`, `blocked`, `not_run`), detail and receipt paths. A pass needs at
-least one receipt. Receipts may refer only to requested read/write paths. The checker
-confirms local bytes and rejects symlinks; it does not prove a test command ran, who
-authored bytes, or whether other files changed. Read receipts must match the original
-context hashes. Only regular UTF-8 report JSON is processed, never executed.
+All eleven source SKILL.md files were read. Existing files remain the v2 baseline;
+the eleven revised candidate entrypoints are under v3/skills. These responsibility
+changes are not a bulk installation and do not amend root policy or merge authority.
 
-Reports also contain current state, next step, known gaps and decisions. Each decision
-has a unique ID, optional earlier parent ID, question, choice, reason, alternatives and
-evidence paths. At least one explicit decision is required, including a no-change
-decision when appropriate. Cycles, missing parents and unsupported evidence fail.
+| Skill | Finding | 3.0 disposition |
+| --- | --- | --- |
+| asgk-startup | Full lifecycle detail is useful to controller, excessive for every worker; any open PR should not hijack unrelated assigned work | Controller selects relevant issue/PR; receiver verifies its packet and current head. Preserve stale/abandoned attempt handling |
+| asgk-issue-scoping | Canonical fields and target discovery are sound; local re-authoring creates duplicate authority | Controller writes issue once; reuse parser/refinement engine; workers request narrowing, never expand scope |
+| asgk-pr-evidence-merge-decision | Correct layered lifecycle but extensive syntax burdens non-PR workers | PR owner invokes Skill; workers supply evidence/gaps. Keep exact tokens, file preflight and current-head checks in existing tooling |
+| asgk-gatekeeper | Eligibility can be mistaken for an approver role | Controller/reviewer checks existing gates. Role aliases do not prove independent actors; green checks are not approval |
+| asgk-post-merge-closeout | Strong quality floor; trigger only covers merges while canonical closeout also covers abandoned, blocked, duplicate and superseded work | Keep post-merge process; explicitly route non-merge outcomes to the same closeout quality contract, without fake merge evidence |
+| asgk-current-status-handoff | Repo recovery and per-worker interruption share the handoff name | Keep CURRENT_STATUS repo-level; per-run handoff belongs in issue/PR comments and successor projection |
+| asgk-evidence-audit | Its requires_human state for semantic/product judgment is broader than target assessment Skills, which forbid that extra gate | Classify unsupported claims; require human gate only for exact existing operation/policy. Semantic judgment alone is not a new approval gate |
+| asgk-governance-health-check | Explicit trigger is good; legacy gaps can still be mistaken for current blocking repair work | Scoped controller audit only; observations do not create backfill or fixes |
+| asgk-release-prep | Exact tag/title/commit authority is sound; irrelevant to ordinary workers | Source-maintainer-only trigger; no packet or program approval substitutes for publication approval |
+| asgk-target-install-audit | Actual guidance is judgment-led; install name may imply copying | Retain target-owned assessment, evaluate existing equivalents and minimum adaptation; no fixed Bot/module/file bundle or extra gate |
+| asgk-upgrade-audit | Correct target ownership; version delta could be mistaken for mandatory sync | Required assessment before migration; compare responsibility/evidence, accept no-change and preserve target decisions/history |
 
-Handoff and closeout are generated only after packet and evidence checks. Failed or
-unknown validations and known gaps produce `blocked`, never ready. `ready_for_review`
-means evidence predicates match, not permission to merge or publication approval.
-Closeout contains a bounded decision summary plus a packet/report digest for retrieval;
-the full report retains the tree. A successor recompiles, rather than inheriting the old
-actor's authority. Outputs are portable files owned by the caller, not a new permanent
-repository ledger. The user decides where durable issue/PR records should live.
+Reduction comes from responsibility-specific invocation, not deleting safety or asking
+users to learn a module picker. Reading all eleven is justified for this review, never
+the default for every worker. Installed/global Skills remain unchanged.
 
-## Adversarial acceptance
+## Falsification
 
-Reject stale packets, expired/revoked input, scope expansion, missing/extra fields,
-duplicate JSON keys, traversal/absolute paths, symbolic-link evidence, altered receipts,
-fake validation status, missing receipts and broken decision chains. Documentation must
-separately identify unaddressed runtime threats: prompt injection, stolen authority,
-external side effects, forged-but-consistent evidence, filesystem races and concurrent
-writers. Local checking is not runtime enforcement.
+Test missing/ambiguous issue authority, scope expansion, stale issue/comment/head,
+forged local-only grants, wrong actor/run, out-of-scope git diff, missing checks, partial
+handoff, unmerged completion, missing rejected choices, broken/cyclic decision links and
+oversized reviews. A hash is not proof a test ran; a role name is not independent review;
+cached history is not current scope. Keep those limits explicit.
 
-## Platform relationship
+## Document-driven evolution
 
-Hermes Bot Mode's persistent Bot identity, messaging, grouping and native task systems
-are possible execution surfaces. This preview supplies a manual packet/report protocol,
-not a Bot implementation or replacement scheduler. No platform-specific configuration
-is installed. No model calls, automatic routing, new dependencies, target writes or
-global Skill synchronization are performed.
+Retain #357 → #358 → branch commits → validation → user testing → later PR/MDR/closeout
+if authorized. Do not erase the failed attempt. Independent later use and target-owned
+evidence remain necessary for self-evolution and portability claims.
 
-Before production use, test a real independent receiver, interruption/recovery,
-runtime access control, evidence provenance, and a target-owned adoption assessment.
-These are unproven here. Do not interpret the experimental directory as a 3.0 release.
+Existing v2 root documents, policies, validators, issue/PR templates and eleven Skills
+remain intact during this experiment. The user tests the branch before choosing what to
+migrate. This does not complete W1–W10, publish 3.0 or bypass root repository rules.
