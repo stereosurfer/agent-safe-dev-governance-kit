@@ -662,7 +662,7 @@ def main(argv=None):
                 'capture': ['GET response shapes', 'repository/issue/PR identities', 'capture drift checks'],
                 'packet': ['canonical issue fields', 'existing refinement engine', 'baseline context hashes', 'scope narrowing'],
                 'check': ['current supplied issue/refinement', 'packet digest', 'issue/comment/PR-head consistency'],
-                'card-draft': ['fresh non-fixture issue snapshot', 'checked issue-backed packet',
+                'card-draft': ['supplied snapshot shape, freshness and declared non-fixture source label', 'checked issue-backed packet',
                                'controller-supplied provenance and bounded card fields'],
                 'search': ['supplied snapshot shape', 'closeout-comment marker', 'case-insensitive query match'],
                 'trace': ['supplied snapshot shape', 'durable URL links', 'bounded traversal and unresolved references'],
@@ -676,6 +676,8 @@ def main(argv=None):
             result['evidence_source'] = 'supplied_snapshots'
         elif args.command == 'demo':
             result['evidence_source'] = 'fixture_and_local_git'
+        if args.command == 'card-draft':
+            result['not_checked'].append('actual origin or authenticity of the supplied snapshot')
         print(json.dumps(result, ensure_ascii=False, indent=2))
         return 2 if result['result'] == 'blocked' else 0
     except Invalid as exc:

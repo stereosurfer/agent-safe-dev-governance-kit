@@ -46,8 +46,9 @@ python3 v3/asgk3.py packet --snapshot /tmp/asgk3-capture/snapshot.json --repo-ro
 python3 v3/asgk3.py card-draft --snapshot /tmp/asgk3-capture/snapshot.json --packet /tmp/asgk3-packet/packet.json --repo-root /path/to/checkout --out /tmp/asgk3-card
 ```
 
-Issue 必須符合既有 canonical scope；工具重用原有 parser，不接受任意本地 JSON
-冒充 issue。可用 `--path`、`--context` 縮小投影。角色上限也是縮限，不是授權。
+Issue 必須符合既有 canonical scope；工具重用原有 parser 檢查提供的 JSON
+內容與 scope，但無法證實本地快照真的來自 GitHub。可用 `--path`、`--context`
+縮小投影。角色上限也是縮限，不是授權。
 不能連線時回報失敗；受信任的 connector 匯出必須標成 `connector_export`，
 不能說成即時授權或 GitHub 已停機的證明。
 `card-draft` 只產生 `CARD.md` 與來源 metadata，不建立 Hermes 卡片。若 Bot 沒有

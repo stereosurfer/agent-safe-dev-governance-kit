@@ -364,7 +364,11 @@ class GithubWorkflowTests(unittest.TestCase):
                 '--out', str(output)]
         with contextlib.redirect_stdout(io.StringIO()) as stream:
             self.assertEqual(0, a.main(args))
-        self.assertEqual('pass', json.loads(stream.getvalue())['result'])
+        result = json.loads(stream.getvalue())
+        self.assertEqual('pass', result['result'])
+        self.assertIn('actual origin or authenticity of the supplied snapshot', result['not_checked'])
+        self.assertIn('supplied snapshot shape, freshness and declared non-fixture source label',
+                      result['mechanically_checked'])
         metadata = a.load(output / 'CARD.json')
         body = (output / 'CARD.md').read_text(encoding='utf-8')
         self.assertEqual(metadata['body_sha256'], hashlib.sha256(body.encode()).hexdigest())
