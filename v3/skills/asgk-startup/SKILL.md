@@ -27,7 +27,9 @@ mutation; do not switch to a broader tool merely to evade that boundary.
 
 When a Hermes Kanban card is used, it owns that run's queue/lease state, not the issue's
 write authority. Check the card's exact issue link and completion contract; `done` is
-not PR merge or issue closeout. See v3/KANBAN_BRIDGE.md only for a Kanban run. For a
+not PR merge or issue closeout. If blocked for missing live authority, post the bounded
+partial handoff as a card comment before blocking, so the next receiver sees the reason.
+See v3/KANBAN_BRIDGE.md only for a Kanban run. For a
 capability task, use the relevant domain index to discover a few pointers, then open
 only selected full lessons/ledgers; see v3/CAPABILITY_EVOLUTION.md only when needed.
 

@@ -251,14 +251,16 @@ def card_draft(snapshot, packet, root):
         'Do not call it a worker-verified or current live issue read. A packet pass is not approval.\n\n'
         'Before any repository mutation, independently re-read the current issue/PR through a permitted, '
         'observable read path. If no such path is available, do not guess or use a broader tool merely to '
-        'bypass that limit: leave a partial handoff with unknowns and block. Kanban status is runtime state, '
+        'bypass that limit: first add a Kanban comment containing a partial handoff, explicitly labeled '
+        'controller-supplied facts, unknowns, and the next gate; then block the card. Do not mark it done '
+        'or in review. Kanban status is runtime state, '
         'not GitHub acceptance, merge authority or issue close-out. A selected_paths value of `none` '
         'authorizes no repository file changes.\n\n'
         '## Evidence provenance\n\n```json\n' + json.dumps(metadata, ensure_ascii=False, indent=2) +
         '\n```\n\n## Bounded work projection\n\n```json\n' +
         json.dumps(handoff, ensure_ascii=False, indent=2) + '\n```\n\n'
-        'In your report, distinguish controller-supplied fields from facts you personally verified with '
-        'an observable tool call. Mark live state and unrun checks `not_checked`; never promote a card or '
+        'In your durable Kanban comment, distinguish controller-supplied fields from facts you personally '
+        'verified with an observable tool call. Mark live state and unrun checks `not_checked`; never promote a card or '
         'snapshot into authority.\n')
     metadata['body_sha256'] = hashlib.sha256(body.encode()).hexdigest()
     return metadata, body

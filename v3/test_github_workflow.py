@@ -61,7 +61,8 @@ class GithubWorkflowTests(unittest.TestCase):
                                .split('\n```', 1)[0])
         self.assertEqual(packet['canonical_fields']['objective'], projected['objective'])
         self.assertEqual(packet['assignment']['selected_paths'], projected['selected_paths'])
-        self.assertIn('leave a partial handoff with unknowns and block', body)
+        self.assertIn('first add a Kanban comment containing a partial handoff', body)
+        self.assertIn('then block the card', body)
         self.assertIn('Kanban status is runtime state', body)
         self.assertIn('`none` authorizes no repository file changes', body)
 
