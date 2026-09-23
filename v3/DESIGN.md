@@ -1,7 +1,8 @@
 # ASGK 3.0 — GitHub-native design contract
 
-Experimental branch contract; [correction #358](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/358).
-Supersedes the local-only preview in #357, not current v2 repository policies.
+Experimental preview.1 branch contract; [scoped review #359](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/359).
+Branches from the #358 GitHub-native candidate without overwriting it, and does not
+supersede current v2 repository policies.
 
 ## Product invariants
 
@@ -49,6 +50,13 @@ Hermes persistent Bots, humans and temporary agents use the same durable work li
 Runtime messaging, orchestration and model selection remain external. Message receipt
 is not acceptance/completion. Receivers recheck current issue/head and packet digest.
 
+Hermes Kanban can own run/card/lease/review state while GitHub owns ASGK work authority,
+PR decisions and searchable closeout. The exact mapping and failure tests are in
+[KANBAN_BRIDGE](KANBAN_BRIDGE.md); no runtime adapter or Bot configuration is installed.
+The worker normally self-reports against deterministic checks. Independent semantic
+review is applied to material capability promotion and existing risk gates, not as a
+mandatory police Bot for every task. Review identity must be real, not a renamed author.
+
 ## Executable candidate contract
 
 1. Capture GET-only GitHub issue/comments and explicitly selected PR observations.
@@ -72,7 +80,8 @@ untrusted test execution, runtime side effects or credential exfiltration.
 Capture is not an atomic transaction. Issue/head changes require refresh. No preview
 command posts comments, opens PRs, merges, closes issues or publishes. Generated PR
 evidence is a fragment; existing PR template/preflight/MDR/strict check-pr still applies.
-Completed closeout claims require merged PR evidence and complete checks, but even that
+Completed closeout claims require a merged PR at the reported head and complete checks;
+closed, unmerged prior attempts remain in the lineage. Even that
 does not authorize closing the issue. Non-merge outcomes preserve their own reasons.
 
 ## All eleven Skills — full-content review
@@ -109,9 +118,15 @@ cached history is not current scope. Keep those limits explicit.
 
 ## Document-driven evolution
 
-Retain #357 → #358 → branch commits → validation → user testing → later PR/MDR/closeout
+Retain #357 → #358 → #359 → branch commits → validation → user testing → later PR/MDR/closeout
 if authorized. Do not erase the failed attempt. Independent later use and target-owned
 evidence remain necessary for self-evolution and portability claims.
+
+Capability work across Research, Video and Translation follows
+[CAPABILITY_EVOLUTION](CAPABILITY_EVOLUTION.md): many lessons/ledgers are permitted,
+while discovery and full-context loading are progressive. A reviewed PR promotes a
+method into a versioned Skill; Bot memory and retrieval indexes do not. This is a
+generic contract, not three mandatory modules or an automatic agent router.
 
 Existing v2 root documents, policies, validators, issue/PR templates and eleven Skills
 remain intact during this experiment. The user tests the branch before choosing what to

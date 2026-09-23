@@ -1,4 +1,4 @@
-# ASGK 3.0 candidate — 使用與反證
+# ASGK 3.0 preview.1 — 使用與反證
 
 測試的是 GitHub 工作治理，不是只有離線檔案封包。
 所有輸出由 caller 指定；選新的目錄，避免覆寫。
@@ -13,7 +13,9 @@ python3 v3/asgk3.py trace --snapshot /tmp/asgk3-github-demo/artifacts/final-snap
 
 依序讀取輸出的：
 `artifacts/WORK.md`、`PARTIAL_HANDOFF.md`、`receiver-packet.json`、
-`CLOSEOUT_DRAFT.md`、`search.json`、`trace.json`。
+`CLOSEOUT_DRAFT.md`、`search.json`、`trace.json`。`pre-closeout-snapshot.json`
+是產生草稿時的輸入，`final-snapshot.json` 則含貼出後的合成 closeout comment；
+兩者不能混作同一時間點的授權快照。
 
 工作包應回答做什麼、去哪裡做、不做什麼、禁止動什麼、如何檢查；
 partial handoff 必須顯示沒跑的檢查；接手者換 actor/run，不繼承前人的批准。
@@ -21,6 +23,31 @@ closeout 保留被否決路徑、原因、適用邊界與 durable URL，而不�
 
 示範使用真實的暫存 Git commits，但所有 GitHub 身份、PR、merge、check 都是 fixture。
 它證明程式分支行為，不證明實際 Bot、review、人類接手或生產合規。
+preview.1 的負例另涵蓋「舊 PR 已關閉且未合併、新 PR 已合併」可以完成並
+保留失敗路徑，以及「舊 PR 尚未處理」或 issue 新增實質留言時必須阻擋
+舊封包的結案草稿，先重新投影。
+
+## Kanban 與能力樹的增量測試
+
+`v3/KANBAN_BRIDGE.md` 是邊界與手動測試協定，尚未連接 Hermes DB。
+在實際 Kanban 測試時，檢查：卡片有 exact issue／PR 連結、PR completion
+contract 被明確設定、run/worktree 可復原、reviewer 是實際不同的人／Bot，
+且 Kanban `done` 不被當成 GitHub issue closeout。Hermes 的預設 review
+dispatch 與 scratch 清理要以當前安裝設定核對，不能只依此文件推定。
+
+`v3/CAPABILITY_EVOLUTION.md` 與 `capability_evolution.py` 提供候選樹狀
+metadata 索引，先選 domain／branch，才打開少量 leaf 的全文。例子：
+
+```bash
+python3 v3/capability_evolution.py browse --index v3/examples/capability_index.json --domain research
+python3 v3/capability_evolution.py browse --index v3/examples/capability_index.json --domain research --branch source-context
+python3 v3/capability_evolution.py select --index v3/examples/capability_index.json --domain research --branch source-context --query handoff
+python3 -m unittest discover -s v3 -p 'test_*.py' -v
+```
+
+測試生成 500 筆合成 Lesson metadata，要求結果數量有界、未讀取全文、
+`observed` 不誤標為已升格，以及 rejected/superseded 不當成現行指令。
+這不證明思維樹的語意品質、實際資料研究流程或真實 reviewer 獨立性。
 
 ## 真實 GitHub 讀取與投影
 
@@ -116,6 +143,8 @@ applies_when/does_not_apply_when、evidence。最多五個 material decisions、
 - 回報／review：假的 pass、自我審查換名、缺少 rejected choices、把 hash 當測試。
 - closeout／搜尋：未 merge 說 completed、刪失敗分支、關係指向顛倒、
   找不到的 comment 猜成已完成、用歷史 review 授權現在工作。
+- 能力演進：Bot 自產 Lesson／測試後自認成功、自行改 canonical Skill；
+  索引大量命中造成假共識；把相反案例、適用限制或原始脈絡藏在摘要後。
 
 ## 平台參考與限制
 
@@ -124,5 +153,6 @@ applies_when/does_not_apply_when、evidence。最多五個 material decisions、
 Bot 的手動接收端參考。實際安装版本、身份、工具與檔案權限需你在測試環境核對。
 本分支不安裝 Bot、不呼叫模型、不承諾 profile 等於 sandbox。
 
-先用合成資料測，再用不同供應商與未參與的人類冷接手；模型／人類與真實輸入
-範圍要留下證據。跨供應商、target pilot、真實合併／release 都不是本次模擬結果。
+先用合成資料測，再用真實 Bot 與未參與的人類冷接手；若跨供應商試驗，
+也要留下模型／人類與輸入範圍證據。跨供應商、target pilot、真實合併／release
+都不是本次模擬結果，且不應用跨供應商測試取代 GitHub／Kanban 邊界驗證。

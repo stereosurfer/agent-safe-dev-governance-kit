@@ -26,3 +26,8 @@ Resolve applicable human gates from durable exact-head evidence. Program executi
 authorization is not owner review of the head. Keep known gaps and CURRENT_STATUS impact
 explicit; update status only if repo recovery would otherwise mislead. Return the PR
 evidence and next gate; do not merge merely because formatting passed.
+
+For capability-promotion PRs, link the originating lessons/ledgers, before/after
+behavioral tests, rejected alternatives, independent semantic review when material,
+the exact Skill version and rollback. A Kanban review or completion receipt is one
+evidence source, never a substitute for this PR's current-head policy decision.

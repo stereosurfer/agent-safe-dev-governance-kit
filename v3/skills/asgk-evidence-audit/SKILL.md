@@ -21,3 +21,8 @@ operation/policy when a human gate actually applies.
 
 Return compact claim/evidence/limit findings in the record being audited. Do not
 manufacture approval, widen work, reroute models or begin corrective writes without scope.
+
+In a capability review, separate an observed lesson, a verified repeat, a regression
+result and an approved versioned method. A metadata index points to material but does
+not attest its content or establish promotion. Inspect only the selected full records
+and their cited evidence; do not treat volume or search rank as proof.

@@ -24,6 +24,12 @@ Search prior closeout comments before broad repo reading when investigating deci
 Search results are historical evidence, not present authority. Missing legacy reviews
 are observations, not automatic repair work.
 
+For a capability change, link the originating observations, experiments, reviewer
+finding, promoted Skill version and rejected options. Keep raw lessons/ledgers in their
+bounded domain collection; the issue closeout is the concise decision entry point, not
+a copy of every record. A failed PR attempt may coexist with a merged replacement and
+must stay visible in the lineage.
+
 Candidate closeout output is a draft. Actual posting/closure follows live issue authority
 and existing gates; milestone closure remains separately gated. If required review or
 evidence is missing, record the blocker instead of closing. Consider CURRENT_STATUS only

@@ -196,10 +196,10 @@ def project(snapshot, assignment, root, review=False):
 def check_packet(snapshot, packet, root, review=False):
     require(type(packet) is dict and 'assignment' in packet, 'PACKET', 'packet', 'Missing issue-backed packet')
     expected = project(snapshot, packet['assignment'], root, review=review)
-    # Closing an issue or appending completion comments is lifecycle evolution, not a new task.
-    # Review mode can ignore new comments, but never issue body, scope, actor or existing PR-head changes.
+    # Closing an issue is lifecycle evolution, not a new task. New issue
+    # comments may contain changed instructions or objections: refresh the
+    # packet instead of silently treating every comment as harmless history.
     if review:
-        expected['comments_sha256'] = packet.get('comments_sha256')
         for number, head in packet.get('pr_heads', {}).items():
             require(expected['pr_heads'].get(number) == head, 'STALE_HEAD', 'pr', 'Recorded PR head changed')
         expected['pr_heads'] = packet.get('pr_heads', {})
@@ -340,9 +340,15 @@ def closeout_draft(snapshot, packet, report, root, status):
     require(len(report['decisions']) <= 5, 'REVIEW_LIMIT', 'decisions', 'At most five material decisions; do not truncate')
     if status == 'completed':
         require(result['result'] == 'pass', 'INCOMPLETE_CLOSEOUT', 'report', 'Cannot complete partial or failed work')
-        require(bool(snapshot['prs']) and all(x['pr']['merged'] for x in snapshot['prs']),
-                'MERGE_REQUIRED', 'prs', 'Completed source work requires observed merged PRs')
-        for item in snapshot['prs']:
+        # Failed attempts stay in the lineage. Only the replacement that contains
+        # this reported head must be merged and carry the closing reference.
+        completion_prs = [x for x in snapshot['prs'] if x['pr']['merged']
+                          and x['pr']['head']['sha'] == report['head_sha']]
+        require(bool(completion_prs), 'MERGE_REQUIRED', 'prs',
+                'Completed source work requires a merged PR for the reported head')
+        require(all(x['pr']['state'] == 'closed' for x in snapshot['prs']),
+                'UNRESOLVED_PR_ATTEMPT', 'prs', 'Close or resolve selected open PR attempts before completion')
+        for item in completion_prs:
             pr = item['pr']
             # Literal closing reference is evidence of intent, not GitHub's closingIssuesReferences proof.
             issue_no = snapshot['issue']['number']
@@ -496,6 +502,7 @@ def workflow_demo(out):
         head={'sha': head}, base={'sha': assignment['base_sha']}, merge_commit_sha=head),
         files=[{'filename': 'README.md'}], reviews=[], checks=[], comments=[])]
     result, closeout = closeout_draft(final, packet, report, root, 'completed')
+    pre_closeout = copy.deepcopy(final)
     final['comments'] = [dict(html_url='https://github.com/example/asgk-synthetic/issues/1#issuecomment-10', body=closeout)]
     prior = copy.deepcopy(snapshot)
     prior['issue'].update(number=2, html_url='https://github.com/example/asgk-synthetic/issues/2', state='closed',
@@ -506,7 +513,8 @@ def workflow_demo(out):
     receiver = default_assignment(snapshot, root, 'synthetic-human-B', 'run-B')
     receiver['prior_handoff'] = 'https://github.com/example/asgk-synthetic/issues/1#issuecomment-11'
     receiver_packet = project(snapshot, receiver, root)
-    save_bundle(Path(out) / 'artifacts', {'snapshot.json': snapshot, 'final-snapshot.json': final,
+    save_bundle(Path(out) / 'artifacts', {'snapshot.json': snapshot, 'pre-closeout-snapshot.json': pre_closeout,
+        'final-snapshot.json': final,
         'prior-snapshot.json': prior, 'assignment.json': assignment, 'packet.json': packet,
         'WORK.md': work_text(packet), 'report.json': report, 'PARTIAL_HANDOFF.md': partial_text,
         'CLOSEOUT_DRAFT.md': closeout, 'receiver-packet.json': receiver_packet,

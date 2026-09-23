@@ -22,3 +22,8 @@ Report blocked, requires_human or eligible with evidence and limits. Eligible ne
 means approved or low-risk by inference. Do not close, merge or publish from a green
 candidate snapshot; recheck live state through the canonical flow immediately before
 any separately authorized mutation.
+
+For a Skill/policy promotion, compare actual author and reviewer identity and inspect
+the evidence of independent judgment when the scoped change needs it. Do not accept
+the same actor wearing a `reviewer` profile label, a passing self-written regression,
+or a Kanban `done` state as independent approval.

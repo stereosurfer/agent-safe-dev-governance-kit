@@ -1,4 +1,4 @@
-# ASGK 3.0 — GitHub 原生工作治理候選版
+# ASGK 3.0 preview.1 — GitHub 原生工作治理候選版
 
 **ASGK 是一套讓人與 AI 能安全、順利交接工作的規則與工具。**
 看得懂工作狀態、接得下去長期工作、查得清楚證據與決策；
@@ -14,6 +14,9 @@ issue 授權 → branch／變更 → 驗證 → PR／MDR／review
 改變的是資訊如何交給執行者：控制層維護規則與角色能力，
 人或 Bot 只收到本次工作所需的範圍、脈絡與交接要求。
 GitHub 仍是正式工作紀錄；工作包、搜尋快取都不是第二套權威。
+Hermes Kanban 可保存 Bot 的卡片、run 與 review 狀態，但不能取代 GitHub
+issue 的授權、PR/MDR 或 close-out。獨立 reviewer 守材料／能力升格等關口，
+不是每件事都要經過一個常駐「警察 Bot」。
 
 ## 從這裡測試
 
@@ -30,6 +33,8 @@ python3 -m unittest discover -s v3 -p 'test_*.py' -v
 GitHub issue／PR／review／merge 都明確標成合成資料，不冒充真實執行證據。
 
 - [完整設計與 11 個 Skills 檢討](DESIGN.md)
+- [Kanban 與 GitHub 的責任邊界](KANBAN_BRIDGE.md)
+- [Lesson／帳本到版本化能力](CAPABILITY_EVOLUTION.md)
 - [操作、GitHub 接手與攻擊測試](TESTING.md)
 - [分支交付狀態與限制](HANDOFF.md)
 
@@ -55,6 +60,10 @@ evidence audit、health check、release prep、target adoption、upgrade assessm
 也修正「語意判斷自動多出人工 gate」與「只有合併後才有 closeout」的誤導。
 本分支測試只讀需要的候選 Skill，不要同時載入兩個版本。尚未安裝或全域同步。
 
+研究、影音與翻譯都是能力演進的例子。Bot memory 保持輕薄；大量 Lesson／帳本
+可以存在自己的領域庫，但先看小索引、再選分支與全文。只有經 issue／PR、
+回歸測試與適用審查後，才把方法升格到版本化 Skill；索引不是新權威。
+
 ## 沒有改掉的邊界
 
 PR body 仍走既有 template／file preflight；MDR、strict check-pr、現有 human gate、
@@ -62,6 +71,8 @@ target-owned assessment、普通 revert 與文件驅動自體進化都保留。
 `handoff` 和 `closeout` 只產生 GitHub comment 草稿，不自動 post／merge／close。
 搜尋以 issue close-out 為入口，不要求翻遍 repo。
 
-這是可測試的 3.0 候選分支，不是已發布或已證實安全的產品。
-真正 Bot 互通、跨供應商冷接手、独立 reviewer 與 target pilot 尚需實測。
+這是從原 `codex/asgk-3-preview` 另開的 preview.1 候選分支，原候選不變；
+不是已發布或已證實安全的產品。
+真正 Bot／Kanban 互通、獨立 reviewer 與 target pilot 尚需實測。
+跨供應商接手仍是可攜性不變量，但不是自動選型功能，也不是本次主要瓶頸。
 你的 2.0 原始工作區與全域 Skills 都保持不動。

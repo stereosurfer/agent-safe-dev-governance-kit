@@ -20,7 +20,8 @@ class GithubWorkflowTests(unittest.TestCase):
         self.root = self.out / 'workspace'
         artifacts = self.out / 'artifacts'
         self.snapshot = a.load(artifacts / 'snapshot.json')
-        self.final = a.load(artifacts / 'final-snapshot.json')
+        self.final = a.load(artifacts / 'pre-closeout-snapshot.json')
+        self.indexed_final = a.load(artifacts / 'final-snapshot.json')
         self.prior = a.load(artifacts / 'prior-snapshot.json')
         self.assignment = a.load(artifacts / 'assignment.json')
         self.packet = a.load(artifacts / 'packet.json')
@@ -96,6 +97,12 @@ class GithubWorkflowTests(unittest.TestCase):
     def test_comment_changed(self):
         self.snapshot['comments'] = [dict(html_url=self.packet['issue'] + '#issuecomment-99', body='New material instruction')]
         self.fails('STALE_PACKET', lambda: w.check_packet(self.snapshot, self.packet, self.root))
+
+    def test_new_material_comment_blocks_stale_closeout(self):
+        self.final['comments'] = [dict(html_url=self.packet['issue'] + '#issuecomment-99',
+                                       body='Owner correction: do not close yet.')]
+        self.fails('STALE_PACKET', lambda: w.closeout_draft(
+            self.final, self.packet, self.report, self.root, 'completed'))
 
     def test_rehashed_fake_scope(self):
         self.packet['refinement']['allowed_paths'] = ['other.txt']
@@ -188,6 +195,32 @@ class GithubWorkflowTests(unittest.TestCase):
             self.assertIn(field, text)
         self.assertIn('DRAFT', text)
 
+    def test_failed_pr_attempt_remains_in_completed_lineage(self):
+        failed = copy.deepcopy(self.final['prs'][0])
+        failed['pr']['number'] = 2
+        failed['pr']['html_url'] = self.packet['issue'].replace('/issues/1', '/pull/2')
+        failed['pr']['head']['sha'] = self.assignment['base_sha']
+        failed['pr']['merged'] = False
+        failed['pr']['merge_commit_sha'] = None
+        failed['pr']['body'] = 'Rejected first approach; replacement follows.'
+        self.final['prs'].insert(0, failed)
+        result, text = w.closeout_draft(self.final, self.packet, self.report, self.root, 'completed')
+        self.assertEqual('pass', result['result'])
+        self.assertIn(failed['pr']['html_url'], text)
+        self.assertIn('"merge_commit": null', text)
+
+    def test_open_failed_attempt_blocks_completed_closeout(self):
+        failed = copy.deepcopy(self.final['prs'][0])
+        failed['pr']['number'] = 2
+        failed['pr']['html_url'] = self.packet['issue'].replace('/issues/1', '/pull/2')
+        failed['pr']['head']['sha'] = self.assignment['base_sha']
+        failed['pr']['state'] = 'open'
+        failed['pr']['merged'] = False
+        failed['pr']['merge_commit_sha'] = None
+        self.final['prs'].insert(0, failed)
+        self.fails('UNRESOLVED_PR_ATTEMPT', lambda: w.closeout_draft(
+            self.final, self.packet, self.report, self.root, 'completed'))
+
     def test_closed_issue_review_is_not_new_work(self):
         self.final['issue']['state'] = 'closed'
         self.assertEqual('pass', w.closeout_draft(self.final, self.packet, self.report, self.root, 'completed')[0]['result'])
@@ -234,17 +267,17 @@ class GithubWorkflowTests(unittest.TestCase):
         self.fails('REVIEW_LIMIT', lambda: w.closeout_draft(self.final, self.packet, self.report, self.root, 'completed'))
 
     def test_search_closeouts_not_repo(self):
-        result = w.search([self.final, self.prior], 'Keep GitHub as work ledger')
+        result = w.search([self.indexed_final, self.prior], 'Keep GitHub as work ledger')
         self.assertEqual(1, len(result['matches']))
         self.assertIn('#issuecomment-', result['matches'][0]['url'])
 
     def test_cross_issue_trace_handles_cycles(self):
-        result = w.trace([self.final, self.prior], self.packet['issue'])
+        result = w.trace([self.indexed_final, self.prior], self.packet['issue'])
         self.assertTrue(any(n['url'] == self.prior['issue']['html_url'] for n in result['nodes']))
         self.assertEqual(len(result['nodes']), len({n['url'] for n in result['nodes']}))
 
     def test_unresolved_trace_is_honest(self):
-        result = w.trace([self.final], self.prior['issue']['html_url'])
+        result = w.trace([self.indexed_final], self.prior['issue']['html_url'])
         self.assertEqual('warning', result['result'])
         self.assertEqual([self.prior['issue']['html_url']], result['unresolved'])
 
@@ -252,9 +285,9 @@ class GithubWorkflowTests(unittest.TestCase):
         self.fails('HOP_LIMIT', lambda: w.trace([self.final], self.packet['issue'], 6))
 
     def test_conflicting_snapshots(self):
-        other = copy.deepcopy(self.final)
+        other = copy.deepcopy(self.indexed_final)
         other['issue']['body'] = 'Conflicting current body'
-        self.fails('SNAPSHOT_CONFLICT', lambda: w.search([self.final, other], 'GitHub'))
+        self.fails('SNAPSHOT_CONFLICT', lambda: w.search([self.indexed_final, other], 'GitHub'))
 
     def test_capture_get_only(self):
         response = type('Result', (), {'returncode': 0, 'stdout': '[]'})()

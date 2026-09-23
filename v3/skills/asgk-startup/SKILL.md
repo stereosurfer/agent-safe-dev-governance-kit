@@ -19,6 +19,12 @@ remaining work and next gate. A packet narrows authority, never replaces it. Fre
 memory or a message acknowledgment is not authority or completion. Request bounded
 context expansion when evidence is insufficient.
 
+When a Hermes Kanban card is used, it owns that run's queue/lease state, not the issue's
+write authority. Check the card's exact issue link and completion contract; `done` is
+not PR merge or issue closeout. See v3/KANBAN_BRIDGE.md only for a Kanban run. For a
+capability task, use the relevant domain index to discover a few pointers, then open
+only selected full lessons/ledgers; see v3/CAPABILITY_EVOLUTION.md only when needed.
+
 If evidence changed, return the durable MDR to merge_blocked before continuing the PR.
 An abandoned unmerged attempt stays preserved; restart under the issue and applicable
 repository policy, without transferring its approval. Outage handling uses the existing

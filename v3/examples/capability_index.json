@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "records": [
+    {
+      "id": "research-handoff-observation",
+      "kind": "lesson",
+      "domain": "research",
+      "tree_path": ["source-context", "long-discussion"],
+      "state": "observed",
+      "title": "Research handoff observation",
+      "summary": "Example pointer for retaining full source context during research handoff; not a promoted method.",
+      "tags": ["handoff", "source-context"],
+      "applies_when": "A research run captures a long discussion.",
+      "does_not_apply_when": "No source context has been captured or verified.",
+      "source_ref": "https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/359",
+      "evidence_refs": ["https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/359"],
+      "content_ref": "v3/CAPABILITY_EVOLUTION.md",
+      "decision_ref": null,
+      "supersedes": [],
+      "capability_version": null
+    },
+    {
+      "id": "video-handoff-observation",
+      "kind": "ledger",
+      "domain": "video",
+      "tree_path": ["asset-lineage", "render-handoff"],
+      "state": "observed",
+      "title": "Video handoff observation",
+      "summary": "Example pointer for shot, asset, edit and render decisions during video handoff; not a promoted method.",
+      "tags": ["handoff", "asset-lineage"],
+      "applies_when": "An edit run changes source assets or render settings.",
+      "does_not_apply_when": "Only unrelated research notes are in scope.",
+      "source_ref": "https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/359",
+      "evidence_refs": ["https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/359"],
+      "content_ref": "v3/CAPABILITY_EVOLUTION.md",
+      "decision_ref": null,
+      "supersedes": [],
+      "capability_version": null
+    },
+    {
+      "id": "translation-handoff-observation",
+      "kind": "lesson",
+      "domain": "translation",
+      "tree_path": ["terminology", "handoff"],
+      "state": "observed",
+      "title": "Translation handoff observation",
+      "summary": "Example pointer for terminology, register and rejected renderings during translation handoff; not a promoted method.",
+      "tags": ["handoff", "terminology"],
+      "applies_when": "A translation run makes terminology decisions.",
+      "does_not_apply_when": "No translation content or style decision exists.",
+      "source_ref": "https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/359",
+      "evidence_refs": ["https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/359"],
+      "content_ref": "v3/CAPABILITY_EVOLUTION.md",
+      "decision_ref": null,
+      "supersedes": [],
+      "capability_version": null
+    }
+  ]
+}
