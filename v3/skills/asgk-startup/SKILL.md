@@ -24,6 +24,8 @@ as a projection, not as a live issue read. Tool discovery, a URL in the card, an
 model-written assertion are not read receipts. When no permitted observable path can
 recheck the live issue, leave a partial handoff with unknowns and block before repo
 mutation; do not switch to a broader tool merely to evade that boundary.
+Do not use a general terminal command to stand in for a missing permitted issue-read
+tool. An attempted command is not a read receipt; hand off the unknown instead.
 
 When a Hermes Kanban card is used, it owns that run's queue/lease state, not the issue's
 write authority. Check the card's exact issue link and completion contract; `done` is
