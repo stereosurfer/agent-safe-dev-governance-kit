@@ -38,13 +38,14 @@ CLI GitHub capture failed in this host environment; connector reads are a distin
 and cannot be reported as a successful CLI integration test. Unit/fixture results do not
 prove a real Bot, independent reviewer, human cold-start, target pilot or release.
 
-The linked [research-runtime-macos reference](https://github.com/stereosurfer/research-runtime-macos/tree/7287e3550e9e4254955c4e226f7b1ddc97d9fd33)
-has been compared with the candidate. It demonstrates a stable answer contract,
-topic-local changing question ledger, concise handoff, source map and conditional
-Skill references. It does not yet specify a cross-task Lesson thought-tree format.
-Preview.1 now distinguishes a task-owned work tree from an optional reusable-capability
-discovery index. If the Researcher Work discussion is uploaded separately, compare it
-before treating this candidate index as the final design.
+The linked [research-runtime-macos delivery contract](https://github.com/stereosurfer/research-runtime-macos/blob/d09eac50c3cd12c1427dadaf5c09d1c8f7dfd38e/docs/PACKAGE_FORMAT.md)
+and [synthetic example](https://github.com/stereosurfer/research-runtime-macos/tree/d09eac50c3cd12c1427dadaf5c09d1c8f7dfd38e/examples/research-package-demo)
+have been compared with this candidate. They demonstrate a stable answer contract,
+topic-local question ledger, an `AGENT_ENTRY` → question node → observation →
+evidence unit reading route, human handoff, source map and separate raw audit layer.
+Preview.1 now distinguishes this task-owned delivery graph from its optional
+cross-work capability catalog. The catalog is not a replacement for the package
+contract and does not validate research completion.
 Do not interpret “candidate works” as authority to migrate other repos or finish W1–W10.
 Preserve the rejected attempt and correction links; no reset, force push or silent deletion.
 
@@ -57,10 +58,10 @@ Preserve the rejected attempt and correction links; no reset, force push or sile
 - Search/trace indexes only supplied snapshots, reports missing links, and never invents history.
 - No independent behavioral proof for the candidate Skills yet; format checks are narrower.
 - Kanban bridge is a design contract, not an installed adapter or live board test.
-- The capability tree/index is a synthetic metadata projection, not a live work ledger
-  or proof of actual Research, Video or Translation workflow quality. The linked
-  runtime Skill is an evidence-based reference for task-local progressive disclosure,
-  not proof that this candidate matches an unpublished thought-tree discussion.
+- The capability catalog is a synthetic metadata projection, not a delivery question
+  graph or proof of actual Research, Video or Translation workflow quality. The linked
+  research package is a concrete domain-owned delivery implementation; ASGK does not
+  impose its exact filenames or toolchain on video and translation targets.
 
 Ignoring this branch preserves v2. Its source commits survive temporary worktree removal;
 do not delete either worktree automatically.

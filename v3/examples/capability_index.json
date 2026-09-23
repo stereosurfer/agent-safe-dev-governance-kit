@@ -1,5 +1,6 @@
 {
   "version": 1,
+  "purpose": "capability_catalog",
   "records": [
     {
       "id": "research-handoff-observation",
@@ -13,7 +14,7 @@
       "applies_when": "A research run captures a long discussion.",
       "does_not_apply_when": "No source context has been captured or verified.",
       "source_ref": "https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/359",
-      "evidence_refs": ["https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/359"],
+      "evidence_refs": [],
       "content_ref": "v3/CAPABILITY_EVOLUTION.md",
       "decision_ref": null,
       "supersedes": [],
@@ -31,7 +32,7 @@
       "applies_when": "An edit run changes source assets or render settings.",
       "does_not_apply_when": "Only unrelated research notes are in scope.",
       "source_ref": "https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/359",
-      "evidence_refs": ["https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/359"],
+      "evidence_refs": [],
       "content_ref": "v3/CAPABILITY_EVOLUTION.md",
       "decision_ref": null,
       "supersedes": [],
@@ -49,7 +50,7 @@
       "applies_when": "A translation run makes terminology decisions.",
       "does_not_apply_when": "No translation content or style decision exists.",
       "source_ref": "https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/359",
-      "evidence_refs": ["https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/359"],
+      "evidence_refs": [],
       "content_ref": "v3/CAPABILITY_EVOLUTION.md",
       "decision_ref": null,
       "supersedes": [],

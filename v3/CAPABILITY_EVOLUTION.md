@@ -20,54 +20,64 @@ reduce *default loading* instead. Large/private raw research or media outputs st
 target-owned store, not in ASGK source or Bot memory. A GitHub record can link to them
 without copying their bytes into the Skill repository.
 
-## Two trees with different owners
+## Delivery question graph and reusable capability catalog
 
-The [research-runtime 0.1 cycle](https://github.com/stereosurfer/research-runtime-macos/blob/7287e3550e9e4254955c4e226f7b1ddc97d9fd33/skill/research-runtime/references/research-cycle-v0.1.md)
-is a concrete reference, not an ASGK mandate for every domain. It separates a stable
-answer contract from a changing question ledger, then puts the concise handoff and
-reviewed answer before a source map and raw evidence. Its Skill entrypoint opens deeper
-references only for the relevant kind of work. The repository does **not** yet define
-a reusable Lesson/"thought-tree" format; do not attribute one to it.
+The owner's [research-runtime delivery contract](https://github.com/stereosurfer/research-runtime-macos/blob/d09eac50c3cd12c1427dadaf5c09d1c8f7dfd38e/docs/PACKAGE_FORMAT.md)
+and [complete synthetic package](https://github.com/stereosurfer/research-runtime-macos/tree/d09eac50c3cd12c1427dadaf5c09d1c8f7dfd38e/examples/research-package-demo)
+provide an actual thought-tree example. Do not reduce that delivery design to a flat
+Lesson index.
 
-Keep these two structures distinct:
+Keep authorization, delivery and reusable capability separate:
 
-| Structure | Canonical owner | Navigation and completion |
+| Structure | Owner | What it decides |
 | --- | --- | --- |
-| **Work tree** | The task/target-owned package or existing GitHub issue/PR, according to the workflow | Decision/outcome contract stays stable until the objective changes; a question/requirement ledger updates as evidence arrives. Each material branch points to support, conflict, gap and stop decision. Completion is judged against the contract, never by tool/run status or number of records. |
-| **Capability tree** | The versioned Skill/capability repository, with GitHub decisions governing promotion | A small entrypoint points to conditional references and a bounded index of relevant Lessons, tests, proposals and method versions. It helps find reusable experience; it does not replace a live work ledger or grant action authority. |
+| **Governed work lineage** | Live GitHub issue/PR, MDR and close-out | Objective, allowed paths, gates, acceptance and why a change was made. The task package cannot grant these. |
+| **Delivery question graph** | The particular task's target-owned package or evidence home | What must be answered to deliver this task, current question status, observations, evidence, limits and next action. It cannot approve its own Skill promotion. |
+| **Reusable capability catalog** | The versioned Skill/capability repository | Which prior Lessons, tests, method versions and bounded case references may help. It is a discovery index, not the active task's question graph or an authority ledger. |
 
-The work tree may be large. Keep its raw material at the task-owned location, and give
-the next reader a short handoff → reviewed result → question/requirement status →
-claim-to-evidence map → selected originals. Research uses the source repo's brief,
-answer contract and question ledger as one example. A video job might instead track
-deliverable decisions, asset lineage and render checks; a translation job might track
-terminology decisions, unresolved passages and review evidence. ASGK does not require
-those exact filenames, question types or folder layouts. The GitHub issue authorizes
-changes; the work package records domain evidence and progress.
+For a substantial *research* task, the source contract gives humans `HANDOFF.md` or
+`INDEX.html` first, and agents one small `kb/AGENT_ENTRY.md`. The agent routes its
+actual question to a `QUESTION_TREE.json` node, reads that node's status and linked
+observation IDs, resolves only relevant `OBSERVATIONS.jsonl` and `EVIDENCE_INDEX.json`
+entries, then opens one **complete** source section or discussion unit when needed.
+The `ANSWER_CONTRACT.md` remains stable unless the decision changes; the
+`QUESTION_LEDGER.md` changes as gaps close. `RESEARCH.md` and `SOURCE_MAP.md` are
+reviewed delivery views; `raw/` and diagnostic material are deeper audit layers.
+An append-only observation is a case finding, not an instruction or universal rule.
+Manifest/hash and graph checks prove package consistency, not the research conclusion.
 
-The capability tree is a discovery projection over its own corpus. A branch has a short
-name, scope and child pointers. A leaf points to one or more Lessons, *bounded slices*
-of case ledgers, tests, proposals or promoted method versions. The slice points back
-to the canonical case package; it is not a copied live ledger. Preserve competing
-answers and rejected branches with reasons instead of flattening them into one success
-story. Full records and cited evidence remain available at their owners, and the live
-issue/PR remains authority for any change.
+This is a reference implementation for the *shape of the handoff*, not a mandatory
+ASGK folder layout or a new generic core validator. A video workflow may route from
+a deliverable question to asset versions, render observations and source media; a
+translation workflow may route from a passage/terminology question to review findings
+and source segments. Their Skill/target owns the precise file format and tests.
+Some small tasks need only issue/PR evidence and a compact handoff, not a full package.
+The reusable invariant is an actionable entry, bounded question/requirement routing,
+stable IDs, observation-to-evidence provenance, explicit gaps and proof limits.
 
-Progressive disclosure is:
+The capability catalog is a *different* progressive-disclosure projection over prior
+experience. A branch names a domain/question; a leaf gives bounded pointers to Lessons,
+ledger slices, tests, proposals or promoted method versions. A slice points back to
+the canonical task package and its relevant question/observation, through a durable
+provenance record; it is not a copy of the live ledger or its private raw data.
+Preserve competing answers, rejected branches and applicability conditions. The live
+issue/PR remains authority for any capability change.
 
-1. **Entry:** load the small Skill purpose, current work link and task handoff.
-2. **Work branch:** inspect the relevant question/requirement and its current gap or
-   stop state; do not load unrelated task evidence.
-3. **Capability branch:** only when prior method experience is needed, choose a
-   relevant domain/question from metadata and see counts, not bodies.
-4. **Leaf:** retrieve a bounded set of Lesson/method summaries and provenance pointers.
-5. **Evidence:** open selected full case slice, test and source material or prior
-   decision chain when the current decision needs it.
+The normal reading route is therefore:
 
-For example, a research handoff might follow `research → source-context → long-discussion`
-and inspect the root/reply hierarchy case. Video may follow `video → asset-lineage →
-render-handoff`; translation may follow `translation → terminology → handoff`. These
-paths illustrate *questions*, not mandated folder names or fixed business phases.
+1. **Current work:** GitHub authority and the task's compact human handoff or Agent
+   entry, depending on the reader.
+2. **Current question:** route to one relevant work-graph node and its gap/stop state.
+3. **Current evidence:** resolve only linked observations, source metadata and selected
+   complete evidence units.
+4. **Prior method experience, if needed:** browse one capability-catalog branch and
+   open a small set of applicable Lesson/method records with original provenance.
+
+For example, a research handoff can route a current question about a long discussion
+to its observation and complete root/reply evidence, while the catalog may separately
+find past long-discussion lessons. Video may ask about asset lineage and a render
+handoff; translation may ask about terminology and review. These are questions, not
+mandated folder names or fixed business phases.
 
 An observed lesson remains an observation. A verified lesson has independently
 reproduced evidence but is not yet a rule. A promoted method has a reviewed decision,
@@ -96,8 +106,9 @@ version it actually loaded.
 
 ## Candidate metadata demonstration
 
-`v3/capability_evolution.py` reads an explicitly supplied JSON index. It validates
-metadata shape and offers `browse` for one tree level or `select` for bounded pointers:
+`v3/capability_evolution.py` reads an explicitly supplied *capability catalog*. It
+validates metadata shape and offers `browse` for one catalog level or `select` for
+bounded pointers:
 
 ```bash
 python3 v3/capability_evolution.py check --index v3/examples/capability_index.json
@@ -107,10 +118,12 @@ python3 v3/capability_evolution.py select --index v3/examples/capability_index.j
 ```
 
 The fixture is illustrative and its records are **observed**, not a real promotion or
-research proof. The module is a *capability-tree discovery example*, not a work-tree
-validator or a canonical question ledger. It does not fetch bodies, verify GitHub links,
-judge evidence, decide whether task questions are complete, synchronize Skills or
-change a Bot. It is one testable projection pattern, not a required format for every
-target. Larger installations can shard indexes by domain/question; the active Skill
-should point to the relevant shard, not concatenate all records. A stale index is
-repaired through a bounded change, never silently treated as current authority.
+research proof. This catalog does **not** implement or validate the source repository's
+delivery question graph. It does not fetch bodies, verify GitHub links, judge evidence,
+decide whether task questions are complete, synchronize Skills or change a Bot. It is
+one optional projection pattern, not a required format for every target. A future
+domain-owned delivery package should be tested against its own contract, including
+negative graph/link/path cases; it must not be certified by this catalog's green result.
+Larger capability corpora can shard indexes by domain/question; the active Skill points
+to the relevant shard instead of concatenating all records. A stale index is repaired
+through a bounded change, never silently treated as current authority.

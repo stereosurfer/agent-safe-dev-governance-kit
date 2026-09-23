@@ -35,9 +35,10 @@ contract 被明確設定、run/worktree 可復原、reviewer 是實際不同的�
 且 Kanban `done` 不被當成 GitHub issue closeout。Hermes 的預設 review
 dispatch 與 scratch 清理要以當前安裝設定核對，不能只依此文件推定。
 
-`v3/CAPABILITY_EVOLUTION.md` 區分工作自己的問題／需求樹與跨工作可再利用的
-能力索引；`capability_evolution.py` 只示範後者的候選 metadata 索引，
-不判定前者是否完成。先選 domain／branch，才打開少量 leaf 的全文。例子：
+`v3/CAPABILITY_EVOLUTION.md` 區分工作自己的交付問題樹與跨工作可再利用的
+能力目錄；`capability_evolution.py` 只示範後者的候選 metadata 索引，
+不判定前者是否完成。先選 domain／branch；工具只回傳少量 leaf 指標，
+全文由接手者按需要另行開啟。例子：
 
 ```bash
 python3 v3/capability_evolution.py browse --index v3/examples/capability_index.json --domain research
@@ -47,8 +48,9 @@ python3 -m unittest discover -s v3 -p 'test_*.py' -v
 ```
 
 測試生成 500 筆合成 Lesson metadata，要求結果數量有界、未讀取全文、
-`observed` 不誤標為已升格，以及 rejected/superseded 不當成現行指令。
-這不證明思維樹的語意品質、實際資料研究流程或真實 reviewer 獨立性。
+`observed` 不誤標為已升格、虛構案例不冒充真實證據、交付問題圖不能冒充能力
+目錄，以及 rejected/superseded 不當成現行指令。這不證明交付問題樹的語意品質、
+實際資料研究流程或真實 reviewer 獨立性；研究包要由其領域契約另行驗證。
 
 ## 真實 GitHub 讀取與投影
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Candidate metadata-only discovery for evidence-linked capability records.
+"""Candidate metadata-only discovery for reusable capability records.
 
-This is a projection, never task authority or automatic skill promotion.
+This is not a delivery question graph, task authority or automatic skill promotion.
 """
 import argparse
 import json
@@ -25,9 +25,11 @@ def _link(value, field):
 
 def validate_index(index):
     """Validate metadata shape and local references, not evidence or content."""
-    record(index, 'version records', 'index')
+    record(index, 'version purpose records', 'index')
     require(type(index['version']) is int and index['version'] == 1,
             'INDEX_VERSION', 'version', 'Expected version 1')
+    require(index['purpose'] == 'capability_catalog', 'INDEX_PURPOSE', 'purpose',
+            'Expected a capability catalog, not a delivery question graph')
     require(type(index['records']) is list, 'INDEX_SHAPE', 'records', 'Expected list')
     ids = set()
     for number, item in enumerate(index['records']):
@@ -55,7 +57,7 @@ def validate_index(index):
         require(all(ID.fullmatch(tag) for tag in item['tags']),
                 'RECORD_TAG', field + '.tags', 'Expected slug tags')
         _link(item['source_ref'], field + '.source_ref')
-        strings(item['evidence_refs'], field + '.evidence_refs', True)
+        strings(item['evidence_refs'], field + '.evidence_refs')
         for link in item['evidence_refs']:
             _link(link, field + '.evidence_refs')
         path_name(item['content_ref'], field + '.content_ref')
@@ -70,6 +72,9 @@ def validate_index(index):
             require(bool(item['decision_ref']) and bool(item['capability_version']),
                     'PROMOTION_PROVENANCE', field,
                     'Promoted record needs a reviewed decision link and capability version')
+        if item['state'] in {'verified', 'promoted'}:
+            require(bool(item['evidence_refs']), 'EVIDENCE_PROVENANCE', field + '.evidence_refs',
+                    'Verified or promoted records need at least one evidence pointer')
     for item in index['records']:
         require(item['id'] not in item['supersedes'] and
                 all(ref in ids or LINK.fullmatch(ref) for ref in item['supersedes']),
@@ -114,12 +119,13 @@ def browse(index, domain, branch=(), limit=8):
     slots = limit - len(shown_children)
     pointers = [_pointer(item) for item in sorted(direct, key=lambda x: x['id'])[:slots]]
     shown = len(shown_children) + len(pointers)
-    return dict(result='pass' if candidates else 'incomplete', evidence_source='supplied_metadata_index',
+    return dict(result='pass' if candidates else 'incomplete', projection='capability_catalog',
+                evidence_source='supplied_metadata_index',
                 mechanically_checked=['index shape', 'local references', 'single-level tree projection'],
                 not_checked=['record content', 'GitHub link existence', 'evidence quality', 'current task authority',
-                             'per-work question completion', 'semantic relevance', 'human approval'],
+                             'delivery question graph', 'per-work question completion', 'semantic relevance', 'human approval'],
                 human_gate={'status': 'not_checked'}, findings=[],
-                proof_boundary='Capability-tree pointers are discovery hints, not a live work ledger, instructions or approval.',
+                proof_boundary='Catalog pointers are discovery hints, not a delivery question graph, instructions or approval.',
                 domain=domain, branch=list(branch), children=shown_children, pointers=pointers,
                 omitted=max(0, len(ordered) + len(direct) - shown))
 
@@ -146,12 +152,13 @@ def select(index, domain, query, limit=8, branch=()):
             ranked.append((score, item))
     ranked.sort(key=lambda pair: (-pair[0], pair[1]['id']))
     pointers = [_pointer(item) for _, item in ranked[:limit]]
-    return dict(result='pass' if pointers else 'incomplete', evidence_source='supplied_metadata_index',
+    return dict(result='pass' if pointers else 'incomplete', projection='capability_catalog',
+                evidence_source='supplied_metadata_index',
                 mechanically_checked=['index shape', 'local references', 'bounded domain/query selection'],
                 not_checked=['record content', 'GitHub link existence', 'evidence quality', 'current task authority',
-                             'per-work question completion', 'semantic relevance', 'human approval'],
+                             'delivery question graph', 'per-work question completion', 'semantic relevance', 'human approval'],
                 human_gate={'status': 'not_checked'}, findings=[],
-                proof_boundary='Capability metadata is not a work ledger; only live issue/PR and reviewed skill versions govern action.',
+                proof_boundary='Catalog metadata is not a delivery question graph; only live issue/PR and reviewed skill versions govern action.',
                 domain=domain, branch=list(branch), query=query, total_matches=len(ranked), omitted=max(0, len(ranked) - len(pointers)),
                 pointers=pointers)
 
@@ -189,12 +196,14 @@ def main(argv=None):
         index = load(args.index)
         if args.command == 'check':
             validate_index(index)
-            result = dict(result='pass', evidence_source='supplied_metadata_index',
+            result = dict(result='pass', projection='capability_catalog',
+                          evidence_source='supplied_metadata_index',
                           human_gate={'status': 'not_checked'}, findings=[], count=len(index['records']),
                           mechanically_checked=['index shape', 'local references'],
                           not_checked=['record content', 'GitHub link existence', 'evidence quality',
-                                       'per-work question completion', 'task authority', 'promotion approval'],
-                          proof_boundary='Structural validation only; this capability index is neither a work nor authority ledger.')
+                                       'delivery question graph', 'per-work question completion',
+                                       'task authority', 'promotion approval'],
+                          proof_boundary='Catalog structure only; no delivery question graph, task authority or promotion proof.')
         elif args.command == 'select':
             result = select(index, args.domain, args.query, args.limit, args.branch)
         else:
@@ -204,10 +213,12 @@ def main(argv=None):
     except (Invalid, OSError, ValueError, TypeError, KeyError) as error:
         finding = error.finding if isinstance(error, Invalid) else dict(
             code='INPUT_IO', field='index', reason=str(error), blocking=True)
-        print(json.dumps(dict(result='fail', evidence_source='supplied_metadata_index',
+        print(json.dumps(dict(result='fail', projection='capability_catalog',
+                              evidence_source='supplied_metadata_index',
                               mechanically_checked=['input shape up to the reported failure'],
                               not_checked=['record content', 'GitHub link existence', 'evidence quality',
-                                           'per-work question completion', 'task authority', 'promotion approval'],
+                                           'delivery question graph', 'per-work question completion',
+                                           'task authority', 'promotion approval'],
                               human_gate={'status': 'not_checked'},
                               proof_boundary='Index validation failed; no records were authorized or promoted.',
                               findings=[finding]), ensure_ascii=False, indent=2))

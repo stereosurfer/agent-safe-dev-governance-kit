@@ -22,13 +22,27 @@ class CapabilityIndexTests(unittest.TestCase):
 
     def test_three_domain_example_is_only_metadata(self):
         self.assertEqual(3, len(c.validate_index(self.index)['records']))
+        self.assertEqual('capability_catalog', self.index['purpose'])
         for domain in ('research', 'video', 'translation'):
             result = c.select(self.index, domain, 'handoff')
+            self.assertEqual('capability_catalog', result['projection'])
             self.assertEqual(1, len(result['pointers']))
             self.assertNotIn('applies_when', result['pointers'][0])
             self.assertIn('current task authority', result['not_checked'])
+            self.assertIn('delivery question graph', result['not_checked'])
             self.assertIn('per-work question completion', result['not_checked'])
-            self.assertIn('not a work ledger', result['proof_boundary'])
+            self.assertIn('not a delivery question graph', result['proof_boundary'])
+
+    def test_delivery_question_graph_cannot_masquerade_as_catalog(self):
+        self.index['purpose'] = 'delivery_question_graph'
+        self.fails('INDEX_PURPOSE', lambda: c.validate_index(self.index))
+
+    def test_synthetic_cases_do_not_claim_real_evidence(self):
+        self.assertTrue(all(not item['evidence_refs'] for item in self.index['records']))
+
+    def test_verified_claim_needs_an_evidence_pointer(self):
+        self.index['records'][0]['state'] = 'verified'
+        self.fails('EVIDENCE_PROVENANCE', lambda: c.validate_index(self.index))
 
     def test_observation_is_not_mislabeled_as_promoted(self):
         result = c.select(self.index, 'research', 'handoff')

@@ -124,9 +124,14 @@ evidence remain necessary for self-evolution and portability claims.
 
 Capability work across Research, Video and Translation follows
 [CAPABILITY_EVOLUTION](CAPABILITY_EVOLUTION.md): many lessons/ledgers are permitted,
-while discovery and full-context loading are progressive. A reviewed PR promotes a
-method into a versioned Skill; Bot memory and retrieval indexes do not. This is a
-generic contract, not three mandatory modules or an automatic agent router.
+while discovery and full-context loading are progressive. The source
+[research package contract](https://github.com/stereosurfer/research-runtime-macos/blob/d09eac50c3cd12c1427dadaf5c09d1c8f7dfd38e/docs/PACKAGE_FORMAT.md)
+demonstrates task-owned question/observation/evidence traversal; the candidate
+capability catalog indexes reusable experience *outside* that active delivery graph.
+A reviewed PR promotes a method into a versioned Skill; Bot memory and retrieval
+indexes do not. This is a generic handoff invariant, not a requirement that every
+target use the research package's exact files, three mandatory modules or an
+automatic agent router.
 
 Existing v2 root documents, policies, validators, issue/PR templates and eleven Skills
 remain intact during this experiment. The user tests the branch before choosing what to
