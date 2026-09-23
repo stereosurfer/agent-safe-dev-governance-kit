@@ -60,8 +60,9 @@ evidence audit、health check、release prep、target adoption、upgrade assessm
 也修正「語意判斷自動多出人工 gate」與「只有合併後才有 closeout」的誤導。
 本分支測試只讀需要的候選 Skill，不要同時載入兩個版本。尚未安裝或全域同步。
 
-研究、影音與翻譯都是能力演進的例子。Bot memory 保持輕薄；大量 Lesson／帳本
-可以存在自己的領域庫，但先看小索引、再選分支與全文。只有經 issue／PR、
+研究、影音與翻譯都是能力演進的例子。Bot memory 保持輕薄；各工作自己的問題／
+需求帳本與原始證據留在工作包，供再利用的 Lesson／方法則由版本化能力庫逐層
+揭露。兩者不合併成一個總帳。只有經 issue／PR、
 回歸測試與適用審查後，才把方法升格到版本化 Skill；索引不是新權威。
 
 ## 沒有改掉的邊界

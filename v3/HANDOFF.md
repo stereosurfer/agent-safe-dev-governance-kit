@@ -38,8 +38,13 @@ CLI GitHub capture failed in this host environment; connector reads are a distin
 and cannot be reported as a successful CLI integration test. Unit/fixture results do not
 prove a real Bot, independent reviewer, human cold-start, target pilot or release.
 
-The user can test this separate candidate after the Researcher Work thought-tree source
-is reconciled. Use durable findings to scope the next correction.
+The linked [research-runtime-macos reference](https://github.com/stereosurfer/research-runtime-macos/tree/7287e3550e9e4254955c4e226f7b1ddc97d9fd33)
+has been compared with the candidate. It demonstrates a stable answer contract,
+topic-local changing question ledger, concise handoff, source map and conditional
+Skill references. It does not yet specify a cross-task Lesson thought-tree format.
+Preview.1 now distinguishes a task-owned work tree from an optional reusable-capability
+discovery index. If the Researcher Work discussion is uploaded separately, compare it
+before treating this candidate index as the final design.
 Do not interpret “candidate works” as authority to migrate other repos or finish W1–W10.
 Preserve the rejected attempt and correction links; no reset, force push or silent deletion.
 
@@ -52,9 +57,10 @@ Preserve the rejected attempt and correction links; no reset, force push or sile
 - Search/trace indexes only supplied snapshots, reports missing links, and never invents history.
 - No independent behavioral proof for the candidate Skills yet; format checks are narrower.
 - Kanban bridge is a design contract, not an installed adapter or live board test.
-- The capability tree/index is a synthetic metadata projection, not proof of actual
-  Research, Video or Translation workflow quality. The user is providing the newer
-  Researcher Work discussion separately; reconcile it before calling this pattern final.
+- The capability tree/index is a synthetic metadata projection, not a live work ledger
+  or proof of actual Research, Video or Translation workflow quality. The linked
+  runtime Skill is an evidence-based reference for task-local progressive disclosure,
+  not proof that this candidate matches an unpublished thought-tree discussion.
 
 Ignoring this branch preserves v2. Its source commits survive temporary worktree removal;
 do not delete either worktree automatically.

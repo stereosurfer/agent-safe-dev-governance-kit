@@ -117,8 +117,9 @@ def browse(index, domain, branch=(), limit=8):
     return dict(result='pass' if candidates else 'incomplete', evidence_source='supplied_metadata_index',
                 mechanically_checked=['index shape', 'local references', 'single-level tree projection'],
                 not_checked=['record content', 'GitHub link existence', 'evidence quality', 'current task authority',
-                             'semantic relevance', 'human approval'], human_gate={'status': 'not_checked'}, findings=[],
-                proof_boundary='Tree branches and leaves are discovery hints, never instructions or approval.',
+                             'per-work question completion', 'semantic relevance', 'human approval'],
+                human_gate={'status': 'not_checked'}, findings=[],
+                proof_boundary='Capability-tree pointers are discovery hints, not a live work ledger, instructions or approval.',
                 domain=domain, branch=list(branch), children=shown_children, pointers=pointers,
                 omitted=max(0, len(ordered) + len(direct) - shown))
 
@@ -148,8 +149,9 @@ def select(index, domain, query, limit=8, branch=()):
     return dict(result='pass' if pointers else 'incomplete', evidence_source='supplied_metadata_index',
                 mechanically_checked=['index shape', 'local references', 'bounded domain/query selection'],
                 not_checked=['record content', 'GitHub link existence', 'evidence quality', 'current task authority',
-                             'semantic relevance', 'human approval'], human_gate={'status': 'not_checked'}, findings=[],
-                proof_boundary='Metadata pointers are discovery hints; only live issue/PR and reviewed skill versions govern action.',
+                             'per-work question completion', 'semantic relevance', 'human approval'],
+                human_gate={'status': 'not_checked'}, findings=[],
+                proof_boundary='Capability metadata is not a work ledger; only live issue/PR and reviewed skill versions govern action.',
                 domain=domain, branch=list(branch), query=query, total_matches=len(ranked), omitted=max(0, len(ranked) - len(pointers)),
                 pointers=pointers)
 
@@ -191,8 +193,8 @@ def main(argv=None):
                           human_gate={'status': 'not_checked'}, findings=[], count=len(index['records']),
                           mechanically_checked=['index shape', 'local references'],
                           not_checked=['record content', 'GitHub link existence', 'evidence quality',
-                                       'task authority', 'promotion approval'],
-                          proof_boundary='Structural validation only; this index is not an authority ledger.')
+                                       'per-work question completion', 'task authority', 'promotion approval'],
+                          proof_boundary='Structural validation only; this capability index is neither a work nor authority ledger.')
         elif args.command == 'select':
             result = select(index, args.domain, args.query, args.limit, args.branch)
         else:
@@ -205,7 +207,7 @@ def main(argv=None):
         print(json.dumps(dict(result='fail', evidence_source='supplied_metadata_index',
                               mechanically_checked=['input shape up to the reported failure'],
                               not_checked=['record content', 'GitHub link existence', 'evidence quality',
-                                           'task authority', 'promotion approval'],
+                                           'per-work question completion', 'task authority', 'promotion approval'],
                               human_gate={'status': 'not_checked'},
                               proof_boundary='Index validation failed; no records were authorized or promoted.',
                               findings=[finding]), ensure_ascii=False, indent=2))

@@ -27,6 +27,8 @@ class CapabilityIndexTests(unittest.TestCase):
             self.assertEqual(1, len(result['pointers']))
             self.assertNotIn('applies_when', result['pointers'][0])
             self.assertIn('current task authority', result['not_checked'])
+            self.assertIn('per-work question completion', result['not_checked'])
+            self.assertIn('not a work ledger', result['proof_boundary'])
 
     def test_observation_is_not_mislabeled_as_promoted(self):
         result = c.select(self.index, 'research', 'handoff')
