@@ -63,6 +63,7 @@ class GithubWorkflowTests(unittest.TestCase):
         self.assertEqual(packet['assignment']['selected_paths'], projected['selected_paths'])
         self.assertIn('leave a partial handoff with unknowns and block', body)
         self.assertIn('Kanban status is runtime state', body)
+        self.assertIn('`none` authorizes no repository file changes', body)
 
     def test_card_draft_rejects_fixture_stale_closed_and_tampered(self):
         self.fails('CARD_SOURCE', lambda: w.card_draft(self.snapshot, self.packet, self.root))

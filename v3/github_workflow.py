@@ -252,7 +252,8 @@ def card_draft(snapshot, packet, root):
         'Before any repository mutation, independently re-read the current issue/PR through a permitted, '
         'observable read path. If no such path is available, do not guess or use a broader tool merely to '
         'bypass that limit: leave a partial handoff with unknowns and block. Kanban status is runtime state, '
-        'not GitHub acceptance, merge authority or issue close-out.\n\n'
+        'not GitHub acceptance, merge authority or issue close-out. A selected_paths value of `none` '
+        'authorizes no repository file changes.\n\n'
         '## Evidence provenance\n\n```json\n' + json.dumps(metadata, ensure_ascii=False, indent=2) +
         '\n```\n\n## Bounded work projection\n\n```json\n' +
         json.dumps(handoff, ensure_ascii=False, indent=2) + '\n```\n\n'
