@@ -19,6 +19,12 @@ remaining work and next gate. A packet narrows authority, never replaces it. Fre
 memory or a message acknowledgment is not authority or completion. Request bounded
 context expansion when evidence is insufficient.
 
+If the receiver only has a controller-supplied snapshot or card draft, label those facts
+as a projection, not as a live issue read. Tool discovery, a URL in the card, and a
+model-written assertion are not read receipts. When no permitted observable path can
+recheck the live issue, leave a partial handoff with unknowns and block before repo
+mutation; do not switch to a broader tool merely to evade that boundary.
+
 When a Hermes Kanban card is used, it owns that run's queue/lease state, not the issue's
 write authority. Check the card's exact issue link and completion contract; `done` is
 not PR merge or issue closeout. See v3/KANBAN_BRIDGE.md only for a Kanban run. For a

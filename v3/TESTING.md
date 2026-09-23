@@ -58,6 +58,7 @@ python3 -m unittest discover -s v3 -p 'test_*.py' -v
 python3 v3/asgk3.py capture --repo OWNER/REPO --issue N --pr P --out /tmp/asgk3-live
 python3 v3/asgk3.py packet --snapshot /tmp/asgk3-live/snapshot.json --repo-root /path/to/repo --actor ACTOR --run RUN --out /tmp/asgk3-work
 python3 v3/asgk3.py check --snapshot /tmp/asgk3-live/snapshot.json --packet /tmp/asgk3-work/packet.json --repo-root /path/to/repo
+python3 v3/asgk3.py card-draft --snapshot /tmp/asgk3-live/snapshot.json --packet /tmp/asgk3-work/packet.json --repo-root /path/to/repo --out /tmp/asgk3-card
 ```
 
 沒有 PR 時省略 `--pr`；多個相關 PR 可重複提供，不自動搜索或採用其他 PR。
@@ -74,6 +75,20 @@ packet 預設投影 issue 的範圍；若 scope 是 glob，請用 `--path` 明�
 用 `--assignment <file>` 取代 actor/run 旗標重新投影。
 role_ceiling 為精確路徑；role_ref 指向記錄該角色限制的 GitHub issue/comment/commit。
 人選、供應商與 Bot profile 由人或外部平台決定，不由此工具分級調度。
+
+`card-draft` 先跑相同的 packet consistency/freshness check，只接受非 fixture
+來源，再把控制器提供的證據與 bounded scope 寫成 `CARD.md`／`CARD.json`；
+沒有自動建立 Kanban 卡片。`CARD.md` 可由操作員在明確選定 board、profile、
+workspace 與 completion contract 後作為 Hermes `--body-file` 輸入。出錯時不
+應留下半成品輸出目錄。操作者在 dispatch 前仍需再核對 GitHub；30 分鐘
+快照上限不是有效的工作租約。
+
+接手者不能把卡片裡的 URL、工具搜尋結果、快照或控制器提供的封包稱作自己
+已即時讀取 issue。只有可核對的實際 GitHub read 才支持該聲稱。若沒有許可的
+唯讀路徑，留下標示來源的 partial handoff 並 block，不能為了過關改用範圍更
+大的 terminal。[#361](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/361)
+保存了首次 Luna 實測中的錯誤聲稱與負例；[#362](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/362)
+保存修正後的重測。
 
 ### 快照信任
 

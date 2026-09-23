@@ -14,6 +14,11 @@ judgment. A matching hash is not a test attestation; a snapshot is not live appr
 a synthetic Bot/PR/merge is not independent real-world evidence. Tie head-sensitive
 claims to the exact head and invalidate stale claims.
 
+For a worker claim that it read the current issue, inspect the actual read-tool receipt
+or classify the fact as controller-supplied snapshot/card data. A tool search, link in
+the task, or later self-correction does not turn an earlier unsupported "issue-verified"
+claim into observed evidence. Record the correction and original error together.
+
 Flag unsupported completion/merge/release claims. Missing evidence is blocked or
 explicitly unknown. Semantic or product judgment may be performed by the authorized
 evaluator; it does not by itself create requires_human. Name the exact existing

@@ -43,12 +43,16 @@ GitHub issue／PR／review／merge 都明確標成合成資料，不冒充真實
 ```bash
 python3 v3/asgk3.py capture --repo OWNER/REPO --issue NUMBER --out /tmp/asgk3-capture
 python3 v3/asgk3.py packet --snapshot /tmp/asgk3-capture/snapshot.json --repo-root /path/to/checkout --actor RECEIVER --run RUN-ID --out /tmp/asgk3-packet
+python3 v3/asgk3.py card-draft --snapshot /tmp/asgk3-capture/snapshot.json --packet /tmp/asgk3-packet/packet.json --repo-root /path/to/checkout --out /tmp/asgk3-card
 ```
 
 Issue 必須符合既有 canonical scope；工具重用原有 parser，不接受任意本地 JSON
 冒充 issue。可用 `--path`、`--context` 縮小投影。角色上限也是縮限，不是授權。
 不能連線時回報失敗；受信任的 connector 匯出必須標成 `connector_export`，
 不能說成即時授權或 GitHub 已停機的證明。
+`card-draft` 只產生 `CARD.md` 與來源 metadata，不建立 Hermes 卡片。若 Bot 沒有
+可觀察的 GitHub 唯讀查詢，卡片僅供部分交接；不得憑快照改 repo 或自稱已核對
+當下 issue。#361 的 Luna 實測曾出現這種錯誤聲稱，修正與重測記在 #362。
 
 ## Skills 也一起演進
 
@@ -75,6 +79,8 @@ target-owned assessment、普通 revert 與文件驅動自體進化都保留。
 
 這是從原 `codex/asgk-3-preview` 另開的 preview.1 候選分支，原候選不變；
 不是已發布或已證實安全的產品。
-真正 Bot／Kanban 互通、獨立 reviewer 與 target pilot 尚需實測。
+真正 Bot／Kanban 的範圍化交接已有 #361 實測，但其首次 issue 核對聲稱失敗；
+這不是生產安全或獨立 reviewer 證明。修正後的重測結果見 #362；target pilot
+仍未實測。
 跨供應商接手仍是可攜性不變量，但不是自動選型功能，也不是本次主要瓶頸。
 你的 2.0 原始工作區與全域 Skills 都保持不動。
