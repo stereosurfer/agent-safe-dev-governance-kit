@@ -743,7 +743,10 @@ def final_closeout_flags(body, issue):
                 break
             line = stripped
         return bool(
-            re.match(r'(?i)^issue closeout review[^\n]*\bdraft\b', line)
+            (re.search(r'(?i)\bdraft\b', line)
+             and re.search(r"(?i)\b(?:do not|don't|not)[ \t]+(?:post|close|publish|final)\b", line))
+            or (re.match(r'(?i)^wip\b', line) and re.search(r'(?i)\bdraft\b', line))
+            or re.match(r'(?i)^issue closeout review[^\n]*\bdraft\b', line)
             or re.match(r'(?i)^(?:\*\*)?status[ \t]*[:—–-](?:\*\*)?[ \t]*'
                         r'(?:\*\*)?draft\b', line)
             or re.match(r'(?i)^(?:\[|\*{1,3})?draft(?:\]|\*{1,3})?'
