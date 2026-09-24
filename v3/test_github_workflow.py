@@ -594,7 +594,9 @@ class GithubWorkflowTests(unittest.TestCase):
                       if w.json_closeout_shape(comment['body'], issue_url))
         original = target['body']
         for prose in ('Note: the draft design was rejected.',
-                      'Draft design was rejected.'):
+                      'Draft design was rejected.',
+                      'The draft design was not final, so we rejected it.',
+                      'The draft decision did not close the issue; this review is final.'):
             with self.subTest(prose=prose):
                 target['body'] = prose + '\n\n' + original
                 searched = w.search([snapshot], 'Keep GitHub as work ledger')
