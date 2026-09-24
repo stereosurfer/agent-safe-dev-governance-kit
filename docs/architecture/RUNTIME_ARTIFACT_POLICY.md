@@ -4,8 +4,9 @@ Runtime outputs are not source code.
 
 Use `docs/architecture/LOG_AND_RECORD_RETENTION_POLICY.md` for ASGK source
 record classes. It does not choose a target application's runtime storage
-layout. The target issue and delivery contract must authorize any external or
-private destination.
+layout. A live target-owned issue must authorize any external or private
+destination; a delivery contract may refine placement but cannot grant write
+or human-gate authority by itself.
 
 ## Do not commit
 
