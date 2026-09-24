@@ -17,11 +17,16 @@ from asgk_lib.task_packet import (evaluate_task_packet, issue_scope_for_task_pac
                                  is_context_pseudo_ref, path_matches_allowed)
 
 PROOF = ('GitHub snapshots are observed evidence, not live or authenticated authorization. '
-         'No merge approval, test-execution attestation, runtime sandbox or external-side-effect audit.')
+         'Local remote configuration and textual PR links are not authenticated repository identity '
+         'or semantic GitHub linkage. No merge approval, test-execution attestation, runtime sandbox '
+         'or external-side-effect audit.')
 REPO = re.compile(r'[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+\Z')
 SHA = re.compile(r'[0-9a-f]{40}\Z')
 LINK = re.compile(r'https://github\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+/'
                   r'(?:issues/\d+(?:#issuecomment-\d+)?|pull/\d+(?:#(?:issuecomment-|discussion_r)\d+)?|commit/[0-9a-f]{40})(?![A-Za-z0-9/#-])')
+GITHUB_REMOTE = re.compile(
+    r'(?:https://github\.com/|git@github\.com:|ssh://git@github\.com/|git://github\.com/)'
+    r'([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+?)(?:\.git)?/?\Z', re.IGNORECASE)
 
 
 def envelope(result='pass', **extra):
@@ -45,6 +50,22 @@ def git(root, *args):
 
 def commit(value):
     require(type(value) is str and SHA.fullmatch(value), 'COMMIT', 'sha', 'Expected exact 40-character commit SHA')
+
+
+def checkout_identity(root, snapshot):
+    """Bind a supplied repository label to local Git config, not to GitHub auth."""
+    names = git(root, 'remote').decode().splitlines()
+    repositories = []
+    for name in names:
+        remote = git(root, 'remote', 'get-url', name).decode().strip()
+        match = GITHUB_REMOTE.fullmatch(remote)
+        if match:
+            repositories.append(match.group(1).casefold())
+    if snapshot['repository'].casefold() in repositories:
+        return 'matching_configured_github_remote'
+    require(snapshot['source'] == 'fixture' and not names, 'REPO_IDENTITY', 'repo_root',
+            'No configured GitHub remote matches the snapshot repository; do not project it onto this checkout')
+    return 'not_checked_fixture_without_remote'
 
 
 def validate_snapshot(snapshot, fresh=False):
@@ -137,6 +158,7 @@ def capture(repository, number, prs=()):
 
 def project(snapshot, assignment, root, review=False):
     validate_snapshot(snapshot, fresh=not review)
+    identity = checkout_identity(root, snapshot)
     issue = copy.deepcopy(snapshot['issue'])
     require(review or issue['state'] == 'open', 'ISSUE_CLOSED', 'issue', 'Closed issue cannot authorize new work')
     # Review of historical results is read-only, not resumed execution authority.
@@ -185,7 +207,8 @@ def project(snapshot, assignment, root, review=False):
             context.append(dict(ref=name, kind='baseline_file', sha256=hashlib.sha256(blob).hexdigest()))
     packet = dict(version=3, mode='issue_refinement', issue=issue['html_url'],
                   authority_sha256=digest(issue['body']), comments_sha256=digest(snapshot['comments']),
-                  repository=snapshot['repository'], assignment=copy.deepcopy(assignment),
+                  repository=snapshot['repository'], checkout_identity=identity,
+                  assignment=copy.deepcopy(assignment),
                   canonical_fields=scope['canonical_fields'], refinement=refinement, context=context,
                   pr_heads={str(x['pr']['number']): x['pr']['head']['sha'] for x in snapshot['prs']},
                   source=snapshot['source'], proof_boundary=PROOF)
@@ -210,7 +233,8 @@ def check_packet(snapshot, packet, root, review=False):
 
 def work_text(packet):
     fields = packet['canonical_fields']
-    data = dict(issue=packet['issue'], packet_id=packet['packet_id'], assignment=packet['assignment'],
+    data = dict(issue=packet['issue'], packet_id=packet['packet_id'],
+                checkout_identity=packet['checkout_identity'], assignment=packet['assignment'],
                 objective=fields['objective'], plan=fields['plan'], acceptance=fields['acceptance_sheet'],
                 expected_output=fields['expected_output'], non_goals=fields['non_goals'],
                 stop_conditions=fields['stop_conditions'], rollback=fields['rollback_expectations'],
@@ -381,6 +405,27 @@ def handoff_draft(snapshot, packet, report, root):
     return result, text
 
 
+def pr_relation_evidence(snapshot, item):
+    """Find explicit lexical backlinks only; GitHub relation semantics stay unchecked."""
+    issue = snapshot['issue']
+    pr = item['pr']
+    number = issue['number']
+    body = pr.get('body') or ''
+    references_issue = (bool(re.search(r'(?<![\w/#])#' + str(number) + r'\b', body))
+                        or any(link == issue['html_url'] or link.startswith(issue['html_url'] + '#issuecomment-')
+                               for link in LINK.findall(body)))
+    evidence = [dict(kind='pr_body_issue_reference', url=pr['html_url'])] if references_issue else []
+    def links_pr(text):
+        return any(link == pr['html_url'] or link.startswith(pr['html_url'] + '#')
+                   for link in LINK.findall(text))
+    if links_pr(issue['body']):
+        evidence.append(dict(kind='issue_body_pr_reference', url=issue['html_url']))
+    for comment in snapshot['comments']:
+        if links_pr(comment['body']):
+            evidence.append(dict(kind='issue_comment_pr_reference', url=comment['html_url']))
+    return evidence
+
+
 def closeout_draft(snapshot, packet, report, root, status):
     require(status in ('completed', 'closed_not_done', 'duplicate', 'superseded', 'blocked'),
             'CLOSEOUT_STATUS', 'status', 'Unknown closeout status')
@@ -408,9 +453,14 @@ def closeout_draft(snapshot, packet, report, root, status):
     if required_relation:
         require(any(x['kind'] == required_relation for x in report['relations']),
                 'RELATION_REQUIRED', 'relations', 'Missing closeout lineage relation')
+    relations = {x['pr']['number']: pr_relation_evidence(snapshot, x) for x in snapshot['prs']}
+    for item in snapshot['prs']:
+        require(bool(relations[item['pr']['number']]), 'UNRELATED_PR', 'prs',
+                'Selected PR has no explicit issue reference or issue-side PR backlink')
     first = report['decisions'][0]
     review = dict(issue=packet['issue'], status=status, scope_summary=report['summary'],
-                  prs_in_scope=[dict(pr=x['pr']['html_url'], role='Scoped source attempt',
+                  prs_in_scope=[dict(pr=x['pr']['html_url'], role='Caller-selected PR with lexical issue reference',
+                    relation_evidence=relations[x['pr']['number']],
                     head=x['pr']['head']['sha'], merge_commit=(f"https://github.com/{snapshot['repository']}/commit/{x['pr']['merge_commit_sha']}"
                         if x['pr']['merged'] else None))
                     for x in snapshot['prs']],
@@ -433,10 +483,54 @@ def closeout_draft(snapshot, packet, report, root, status):
     return result, text
 
 
+def structured_closeout(body, issue_url):
+    """Recognize same-issue fenced closeouts, never a bare marker or quote."""
+    number = issue_url.rsplit('/', 1)[1]
+    for match in re.finditer(r'(?ms)^```(json|yaml)[ \t]*\n(.*?)^```[ \t]*$', body):
+        language, block = match.groups()
+        if language == 'json':
+            try:
+                value = json.loads(block)
+            except (ValueError, TypeError):
+                continue
+            if type(value) is not dict or type(value.get('issue_closeout_review')) is not dict:
+                continue
+            review = value['issue_closeout_review']
+            if (review.get('issue') in (issue_url, '#' + number)
+                    and review.get('status') in ('completed', 'closed_not_done', 'duplicate', 'superseded', 'blocked')
+                    and type(review.get('decision_analysis')) is dict):
+                return True
+        else:
+            lines = block.splitlines()
+            if not lines or lines[0] != 'issue_closeout_review:':
+                continue
+            issue = re.search(r'(?m)^  issue:[ \t]*["\']?([^"\'\s]+)["\']?[ \t]*$', block)
+            status = re.search(r'(?m)^  status:[ \t]*(\w+)[ \t]*$', block)
+            if (issue and issue.group(1) in (issue_url, '#' + number)
+                    and status and status.group(1) in ('completed', 'closed_not_done', 'duplicate', 'superseded', 'blocked')
+                    and re.search(r'(?m)^  decision_analysis:[ \t]*$', block)):
+                return True
+    return False
+
+
 def index_snapshots(snapshots):
     nodes = {}
+    known = {}
     for snapshot in snapshots:
         validate_snapshot(snapshot)
+        repository = snapshot['repository']
+        issue = snapshot['issue']
+        key = (repository, str(issue['number']))
+        require(key not in known or known[key] == issue['html_url'], 'SNAPSHOT_CONFLICT', issue['html_url'],
+                'An issue and PR cannot share one GitHub number in the same repository')
+        known[key] = issue['html_url']
+        for item in snapshot['prs']:
+            pr = item['pr']
+            key = (repository, str(pr['number']))
+            require(key not in known or known[key] == pr['html_url'], 'SNAPSHOT_CONFLICT', pr['html_url'],
+                    'An issue and PR cannot share one GitHub number in the same repository')
+            known[key] = pr['html_url']
+    for snapshot in snapshots:
         issue = snapshot['issue']
         entries = [(issue['html_url'], issue['body'], 'issue')]
         entries += [(c['html_url'], c['body'], 'comment') for c in snapshot['comments']]
@@ -452,10 +546,19 @@ def index_snapshots(snapshots):
             if link in nodes:
                 require(nodes[link]['body'] == body, 'SNAPSHOT_CONFLICT', link, 'Conflicting snapshots; select a current version explicitly')
             refs = set(LINK.findall(body))
-            refs.update(f"https://github.com/{snapshot['repository']}/issues/{n}" for n in re.findall(r'(?<![\w/-])#(\d+)\b', body))
+            shorthand = set(re.findall(r'(?<![\w/-])#(\d+)\b', body))
+            refs.update(known[(snapshot['repository'], n)] for n in shorthand
+                        if (snapshot['repository'], n) in known)
+            unresolved_shorthand = sorted('#' + n for n in shorthand
+                                          if (snapshot['repository'], n) not in known)
             if kind == 'issue':
-                refs.update(c['html_url'] for c in snapshot['comments'] if 'issue_closeout_review' in c['body'])
+                refs.update(c['html_url'] for c in snapshot['comments']
+                            if structured_closeout(c['body'], issue['html_url']))
             nodes[link] = dict(url=link, kind=kind, body=body, links=sorted(refs - {link}),
+                               unresolved_shorthand_refs=unresolved_shorthand,
+                               structured_closeout=(kind == 'comment' and
+                                   structured_closeout(body, issue['html_url'])
+                                   and link.startswith(issue['html_url'] + '#issuecomment-')),
                                source=snapshot['source'], captured_at=snapshot['captured_at'])
     return nodes
 
@@ -464,7 +567,7 @@ def search(snapshots, query):
     words(query, 'query')
     nodes = index_snapshots(snapshots)
     return envelope(matches=[dict(url=n['url'], kind=n['kind'], excerpt=n['body'][:280], source=n['source'])
-        for n in nodes.values() if n['kind'] == 'comment' and 'issue_closeout_review' in n['body']
+        for n in nodes.values() if n['kind'] == 'comment' and n['structured_closeout']
         and query.casefold() in n['body'].casefold()], search_scope='Only supplied GitHub comment snapshots; no repository scan')
 
 
@@ -473,7 +576,7 @@ def trace(snapshots, start, max_hops=5):
     require(type(max_hops) is int and 0 <= max_hops <= 5, 'HOP_LIMIT', 'max_hops', 'Use zero to five durable hops')
     nodes = index_snapshots(snapshots)
     todo = [(start, 0)]
-    visited = set(); found = []; unresolved = []; frontier = []
+    visited = set(); found = []; unresolved = []; frontier = []; unresolved_shorthand = set()
     while todo:
         link, depth = todo.pop(0)
         if link in visited:
@@ -483,14 +586,17 @@ def trace(snapshots, start, max_hops=5):
             unresolved.append(link)
             continue
         node = nodes[link]
-        found.append(dict(url=link, kind=node['kind'], hops=depth, links=node['links'], source=node['source']))
+        found.append(dict(url=link, kind=node['kind'], hops=depth, links=node['links'],
+                          unresolved_shorthand_refs=node['unresolved_shorthand_refs'], source=node['source']))
+        unresolved_shorthand.update(node['unresolved_shorthand_refs'])
         if depth < max_hops:
             todo.extend((ref, depth + 1) for ref in node['links'])
         else:
             frontier.extend(ref for ref in node['links'] if ref not in visited)
-    return envelope('warning' if unresolved or frontier else 'pass', nodes=found,
+    return envelope('warning' if unresolved or frontier or unresolved_shorthand else 'pass', nodes=found,
                     unresolved=sorted(set(unresolved)), hop_limit_frontier=sorted(set(frontier)),
-                    trace_scope='Linked snapshot evidence only; missing URLs are not proof of absence')
+                    unresolved_shorthand_refs=sorted(unresolved_shorthand),
+                    trace_scope='Linked snapshot evidence only; unresolved shorthand is not guessed to be an issue or PR')
 
 
 def default_assignment(snapshot, root, actor, run, selected_paths=None, selected_context=None):
@@ -664,8 +770,9 @@ def main(argv=None):
                 'check': ['current supplied issue/refinement', 'packet digest', 'issue/comment/PR-head consistency'],
                 'card-draft': ['supplied snapshot shape, freshness and declared non-fixture source label', 'checked issue-backed packet',
                                'controller-supplied provenance and bounded card fields'],
-                'search': ['supplied snapshot shape', 'closeout-comment marker', 'case-insensitive query match'],
-                'trace': ['supplied snapshot shape', 'durable URL links', 'bounded traversal and unresolved references'],
+                'search': ['supplied snapshot shape', 'same-issue structured closeout block', 'case-insensitive query match'],
+                'trace': ['supplied snapshot shape', 'durable URL links', 'known-snapshot shorthand links',
+                          'bounded traversal and unresolved references'],
                 'demo': ['synthetic lifecycle fixture', 'local in-place git change', 'partial handoff', 'closeout/search/trace'],
             }.get(args.command, [])
         if args.command == 'capture':

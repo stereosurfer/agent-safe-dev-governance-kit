@@ -51,6 +51,8 @@ python3 -m unittest discover -s v3 -p 'test_*.py' -v
 `observed` 不誤標為已升格、虛構案例不冒充真實證據、交付問題圖不能冒充能力
 目錄，以及 rejected/superseded 不當成現行指令。這不證明交付問題樹的語意品質、
 實際資料研究流程或真實 reviewer 獨立性；研究包要由其領域契約另行驗證。
+`content_ref` 僅檢查路徑語法，`check`／`browse`／`select` 不確認檔案存在；
+其輸出把存在性列在 `not_checked`，不能把 pointer 當成已讀到的 Lesson。
 
 ## 真實 GitHub 讀取與投影
 
@@ -98,6 +100,14 @@ issue 是 GitHub REST 形狀：number、html_url、body、state、updated_at。
 Connector export 需保留原始欄位並標記 source=connector_export；
 fixture 不得重標成實際 API 證據。Saved JSON 無法自證其來源真實。
 
+從非 fixture 快照產生 packet 時，`--repo-root` 必須有至少一個設定的
+GitHub remote 與快照的 `repository` 相符；remote 不必名為 `origin`。
+不相符或沒有 remote 會回報 `REPO_IDENTITY`，不能把同一份 issue 投影到
+另一個 checkout。純合成 fixture 的暫存 repo 可以沒有 remote，但 packet 的
+`checkout_identity` 明列 `not_checked_fixture_without_remote`。這只是本機
+Git 設定的字串比對，不驗證 GitHub 身份、remote 真實性、快照來源或當下授權。
+若操作員改動 local remote，先前 packet 會失效並需重新投影。
+
 新工作投影拒絕超過 30 分鐘的快照，但這不是安全 lease 或即時撤銷。
 每次動作前仍須依既有流程重新確認 live issue/PR。讀取與實際操作不是原子交易。
 GitHub 無法讀取時停止此工具；既有經獨立證據確認的 outage fallback 不在此重造。
@@ -133,6 +143,20 @@ applies_when/does_not_apply_when、evidence。最多五個 material decisions、
 中文按字計。超過即要求重寫，不截斷。這是 GitHub issue closeout 草稿，
 仍須依 live acceptance、MDR、closingIssuesReferences 與既有 gate 確認才能實際關閉。
 工具看到一段 Closes 文字不代表 GitHub 已證明 closing relationship。
+額外選入的失敗 PR 嘗試也必須在 PR body 明確指向該 issue，或在該 issue
+body/comment 明確指向該 PR；否則 closeout 回報 `UNRELATED_PR`，不會默默把
+caller 選入的任意 PR 放進 `prs_in_scope`。輸出的 `relation_evidence` 只是
+文字連結來源，不是 GitHub `closingIssuesReferences`、語意關聯或核准證據。
+
+`search`／`trace` 只將與本 issue 編號相符、位於真正 fenced JSON 或
+canonical fenced YAML 的 `issue_closeout_review` 視為可搜尋 close-out。
+純文字 marker、Markdown 引用中的範例和其他 issue 的 review 不會形成
+issue → closeout comment 邊。舊式無結構的 prose close-out 可能因此不在
+搜尋結果，這是明確的查找邊界，不等於那些決策不存在；需要時仍查原始
+GitHub issue。即使結構吻合，工具也不驗證留言者、內容真偽或是否已完成。
+`trace` 只把 `#N` 縮寫連到本次快照中已知的 issue 或 PR；未知編號列入
+`unresolved_shorthand_refs`，不再一律猜成 issue。補上對應快照才能解開該邊；
+沒有提供快照不代表 GitHub 上不存在該決策。
 
 ## 所有 Skills 的情境測試
 
