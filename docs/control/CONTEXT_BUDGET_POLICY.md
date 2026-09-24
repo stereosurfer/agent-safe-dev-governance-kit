@@ -238,7 +238,7 @@ read_sets:
     read_when_record_placement_or_retention_is_decided:
       - docs/architecture/LOG_AND_RECORD_RETENTION_POLICY.md
     optional_read:
-      - docs/architecture/EXTERNALIZED_RESPONSIBILITY_BOUNDARY.md
+      - task-owned target storage or delivery contract named by the issue
     stop_if:
       - broader_filesystem_permission_required
       - protected_path_change_required_without_explicit_issue_scope
@@ -277,26 +277,19 @@ read_sets:
       - allowed_path_overlap_without_authorization
       - current_work_unit_unclear
 
-  promotion_or_output_readiness:
-    use_when: "Artifact promotion, source/input class boundaries, downstream output, external calls, import/export, provider/model calls, or publication readiness."
+  external_or_publication:
+    use_when: "External/API/model/cloud/MCP action, target write, raw-source retention, import/export, or publication is in scope."
     read:
       - AGENTS.md
       - current GitHub issue or PR
       - docs/control/HUMAN_GATED_OPERATIONS.md
-    read_when_artifact_promotion_or_readiness_applies:
-      - docs/bootstrap/13_artifact_promotion_policy.md
-      - docs/bootstrap/15_source_or_input_class_matrix.md
-      - docs/bootstrap/16_downstream_promotion_matrix.md
-      - docs/bootstrap/17_readiness_audit_policy.md
     optional_read:
-      - contracts/promotion_gate.contract.yaml
-      - schemas/promotion_gate.schema.json
-      - schemas/execution_lane.schema.json
+      - task-owned delivery contract or source-evidence policy named by the issue
+      - docs/control/SOURCE_ONLY_RELEASE_POLICY.md when an ASGK release is in scope
     stop_if:
-      - output_uses_unpromoted_artifact
-      - deterministic_fallback_presented_as_production_success
-      - live_external_call_without_explicit_gate
-      - publication_or_release_gate_required
+      - action_missing_exact_issue_scope
+      - applicable_human_gate_unresolved
+      - structural_fallback_overclaimed_as_semantic_or_production_proof
 
   tooling_or_validation:
     use_when: "Validation scripts, path hygiene, CI workflow, future CLI wrapper, or script behavior."
@@ -321,14 +314,12 @@ Selecting a read set is a context classification only. It never makes a
 protected path safe to edit, never approves merge, and never replaces the
 current issue or PR allowed paths.
 
-For an external call, import/export, provider/model call, or publication that
-does not rely on any source, generated, candidate, validated, or promoted
-artifact subject to promotion or readiness rules, the artifact-specific
-documents above are not generic prerequisites. If such an artifact is involved,
-read the applicable promotion/readiness controls before the downstream action,
-regardless of whether it has already been promoted. The current issue's exact
-read set must still include relevant controls, including Human-Gated Operations
-for an applicable human gate. A context class cannot waive that gate.
+An external action or publication needs the current issue's exact scope and
+the applicable Human-Gated Operations check. If a target workflow has its own
+artifact eligibility, source-quality or delivery contract, read that named
+contract when the action actually depends on it. ASGK does not impose a
+universal provider lane, source-class matrix, promotion chain or readiness-log
+format. A context class cannot waive a task-specific control or human gate.
 
 ## Context Expansion
 
