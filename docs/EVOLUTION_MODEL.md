@@ -186,9 +186,11 @@ mechanical_entrypoints:
 The map is a navigation aid. It does not create a second authority layer.
 The root workflow and catalog implementations are canonical under
 `scripts/asgk_lib/`; their named `v3/` compatibility wrappers and focused
-tests support the public CLI and `doctor`. Uncut-over `v3/` templates, Skills
-and design proposals remain non-default candidates under #372 until separately
-reviewed. Optional Hermes/Kanban run state is
+tests support the public CLI and `doctor`. The two root target-navigation
+templates under `templates/` are optional, assessment-guided references, not
+required target files or uncut-over `v3/` templates. The eleven proposed
+`v3/skills/` and unpromoted design proposals remain non-default candidates
+under #372 until separately reviewed. Optional Hermes/Kanban run state is
 outside this map and never replaces GitHub work authority. A Codex+GitHub-only
 recurring content job has no Kanban dependency; its schedule is a trigger, not
 the current write or publication decision. Target assessment may also conclude
