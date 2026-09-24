@@ -4,8 +4,8 @@ Status: active source-only release policy.
 
 This document defines version-neutral execution and closeout rules for ASGK
 source-only GitHub releases, together with explicitly labeled historical v1.x
-release facts. Historical facts do not authorize or constrain current ASGK 2.0
-work. This policy and `release-state-check` do not execute or authorize tags,
+release facts. Historical facts do not authorize or constrain later ASGK work.
+This policy and `release-state-check` do not execute or authorize tags,
 GitHub Releases, packages, publication, external distribution, installers, or
 repository-setting changes.
 
@@ -85,7 +85,7 @@ source_only_release_gates:
     required: true
     human_gate: false
     status: explicit
-    output: "The v1.0 release excluded runtime adapters and productization; this historical fact does not define ASGK 2.0."
+    output: "The v1.0 release excluded runtime adapters and productization; this historical fact does not define later ASGK versions."
   release_execution_issue:
     required: true
     human_gate: true
@@ -196,7 +196,7 @@ historical_v1_0_scope_exclusions:
     - runtime-specific adapter testing
   rule:
     - these items were outside the v1.0 source-only release
-    - this historical exclusion is not current ASGK 2.0 product authority
+    - this historical exclusion is not current product authority for later ASGK versions
     - any future proposal requires a new durable issue and current justification
 ```
 
