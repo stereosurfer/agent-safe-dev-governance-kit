@@ -68,8 +68,8 @@ If these sources conflict, stop and report the conflict.
 | storage or runtime artifact policy change | `advanced` | maybe | maybe | `security_or_storage` | Boundary expansion is human-gated. |
 | qualified program-scoped reversible protected source change | `frontier` | yes only under canonical policy plus exact current-issue authority | no only when current-head evidence proves no Human-Gated Operations item applies | `merge_decision` | Requires an OWNER-approved exact scope source, a child issue no broader than that source, tracked source only, no external side effect beyond routine issue/PR metadata, ordinary revert, independent review, CI, and strict `check-pr`; never describe the program grant as current-head human review. |
 | other protected path, human-gate, program-eligibility, merge-policy, or merge-authority change | `frontier` | no | yes | `merge_decision` | Never solo auto-merge. A PR changing the program path cannot use the path it changes. |
-| dependency, cloud/API, MCP, or model-call enablement | `frontier` | no | yes | `promotion_or_output_readiness` | Requires explicit gate and rollback. |
-| release/publication decision | `frontier` | no | yes | `promotion_or_output_readiness` | Human-gated. |
+| dependency, cloud/API, MCP, or model-call enablement | `frontier` | no | yes when the existing Human-Gated Operations policy applies | `external_or_publication` | Requires exact issue scope, applicable gate, proof limits, and rollback; no provider lane is assigned here. |
+| release/publication decision | `frontier` | no | yes | `external_or_publication` | Human-gated; a readiness note or validator pass is not approval. |
 
 ## Frontier-Guided Adoption And Upgrade Assessment
 

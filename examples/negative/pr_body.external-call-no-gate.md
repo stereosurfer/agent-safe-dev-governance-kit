@@ -9,7 +9,9 @@ negative_case:
 
 ## Summary
 
-Expected human gate: live API/provider lane without approval evidence.
+Expected stop: the issue scopes a new live external API/model capability, but
+the applicable human gate has no approval. This is review guidance, not an executable
+scenario in the current registry.
 
 ## Task Reference
 
@@ -17,7 +19,8 @@ Refs #000
 
 ## Scope Boundaries
 
-This PR opens a live API lane but does not include a human approval record.
+This PR enables a live external call within its current issue's scope but does
+not show an applicable human approval record.
 
 ## Current Status Impact
 

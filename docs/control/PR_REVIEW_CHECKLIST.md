@@ -230,7 +230,7 @@ Canonical references:
 ```text
 docs/architecture/LOG_AND_RECORD_RETENTION_POLICY.md
 docs/architecture/RUNTIME_ARTIFACT_POLICY.md
-docs/architecture/EXTERNALIZED_RESPONSIBILITY_BOUNDARY.md
+docs/control/HUMAN_GATED_OPERATIONS.md
 ```
 
 ## Step 8 — Human Gate Check

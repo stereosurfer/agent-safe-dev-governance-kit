@@ -1,19 +1,20 @@
 # 07 Contract First
 
-Every feature that creates, transforms, promotes, exports, or merges artifacts needs a contract first.
+Status: conditional source summary.
 
-Each contract must define:
+The current GitHub issue or qualifying PR owns the work-unit contract:
+objective, allowed paths, expected output, validation, non-goals, stop
+conditions, and rollback. A task packet can narrow it but not replace it.
 
-```yaml
-name:
-version:
-input:
-output:
-required_fields:
-validation_rules:
-examples:
-failure_modes:
-promotion_rules:
-```
+When a work unit creates or changes a machine-readable interface, identify
+the relevant repository- or target-owned contract or schema before implementation. Specify
+its inputs/outputs, required fields, invariants, failure cases, compatibility
+and project-specific positive/negative checks as needed by that interface.
+Do not manufacture an artifact contract, source class, promotion status, or
+provider lane for ordinary repository work.
 
-Do not allow prose-only contracts for machine-validated artifacts.
+A task-owned delivery contract may define question/evidence graphs, output
+eligibility or a promotion process for its own workflow. It does not grant
+GitHub edit scope, external-action permission, merge authority, or human-gate
+approval. Use the current issue and `docs/control/HUMAN_GATED_OPERATIONS.md`
+for those boundaries.

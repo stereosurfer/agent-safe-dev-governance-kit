@@ -89,12 +89,12 @@ roles:
 
 The candidate entry routes to its own relevant files on demand; this registry
 does not make all of `v3/**` a default read set or a second governance spine.
-The fixed three-root storage family was retired by #391; source record placement
-and runtime commit hygiene have the separate owners listed below. The existing
-execution-lane and artifact-promotion rows are not reclassified by that
-storage-boundary work. Their 3.0 disposition still requires separately scoped
-semantic review of each active owner and its inbound references; the candidate
-entry does not grant them new authority.
+The fixed three-root storage family was retired by #391, and the source-wide
+execution-lane/artifact-promotion family by #393. Source record placement,
+runtime commit hygiene, exact issue scope, and Human-Gated Operations keep
+their separate owners below. A target-owned delivery method may define its
+own artifact process; neither the candidate entry nor this registry grants
+that process ASGK-wide authority.
 
 ## Target Assessment And Optional References
 
@@ -236,14 +236,9 @@ target_storage_layout: target_owned_when_relevant
 | `docs/bootstrap/04_file_structure.md` | canonical | top-level file layout and dependency direction | no | new directories, repo structure changes | `lane_01_architecture` |
 | `docs/bootstrap/05_context_budget.md` | summary | basic task context limits | no | task scoping, token-budget review | `lane_00_controller` |
 | `docs/bootstrap/06_naming_versioning.md` | canonical | branch, commit, timestamp, and schema-version conventions | no | branch/commit/schema naming changes | `lane_06_ci_github` |
-| `docs/bootstrap/07_contract_first.md` | canonical | contract-first rule | no | contract/schema/artifact work | `lane_02_schema_contracts` |
-| `docs/bootstrap/08_acceptance_criteria.md` | canonical | three-layer acceptance model and definition of done | no | issue/PR acceptance changes | `lane_00_controller` |
-| `docs/bootstrap/09_safety_checks.md` | summary | minimum safety check overview | no | safety orientation only | `lane_05_security` |
-| `docs/bootstrap/13_artifact_promotion_policy.md` | summary | promotion chain overview and status values | no | artifact/data/evidence-heavy work | `lane_02_schema_contracts` |
-| `docs/bootstrap/14_execution_lanes.md` | canonical | execution lanes and external-call boundaries | no | execution lane/API/provider discussions | `lane_05_security` |
-| `docs/bootstrap/15_source_or_input_class_matrix.md` | optional module | source/input class use boundaries | no | evidence, source, claim, or context-pack projects | `lane_02_schema_contracts` |
-| `docs/bootstrap/16_downstream_promotion_matrix.md` | optional module | downstream artifact eligibility | no | artifact promotion or output eligibility work | `lane_02_schema_contracts` |
-| `docs/bootstrap/17_readiness_audit_policy.md` | canonical | readiness audit before output, API, import, publication, or external calls | no | API/model/provider/output readiness changes | `lane_05_security` |
+| `docs/bootstrap/07_contract_first.md` | summary | conditional machine-interface contract guidance; GitHub issue/PR owns work authority | no | contract, schema, or task-owned delivery-interface work | `lane_02_schema_contracts` |
+| `docs/bootstrap/08_acceptance_criteria.md` | summary | conditional implementation/data/governance acceptance orientation | no | issue/PR acceptance changes | `lane_00_controller` |
+| `docs/bootstrap/09_safety_checks.md` | summary | short source safety and validation orientation; AGENTS and HGO own gates | no | safety orientation only | `lane_05_security` |
 
 ## Task Packet And Report Documents
 
