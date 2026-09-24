@@ -1,6 +1,8 @@
 # ASGK Evolution Model
 
-Status: active ASGK 2.0 governance model.
+Status: current document-driven self-evolution model; the 3.0 capability
+projection under #372 is still a non-default candidate, not a released product
+contract.
 
 This document defines how ASGK improves itself as a document-driven system. It
 is a durable model, not a progress log, release plan, maturity ledger, or
@@ -8,10 +10,12 @@ runtime-specific design.
 
 ## Core Thesis
 
-ASGK evolves when a durable rule becomes a bounded work unit, is projected into
-the repository, checked with explicit evidence, used independently later, and
-closed out with a traceable decision. The model must remain understandable to a
-new person or a different AI without access to the author’s prior conversation.
+ASGK evolves when a durable rule or observed failure becomes a bounded work
+unit, is projected into the repository, checked with explicit evidence, used
+independently later, and closed out with a traceable decision. The model must
+remain understandable to a new person or a different AI without access to the
+author’s prior conversation. This source repository must demonstrate that loop
+on itself; a good-looking proposal or synthetic test is not later-use proof.
 
 ## The Self-Evolution Loop
 
@@ -19,10 +23,27 @@ new person or a different AI without access to the author’s prior conversation
 durable rule
   -> bounded issue/PR
   -> checked projection
+  -> decision and rejected paths in issue closeout
   -> independent later use
   -> target evidence when applicable
   -> release closeout
 ```
+
+When experience suggests a reusable method, a related but distinct loop is:
+
+```text
+run / incident
+  -> observed Lesson or ledger entry with provenance and competing explanations
+  -> bounded improvement issue and proposal
+  -> branch / PR, regression and independent review
+  -> applicable existing gate and versioned Skill or knowledge change
+  -> later-use evidence for the version actually loaded
+```
+
+Either loop can stop at an observation or reject a proposal. A Lesson is not a
+rule merely because it is indexed; a merged Skill edit is not later-use proof.
+Accepted, rejected, blocked and reverted branches remain in GitHub issues,
+PRs, commits and closeout comments rather than a new permanent migration log.
 
 ### 1. Durable rule
 
@@ -55,6 +76,13 @@ be able to recover what to do, where to work, what is forbidden, which evidence
 exists, and what remains unknown. A cold reader or replacement agent is
 evidence of handoff quality, not a source of authority.
 
+For reusable methods, later use must identify the version actually loaded and
+its new result. The originating Bot or agent may propose and implement a
+change, but its favorable self-test is not independent semantic confirmation.
+Apply a separate reviewer and the *existing* human gate when the concrete
+Skill, policy, security or publication change requires one; do not invent a
+universal police Bot or extra human checkpoint for every Lesson.
+
 ### 5. Target evidence
 
 When ASGK is assessed in another repository, the assessment is read-only and
@@ -84,12 +112,34 @@ improvement_modes:
   prove_target_claim: record caller-supplied target evidence without overclaiming
   close_out: preserve a compact decision tree and current recovery state
   remove_residue: delete or reclassify superseded material under its own scope
+  promote_capability: move a reproducible, reviewed Lesson into a versioned method
 ```
 
 More documents are not automatically more governance. A new projection must
 have one owner, one reason to exist, and a bounded consumer. Duplicate owners,
 unbounded reading, and historical plans presented as current instructions are
 regressions.
+
+## Three Different State Owners
+
+| State | Owner | Purpose and limit |
+| --- | --- | --- |
+| Governed change and decision tree | Live GitHub issue/qualifying PR, MDR, review, CI, commits and issue closeout | Grants bounded work and preserves why paths were accepted or rejected; a search index only points back to it. |
+| Current delivery question/evidence graph | The particular target-owned research, video, translation or other task package, when needed | Routes a reader from a compact entry to the relevant question, observations, complete evidence units, gaps and next action; it cannot promote its own method or grant repo edits. |
+| Reusable capability and experience | Versioned Skill/knowledge repository with a bounded Lesson/catalog index | Finds applicable prior cases and methods; an observed record is not an approved rule or the current task's question graph. |
+
+Many Lessons and ledgers may accumulate without being loaded by default. A
+reader starts from the current GitHub work unit and compact task entry, opens
+one relevant question/evidence unit, then consults a narrow prior-method slice
+only when useful. Full raw evidence stays at the task's appropriate home; Bot
+memory keeps identity and pointers, not the entire method or audit corpus.
+The research package's thought-tree shape is an example, not a mandatory ASGK
+folder scheme. Small tasks may need only an issue/PR and compact handoff.
+
+The `v3/` capability catalog and candidate Skills illustrate this design but
+are not yet the default root CLI or installed Skills. Its structural checks
+cannot prove a referenced file exists, that a method is applicable, or that a
+target's substantive conclusion is sound.
 
 ## Evidence And Judgment Boundaries
 
@@ -132,6 +182,12 @@ mechanical_entrypoints:
 ```
 
 The map is a navigation aid. It does not create a second authority layer.
+`v3/**` remains candidate source under #372 until separate root CLI, policy,
+template and Skill cutovers are reviewed. Optional Hermes/Kanban run state is
+outside this map and never replaces GitHub work authority. A Codex+GitHub-only
+recurring content job has no Kanban dependency; its schedule is a trigger, not
+the current write or publication decision. Target assessment may also conclude
+that no ASGK adaptation is needed.
 
 ## Change And Recovery Rule
 

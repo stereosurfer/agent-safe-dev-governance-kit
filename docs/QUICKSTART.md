@@ -11,9 +11,11 @@ When policy details matter, follow the canonical documents named in
 
 ## What ASGK Sets Up
 
-ASGK is a GitHub-native governance kit for AI-assisted repository work. It makes
-GitHub issues, pull requests, validation, merge decisions, and handoff files the
-durable source of truth.
+ASGK is a GitHub-native governance kit for AI-assisted repository work. A live
+GitHub issue or qualifying PR authorizes bounded work; repository rules define
+durable constraints. Validation supplies evidence, merge decisions record the
+gate outcome, and a compact handoff helps the next person or AI resume. None of
+those evidence or recovery surfaces creates new work authority.
 
 It does not replace your coding agent, project architecture, runtime, package
 manager, installer, or orchestration system. A human, Codex, Claude Code,
@@ -33,21 +35,31 @@ target repo
     and existing governance surfaces
 ```
 
-Commands in this guide run from the repository root of whichever context is
-being checked.
+Commands under `scripts/asgk.py` run from this ASGK source checkout unless a
+target has deliberately adopted equivalent tooling. `target-evidence-check`
+reads the explicit `--repo-root`; project-specific tests run in the target's
+own checkout.
 
-Do not treat ASGK v1.x as a runtime package or a universal target-repository
-shape. It is source-distributed governance guidance that may be selectively
-adapted when a target assessment recommends it.
+Do not treat ASGK as a runtime package or a universal target-repository shape.
+The latest completed source-only release is v1.7.3. The `v3/` subtree on this
+source repository's main is a non-default candidate under #372, not a released
+CLI or a required target install. Source guidance may be selectively adapted
+when a target-owned assessment recommends it, or not adopted at all.
 
 ## Before You Start
 
-You need a GitHub repository, permission to create issues/branches/PRs/commits,
-Python 3 for local validation, and one small change to run through the process
-first. GitHub Actions should be enabled when using the included workflow.
+For a first governed source change, you need a GitHub repository, permission to
+create issues/branches/PRs/commits, Python 3 for local validation, and one
+small change. GitHub Actions should be enabled when using the included
+workflow. A read-only target assessment or no-adoption decision does not
+require installing this tooling first.
 
 Optional helpers are the `gh` CLI, an AI coding agent, ASGK Skill Pack support
 in the agent client, and a human reviewer for protected or human-gated work.
+Hermes, Kanban, Bots and Groups are not prerequisites. If a target uses Kanban,
+its card/run state stays in that runtime; GitHub retains the governed issue,
+PR, merge decision and closeout. No separate police Bot is required for every
+task.
 
 ## Minimal Read Order
 
@@ -61,7 +73,7 @@ For a human assessing ASGK adoption:
 5. only the additional target evidence identified during assessment
 ```
 
-For an AI agent starting work in an ASGK-governed repository:
+For an AI agent starting work in this ASGK source repository:
 
 ```text
 1. AGENTS.md
@@ -72,13 +84,17 @@ For an AI agent starting work in an ASGK-governed repository:
 ```
 
 Do not read the whole repository by default. Use the smallest context set that
-can safely answer the current issue or PR.
+can safely answer the current issue or PR. A target uses its own assessed
+startup and handoff surfaces; these source-repo filenames are not a required
+target bundle.
 
 ## Optional Skill Pack
 
 ASGK ships source-distributed skills under `skills/`. They are reusable
 procedures, not a new authority layer. Use `docs/SKILL_PACK.md` for the full
 list, usage timing, client-installed mode, and repository-reference mode.
+Read the relevant Skill only when its trigger applies; the eleven `v3/skills`
+files are candidate proposals, not installed or active replacements.
 
 For target adoption or a material upgrade, the relevant Skill guides a
 human-selected frontier-capability evaluator through evidence, boundaries,
@@ -107,6 +123,13 @@ read-only. The evaluator uses target evidence and judgment to determine fit,
 minimum sufficient adaptation, or whether no change or no adoption is the
 better result.
 
+For a recurring Codex-and-GitHub website task, a schedule only starts the run.
+It cannot stand in for the current issue/qualifying PR, content/source rules,
+validation, review or publication gate. A later person or Codex should be able
+to recover the latest change from that website's own durable artifacts, without
+reading this source repo wholesale. The 3.0 program requires a real positive
+and negative test of this path; this guide does not claim it has passed.
+
 Record the assessment in an existing target-owned issue, PR, or handoff lineage.
 The assessment itself adds no approval gate. Existing gates apply only when its
 implementation proposal touches a concrete protected or high-risk action.
@@ -128,8 +151,9 @@ judgment.
 
 ## First Governed Change
 
-Choose a small docs-only change first. The goal is to learn the governance loop
-without adding technical risk.
+This section describes this source repository's current operating profile, not
+a mandatory form for every target. Choose a small docs-only source change
+first to learn the governance loop without adding technical risk.
 
 ### 1. Create One Issue
 
@@ -225,7 +249,7 @@ including by creating, removing, loosening, tightening, or reclassifying it.
 
 ### 5. Validate
 
-For governance or scaffold changes:
+For governance or scaffold changes in this ASGK source repository:
 
 ```bash
 python3 scripts/asgk.py doctor
@@ -241,6 +265,8 @@ python3 scripts/asgk.py <command> --help
 For project-specific code changes, also run the tests required by the issue.
 Record what those tests cover and what they do not prove in the PR Validation
 section.
+In a target repository, use its own project-specific checks; this source
+repository's `doctor` is not a universal target completion test.
 
 ## Open The PR
 
@@ -304,6 +330,13 @@ The assessment should:
 Only after a change is recommended should a target-owned implementation issue
 or PR authorize edits. The read-only assessment does not create an additional
 human approval layer.
+
+A low-risk target may already have adequate GitHub PR, CI, review and handoff
+history. Record that evidence and a no-change/no-adoption recommendation when
+appropriate; do not copy this source repo's 13-field form or file layout as a
+universal bundle. Any target that *does* adopt an ASGK rule must state its
+actual local authority and publication boundary without an implicit
+schedule-based exception.
 
 ASGK's `docs/DOCUMENT_MAP.md` and `docs/DOCUMENT_REGISTRY.md` remain authority
 only for this repository. Their templates are optional references, not required

@@ -1,10 +1,16 @@
 # ASGK Skill Pack
 
-Status: source-distributed v0 skill pack.
+Status: eleven current source-distributed root Skills. The eleven `v3/skills`
+entrypoints are candidate proposals under #372, not installed replacements or
+proof of a released 3.0 Skill pack.
 
 ASGK skills are reusable operating procedures for agents working in an
 ASGK-governed repository. They reduce repeated rule reading and after-the-fact
 reasoning, but they do not become a new authority layer.
+Invoke only the Skill relevant to the current responsibility and stage. A
+worker receiving a bounded task need not read all eleven or the full control
+library; the controller or PR/release owner reads the procedures it actually
+uses. Neither a persistent Bot nor a separate police agent is compulsory.
 
 ```yaml
 skill_pack_rule:
@@ -67,6 +73,11 @@ Copy one or more directories under `skills/` into the user's agent client skill
 location, such as a Codex skills directory or an equivalent client-specific
 skill mechanism.
 
+This is an explicit client choice, not an automatic synchronization or bulk
+installation. Record the version actually loaded when it matters to a test or
+handoff. The candidate `v3/skills/` copies remain separate until their own
+reviewed root-source cutover; do not load both versions as coequal authority.
+
 Use this mode when the agent client supports native skill discovery. The skill
 metadata can trigger at the right moment without loading all ASGK rules into the
 conversation.
@@ -118,7 +129,7 @@ opening_or_updating_pr:
 
 after_merge:
   - post_merge_closeout
-  - current_status_handoff
+  - current_status_handoff # only when the compact recovery snapshot would mislead otherwise
 
 when_claims_matter:
   - evidence_audit
@@ -133,9 +144,22 @@ when_adopting_asgk_elsewhere:
 when_updating_existing_asgk_adoption:
   - upgrade_audit
 
-weekly_or_milestone_review:
+periodic_or_milestone_review_when_requested:
   - governance_health_check
 ```
+
+These triggers select procedures, not extra approvals. A recurring Codex-only
+website run does not need Hermes, Kanban, Group or a Bot profile. Its schedule
+is not current write/publication authority; existing or adopted target-owned
+issue/PR and content controls determine the bounded change. A read-only target
+assessment may recommend no ASGK installation when existing controls suffice.
+
+Lessons and ledgers from research, video, translation or other work belong to
+their task-owned evidence home. A bounded capability index can point to
+reusable observations; a reviewed Skill PR can promote a method. Neither Bot
+memory nor that index grants work scope or merges a change. See
+`docs/EVOLUTION_MODEL.md` for the state-owner distinction and the candidate
+`v3/CAPABILITY_EVOLUTION.md` for the proposed progressive-disclosure pattern.
 
 ## Design Constraints
 
@@ -322,9 +346,11 @@ startup
   -> gatekeeper
   -> merge
   -> post_merge_closeout
-  -> current_status_handoff
-  -> governance_health_check
+  -> current_status_handoff when the recovery snapshot changes
 ```
+
+`governance_health_check` is a separate requested periodic/milestone audit,
+not a mandatory terminal step for every PR.
 
 Use this sequence for adoption testing:
 

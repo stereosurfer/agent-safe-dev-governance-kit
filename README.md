@@ -28,6 +28,12 @@ issue
   -> handoff / current status
 ```
 
+Accepted, rejected, superseded, and reverted paths remain in that GitHub
+lineage. The bounded issue closeout review is a fast decision-tree entrypoint,
+not a second work ledger. A separate task-owned delivery package may hold its
+current questions and evidence; a versioned capability catalog may help find
+prior Lessons and methods. Neither grants current work authority.
+
 The core principle is:
 
 ```text
@@ -62,7 +68,9 @@ separate responsibilities.
 
 ## Product Shape
 
-ASGK v1.x is distributed as a source-only governance kit:
+The latest release is source-only. This repository's root entrypoints remain
+current-main governance while [the 3.0 program](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/372)
+integrates and tests a non-default candidate under [`v3/`](v3/README.md):
 
 ```text
 repo core
@@ -72,6 +80,22 @@ validators
 skills
   -> focused procedures that guide evidence gathering and model judgment
 ```
+
+ASGK does not require Hermes, Kanban, a persistent Bot, or a separate police
+agent. When ASGK is used alongside Kanban, cards/runs belong to that runtime
+while GitHub retains ASGK work scope, PR/MDR, and closeout authority. Codex
+and GitHub alone can use the repository-governance loop; a recurring schedule
+starts a run, not that run's permission to edit or publish. The no-Hermes
+website case is a required 3.0 acceptance test, not a proven deployment yet.
+
+Research, video, and translation are examples of capability evolution, not
+mandatory ASGK modules. A task's question/evidence graph belongs to its own
+delivery contract. Reusable Lessons and methods can be discovered in bounded
+slices and promoted to a versioned Skill only through the applicable issue,
+PR, tests, review, and any existing human gate that applies. A large lesson
+corpus calls for progressive disclosure, not full-context loading or inflated
+Bot memory. The 3.0 model is documented in the candidate; root Skills and CLI
+have not yet been cut over.
 
 Skills are not a new authority layer or a substitute for model judgment. They
 direct attention to relevant evidence, safety boundaries, uncertainty, and stop
@@ -101,7 +125,7 @@ semantic adoption readiness.
 
 ## Who It Is For
 
-ASGK v1.x is useful for repositories that:
+ASGK is useful for repositories that:
 
 - allow AI agents or automation to create code or documentation changes;
 - need one source of truth for humans and agents;
@@ -110,11 +134,13 @@ ASGK v1.x is useful for repositories that:
 - want high-risk operations to require explicit human approval;
 - care about recovery after context loss, compacted sessions, or agent handoff.
 
-It is a poor fit when a project wants fully ad hoc agent work, does not use
-GitHub issues and PRs, or wants a runtime-specific agent profile to define the
-governance model. ASGK v1.x deliberately keeps the default layer generic.
+It can be a poor fit when existing PR/CI/review history already supplies enough
+handoff and auditability for the actual risk. A target-owned, read-only
+assessment may recommend minimum change, no change, or no adoption; it should
+not force the source repository's full issue form, file layout, or runtime
+profile into a smaller project. The default layer remains generic.
 
-## What ASGK v1.x Includes
+## What The Current Root Source Includes
 
 - `AGENTS.md` operating rules for agents entering the repository.
 - GitHub issue and PR templates for scoped work units.
@@ -133,9 +159,9 @@ governance model. ASGK v1.x deliberately keeps the default layer generic.
 - PR-level status validation for draft state, mergeability, review decision,
   status checks, PR-body policy, changed-path hygiene, and GitHub closing issue
   references.
-- Source-distributed ASGK Skill Pack v0 under `skills/` for startup, issue
-  scoping, PR evidence, gatekeeping, post-merge closeout, current-status
-  handoff, evidence audit, target-install audit, and governance health checks.
+- Eleven source-distributed ASGK Skills under `skills/`, used by relevant
+  responsibility and stage; they are not loaded or installed as a bundle by
+  default. The eleven `v3/skills/` files remain candidate proposals.
 - Document map and context-budget guidance so agents read the smallest
   sufficient context instead of the whole repository.
 - Read-only `target-evidence-check` diagnostics for explicit caller-supplied
@@ -164,24 +190,34 @@ If your agent client supports skills, copy the needed directories under
 repository-reference procedures and read only the specific `SKILL.md` needed for
 the current work unit. See `docs/SKILL_PACK.md`.
 
-For a first governed change in a repository that already has ASGK adopted:
+For a first governed change in this ASGK source repository:
 
 ```text
-1. Read AGENTS.md.
-2. Read docs/handoff/CURRENT_STATUS.md.
-3. Open or select one GitHub issue with objective, allowed paths, validation,
+1. Read AGENTS.md, README.md, and docs/handoff/CURRENT_STATUS.md.
+2. Open or select one GitHub issue with objective, allowed paths, validation,
    expected output, non-goals, stop conditions, and rollback expectations.
-4. Create a branch from current main.
-5. Change only the allowed paths.
-6. Run python3 scripts/asgk.py doctor.
-7. Draft the PR body in a file using .github/PULL_REQUEST_TEMPLATE.md.
-8. Fill the Current Status Impact and Merge Decision Record sections.
-9. Run local PR body governance preflight before PR create/edit:
+3. Create a branch from current main.
+4. Change only the allowed paths.
+5. Run the issue's project checks and python3 scripts/asgk.py doctor.
+6. Draft the PR body in a file using .github/PULL_REQUEST_TEMPLATE.md.
+7. Fill the Current Status Impact and Merge Decision Record sections.
+8. Run local PR body governance preflight before PR create/edit:
    python3 scripts/pr_governance_preflight.py check --body-file <body-file>
-10. Open or update the PR with the checked body file.
-11. Wait for GitHub Actions when they apply.
-12. Merge only when policy, validation, CI, and human gates allow it.
+9. Open or update the PR with the checked body file.
+10. Wait for GitHub Actions when they apply.
+11. Merge only when policy, validation, CI, and human gates allow it.
 ```
+
+A target uses its own assessed authority, files, PR shape and project tests;
+the ASGK source `doctor` and this repository's exact form are not universal
+target gates.
+
+For a recurring content job, the scheduler only awakens the worker. Each
+actual change still needs its target's current durable authority and
+publication boundary. A low-risk website may need only its existing GitHub
+issue/PR, content/source rules, CI and compact closeout—or no ASGK adoption
+when those controls already suffice. This choice requires target evidence;
+the 3.0 website positive/negative tests have not yet been completed.
 
 This repository's `docs/DOCUMENT_MAP.md` and `docs/DOCUMENT_REGISTRY.md` are
 repo-local. Do not copy them unchanged into a target repository. A target may
@@ -223,14 +259,16 @@ source-only GitHub release: no package, installer, runtime adapter, dependency,
 schema, workflow, repository visibility change, cloud/API/model lane, MCP
 change, or v2.0 work is included.
 
-The active ASGK 2.0 evolution keeps the generic governance core and focuses on
-clear, resumable, traceable human-AI work plus frontier-guided target
-assessment. The superseded runtime-adapter/profile roadmap does not define
-ASGK 2.0.
+The [ASGK 3.0 program](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/372)
+is active, but 3.0 is not released. Preview.1-derived `v3/**` is present on
+`main` only as a non-default candidate. Root authority, public CLI, templates,
+and eleven source Skills still need separately scoped cutover and real
+lifecycle/target evidence. The former 2.0 program and old runtime-adapter
+roadmaps are history, not instructions for the next work unit.
 
-## What v1.x Does Not Include
+## What The Generic Core Does Not Supply
 
-ASGK v1.x does not:
+ASGK does not itself:
 
 - replace Codex, Claude Code, Cursor, ChatGPT, OpenGoat, or other agent
   runtimes;
@@ -244,6 +282,10 @@ ASGK v1.x does not:
   provider; ASGK can require gates and records, but runtime egress controls live
   outside the governance kit;
 - remove the need for tests, code review, and human judgment.
+
+Optional Bot, Kanban, API, MCP, or other runtime integration requires its own
+bounded scope and existing risk gates. Their absence does not prevent a
+Codex-and-GitHub-only repository from using—or declining—ASGK.
 
 ## Where To Read Next
 
@@ -273,7 +315,10 @@ ASGK v1.x
   = latest released generic repo-governance line
 
 ASGK v2.0
-  = active docs-driven evolution of safe handoff, traceability, and assessment
+  = prior docs-driven evolution and retained historical evidence
+
+ASGK 3.0
+  = active release program with a non-default candidate, not yet published
 ```
 
 The lineage matters, but old roadmap labels are not current product authority.
