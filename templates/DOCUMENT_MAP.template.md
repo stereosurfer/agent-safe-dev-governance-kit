@@ -32,10 +32,13 @@ Do not read the whole repository for every task.
 Read the smallest set of canonical documents required by the work unit.
 ```
 
-If the target uses a registry and two documents appear to disagree, prefer the
-document marked `canonical` for that topic. If a summary document disagrees with
-a canonical document, the summary is stale and should be fixed through the
-target's durable work-unit process.
+If the target uses a registry and two documents appear to disagree, consult it
+to identify the intended owner; its `canonical` label does not silently settle
+a material conflict about scope, permissions, source of truth, validation,
+protected paths, runtime artifacts, human gates, or merge behavior. Stop and
+report such a conflict under the target's own operating rules. Repair a stale
+summary through the target's durable work-unit process after the boundary is
+clear. This reference creates no additional target approval gate.
 
 ## Default Startup Set
 
