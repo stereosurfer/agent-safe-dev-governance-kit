@@ -1,4 +1,10 @@
-# ASGK 3.0 candidate handoff
+# ASGK 3.0 candidate lineage handoff
+
+The GitHub workflow CLI is now canonical under `scripts/asgk_lib/` and
+`python3 scripts/asgk.py workflow` through #397. This file records preview.1
+history and remaining candidate limits; it is not the repository recovery
+snapshot. Read root `AGENTS.md`, `README.md`,
+`docs/handoff/CURRENT_STATUS.md`, and the live work issue first.
 
 ## Current authority and lineage
 
@@ -10,7 +16,7 @@
 - [#362](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/362)'s provenance correction was integrated by [PR #369](https://github.com/stereosurfer/agent-safe-dev-governance-kit/pull/369) into preview.1 as `62438b4c3c6439678226498b0ebc75d26a639fa3`; [#368](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/368) closed after that non-default-base merge.
 - [#370](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/370)'s observed Lesson was integrated by PR #371. Its [closeout](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/370#issuecomment-5806869845) preserves the pre-merge MDR timing exception: the OWNER merged the reviewed head, but the PR body's earlier `merge_blocked`/pending record must not be rewritten as an on-time gate pass.
 - [#377](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/377)'s entry/handoff recovery was integrated by [PR #380](https://github.com/stereosurfer/agent-safe-dev-governance-kit/pull/380) into preview.1 as `1d530176f05880ef90e36cfb2eccc87cb6c5bbb3`; it did not change main by itself.
-- [#381](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/381) governs whether this candidate subtree is imported to `main`; resolve its live PR/issue state rather than assuming a branch copy is canonical. Even when `v3/**` is present on main, no root 3.0 cutover, v3 release, target migration or global Skill synchronization follows from that import. Main separately retains W6B [PR #373](https://github.com/stereosurfer/agent-safe-dev-governance-kit/pull/373) and recovery-status [PR #376](https://github.com/stereosurfer/agent-safe-dev-governance-kit/pull/376) / [PR #379](https://github.com/stereosurfer/agent-safe-dev-governance-kit/pull/379); do not treat the candidate branch's older root files as current-main state.
+- [#381](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/381) was the bounded candidate-subtree import decision. #397 integrates only the GitHub workflow portion into the root CLI; it does not activate the capability catalog, templates, source Skills, target migration, release or global Skill synchronization. Earlier W6B and status PRs remain historical evidence, not next-work routing.
 
 ## Candidate recovery
 
@@ -25,8 +31,9 @@ relevant `v3/skills` entrypoint only when its procedure is needed. Follow links
 to #357–#371 for a specific decision trace; do not load that history by default.
 The live child issue or PR still supplies exact allowed paths and validation.
 
-The prior standalone compiler/receipt demo has been replaced as the public entrypoint.
-GitHub issue parsing and refinement reuse existing source functions. New commands capture
+The prior standalone compiler/receipt demo has been replaced by the root
+`scripts/asgk.py workflow` entrypoint. GitHub issue parsing and refinement
+reuse existing source functions. Its commands capture
 read-only snapshots, project an issue, preserve partial handoff, draft issue closeout,
 and search/trace linked GitHub comments. In-place committed changes are supported.
 
@@ -77,7 +84,7 @@ Preserve the rejected attempt and correction links; no reset, force push or sile
 
 ## Known implementation limits
 
-- The preview CLI does not automate GitHub posting, PR creation, merge, closure, Bot setup or publication. Separate #367/#370 field tests used other scoped tools; they are not CLI features.
+- The root workflow CLI does not automate GitHub posting, PR creation, merge, closure, Bot setup or publication. Separate #367/#370 field tests used other scoped tools; they are not CLI features.
 - Capture is not atomic; a saved snapshot is not live authority or authenticated evidence.
 - Local committed diff observation does not retain uncommitted patch contents or inspect ignored/external side effects.
 - Checks report evidence coverage, not command execution, approval or semantic correctness.
@@ -92,6 +99,7 @@ Preserve the rejected attempt and correction links; no reset, force push or sile
   research package is a concrete domain-owned delivery implementation; ASGK does not
   impose its exact filenames or toolchain on video and translation targets.
 
-Presence of this subtree on `main` does not change the root operating rules until
-separately authorized cutover work. Preview.1 and its source commits preserve the
-candidate lineage; do not delete a branch or worktree automatically.
+Presence of this subtree on `main` changes no root operating rule by itself.
+#397 makes only the GitHub workflow implementation/CLI canonical. Preview.1
+and its source commits preserve candidate lineage; do not delete a branch or
+worktree automatically.

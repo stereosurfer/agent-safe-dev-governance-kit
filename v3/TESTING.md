@@ -1,4 +1,10 @@
-# ASGK 3.0 preview.1 — 使用與反證
+# ASGK 3.0 GitHub workflow — 使用與反證
+
+GitHub workflow 由根目錄的 `scripts/asgk.py workflow` 執行；
+`v3/asgk3.py` 是相容入口。能力目錄仍是獨立候選，不在 root `doctor`
+的這組 workflow command 驗收內。所有工作流結果為 common JSON envelope；
+未解決的 trace 是 `warning`、`domain_result: incomplete`、exit 1，
+不是成功的完整決策樹。
 
 測試的是 GitHub 工作治理，不是只有離線檔案封包。
 所有輸出由 caller 指定；選新的目錄，避免覆寫。
@@ -6,9 +12,9 @@
 ## 一輪端到端測試
 
 ```bash
-python3 v3/asgk3.py demo --out /tmp/asgk3-github-demo
-python3 v3/asgk3.py search --snapshot /tmp/asgk3-github-demo/artifacts/final-snapshot.json --snapshot /tmp/asgk3-github-demo/artifacts/prior-snapshot.json --query "work ledger"
-python3 v3/asgk3.py trace --snapshot /tmp/asgk3-github-demo/artifacts/final-snapshot.json --snapshot /tmp/asgk3-github-demo/artifacts/prior-snapshot.json --start https://github.com/example/asgk-synthetic/issues/1 --max-hops 5
+python3 scripts/asgk.py workflow demo --out /tmp/asgk3-github-demo
+python3 scripts/asgk.py workflow search --snapshot /tmp/asgk3-github-demo/artifacts/final-snapshot.json --snapshot /tmp/asgk3-github-demo/artifacts/prior-snapshot.json --query "work ledger"
+python3 scripts/asgk.py workflow trace --snapshot /tmp/asgk3-github-demo/artifacts/final-snapshot.json --snapshot /tmp/asgk3-github-demo/artifacts/prior-snapshot.json --start https://github.com/example/asgk-synthetic/issues/1 --max-hops 5
 ```
 
 依序讀取輸出的：
@@ -59,10 +65,10 @@ python3 -m unittest discover -s v3 -p 'test_*.py' -v
 ## 真實 GitHub 讀取與投影
 
 ```bash
-python3 v3/asgk3.py capture --repo OWNER/REPO --issue N --pr P --out /tmp/asgk3-live
-python3 v3/asgk3.py packet --snapshot /tmp/asgk3-live/snapshot.json --repo-root /path/to/repo --actor ACTOR --run RUN --out /tmp/asgk3-work
-python3 v3/asgk3.py check --snapshot /tmp/asgk3-live/snapshot.json --packet /tmp/asgk3-work/packet.json --repo-root /path/to/repo
-python3 v3/asgk3.py card-draft --snapshot /tmp/asgk3-live/snapshot.json --packet /tmp/asgk3-work/packet.json --repo-root /path/to/repo --out /tmp/asgk3-card
+python3 scripts/asgk.py workflow capture --repo OWNER/REPO --issue N --pr P --out /tmp/asgk3-live
+python3 scripts/asgk.py workflow packet --snapshot /tmp/asgk3-live/snapshot.json --repo-root /path/to/repo --actor ACTOR --run RUN --out /tmp/asgk3-work
+python3 scripts/asgk.py workflow check --snapshot /tmp/asgk3-live/snapshot.json --packet /tmp/asgk3-work/packet.json --repo-root /path/to/repo
+python3 scripts/asgk.py workflow card-draft --snapshot /tmp/asgk3-live/snapshot.json --packet /tmp/asgk3-work/packet.json --repo-root /path/to/repo --out /tmp/asgk3-card
 ```
 
 沒有 PR 時省略 `--pr`；多個相關 PR 可重複提供，不自動搜索或採用其他 PR。
@@ -127,8 +133,8 @@ Uncommitted state 會產生 blocked handoff；檔案仍原封不動，不能說�
 副作用、測試是否真的執行與 runtime sandbox 不是此檢查能證明的內容。
 
 ```bash
-python3 v3/asgk3.py handoff --snapshot SNAPSHOT --packet PACKET --report REPORT --repo-root REPO --out /tmp/asgk3-handoff
-python3 v3/asgk3.py closeout --snapshot FINAL-SNAPSHOT --packet PACKET --report REPORT --repo-root REPO --status completed --out /tmp/asgk3-closeout
+python3 scripts/asgk.py workflow handoff --snapshot SNAPSHOT --packet PACKET --report REPORT --repo-root REPO --out /tmp/asgk3-handoff
+python3 scripts/asgk.py workflow closeout --snapshot FINAL-SNAPSHOT --packet PACKET --report REPORT --repo-root REPO --status completed --out /tmp/asgk3-closeout
 ```
 
 Handoff 草稿放回 scoped issue/PR；取得真實 comment URL 後，作為下一個 assignment

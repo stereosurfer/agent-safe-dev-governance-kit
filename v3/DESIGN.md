@@ -1,11 +1,17 @@
 # ASGK 3.0 — GitHub-native design contract
 
-Experimental preview.1-derived candidate contract; [scoped review #359](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/359).
-Branches from the #358 GitHub-native candidate without overwriting it. The
-[formal 3.0 program #372](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/372)
-now coordinates promotion. [#381](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/381)
-may import this subtree to main, but its presence does not supersede the root
-repository policies or any live child issue's exact authority.
+Preview.1-derived design; [scoped review #359](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/359).
+The GitHub work-projection implementation is canonical under
+`scripts/asgk_lib/github_workflow.py` and public through
+`scripts/asgk.py workflow` after #397. The capability catalog, templates and
+eleven proposed Skills remain candidates; this document is not a second
+authority for issue scope, approval or release.
+This design descends from the #358 GitHub-native candidate without overwriting
+it. The [formal 3.0 program #372](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/372)
+coordinates promotion. [#381](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/381)
+imported the candidate subtree to main as non-default source; #397 promotes
+only its GitHub workflow implementation. Neither step supersedes root policies
+or any live child issue's exact authority.
 
 ## Product invariants
 
@@ -145,8 +151,7 @@ The preview.1 branch still contains root files from its earlier fork; main has
 since changed through W6B [PR #373](https://github.com/stereosurfer/agent-safe-dev-governance-kit/pull/373)
 and recovery-status [PR #376](https://github.com/stereosurfer/agent-safe-dev-governance-kit/pull/376) / [PR #379](https://github.com/stereosurfer/agent-safe-dev-governance-kit/pull/379).
 Do not call the older root copies current authority or treat a head-to-head diff
-as the candidate's source patch. Even an imported `v3/` subtree is not the root
-product contract. #372 requires a separately reviewed canonical
-cutover across root entry, policies, validators, templates and all eleven Skills.
-This document change does not perform that cutover, publish 3.0, or bypass
-current main rules.
+as the candidate's source patch. #397 promotes the GitHub workflow CLI into
+the root entry and doctor, not the whole `v3/` subtree. #372 still requires
+separately reviewed capability, template, Skill, field-test and release work.
+This document does not publish 3.0 or bypass current main rules.

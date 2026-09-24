@@ -14,6 +14,20 @@ EXPECTED_SUCCESS = "expected_success"
 
 ASGK = ("python3", "scripts/asgk.py")
 
+WORKFLOW_PROOF_BOUNDARY = (
+    "GitHub snapshots are observed evidence, not live or authenticated authorization. "
+    "Local remote configuration and textual PR links are not authenticated repository identity "
+    "or semantic GitHub linkage. No merge approval, test-execution attestation, runtime sandbox "
+    "or external-side-effect audit."
+)
+WORKFLOW_MINIMAL_SNAPSHOT = (
+    '{"version":1,"source":"fixture","captured_at":"2025-01-01T00:00:00Z",'
+    '"repository":"example/asgk-synthetic","issue":{"number":1,'
+    '"html_url":"https://github.com/example/asgk-synthetic/issues/1",'
+    '"body":"A scoped work unit","state":"closed",'
+    '"updated_at":"2025-01-01T00:00:00Z"},"comments":[],"prs":[]}'
+)
+
 TARGET_EVIDENCE_EXPECTED_PROOF_BOUNDARY = (
     "Exit 0 proves only that every accepted caller-supplied mechanical claim "
     "matched the named observable target paths or literal text during this "
@@ -1756,6 +1770,60 @@ RETAINED_JSON_SCENARIOS = (
         SOURCE_INVENTORY_PROOF_BOUNDARY,
         expected_mechanically_checked=SOURCE_INVENTORY_CHECKED,
         expected_not_checked=SOURCE_INVENTORY_NOT_CHECKED,
+    ),
+    JsonScenario(
+        "workflow_trace_supplied_snapshot",
+        "workflow",
+        (*ASGK, "workflow", "trace", "--snapshot", "{temp_input}",
+         "--start", "https://github.com/example/asgk-synthetic/issues/1", "--json"),
+        "positive",
+        "pass",
+        0,
+        (),
+        WORKFLOW_PROOF_BOUNDARY,
+        temp_input=TempInput(content=WORKFLOW_MINIMAL_SNAPSHOT),
+        expected_mechanically_checked=(
+            "supplied snapshot shape", "durable URL links",
+            "closed-issue structured closeout edge", "known-snapshot shorthand links",
+            "bounded traversal and unresolved references",
+        ),
+        expected_payload_fields=(("evidence_source", "supplied_snapshots"),),
+    ),
+    JsonScenario(
+        "workflow_trace_unresolved_snapshot",
+        "workflow",
+        (*ASGK, "workflow", "trace", "--snapshot", "{temp_input}",
+         "--start", "https://github.com/example/asgk-synthetic/issues/2", "--json"),
+        "negative",
+        "warning",
+        1,
+        ("WF_TRACE_INCOMPLETE",),
+        WORKFLOW_PROOF_BOUNDARY,
+        expected_domain_result="incomplete",
+        temp_input=TempInput(content=WORKFLOW_MINIMAL_SNAPSHOT),
+        expected_mechanically_checked=(
+            "supplied snapshot shape", "durable URL links",
+            "closed-issue structured closeout edge", "known-snapshot shorthand links",
+            "bounded traversal and unresolved references",
+        ),
+        expected_payload_fields=(("evidence_source", "supplied_snapshots"),),
+    ),
+    JsonScenario(
+        "workflow_snapshot_version_invalid",
+        "workflow",
+        (*ASGK, "workflow", "search", "--snapshot", "{temp_input}", "--query", "trace", "--json"),
+        "negative",
+        "fail",
+        1,
+        ("SNAPSHOT_VERSION",),
+        WORKFLOW_PROOF_BOUNDARY,
+        temp_input=TempInput(
+            content=WORKFLOW_MINIMAL_SNAPSHOT,
+            replacements=(('"version":1', '"version":2'),),
+        ),
+        expected_mechanically_checked=(
+            "workflow input handling and failure classification up to the reported boundary",
+        ),
     ),
 )
 

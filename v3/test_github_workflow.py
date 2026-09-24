@@ -3,6 +3,8 @@ import copy
 import hashlib
 import io
 import json
+import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -193,6 +195,22 @@ class GithubWorkflowTests(unittest.TestCase):
         w.git(self.root, '-c', 'core.hooksPath=/dev/null', 'commit', '-m', 'Synthetic out-of-scope mutation')
         self.report['head_sha'] = w.git(self.root, 'rev-parse', 'HEAD').decode().strip()
         self.fails('DIFF_SCOPE', self.observe)
+        report_file = self.out / 'out-of-scope-report.json'
+        report_file.write_text(json.dumps(self.report), encoding='utf-8')
+        output = self.out / 'out-of-scope-handoff'
+        source_root = Path(__file__).resolve().parents[1]
+        completed = subprocess.run(
+            [sys.executable, str(source_root / 'scripts/asgk.py'), 'workflow', 'handoff',
+             '--snapshot', str(self.out / 'artifacts/snapshot.json'),
+             '--packet', str(self.out / 'artifacts/packet.json'),
+             '--report', str(report_file), '--repo-root', str(self.root),
+             '--out', str(output)],
+            cwd=source_root, capture_output=True, text=True, check=False,
+        )
+        self.assertEqual(1, completed.returncode)
+        self.assertFalse(completed.stderr, completed.stderr)
+        self.assertEqual('DIFF_SCOPE', json.loads(completed.stdout)['findings'][0]['code'])
+        self.assertFalse(output.exists())
 
     def test_symlink_committed_output(self):
         (self.root / 'README.md').unlink()
@@ -425,6 +443,17 @@ class GithubWorkflowTests(unittest.TestCase):
         result = w.trace([self.indexed_final], self.prior['issue']['html_url'])
         self.assertEqual('warning', result['result'])
         self.assertEqual([self.prior['issue']['html_url']], result['unresolved'])
+        self.assertEqual('incomplete', result['domain_result'])
+        self.assertEqual(['WF_TRACE_INCOMPLETE'], [finding['code'] for finding in result['findings']])
+        self.assertEqual([], w.validation_result_errors(result))
+
+    def test_direct_workflow_results_keep_common_envelope(self):
+        for result in (
+            self.observe(),
+            w.search([self.indexed_final], 'GitHub'),
+            w.trace([self.indexed_final], self.packet['issue']),
+        ):
+            self.assertEqual([], w.validation_result_errors(result))
 
     def test_hops_bounded(self):
         self.fails('HOP_LIMIT', lambda: w.trace([self.final], self.packet['issue'], 6))
@@ -456,6 +485,113 @@ class GithubWorkflowTests(unittest.TestCase):
                 '--repo-root', str(self.root), '--actor', 'human-B', '--run', 'run-B', '--out', str(output)]))
             self.assertEqual(0, a.main(['check', '--snapshot', str(artifacts / 'snapshot.json'),
                 '--packet', str(output / 'packet.json'), '--repo-root', str(self.root)]))
+
+    def test_root_workflow_entry_full_fixture_chain(self):
+        source_root = Path(__file__).resolve().parents[1]
+        artifacts = self.out / 'artifacts'
+
+        def root_cli(*args):
+            completed = subprocess.run(
+                [sys.executable, str(source_root / 'scripts/asgk.py'), 'workflow', *map(str, args)],
+                cwd=source_root, capture_output=True, text=True, check=False,
+            )
+            self.assertFalse(completed.stderr, completed.stderr)
+            return completed.returncode, json.loads(completed.stdout)
+
+        packet_out = self.out / 'root-packet'
+        code, result = root_cli('packet', '--snapshot', artifacts / 'snapshot.json',
+            '--repo-root', self.root, '--actor', 'human-B', '--run', 'run-B',
+            '--out', packet_out)
+        self.assertEqual(0, code)
+        self.assertEqual('pass', result['result'])
+        self.assertEqual('not_checked', result['human_gate']['status'])
+        self.assertTrue(result['human_gate']['reason'])
+        code, result = root_cli('check', '--snapshot', artifacts / 'snapshot.json',
+            '--packet', packet_out / 'packet.json', '--repo-root', self.root)
+        self.assertEqual(0, code)
+        self.assertEqual('pass', result['result'])
+
+        partial = copy.deepcopy(self.report)
+        partial['state'] = 'partial'
+        partial['remaining'] = ['Run the required project check']
+        partial_file = self.out / 'partial.json'
+        partial_file.write_text(json.dumps(partial), encoding='utf-8')
+        handoff_out = self.out / 'root-handoff'
+        code, result = root_cli('handoff', '--snapshot', artifacts / 'snapshot.json',
+            '--packet', artifacts / 'packet.json', '--repo-root', self.root,
+            '--report', partial_file, '--out', handoff_out)
+        self.assertEqual(1, code)
+        self.assertEqual('blocked', result['result'])
+        self.assertEqual(['WORK_INCOMPLETE'],
+                         [finding['code'] for finding in result['findings']])
+        self.assertTrue((handoff_out / 'HANDOFF_DRAFT.md').is_file())
+
+        closeout_out = self.out / 'root-closeout'
+        code, result = root_cli('closeout', '--snapshot', artifacts / 'pre-closeout-snapshot.json',
+            '--packet', artifacts / 'packet.json', '--repo-root', self.root,
+            '--report', artifacts / 'report.json', '--status', 'completed',
+            '--out', closeout_out)
+        self.assertEqual(0, code)
+        self.assertEqual('pass', result['result'])
+        self.assertTrue((closeout_out / 'CLOSEOUT_DRAFT.md').is_file())
+
+        code, result = root_cli('search', '--snapshot', artifacts / 'final-snapshot.json',
+            '--query', 'GitHub')
+        self.assertEqual(0, code)
+        self.assertEqual(1, len(result['matches']))
+        code, result = root_cli('trace', '--snapshot', artifacts / 'final-snapshot.json',
+            '--snapshot', artifacts / 'prior-snapshot.json',
+            '--start', self.packet['issue'])
+        self.assertIn(code, (0, 1))
+        self.assertTrue(result['nodes'])
+        self.assertIn(result['result'], ('pass', 'warning'))
+
+    def test_root_workflow_rejects_invalid_without_writing(self):
+        source_root = Path(__file__).resolve().parents[1]
+        artifacts = self.out / 'artifacts'
+        invalid = self.out / 'rejected-card'
+        def rejected(*args):
+            completed = subprocess.run(
+                [sys.executable, str(source_root / 'scripts/asgk.py'), 'workflow', *map(str, args)],
+                cwd=source_root, capture_output=True, text=True, check=False,
+            )
+            self.assertEqual(1, completed.returncode)
+            self.assertFalse(completed.stderr, completed.stderr)
+            return json.loads(completed.stdout)
+
+        result = rejected('card-draft', '--snapshot', artifacts / 'snapshot.json',
+            '--packet', artifacts / 'packet.json', '--repo-root', self.root,
+            '--out', invalid)
+        self.assertEqual('CARD_SOURCE', result['findings'][0]['code'])
+        self.assertFalse(invalid.exists())
+
+        stale = copy.deepcopy(self.snapshot)
+        stale['captured_at'] = '2000-01-01T00:00:00Z'
+        stale_file = self.out / 'stale.json'
+        stale_file.write_text(json.dumps(stale), encoding='utf-8')
+        stale_output = self.out / 'stale-packet'
+        result = rejected('packet', '--snapshot', stale_file, '--repo-root', self.root,
+            '--actor', 'synthetic-bot-A', '--run', 'run-A', '--out', stale_output)
+        self.assertEqual('STALE_SNAPSHOT', result['findings'][0]['code'])
+        self.assertFalse(stale_output.exists())
+
+        forged = copy.deepcopy(self.snapshot)
+        forged['source'] = 'gh_api'
+        forged_file = self.out / 'forged.json'
+        forged_file.write_text(json.dumps(forged), encoding='utf-8')
+        forged_output = self.out / 'forged-packet'
+        result = rejected('packet', '--snapshot', forged_file, '--repo-root', self.root,
+            '--actor', 'synthetic-bot-A', '--run', 'run-A', '--out', forged_output)
+        self.assertEqual('REPO_IDENTITY', result['findings'][0]['code'])
+        self.assertFalse(forged_output.exists())
+
+        changed = copy.deepcopy(self.snapshot)
+        changed['issue']['body'] += '\n\nNew scope objection.'
+        changed_file = self.out / 'changed-issue.json'
+        changed_file.write_text(json.dumps(changed), encoding='utf-8')
+        result = rejected('check', '--snapshot', changed_file,
+            '--packet', artifacts / 'packet.json', '--repo-root', self.root)
+        self.assertEqual('STALE_PACKET', result['findings'][0]['code'])
 
     def test_cli_card_draft_writes_only_after_validation(self):
         snapshot, packet = self.observed_packet()

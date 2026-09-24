@@ -1,4 +1,10 @@
-# ASGK 3.0 候選來源 — GitHub 原生工作治理
+# ASGK 3.0 候選來源與已整合的 GitHub 工作流
+
+本目錄保留 preview.1 設計與測試來源。GitHub workflow 的正式實作已移至
+`scripts/asgk_lib/github_workflow.py`，公開入口是
+`python3 scripts/asgk.py workflow --help`；`v3/asgk3.py` 與
+`v3/github_workflow.py` 只做代理，不是第二套規則。能力目錄、模板與
+11 個 `v3/skills/` 仍是候選，3.0 尚未發布。
 
 **ASGK 是一套讓人與 AI 能安全、順利交接工作的規則與工具。**
 看得懂工作狀態、接得下去長期工作、查得清楚證據與決策；
@@ -33,7 +39,7 @@ issue 的授權、PR/MDR 或 close-out。獨立 reviewer 守材料／能力升�
 不安裝套件、不呼叫模型、不更改 Bot 設定。
 
 ```bash
-python3 v3/asgk3.py demo --out /tmp/asgk3-github-test
+python3 scripts/asgk.py workflow demo --out /tmp/asgk3-github-test
 python3 -m unittest discover -s v3 -p 'test_*.py' -v
 ```
 
@@ -50,9 +56,9 @@ GitHub issue／PR／review／merge 都明確標成合成資料，不冒充真實
 ## 真實 issue 的工作包
 
 ```bash
-python3 v3/asgk3.py capture --repo OWNER/REPO --issue NUMBER --out /tmp/asgk3-capture
-python3 v3/asgk3.py packet --snapshot /tmp/asgk3-capture/snapshot.json --repo-root /path/to/checkout --actor RECEIVER --run RUN-ID --out /tmp/asgk3-packet
-python3 v3/asgk3.py card-draft --snapshot /tmp/asgk3-capture/snapshot.json --packet /tmp/asgk3-packet/packet.json --repo-root /path/to/checkout --out /tmp/asgk3-card
+python3 scripts/asgk.py workflow capture --repo OWNER/REPO --issue NUMBER --out /tmp/asgk3-capture
+python3 scripts/asgk.py workflow packet --snapshot /tmp/asgk3-capture/snapshot.json --repo-root /path/to/checkout --actor RECEIVER --run RUN-ID --out /tmp/asgk3-packet
+python3 scripts/asgk.py workflow card-draft --snapshot /tmp/asgk3-capture/snapshot.json --packet /tmp/asgk3-packet/packet.json --repo-root /path/to/checkout --out /tmp/asgk3-card
 ```
 
 Issue 必須符合既有 canonical scope；工具重用原有 parser 檢查提供的 JSON
@@ -88,8 +94,8 @@ target-owned assessment、普通 revert 與文件驅動自體進化都保留。
 搜尋以 issue close-out 為入口，不要求翻遍 repo。
 
 本目錄源自從原 `codex/asgk-3-preview` 另開的 preview.1 候選分支，原候選不變。
-它即使出現在 main，仍只是待根目錄契約、CLI、模板及 11 個正式 Skills 整合的
-非預設候選來源；不是已發布或已證實安全的產品。
+它的 GitHub workflow 部分已由 #397 整合到根目錄 CLI 與 doctor；
+其餘候選來源不是已發布或已證實安全的產品。
 真正 Bot／Kanban 的範圍化交接已有 #361 實測，但其首次 issue 核對聲稱失敗；
 這不是生產安全或獨立 reviewer 證明。修正後的重測結果見 #362；target pilot
 仍未實測。
@@ -101,7 +107,6 @@ Hermes 的[#367 留言測試](https://github.com/stereosurfer/agent-safe-dev-gov
 與 #370 限定路徑寫入是分別受控的實測，不是本 CLI 已有自動 GitHub 發文功能，
 也不證明一般寫入隔離或可上線。
 跨供應商接手仍是可攜性不變量，但不是自動選型功能，也不是本次主要瓶頸。
-目前 main 另有 W6B 清理與交接狀態更新（包含
-[#379](https://github.com/stereosurfer/agent-safe-dev-governance-kit/pull/379)）。
-[#381](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/381) 只授權這批
-候選來源的受審整合，不授權根目錄正式切換或同步全域 Skills；請核對即時 PR／分支狀態。
+舊 #379/#381 是候選匯入階段的決策與證據，不是目前的下一工作指令。
+後續工作依 #372 的 live child issue；不得由候選來源推定模板、能力目錄、
+全域 Skills 同步或發布已獲授權。
