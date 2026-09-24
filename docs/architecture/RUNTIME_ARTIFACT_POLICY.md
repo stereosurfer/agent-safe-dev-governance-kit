@@ -12,8 +12,8 @@ private destination.
 Do not commit raw captures, private files, live databases, model or preview
 caches, scratch, generated run outputs, or external preparation outputs. The
 ASGK source hygiene check recognizes paths such as `runs/`, `corpus/`, and
-`artifacts/` as runtime-output warnings; that is not a universal target-repo
-directory specification.
+`artifacts/` as blocking changed-path findings; that path-only check is not a
+universal target-repo directory specification.
 
 ## Allowed in repo
 

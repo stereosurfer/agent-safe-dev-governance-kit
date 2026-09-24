@@ -89,10 +89,12 @@ roles:
 
 The candidate entry routes to its own relevant files on demand; this registry
 does not make all of `v3/**` a default read set or a second governance spine.
-The existing specialized storage, execution-lane, and artifact-promotion rows
-are not reclassified by this navigation-only update. Their 3.0 disposition
-requires separately scoped semantic review of each active owner and its inbound
-references; the candidate entry does not grant them new authority.
+The fixed three-root storage family was retired by #391; source record placement
+and runtime commit hygiene have the separate owners listed below. The existing
+execution-lane and artifact-promotion rows are not reclassified by that
+storage-boundary work. Their 3.0 disposition still requires separately scoped
+semantic review of each active owner and its inbound references; the candidate
+entry does not grant them new authority.
 
 ## Target Assessment And Optional References
 
@@ -229,7 +231,7 @@ target_storage_layout: target_owned_when_relevant
 | Document | Role | Canonical for | Read by default | Read when | Owned by lane |
 |---|---|---|---:|---|---|
 | `docs/bootstrap/00_project_brief.md` | canonical | project mission and non-goals | no | project initialization, mission changes | `lane_01_architecture` |
-| `docs/bootstrap/01_physical_boundaries.md` | canonical | writable paths, protected paths, forbidden actions | no | path, security, filesystem, CI, PR hygiene work | `lane_05_security` |
+| `docs/bootstrap/01_physical_boundaries.md` | summary | short source path and runtime boundary overview; AGENTS and Human-Gated Operations own authority | no | path, security, filesystem, CI, PR hygiene work | `lane_05_security` |
 | `docs/bootstrap/03_tech_stack.md` | canonical | declared stack and dependency policy | no | dependency or toolchain changes | `lane_03_backend` |
 | `docs/bootstrap/04_file_structure.md` | canonical | top-level file layout and dependency direction | no | new directories, repo structure changes | `lane_01_architecture` |
 | `docs/bootstrap/05_context_budget.md` | summary | basic task context limits | no | task scoping, token-budget review | `lane_00_controller` |

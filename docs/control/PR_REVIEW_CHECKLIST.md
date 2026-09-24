@@ -212,7 +212,8 @@ live `check-pr`.
 Confirm:
 
 - [ ] Any destination outside the source repo is explicitly authorized by the
-      issue or target-owned delivery contract; no external write is inferred
+      live issue. A target-owned delivery contract may refine placement but
+      cannot grant write or human-gate authority; no external write is inferred
       from an example or a named storage root.
 - [ ] No runtime outputs committed.
 - [ ] No SQLite live DB, preview cache, model cache, or scratch files committed.
@@ -249,6 +250,13 @@ Confirm whether the PR touches any human-gated operation:
 - [ ] release/publication decision
 - [ ] milestone closure
 - [ ] merge policy authority change
+- [ ] external-system or target-repository write
+- [ ] private material or raw-source retention
+- [ ] externalized responsibility moved into the repo
+
+This is a reminder list, not an exhaustive replacement for
+`docs/control/HUMAN_GATED_OPERATIONS.md`; review that canonical list for every
+PR. An authorized destination in Step 7 does not itself pass Step 8.
 
 If yes, the PR is not low-risk merge eligible. A durable approval record may
 authorize the human-gated path, but it does not convert the work into low-risk

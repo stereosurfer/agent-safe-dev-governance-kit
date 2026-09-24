@@ -27,12 +27,13 @@ state, not a second ASGK approval record.
 
 ## Placement and retention decisions
 
-Before an authorized task writes outside the source repo, its issue or target
-contract must identify the exact destination, data class, owner, intended
-retention, cleanup/rollback, and whether private material or external sync is
-involved. Do not infer permission from a folder name or a prior project's
-layout. Cloud/API/MCP access, external-system writes, raw-source retention,
-publication, and private material remain subject to
+Before a task writes outside the source repo, its live issue must authorize the
+action and exact destination. A target-owned delivery contract may refine the
+data class, owner, intended retention, cleanup/rollback, and whether private
+material or external sync is involved; it cannot independently grant write or
+human-gate authority. Do not infer permission from a folder name or a prior
+project's layout. Cloud/API/MCP access, external-system writes, raw-source
+retention, publication, and private material remain subject to
 `docs/control/HUMAN_GATED_OPERATIONS.md`.
 
 For field tests, state which evidence remains in GitHub, which deliverables are

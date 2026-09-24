@@ -235,8 +235,9 @@ read_sets:
       - docs/architecture/RUNTIME_ARTIFACT_POLICY.md
       - docs/control/HUMAN_GATED_OPERATIONS.md
       - current GitHub issue or PR
-    optional_read:
+    read_when_record_placement_or_retention_is_decided:
       - docs/architecture/LOG_AND_RECORD_RETENTION_POLICY.md
+    optional_read:
       - docs/architecture/EXTERNALIZED_RESPONSIBILITY_BOUNDARY.md
     stop_if:
       - broader_filesystem_permission_required
