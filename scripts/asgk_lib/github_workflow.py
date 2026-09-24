@@ -742,18 +742,22 @@ def final_closeout_flags(body, issue):
             if stripped == line:
                 break
             line = stripped
+        # Only a label about this closeout is disqualifying. Free prose about
+        # rejected draft designs or artifact publication is not that label.
         return bool(
-            (re.search(r'(?i)\bdraft\b', line)
-             and re.search(r"(?i)\b(?:do not|don't)[ \t]+(?:post|close|publish)\b", line))
-            or re.match(r'(?i)^(?:unposted|unfinalized)[ \t]+draft\b', line)
+            re.match(r'(?i)^(?:unposted|unfinalized)[ \t]+draft'
+                     r'(?:[ \t]+(?:closeout|review)\b|[ \t]*[-—–:.,!(/]|[ \t]*$)', line)
+            or re.match(r'(?i)^do not[ \t]+(?:post|close|publish)[ \t]*[-—–:]'
+                        r'[ \t]*draft\b', line)
             or (re.match(r'(?i)^wip\b', line) and re.search(r'(?i)\bdraft\b', line))
             or re.match(r'(?i)^issue closeout review[^\n]*\bdraft\b', line)
             or re.match(r'(?i)^(?:\*\*)?status[ \t]*[:—–-](?:\*\*)?[ \t]*'
                         r'(?:\*\*)?draft\b', line)
             or re.match(r'(?i)^(?:\[|\*{1,3})?draft(?:\]|\*{1,3})?'
-                        r'[ \t]*(?:[-—–:.,!]|$)', line)
+                        r'(?:[ \t]*[-—–:.,!(/]|[ \t]+do not[ \t]+'
+                        r'(?:post|close|publish)\b|[ \t]*$)', line)
             or re.match(r'(?i)^this (?:closeout|review) is a[ \t]+draft\b', line)
-            or re.match(r'(?i)^this is a[ \t]+draft\b', line))
+            or re.match(r'(?i)^this is a[ \t]+draft(?:[ \t]*[-—–:.,!]|[ \t]*$)', line))
     explicit_draft = any(draft_banner(line) for line in prose.splitlines())
     json_checked = not explicit_draft and json_closeout_shape(body, issue['html_url'])
     if re.search(r'(?i)\bdraft\b', prose):

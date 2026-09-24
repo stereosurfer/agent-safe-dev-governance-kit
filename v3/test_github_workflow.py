@@ -598,7 +598,11 @@ class GithubWorkflowTests(unittest.TestCase):
                       'The draft design was not final, so we rejected it.',
                       'The draft decision did not close the issue; this review is final.',
                       'The unfinalized draft design was rejected in favor of the shipped approach.',
-                      'The unposted draft announcement was rejected; this is the final closeout.'):
+                      'The unposted draft announcement was rejected; this is the final closeout.',
+                      'Unfinalized draft design was rejected in favor of the shipped approach.',
+                      'Unposted draft announcement was rejected; this is the final closeout.',
+                      'We do not post draft artifacts publicly; this final closeout records why.',
+                      'The draft proposal was rejected; do not publish its private source, but this review is final.'):
             with self.subTest(prose=prose):
                 target['body'] = prose + '\n\n' + original
                 searched = w.search([snapshot], 'Keep GitHub as work ledger')
