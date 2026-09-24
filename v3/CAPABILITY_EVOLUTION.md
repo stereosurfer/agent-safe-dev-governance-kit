@@ -141,5 +141,7 @@ question graph, or a substitute for reading the cited issue and its limits.
 
 The small regression checks the real pointer's shape, bounded branch browsing,
 selection without loading the Lesson body, and rejection of an unsupported
-`promoted` label. Passing it proves metadata behavior only; #370's GitHub PR,
-independent review, and closeout supply the separate change-decision lineage.
+`promoted` label. Passing it proves metadata behavior only. #370's GitHub PR,
+independent review, and closeout can supply the separate change-decision
+lineage only after those steps actually occur; the catalog does not establish
+their completion.
