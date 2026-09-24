@@ -361,6 +361,7 @@ class GithubWorkflowTests(unittest.TestCase):
 
     def test_canonical_yaml_closeout_is_searchable(self):
         snapshot = copy.deepcopy(self.final)
+        snapshot['issue']['state'] = 'closed'
         snapshot['comments'] = [dict(html_url=self.packet['issue'] + '#issuecomment-50',
             body='Completed.\n\n```yaml\nissue_closeout_review:\n  issue: "#1"\n'
                  '  status: completed\n  decision_analysis:\n    decision_made: "Keep trace"\n```\n')]
@@ -372,6 +373,7 @@ class GithubWorkflowTests(unittest.TestCase):
 
     def test_marker_quote_and_wrong_issue_do_not_create_closeout_edges(self):
         snapshot = copy.deepcopy(self.final)
+        snapshot['issue']['state'] = 'closed'
         bodies = [
             'I object to issue_closeout_review as proof of completion.',
             '> ```yaml\n> issue_closeout_review:\n>   issue: "#1"\n>   status: completed\n> ```',
@@ -386,6 +388,23 @@ class GithubWorkflowTests(unittest.TestCase):
         issue_node = next(x for x in w.trace([snapshot], self.packet['issue'])['nodes']
                           if x['url'] == self.packet['issue'])
         self.assertFalse(any(comment['html_url'] in issue_node['links'] for comment in snapshot['comments']))
+
+    def test_open_issue_does_not_index_premature_closeout(self):
+        snapshot = copy.deepcopy(self.indexed_final)
+        snapshot['issue']['state'] = 'open'
+        self.assertEqual([], w.search([snapshot], 'Keep GitHub as work ledger')['matches'])
+        issue_node = next(x for x in w.trace([snapshot], self.packet['issue'])['nodes']
+                          if x['url'] == self.packet['issue'])
+        self.assertNotIn(snapshot['comments'][0]['html_url'], issue_node['links'])
+
+    def test_draft_banner_is_not_indexed_even_after_issue_closes(self):
+        snapshot = copy.deepcopy(self.indexed_final)
+        draft = (self.out / 'artifacts' / 'CLOSEOUT_DRAFT.md').read_text(encoding='utf-8')
+        snapshot['comments'][0]['body'] = draft
+        self.assertEqual([], w.search([snapshot], 'Keep GitHub as work ledger')['matches'])
+        issue_node = next(x for x in w.trace([snapshot], self.packet['issue'])['nodes']
+                          if x['url'] == self.packet['issue'])
+        self.assertNotIn(snapshot['comments'][0]['html_url'], issue_node['links'])
 
     def test_cross_issue_trace_handles_cycles(self):
         result = w.trace([self.indexed_final, self.prior], self.packet['issue'])

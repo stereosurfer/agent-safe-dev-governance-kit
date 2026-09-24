@@ -513,6 +513,13 @@ def structured_closeout(body, issue_url):
     return False
 
 
+def final_closeout_comment(body, issue):
+    """Index only closed-issue comments without the generator's draft banner."""
+    return (issue['state'] == 'closed'
+            and not re.search(r'(?im)^#{1,6}[ \t]+issue closeout review[^\n]*\bdraft\b', body)
+            and structured_closeout(body, issue['html_url']))
+
+
 def index_snapshots(snapshots):
     nodes = {}
     known = {}
@@ -553,11 +560,11 @@ def index_snapshots(snapshots):
                                           if (snapshot['repository'], n) not in known)
             if kind == 'issue':
                 refs.update(c['html_url'] for c in snapshot['comments']
-                            if structured_closeout(c['body'], issue['html_url']))
+                            if final_closeout_comment(c['body'], issue))
             nodes[link] = dict(url=link, kind=kind, body=body, links=sorted(refs - {link}),
                                unresolved_shorthand_refs=unresolved_shorthand,
                                structured_closeout=(kind == 'comment' and
-                                   structured_closeout(body, issue['html_url'])
+                                   final_closeout_comment(body, issue)
                                    and link.startswith(issue['html_url'] + '#issuecomment-')),
                                source=snapshot['source'], captured_at=snapshot['captured_at'])
     return nodes
@@ -568,7 +575,8 @@ def search(snapshots, query):
     nodes = index_snapshots(snapshots)
     return envelope(matches=[dict(url=n['url'], kind=n['kind'], excerpt=n['body'][:280], source=n['source'])
         for n in nodes.values() if n['kind'] == 'comment' and n['structured_closeout']
-        and query.casefold() in n['body'].casefold()], search_scope='Only supplied GitHub comment snapshots; no repository scan')
+        and query.casefold() in n['body'].casefold()],
+        search_scope='Only structured closeout comments in supplied closed-issue snapshots; no repository scan')
 
 
 def trace(snapshots, start, max_hops=5):
@@ -658,7 +666,11 @@ def workflow_demo(out):
         files=[{'filename': 'README.md'}], reviews=[], checks=[], comments=[])]
     result, closeout = closeout_draft(final, packet, report, root, 'completed')
     pre_closeout = copy.deepcopy(final)
-    final['comments'] = [dict(html_url='https://github.com/example/asgk-synthetic/issues/1#issuecomment-10', body=closeout)]
+    final['issue']['state'] = 'closed'
+    posted_closeout = closeout.replace('# Issue closeout review — DRAFT, not posted or closed',
+                                        '# Issue closeout review — synthetic posted fixture')
+    final['comments'] = [dict(html_url='https://github.com/example/asgk-synthetic/issues/1#issuecomment-10',
+                              body=posted_closeout)]
     prior = copy.deepcopy(snapshot)
     prior['issue'].update(number=2, html_url='https://github.com/example/asgk-synthetic/issues/2', state='closed',
         body='Synthetic rejected approach; replaced by https://github.com/example/asgk-synthetic/issues/1')
@@ -770,8 +782,10 @@ def main(argv=None):
                 'check': ['current supplied issue/refinement', 'packet digest', 'issue/comment/PR-head consistency'],
                 'card-draft': ['supplied snapshot shape, freshness and declared non-fixture source label', 'checked issue-backed packet',
                                'controller-supplied provenance and bounded card fields'],
-                'search': ['supplied snapshot shape', 'same-issue structured closeout block', 'case-insensitive query match'],
-                'trace': ['supplied snapshot shape', 'durable URL links', 'known-snapshot shorthand links',
+                'search': ['supplied snapshot shape', 'closed-issue structured closeout without draft banner',
+                           'case-insensitive query match'],
+                'trace': ['supplied snapshot shape', 'durable URL links',
+                          'closed-issue structured closeout edge', 'known-snapshot shorthand links',
                           'bounded traversal and unresolved references'],
                 'demo': ['synthetic lifecycle fixture', 'local in-place git change', 'partial handoff', 'closeout/search/trace'],
             }.get(args.command, [])

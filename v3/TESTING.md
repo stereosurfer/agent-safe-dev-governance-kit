@@ -16,6 +16,8 @@ python3 v3/asgk3.py trace --snapshot /tmp/asgk3-github-demo/artifacts/final-snap
 `CLOSEOUT_DRAFT.md`、`search.json`、`trace.json`。`pre-closeout-snapshot.json`
 是產生草稿時的輸入，`final-snapshot.json` 則含貼出後的合成 closeout comment；
 兩者不能混作同一時間點的授權快照。
+示範中的 final issue 已標成 closed，貼出的合成留言移除了草稿標頭；
+`CLOSEOUT_DRAFT.md` 仍保留未發布草稿，不能直接當成已完成的結案證據。
 
 工作包應回答做什麼、去哪裡做、不做什麼、禁止動什麼、如何檢查；
 partial handoff 必須顯示沒跑的檢查；接手者換 actor/run，不繼承前人的批准。
@@ -148,12 +150,15 @@ body/comment 明確指向該 PR；否則 closeout 回報 `UNRELATED_PR`，不會
 caller 選入的任意 PR 放進 `prs_in_scope`。輸出的 `relation_evidence` 只是
 文字連結來源，不是 GitHub `closingIssuesReferences`、語意關聯或核准證據。
 
-`search`／`trace` 只將與本 issue 編號相符、位於真正 fenced JSON 或
-canonical fenced YAML 的 `issue_closeout_review` 視為可搜尋 close-out。
+`search`／`trace` 只在提供的 issue 快照已是 closed、留言沒有草稿標頭，
+且與本 issue 編號相符、位於真正 fenced JSON 或 canonical fenced YAML 時，
+才把 `issue_closeout_review` 視為可搜尋 close-out。
 純文字 marker、Markdown 引用中的範例和其他 issue 的 review 不會形成
 issue → closeout comment 邊。舊式無結構的 prose close-out 可能因此不在
 搜尋結果，這是明確的查找邊界，不等於那些決策不存在；需要時仍查原始
 GitHub issue。即使結構吻合，工具也不驗證留言者、內容真偽或是否已完成。
+因此這仍是「提供的快照顯示已關閉」的機械線索，不能以本地 JSON 當成
+GitHub 實際結案或人類核准證明。
 `trace` 只把 `#N` 縮寫連到本次快照中已知的 issue 或 PR；未知編號列入
 `unresolved_shorthand_refs`，不再一律猜成 issue。補上對應快照才能解開該邊；
 沒有提供快照不代表 GitHub 上不存在該決策。
