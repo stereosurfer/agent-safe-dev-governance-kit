@@ -7,6 +7,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 import asgk3
 import capability_evolution as c
@@ -247,6 +248,9 @@ class CapabilityIndexTests(unittest.TestCase):
                 self.assertEqual('fail', result['result'])
                 self.assertEqual('INDEX_DEPTH', result['findings'][0]['code'])
                 self.assertEqual('index', result['findings'][0]['field'])
+                self.assertEqual(['index JSON nesting depth limit'], result['mechanically_checked'])
+                self.assertEqual('Index JSON nesting exceeds the supported depth.',
+                                 result['findings'][0]['reason'])
                 self.assertEqual([], validation_result_errors(result))
                 outputs.append(completed.stdout)
             self.assertEqual(outputs[0], outputs[1])
@@ -256,6 +260,16 @@ class CapabilityIndexTests(unittest.TestCase):
         for _ in range(c.MAX_INDEX_DEPTH + 1):
             nested = [nested]
         self.fails('INDEX_DEPTH', lambda: c.validate_index(nested))
+        output = io.StringIO()
+        with mock.patch('asgk_lib.capability_evolution.load', return_value=nested):
+            with contextlib.redirect_stdout(output):
+                self.assertEqual(1, c.main(['check', '--index', 'synthetic-index.json']))
+        result = json.loads(output.getvalue())
+        self.assertEqual('INDEX_DEPTH', result['findings'][0]['code'])
+        self.assertEqual('Index JSON nesting exceeds the supported depth.',
+                         result['findings'][0]['reason'])
+        self.assertEqual(['index JSON nesting depth limit'], result['mechanically_checked'])
+        self.assertEqual([], validation_result_errors(result))
 
     def test_max_length_pointer_output_is_bounded(self):
         template = self.index['records'][0]

@@ -256,16 +256,18 @@ def run(args):
         print(json.dumps(result, ensure_ascii=False, indent=2))
         return 0 if result['result'] == 'pass' else 1
     except RecursionError:
-        result = envelope(result='fail', checked=['index JSON parser depth limit'])
+        result = envelope(result='fail', checked=['index JSON nesting depth limit'])
         result['findings'] = [dict(
             code='INDEX_DEPTH', field='index',
-            reason='Index JSON nesting exceeds the supported parser depth.', blocking=True)]
+            reason='Index JSON nesting exceeds the supported depth.', blocking=True)]
         print(json.dumps(result, ensure_ascii=False, indent=2))
         return 1
     except (Invalid, OSError, ValueError, TypeError, KeyError) as error:
         finding = error.finding if isinstance(error, Invalid) else dict(
             code='INPUT_IO', field='index', reason=str(error), blocking=True)
-        result = envelope(result='fail', checked=['input shape up to the reported failure'])
+        checked = (['index JSON nesting depth limit'] if finding['code'] == 'INDEX_DEPTH'
+                   else ['input shape up to the reported failure'])
+        result = envelope(result='fail', checked=checked)
         result['findings'] = [finding]
         print(json.dumps(result, ensure_ascii=False, indent=2))
         return 1

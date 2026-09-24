@@ -767,7 +767,7 @@ RETAINED_JSON_SCENARIOS = (
         (*ASGK, "catalog", "check", "--index", "{temp_input}", "--json"),
         "negative", "fail", 1, ("INDEX_DEPTH",), CATALOG_PROOF_BOUNDARY,
         temp_input=TempInput(content="[" * 2000 + "]" * 2000),
-        expected_mechanically_checked=("index JSON parser depth limit",),
+        expected_mechanically_checked=("index JSON nesting depth limit",),
     ),
     JsonScenario(
         "catalog_invalid_reference", "catalog",
