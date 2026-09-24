@@ -96,11 +96,11 @@ Each evidence item needs a limit or non-proof.
    recommendation, minimum bounded scope, target-owned state to preserve,
    material evidence, proof limits, and any exact `next_action_gate`. Do not
    require a fixed completion label or treat the assessment as approval.
-    For material method or Skill promotion, link the originating observations,
-    before/after behavior and negative regressions, rejected alternatives,
-    independent semantic review when required, exact changed Skill version,
-    and rollback. A Kanban completion receipt is evidence about a run, not
-    this PR's current-head decision.
+   For material method or Skill promotion, link the originating observations,
+   before/after behavior and negative regressions, rejected alternatives,
+   independent semantic review when required, exact changed Skill version,
+   and rollback. A Kanban completion receipt is evidence about a run, not
+   this PR's current-head decision.
 12. Before creating or editing a PR body, run local file-backed PR body
    preflight when available:
 

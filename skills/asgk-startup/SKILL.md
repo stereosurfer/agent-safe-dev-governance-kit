@@ -63,9 +63,9 @@ Use `docs/DOCUMENT_MAP.md` only if the work unit points to additional context.
    that no escalation trigger applies, and keep a hard stop before PR, merge,
    protected-path exception, or external action.
 9. For an ASGK-governed work unit, before reporting `ready_for_work_unit`,
-   confirm the authority contains the canonical 13 task fields plus separate `context_read_set` and
-   `project_specific_validation` gates. When the repository provides the
-   command, run:
+   confirm the authority contains the canonical 13 task fields plus separate
+   `context_read_set` and `project_specific_validation` gates. When the
+   repository provides the command, run:
 
    ```bash
    python3 scripts/asgk.py work-unit-check --issue <number> --authority-only --json
