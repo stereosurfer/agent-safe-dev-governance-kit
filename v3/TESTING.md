@@ -3,8 +3,8 @@
 GitHub workflow 由根目錄的 `scripts/asgk.py workflow` 執行；
 `v3/asgk3.py` 是相容入口。能力目錄仍是獨立候選，不在 root `doctor`
 的這組 workflow command 驗收內。所有工作流結果為 common JSON envelope；
-未解決的 trace 是 `warning`、`domain_result: incomplete`、exit 1，
-不是成功的完整決策樹。
+未解決或含 YAML 候選的 trace 是 `warning`、`domain_result: incomplete`、
+exit 1，不是成功的完整決策樹。
 
 測試的是 GitHub 工作治理，不是只有離線檔案封包。
 所有輸出由 caller 指定；選新的目錄，避免覆寫。
@@ -156,19 +156,19 @@ body/comment 明確指向該 PR；否則 closeout 回報 `UNRELATED_PR`，不會
 caller 選入的任意 PR 放進 `prs_in_scope`。輸出的 `relation_evidence` 只是
 文字連結來源，不是 GitHub `closingIssuesReferences`、語意關聯或核准證據。
 
-`search`／`trace` 只在提供的 issue 快照已是 closed、留言沒有草稿標頭，
-且與本 issue 編號相符、位於真正 fenced JSON 或 canonical fenced YAML，
-並有決定、理由、帶理由的否決路徑及至少一項有證據的 decision 時，
-才把 `issue_closeout_review` 視為可搜尋 close-out。
-空 `decision_analysis`、只有標題的 YAML、純文字 marker、Markdown
-引用中的範例和其他 issue 的 review 不會形成
-issue → closeout comment 邊。YAML 索引只支援這個有界形狀；註解、null、
-布林、數字、flow collection、alias 或 tag 不能冒充決策敘述或證據，
-並非通用 YAML 驗證器。舊式無結構的 prose close-out 可能因此不在搜尋
-結果，這是明確的查找邊界，不等於那些決策不存在；需要時仍查原始
-GitHub issue。即使結構吻合，工具也不驗證留言者、內容真偽或是否已完成。
-因此這仍是「提供的快照顯示已關閉」的機械線索，不能以本地 JSON 當成
-GitHub 實際結案或人類核准證明。
+`search`／`trace` 只從 caller 提供、顯示已 closed 的 issue 快照讀取非草稿
+留言。只有無重複鍵、同 issue、具決定／理由／否決路徑／證據等必要形狀的
+fenced JSON 能建立 `json_shape_checked` 的 issue → comment 邊；這仍只是
+結構檢查，不驗證作者、內容真偽、即時 GitHub 狀態或核准。
+
+fenced YAML 若開頭帶 `issue_closeout_review:`，一律只列為
+`candidate_unverified_yaml`。工具不解析其 issue 編號或內容；輸出的
+`container_issue_url` 僅表示留言所屬快照，不能當成 YAML 自稱的 issue。
+YAML 候選的 URL、來源及快照時間會另列於 `candidates`，不建立上述完整邊；
+即使看起來符合範本，或雖然格式有誤，搜尋／追溯遇到候選仍回
+`warning`、`domain_result: incomplete`、exit 1。純文字 marker、Markdown
+引用範例與草稿不算候選。舊式 prose close-out 可能不在搜尋結果；這不代表
+決策不存在，必要時仍查原始 GitHub issue。
 `trace` 只把 `#N` 縮寫連到本次快照中已知的 issue 或 PR；未知編號列入
 `unresolved_shorthand_refs`，不再一律猜成 issue。補上對應快照才能解開該邊；
 沒有提供快照不代表 GitHub 上不存在該決策。

@@ -88,7 +88,10 @@ Preserve the rejected attempt and correction links; no reset, force push or sile
 - Capture is not atomic; a saved snapshot is not live authority or authenticated evidence.
 - Local committed diff observation does not retain uncommitted patch contents or inspect ignored/external side effects.
 - Checks report evidence coverage, not command execution, approval or semantic correctness.
-- Search/trace indexes only supplied snapshots, reports missing links, and never invents history.
+- Search/trace indexes only supplied snapshots: duplicate-free JSON gets a bounded
+  shape-checked edge, while YAML closeouts remain visible only as unverified
+  candidate URLs and make the affected lookup incomplete. It reports missing
+  links and never invents history, authorship, approval or YAML semantics.
 - No independent behavioral proof for the candidate Skills yet; format checks are narrower.
 - Kanban bridge and card-draft are not an installed adapter or runtime-enforced
   tool policy. The one successful Luna negative-path run does not prove that

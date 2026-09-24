@@ -91,7 +91,8 @@ evidence audit、health check、release prep、target adoption、upgrade assessm
 PR body 仍走既有 template／file preflight；MDR、strict check-pr、現有 human gate、
 target-owned assessment、普通 revert 與文件驅動自體進化都保留。
 `handoff` 和 `closeout` 只產生 GitHub comment 草稿，不自動 post／merge／close。
-搜尋以 issue close-out 為入口，不要求翻遍 repo。
+搜尋以 issue close-out 為入口，不要求翻遍 repo；JSON 只做有限形狀檢查，
+YAML 只回傳待核實候選網址，遇到候選不能宣稱追溯完整。
 
 本目錄源自從原 `codex/asgk-3-preview` 另開的 preview.1 候選分支，原候選不變。
 它的 GitHub workflow 部分已由 #397 整合到根目錄 CLI 與 doctor；

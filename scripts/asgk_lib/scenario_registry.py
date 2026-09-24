@@ -59,6 +59,29 @@ WORKFLOW_CLOSEOUT_SNAPSHOT["comments"] = [{
     "body": "```json\n" + WORKFLOW_CLOSEOUT_COMMENT + "\n```",
 }]
 WORKFLOW_CLOSEOUT_SNAPSHOT = json.dumps(WORKFLOW_CLOSEOUT_SNAPSHOT, separators=(",", ":"))
+WORKFLOW_YAML_CANDIDATE_URL = WORKFLOW_ISSUE_URL + "#issuecomment-11"
+WORKFLOW_YAML_CANDIDATE_BODY = (
+    '```yaml\nissue_closeout_review:\n  issue: "#1"\n  status: completed\n'
+    '  decision_analysis:\n    decision_made: "Keep GitHub trace"\n'
+    '    why_this_path: "The next worker needs the GitHub trail."\n'
+    '    rejected_paths:\n      - path: "Chat only"\n        reason: "Cannot recover it."\n'
+    '    reusable_signal:\n      applies_later: true\n      reason: "Retain a bounded link."\n'
+    '  decisions:\n    - decision: "Keep GitHub trace"\n'
+    '      reason: "The issue remains discoverable."\n      evidence: ["#1"]\n```'
+)
+WORKFLOW_YAML_CANDIDATE_SNAPSHOT = json.loads(WORKFLOW_MINIMAL_SNAPSHOT)
+WORKFLOW_YAML_CANDIDATE_SNAPSHOT["comments"] = [{
+    "html_url": WORKFLOW_YAML_CANDIDATE_URL,
+    "body": WORKFLOW_YAML_CANDIDATE_BODY,
+}]
+WORKFLOW_YAML_CANDIDATE_SNAPSHOT = json.dumps(WORKFLOW_YAML_CANDIDATE_SNAPSHOT, separators=(",", ":"))
+WORKFLOW_MALFORMED_YAML_CANDIDATE_SNAPSHOT = json.loads(WORKFLOW_MINIMAL_SNAPSHOT)
+WORKFLOW_MALFORMED_YAML_CANDIDATE_SNAPSHOT["comments"] = [{
+    "html_url": WORKFLOW_YAML_CANDIDATE_URL,
+    "body": '```yaml\nissue_closeout_review:\n  issue: "#999"\n  decision_analysis: {}\n```',
+}]
+WORKFLOW_MALFORMED_YAML_CANDIDATE_SNAPSHOT = json.dumps(
+    WORKFLOW_MALFORMED_YAML_CANDIDATE_SNAPSHOT, separators=(",", ":"))
 
 TARGET_EVIDENCE_EXPECTED_PROOF_BOUNDARY = (
     "Exit 0 proves only that every accepted caller-supplied mechanical claim "
@@ -1816,7 +1839,8 @@ RETAINED_JSON_SCENARIOS = (
         temp_input=TempInput(content=WORKFLOW_CLOSEOUT_SNAPSHOT),
         expected_mechanically_checked=(
             "supplied snapshot shape", "durable URL links",
-            "closed-issue structured closeout edge", "known-snapshot shorthand links",
+            "closed-issue JSON shape-checked closeout edge",
+            "separate unverified YAML candidate URLs", "known-snapshot shorthand links",
             "bounded traversal and unresolved references",
         ),
         expected_payload_fields=(
@@ -1830,6 +1854,60 @@ RETAINED_JSON_SCENARIOS = (
                  "source": "fixture"},
             ]),
             ("unresolved", []),
+            ("candidates", []),
+        ),
+    ),
+    JsonScenario(
+        "workflow_trace_yaml_candidate_incomplete",
+        "workflow",
+        (*ASGK, "workflow", "trace", "--snapshot", "{temp_input}",
+         "--start", WORKFLOW_ISSUE_URL, "--json"),
+        "negative",
+        "warning",
+        1,
+        ("WF_YAML_CANDIDATE_UNVERIFIED",),
+        WORKFLOW_PROOF_BOUNDARY,
+        expected_domain_result="incomplete",
+        temp_input=TempInput(content=WORKFLOW_YAML_CANDIDATE_SNAPSHOT),
+        expected_mechanically_checked=(
+            "supplied snapshot shape", "durable URL links",
+            "closed-issue JSON shape-checked closeout edge",
+            "separate unverified YAML candidate URLs", "known-snapshot shorthand links",
+            "bounded traversal and unresolved references",
+        ),
+        expected_payload_fields=(
+            ("evidence_source", "supplied_snapshots"),
+            ("nodes", [{"url": WORKFLOW_ISSUE_URL, "kind": "issue", "hops": 0,
+                        "links": [], "unresolved_shorthand_refs": [], "source": "fixture"}]),
+            ("candidates", [{"url": WORKFLOW_YAML_CANDIDATE_URL,
+                             "container_issue_url": WORKFLOW_ISSUE_URL,
+                             "evidence_class": "candidate_unverified_yaml",
+                             "source": "fixture", "captured_at": "2025-01-01T00:00:00Z"}]),
+        ),
+    ),
+    JsonScenario(
+        "workflow_search_malformed_yaml_candidate_incomplete",
+        "workflow",
+        (*ASGK, "workflow", "search", "--snapshot", "{temp_input}",
+         "--query", "issue_closeout_review", "--json"),
+        "negative",
+        "warning",
+        1,
+        ("WF_YAML_CANDIDATE_UNVERIFIED",),
+        WORKFLOW_PROOF_BOUNDARY,
+        expected_domain_result="incomplete",
+        temp_input=TempInput(content=WORKFLOW_MALFORMED_YAML_CANDIDATE_SNAPSHOT),
+        expected_mechanically_checked=(
+            "supplied snapshot shape", "closed-issue duplicate-free JSON closeout shape",
+            "fenced YAML candidate marker without syntax validation", "case-insensitive query match",
+        ),
+        expected_payload_fields=(
+            ("evidence_source", "supplied_snapshots"),
+            ("matches", []),
+            ("candidates", [{"url": WORKFLOW_YAML_CANDIDATE_URL,
+                             "container_issue_url": WORKFLOW_ISSUE_URL,
+                             "evidence_class": "candidate_unverified_yaml",
+                             "source": "fixture", "captured_at": "2025-01-01T00:00:00Z"}]),
         ),
     ),
     JsonScenario(
@@ -1846,7 +1924,8 @@ RETAINED_JSON_SCENARIOS = (
         temp_input=TempInput(content=WORKFLOW_MINIMAL_SNAPSHOT),
         expected_mechanically_checked=(
             "supplied snapshot shape", "durable URL links",
-            "closed-issue structured closeout edge", "known-snapshot shorthand links",
+            "closed-issue JSON shape-checked closeout edge",
+            "separate unverified YAML candidate URLs", "known-snapshot shorthand links",
             "bounded traversal and unresolved references",
         ),
         expected_payload_fields=(("evidence_source", "supplied_snapshots"),),

@@ -80,7 +80,9 @@ mandatory police Bot for every task. Review identity must be real, not a renamed
    reasons, rejected alternatives, applicability, evidence, known limits; maximum five
    decisions and 400 words. Reject overflow instead of truncating reasoning.
 5. Search explicit snapshots for closeout comments and trace durable links with bounded
-   hops. Missing records remain unresolved; do not read the entire repo or invent links.
+   hops. Duplicate-free JSON may form a shape-checked edge; fenced YAML is only a
+   provenance-labeled, unparsed candidate URL and makes the affected lookup incomplete.
+   Missing records remain unresolved; do not read the entire repo or invent links.
 
 Committed in-place changes use exact git base/head. Partial work can be handed off with
 missing receipts/checks recorded as blockers. Local checks do not cover ignored files,

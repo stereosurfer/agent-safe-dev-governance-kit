@@ -158,7 +158,8 @@ profile into a smaller project. The default layer remains generic.
 - GitHub snapshot/work projection, draft-only handoff and closeout, and bounded
   closeout search/trace through `python3 scripts/asgk.py workflow --help`.
   Capture uses GitHub GET only; supplied snapshots and local observations do
-  not grant current issue authority or approval.
+  not grant current issue authority or approval. YAML closeout comments are
+  unverified candidate pointers, not complete decision-tree edges.
 - Negative fixtures for governance hygiene, PR bodies, handoff packets,
   caller-supplied target evidence, and stale current-status patterns.
 - Explicit validation-boundary wording so `doctor` evidence is not treated as a
