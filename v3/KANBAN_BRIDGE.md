@@ -20,8 +20,26 @@ merge approval, and a GitHub comment is not proof the worker's Kanban run comple
 For coding PR cards, Hermes's PR completion contract is explicit; prose PR URLs do not
 set it, and its local-only default must not be misreported as remote acceptance. Its
 own exact-head/required-check guard is useful runtime evidence, not ASGK's MDR or
-human-gate decision. In the candidate, `capture`, `packet`, `handoff` and `closeout`
-remain read-only/draft-producing; no automatic Kanban or GitHub mutation is present.
+human-gate decision. In the candidate, `capture`, `packet`, `card-draft`, `handoff`
+and `closeout` remain read-only/draft-producing; no automatic Kanban or GitHub
+mutation is present.
+
+### Handoff when the Bot has no GitHub read tool
+
+The controller may use a fresh issue capture and checked packet to generate a
+`card-draft` for manual Kanban creation. The draft carries the exact issue link,
+snapshot source/time, packet ID, selected scope, stops and validation. Its facts are
+**controller-supplied snapshot evidence**. A worker may summarize them for a partial
+handoff, but must not say it independently verified the current issue. Before any
+repository mutation it needs an observable permitted live issue/PR read; if that is
+unavailable, it blocks. A tool search, card URL, or saved packet is not a read receipt.
+
+The first GPT-6 Luna field test in [#361](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/361)
+exposed the failure this boundary addresses: a worker claimed to have read the issue
+without an issue GET/open tool call. A later correction did not erase that unsupported
+claim. A separate packet-fed run labeled its source correctly, but neither run proved
+production isolation or general model reliability. See [#362](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/362)
+for the source correction and retest.
 
 The first durable link from the card must point to the GitHub work unit. GitHub need
 not duplicate every heartbeat or retry. Promote only material results: changed scope,

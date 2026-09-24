@@ -6,7 +6,12 @@
 - Parent candidate: [#358](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/358), commit af7b143fa5b0d3c33d3b9e0cbe8f64434ee124ea.
 - Rejected direction retained: [#357](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/357), local commit 7e2cfc6.
 - Branch: codex/asgk-3-preview.1; original preview branch remains unchanged.
-- No merge, release, migration, target write or global Skill synchronization.
+- Scoped correction: [#362](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/362)
+  originated on `codex/asgk-3-preview.1-provenance-fix`; [#368](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/368)
+  governs its review and proposed integration into preview.1. Until that PR merges,
+  the correction remains on the separate branch. Verify the live PR state before
+  treating it as part of preview.1.
+- No merge to `main`, release, migration, target write or global Skill synchronization.
 - #323/#356 and the original dirty W6B worktree are separate and untouched.
 
 ## Candidate recovery
@@ -33,10 +38,25 @@ the merged replacement and blocks unresolved open attempts.
 
 Parent-candidate checks, failures and live-read provenance remain in #358 comments.
 Preview.1's bounded checks and remaining research-reference gap belong to #359;
-they must not be silently reported as parent-candidate proof.
-CLI GitHub capture failed in this host environment; connector reads are a distinct source
-and cannot be reported as a successful CLI integration test. Unit/fixture results do not
-prove a real Bot, independent reviewer, human cold-start, target pilot or release.
+they must not be silently reported as parent-candidate proof. #362 adds a
+`card-draft` command: it accepts a fresh, checked, non-fixture issue packet and
+emits a controller-supplied Kanban card draft without posting to Hermes or GitHub.
+The card names the issue, source and proof boundary, and requires a worker lacking
+a permitted live issue-read tool to comment with a partial handoff before blocking.
+
+The earlier #361 live GPT-6 Luna run showed a false worker-side “issue-verified”
+claim without an observable GitHub read. #362 retained two imperfect retests:
+`t_0fb59a91` blocked without a durable comment; `t_33c81c51` commented and
+blocked, but attempted a general terminal command. The corrected, independently
+generated card `t_46c2a073` used GPT-6 Luna on the isolated
+`asgk-preview1-fix-362` board. Its redacted tool sequence was only
+`kanban_show → kanban_comment → kanban_block`; the comment distinguished
+controller-supplied facts from worker observation, named unknowns and the next
+gate, and the card remained blocked without a repo write. The worker also noticed
+that this no-write rehearsal selected `none` despite its parent issue's broader
+implementation objective. These runs are evidence about this bounded negative
+path, not proof of an executable live issue-read path, independent reviewer,
+human cold-start, target pilot or release.
 
 The linked [research-runtime-macos delivery contract](https://github.com/stereosurfer/research-runtime-macos/blob/d09eac50c3cd12c1427dadaf5c09d1c8f7dfd38e/docs/PACKAGE_FORMAT.md)
 and [synthetic example](https://github.com/stereosurfer/research-runtime-macos/tree/d09eac50c3cd12c1427dadaf5c09d1c8f7dfd38e/examples/research-package-demo)
@@ -57,7 +77,9 @@ Preserve the rejected attempt and correction links; no reset, force push or sile
 - Checks report evidence coverage, not command execution, approval or semantic correctness.
 - Search/trace indexes only supplied snapshots, reports missing links, and never invents history.
 - No independent behavioral proof for the candidate Skills yet; format checks are narrower.
-- Kanban bridge is a design contract, not an installed adapter or live board test.
+- Kanban bridge and card-draft are not an installed adapter or runtime-enforced
+  tool policy. The one successful Luna negative-path run does not prove that
+  another model/run will obey the card or that a worker can execute a write task.
 - The capability catalog is a synthetic metadata projection, not a delivery question
   graph or proof of actual Research, Video or Translation workflow quality. The linked
   research package is a concrete domain-owned delivery implementation; ASGK does not

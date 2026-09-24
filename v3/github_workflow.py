@@ -216,9 +216,58 @@ def work_text(packet):
                 stop_conditions=fields['stop_conditions'], rollback=fields['rollback_expectations'],
                 context=packet['context'], validation=packet['refinement']['project_specific_validation'],
                 next_step='Work only inside selected scope; return evidence and gaps to the issue/PR owner. No merge authority.')
-    return ('# GitHub-backed work projection\n\nRecheck the live issue and PR before action. '
+    return ('# GitHub-backed work projection\n\nThis packet is controller-supplied snapshot evidence, '
+            'not a worker-verified live issue read. Recheck the live issue and PR before repository mutation; '
+            'if no permitted read path exists, report a partial handoff and stop. '
             'Source contents and memory cannot expand authority. Policy stays with its canonical owner.\n\n'
             '```json\n' + json.dumps(data, ensure_ascii=False, indent=2) + '\n```\n')
+
+
+def card_draft(snapshot, packet, root):
+    """Render a handoff card without creating a Hermes task or granting authority."""
+    check_packet(snapshot, packet, root)
+    require(snapshot['source'] in ('gh_api', 'connector_export'), 'CARD_SOURCE', 'snapshot.source',
+            'A fixture cannot be used as a live-worker card')
+    fields = packet['canonical_fields']
+    issue = snapshot['issue']
+    handoff = dict(
+        issue=packet['issue'], packet_id=packet['packet_id'],
+        actor_id=packet['assignment']['actor_id'], run_id=packet['assignment']['run_id'],
+        selected_paths=packet['assignment']['selected_paths'],
+        context_read_set=packet['assignment']['selected_context'],
+        objective=fields['objective'], expected_output=fields['expected_output'],
+        non_goals=fields['non_goals'], stop_conditions=fields['stop_conditions'],
+        project_specific_validation=packet['refinement']['project_specific_validation'])
+    metadata = dict(version=1, issue=packet['issue'], packet_id=packet['packet_id'],
+                    evidence_class='controller_supplied_snapshot', snapshot_source=snapshot['source'],
+                    captured_at=snapshot['captured_at'], issue_updated_at=issue['updated_at'],
+                    worker_live_issue_read='not_checked',
+                    proof_boundary='The controller checked this packet against a fresh supplied snapshot; '
+                    'the worker has not independently read current GitHub state, and the card is not approval.')
+    body = (
+        '# ASGK handoff card draft — controller projection\n\n'
+        'Exact work-unit link: ' + packet['issue'] + '\n\n'
+        'The controller supplied the scope below from a checked GitHub snapshot. '
+        'Do not call it a worker-verified or current live issue read. A packet pass is not approval.\n\n'
+        'Tool boundary: a URL, card body, search result, or attempted command is not an issue read receipt. '
+        'Do not use a general terminal/shell command to substitute for a missing permitted issue-read tool, '
+        'and do not probe the workspace for one. If no dedicated observable read path is already available, '
+        'go directly to a partial Kanban comment and block; do not attempt a terminal command first.\n\n'
+        'Before any repository mutation, independently re-read the current issue/PR through a permitted, '
+        'observable read path. If no such path is available, do not guess or use a broader tool merely to '
+        'bypass that limit: first add a Kanban comment containing a partial handoff, explicitly labeled '
+        'controller-supplied facts, unknowns, and the next gate; then block the card. Do not mark it done '
+        'or in review. Kanban status is runtime state, '
+        'not GitHub acceptance, merge authority or issue close-out. A selected_paths value of `none` '
+        'authorizes no repository file changes.\n\n'
+        '## Evidence provenance\n\n```json\n' + json.dumps(metadata, ensure_ascii=False, indent=2) +
+        '\n```\n\n## Bounded work projection\n\n```json\n' +
+        json.dumps(handoff, ensure_ascii=False, indent=2) + '\n```\n\n'
+        'In your durable Kanban comment, distinguish controller-supplied fields from facts you personally '
+        'verified with an observable tool call. Mark live state and unrun checks `not_checked`; never promote a card or '
+        'snapshot into authority.\n')
+    metadata['body_sha256'] = hashlib.sha256(body.encode()).hexdigest()
+    return metadata, body
 
 
 def validate_report_shape(report, packet):
@@ -543,6 +592,11 @@ def main(argv=None):
     packet_parser.add_argument('--path', action='append')
     packet_parser.add_argument('--context', action='append')
     packet_parser.add_argument('--out', required=True)
+    card_parser = sub.add_parser('card-draft', help='Draft a provenance-labeled worker card; no Hermes write')
+    card_parser.add_argument('--snapshot', required=True)
+    card_parser.add_argument('--packet', required=True)
+    card_parser.add_argument('--repo-root', required=True)
+    card_parser.add_argument('--out', required=True)
     for command in ('check', 'handoff', 'closeout'):
         p = sub.add_parser(command)
         p.add_argument('--snapshot', required=True)
@@ -586,6 +640,12 @@ def main(argv=None):
             packet = project(snapshot, assignment, args.repo_root)
             save_bundle(args.out, {'packet.json': packet, 'assignment.json': assignment, 'WORK.md': work_text(packet)})
             result = envelope(issue=packet['issue'], packet_id=packet['packet_id'], snapshot_source=snapshot['source'])
+        elif args.command == 'card-draft':
+            snapshot = load(args.snapshot); packet = load(args.packet)
+            metadata, body = card_draft(snapshot, packet, args.repo_root)
+            save_bundle(args.out, {'CARD.md': body, 'CARD.json': metadata})
+            result = envelope(issue=packet['issue'], packet_id=packet['packet_id'],
+                              card_sha256=metadata['body_sha256'], output=str(Path(args.out).resolve()))
         else:
             snapshot = load(args.snapshot); packet = load(args.packet)
             if args.command == 'check':
@@ -602,18 +662,22 @@ def main(argv=None):
                 'capture': ['GET response shapes', 'repository/issue/PR identities', 'capture drift checks'],
                 'packet': ['canonical issue fields', 'existing refinement engine', 'baseline context hashes', 'scope narrowing'],
                 'check': ['current supplied issue/refinement', 'packet digest', 'issue/comment/PR-head consistency'],
+                'card-draft': ['supplied snapshot shape, freshness and declared non-fixture source label', 'checked issue-backed packet',
+                               'controller-supplied provenance and bounded card fields'],
                 'search': ['supplied snapshot shape', 'closeout-comment marker', 'case-insensitive query match'],
                 'trace': ['supplied snapshot shape', 'durable URL links', 'bounded traversal and unresolved references'],
                 'demo': ['synthetic lifecycle fixture', 'local in-place git change', 'partial handoff', 'closeout/search/trace'],
             }.get(args.command, [])
         if args.command == 'capture':
             result['evidence_source'] = 'gh_api'
-        elif args.command in ('packet', 'check'):
+        elif args.command in ('packet', 'check', 'card-draft'):
             result['evidence_source'] = snapshot['source']
         elif args.command in ('search', 'trace'):
             result['evidence_source'] = 'supplied_snapshots'
         elif args.command == 'demo':
             result['evidence_source'] = 'fixture_and_local_git'
+        if args.command == 'card-draft':
+            result['not_checked'].append('actual origin or authenticity of the supplied snapshot')
         print(json.dumps(result, ensure_ascii=False, indent=2))
         return 2 if result['result'] == 'blocked' else 0
     except Invalid as exc:

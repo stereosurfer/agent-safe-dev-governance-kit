@@ -1,5 +1,6 @@
 import contextlib
 import copy
+import hashlib
 import io
 import json
 import tempfile
@@ -35,6 +36,11 @@ class GithubWorkflowTests(unittest.TestCase):
     def project(self):
         return w.project(self.snapshot, self.assignment, self.root)
 
+    def observed_packet(self, source='gh_api'):
+        snapshot = copy.deepcopy(self.snapshot)
+        snapshot['source'] = source
+        return snapshot, w.project(snapshot, self.assignment, self.root)
+
     def observe(self):
         return w.observe_work(self.snapshot, self.packet, self.report, self.root)
 
@@ -42,6 +48,40 @@ class GithubWorkflowTests(unittest.TestCase):
         self.assertEqual(self.packet, self.project())
         self.assertIn(self.packet['issue'], w.work_text(self.packet))
         self.assertNotIn('merge_allowed', w.work_text(self.packet))
+        self.assertIn('not a worker-verified live issue read', w.work_text(self.packet))
+
+    def test_card_draft_labels_controller_projection(self):
+        snapshot, packet = self.observed_packet()
+        metadata, body = w.card_draft(snapshot, packet, self.root)
+        self.assertEqual('controller_supplied_snapshot', metadata['evidence_class'])
+        self.assertEqual('gh_api', metadata['snapshot_source'])
+        self.assertEqual('not_checked', metadata['worker_live_issue_read'])
+        self.assertEqual(packet['packet_id'], metadata['packet_id'])
+        projected = json.loads(body.split('## Bounded work projection\n\n```json\n', 1)[1]
+                               .split('\n```', 1)[0])
+        self.assertEqual(packet['canonical_fields']['objective'], projected['objective'])
+        self.assertEqual(packet['assignment']['selected_paths'], projected['selected_paths'])
+        self.assertIn('first add a Kanban comment containing a partial handoff', body)
+        self.assertIn('then block the card', body)
+        self.assertIn('do not attempt a terminal command first', body)
+        self.assertIn('Kanban status is runtime state', body)
+        self.assertIn('`none` authorizes no repository file changes', body)
+
+    def test_card_draft_rejects_fixture_stale_closed_and_tampered(self):
+        self.fails('CARD_SOURCE', lambda: w.card_draft(self.snapshot, self.packet, self.root))
+        snapshot, packet = self.observed_packet()
+        stale = copy.deepcopy(snapshot); stale['captured_at'] = '2000-01-01T00:00:00Z'
+        self.fails('STALE_SNAPSHOT', lambda: w.card_draft(stale, packet, self.root))
+        closed = copy.deepcopy(snapshot); closed['issue']['state'] = 'closed'
+        self.fails('ISSUE_CLOSED', lambda: w.card_draft(closed, packet, self.root))
+        tampered = copy.deepcopy(packet); tampered['canonical_fields']['objective'] = ['Do anything']
+        self.fails('STALE_PACKET', lambda: w.card_draft(snapshot, tampered, self.root))
+
+    def test_card_draft_connector_source_is_explicit(self):
+        snapshot, packet = self.observed_packet('connector_export')
+        metadata, body = w.card_draft(snapshot, packet, self.root)
+        self.assertEqual('connector_export', metadata['snapshot_source'])
+        self.assertIn('"snapshot_source": "connector_export"', body)
 
     def test_missing_issue(self):
         self.snapshot['issue'] = None
@@ -311,6 +351,37 @@ class GithubWorkflowTests(unittest.TestCase):
                 '--repo-root', str(self.root), '--actor', 'human-B', '--run', 'run-B', '--out', str(output)]))
             self.assertEqual(0, a.main(['check', '--snapshot', str(artifacts / 'snapshot.json'),
                 '--packet', str(output / 'packet.json'), '--repo-root', str(self.root)]))
+
+    def test_cli_card_draft_writes_only_after_validation(self):
+        snapshot, packet = self.observed_packet()
+        inputs = self.out / 'card-inputs'
+        inputs.mkdir()
+        (inputs / 'snapshot.json').write_text(json.dumps(snapshot), encoding='utf-8')
+        (inputs / 'packet.json').write_text(json.dumps(packet), encoding='utf-8')
+        output = self.out / 'card-output'
+        args = ['card-draft', '--snapshot', str(inputs / 'snapshot.json'),
+                '--packet', str(inputs / 'packet.json'), '--repo-root', str(self.root),
+                '--out', str(output)]
+        with contextlib.redirect_stdout(io.StringIO()) as stream:
+            self.assertEqual(0, a.main(args))
+        result = json.loads(stream.getvalue())
+        self.assertEqual('pass', result['result'])
+        self.assertIn('actual origin or authenticity of the supplied snapshot', result['not_checked'])
+        self.assertIn('supplied snapshot shape, freshness and declared non-fixture source label',
+                      result['mechanically_checked'])
+        metadata = a.load(output / 'CARD.json')
+        body = (output / 'CARD.md').read_text(encoding='utf-8')
+        self.assertEqual(metadata['body_sha256'], hashlib.sha256(body.encode()).hexdigest())
+        self.assertEqual(packet['packet_id'], metadata['packet_id'])
+
+        invalid = self.out / 'invalid-card-output'
+        fixture_args = ['card-draft', '--snapshot', str(self.out / 'artifacts' / 'snapshot.json'),
+                        '--packet', str(self.out / 'artifacts' / 'packet.json'),
+                        '--repo-root', str(self.root), '--out', str(invalid)]
+        with contextlib.redirect_stdout(io.StringIO()) as stream:
+            self.assertEqual(1, a.main(fixture_args))
+        self.assertEqual('CARD_SOURCE', json.loads(stream.getvalue())['findings'][0]['code'])
+        self.assertFalse(invalid.exists())
 
 
 if __name__ == '__main__':
