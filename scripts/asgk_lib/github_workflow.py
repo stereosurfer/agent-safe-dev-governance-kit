@@ -754,8 +754,9 @@ def final_closeout_flags(body, issue):
             or re.match(r'(?i)^(?:\*\*)?status[ \t]*[:—–-](?:\*\*)?[ \t]*'
                         r'(?:\*\*)?draft\b', line)
             or re.match(r'(?i)^(?:\[|\*{1,3})?draft(?:\]|\*{1,3})?'
-                        r'(?:[ \t]+(?:closeout|review)\b|[ \t]*[-—–:.,!(/]|[ \t]+do not[ \t]+'
-                        r'(?:post|close|publish)\b|[ \t]*$)', line)
+                        r'(?:[ \t]+(?:closeout|review)\b(?:[ \t]+review\b)?)?'
+                        r'(?:[ \t]*$|[ \t]*[-—–:.,!(/][ \t]*(?:(?:do not|unposted|unfinalized)\b|$)'
+                        r'|[ \t]+do not[ \t]+(?:post|close|publish)\b)', line)
             or re.match(r'(?i)^this (?:closeout|review) is a[ \t]+draft\b', line)
             or re.match(r'(?i)^this is a[ \t]+draft'
                         r'(?:[ \t]+(?:closeout|review)\b|[ \t]*[-—–:.,!]|[ \t]*$)', line))
@@ -769,7 +770,10 @@ def final_closeout_flags(body, issue):
             stripped = line.strip()
             if stripped.startswith('#') and draft_banner(stripped[1:].strip()):
                 return True
-            scalar = re.match(r'^\s*[A-Za-z_][A-Za-z0-9_]*:\s*(.*)$', line)
+            # A draft label in the primary decision marks an unposted review.
+            # Rejected alternatives and reasons may legitimately describe a
+            # draft closeout; scanning every scalar would erase that history.
+            scalar = re.match(r'^\s*decision_made:\s*(.*)$', line)
             if scalar and draft_banner(scalar.group(1).strip().strip('"\'')):
                 return True
         return False

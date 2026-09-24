@@ -476,6 +476,35 @@ class GithubWorkflowTests(unittest.TestCase):
         issue_node = next(node for node in traced['nodes'] if node['url'] == self.packet['issue'])
         self.assertIn(comment_url, issue_node['links'])
 
+    def test_rejected_draft_closeout_automation_is_final_decision_text(self):
+        snapshot = copy.deepcopy(self.final)
+        snapshot['issue']['state'] = 'closed'
+        comment_url = self.packet['issue'] + '#issuecomment-99'
+        closeout = self.canonical_yaml_closeout().replace(
+            'decision_made: "Keep trace"',
+            'decision_made: "Draft closeout automation was rejected."')
+        snapshot['comments'] = [dict(html_url=comment_url, body=closeout)]
+        searched = w.search([snapshot], 'Draft closeout automation was rejected.')
+        self.assertEqual([comment_url], [item['url'] for item in searched['matches']])
+        self.assertEqual('yaml_subset_shape_checked', searched['matches'][0]['evidence_class'])
+        traced = w.trace([snapshot], self.packet['issue'])
+        issue_node = next(node for node in traced['nodes'] if node['url'] == self.packet['issue'])
+        self.assertIn(comment_url, issue_node['links'])
+
+    def test_explicit_draft_label_in_rejected_path_does_not_discard_final_closeout(self):
+        snapshot = copy.deepcopy(self.final)
+        snapshot['issue']['state'] = 'closed'
+        comment_url = self.packet['issue'] + '#issuecomment-100'
+        closeout = self.canonical_yaml_closeout().replace(
+            'Use a chat-only summary', 'DRAFT closeout — do not post')
+        snapshot['comments'] = [dict(html_url=comment_url, body=closeout)]
+        searched = w.search([snapshot], 'DRAFT closeout — do not post')
+        self.assertEqual([comment_url], [item['url'] for item in searched['matches']])
+        self.assertEqual('yaml_subset_shape_checked', searched['matches'][0]['evidence_class'])
+        traced = w.trace([snapshot], self.packet['issue'])
+        issue_node = next(node for node in traced['nodes'] if node['url'] == self.packet['issue'])
+        self.assertIn(comment_url, issue_node['links'])
+
     def test_yaml_search_does_not_promote_prose_only_query(self):
         snapshot = copy.deepcopy(self.final)
         snapshot['issue']['state'] = 'closed'
@@ -612,6 +641,7 @@ class GithubWorkflowTests(unittest.TestCase):
         original = target['body']
         for prose in ('Note: the draft design was rejected.',
                       'Draft design was rejected.',
+                      'Draft closeout automation was rejected.',
                       'The draft design was not final, so we rejected it.',
                       'The draft decision did not close the issue; this review is final.',
                       'The unfinalized draft design was rejected in favor of the shipped approach.',
