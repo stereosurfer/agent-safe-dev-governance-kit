@@ -283,9 +283,10 @@ read_sets:
       - AGENTS.md
       - current GitHub issue or PR
       - docs/control/HUMAN_GATED_OPERATIONS.md
-    optional_read:
+    read_when_asgk_release_applies:
+      - docs/control/SOURCE_ONLY_RELEASE_POLICY.md
+    read_when_action_depends_on_task_contract:
       - task-owned delivery contract or source-evidence policy named by the issue
-      - docs/control/SOURCE_ONLY_RELEASE_POLICY.md when an ASGK release is in scope
     stop_if:
       - action_missing_exact_issue_scope
       - applicable_human_gate_unresolved

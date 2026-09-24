@@ -9,7 +9,7 @@ an unrelated artifact-promotion pipeline merely to complete a repository PR.
 ```yaml
 acceptance_dimensions:
   implementation: project tests, type checks, or formatting when applicable
-  data_or_interface: relevant target-owned schema, contract, fixture, provenance, or output-quality checks when applicable
+  data_or_interface: relevant repository- or target-owned schema, contract, fixture, provenance, or output-quality checks when applicable
   governance: issue authority, allowed paths, PR evidence, CI, Merge Decision Record, applicable human gates, and close-out
 ```
 

@@ -7,7 +7,7 @@ objective, allowed paths, expected output, validation, non-goals, stop
 conditions, and rollback. A task packet can narrow it but not replace it.
 
 When a work unit creates or changes a machine-readable interface, identify
-the relevant target-owned contract or schema before implementation. Specify
+the relevant repository- or target-owned contract or schema before implementation. Specify
 its inputs/outputs, required fields, invariants, failure cases, compatibility
 and project-specific positive/negative checks as needed by that interface.
 Do not manufacture an artifact contract, source class, promotion status, or
