@@ -84,12 +84,13 @@ to them.
 
 Before changing files, use the selected issue or qualifying PR's smallest
 exact `context_read_set`. An optional `issue_refinement` packet may narrow it,
-never expand or replace the issue. Named classes below are prompts to check
-relevance, not automatic document bundles or a second task identity. If more
-than one class appears relevant, read only the exact paths needed and record
-any expansion reason in the existing issue, PR, or handoff surface. The read
-set does not grant permission to edit its files; `allowed_paths` remains the
-write boundary.
+never expand or replace the issue. Do not silently omit an item in the selected
+exact set; narrow it through an authorized refinement or correct the issue.
+Named classes below are prompts to check relevance, not automatic document
+bundles or a second task identity. If more than one class appears relevant,
+use the exact set and record any needed expansion reason in the existing issue,
+PR, or handoff surface. The read set does not grant permission to edit its
+files; `allowed_paths` remains the write boundary.
 
 ```yaml
 context_read_set_selection:

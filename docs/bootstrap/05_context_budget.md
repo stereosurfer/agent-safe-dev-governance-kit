@@ -6,9 +6,11 @@ of limits.
 
 Start with `AGENTS.md`, `README.md`, `docs/handoff/CURRENT_STATUS.md`, and the
 selected live GitHub issue or PR. For executable work, that authority records
-an exact `context_read_set` and `project_specific_validation`. Read only what
-is relevant, then record any justified expansion. No fixed per-task file count
-or per-PR changed-file count overrides the issue's scope and validation.
+an exact `context_read_set` and `project_specific_validation`. Read that exact
+set; do not silently skip an item because it seems irrelevant. Narrow it only
+through an authorized `issue_refinement`, and record any justified expansion.
+No fixed per-task file count or per-PR changed-file count overrides the issue's
+scope and validation.
 
 A task packet is optional. `issue_refinement` may only narrow a live issue;
 `github_unavailable_fallback` is a bounded local-work exception during a
