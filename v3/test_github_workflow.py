@@ -459,6 +459,23 @@ class GithubWorkflowTests(unittest.TestCase):
                 self.assertNotIn(comment_url, issue_node['links'])
                 self.assertIn('WF_CLOSEOUT_NOT_FOUND', [item['code'] for item in traced['findings']])
 
+    def test_rejected_draft_option_is_valid_yaml_decision_evidence(self):
+        snapshot = copy.deepcopy(self.final)
+        snapshot['issue']['state'] = 'closed'
+        comment_url = self.packet['issue'] + '#issuecomment-98'
+        closeout = self.canonical_yaml_closeout().replace(
+            'Use a chat-only summary', 'Draft chat-only summary')
+        snapshot['comments'] = [dict(
+            html_url=comment_url,
+            body='The draft design was rejected.\n\n' + closeout,
+        )]
+        searched = w.search([snapshot], 'Draft chat-only summary')
+        self.assertEqual([comment_url], [item['url'] for item in searched['matches']])
+        self.assertEqual('yaml_subset_shape_checked', searched['matches'][0]['evidence_class'])
+        traced = w.trace([snapshot], self.packet['issue'])
+        issue_node = next(node for node in traced['nodes'] if node['url'] == self.packet['issue'])
+        self.assertIn(comment_url, issue_node['links'])
+
     def test_yaml_search_does_not_promote_prose_only_query(self):
         snapshot = copy.deepcopy(self.final)
         snapshot['issue']['state'] = 'closed'
@@ -640,6 +657,9 @@ class GithubWorkflowTests(unittest.TestCase):
                        'Unfinalized DRAFT closeout.',
                        'This closeout is a DRAFT — do not post.',
                        'This closeout is a DRAFT.',
+                       'DRAFT closeout — do not post.',
+                       'Draft closeout review — do not post.',
+                       'This is a DRAFT closeout.',
                        'Do not post — DRAFT closeout.'):
             with self.subTest(banner=banner):
                 target['body'] = banner + '\n\n' + original

@@ -754,16 +754,26 @@ def final_closeout_flags(body, issue):
             or re.match(r'(?i)^(?:\*\*)?status[ \t]*[:—–-](?:\*\*)?[ \t]*'
                         r'(?:\*\*)?draft\b', line)
             or re.match(r'(?i)^(?:\[|\*{1,3})?draft(?:\]|\*{1,3})?'
-                        r'(?:[ \t]*[-—–:.,!(/]|[ \t]+do not[ \t]+'
+                        r'(?:[ \t]+(?:closeout|review)\b|[ \t]*[-—–:.,!(/]|[ \t]+do not[ \t]+'
                         r'(?:post|close|publish)\b|[ \t]*$)', line)
             or re.match(r'(?i)^this (?:closeout|review) is a[ \t]+draft\b', line)
-            or re.match(r'(?i)^this is a[ \t]+draft(?:[ \t]*[-—–:.,!]|[ \t]*$)', line))
+            or re.match(r'(?i)^this is a[ \t]+draft'
+                        r'(?:[ \t]+(?:closeout|review)\b|[ \t]*[-—–:.,!]|[ \t]*$)', line))
     explicit_draft = any(draft_banner(line) for line in prose.splitlines())
     json_checked = not explicit_draft and json_closeout_shape(body, issue['html_url'])
-    if re.search(r'(?i)\bdraft\b', prose):
+    if explicit_draft:
         return json_checked, False, False
     candidate = yaml_closeout_candidate(body)
-    if candidate and any(re.search(r'(?i)\bdraft\b', block)
+    def yaml_draft_marker(block):
+        for line in block.splitlines():
+            stripped = line.strip()
+            if stripped.startswith('#') and draft_banner(stripped[1:].strip()):
+                return True
+            scalar = re.match(r'^\s*[A-Za-z_][A-Za-z0-9_]*:\s*(.*)$', line)
+            if scalar and draft_banner(scalar.group(1).strip().strip('"\'')):
+                return True
+        return False
+    if candidate and any(yaml_draft_marker(block)
                          for block in standalone_yaml_blocks(body)
                          if re.search(r'(?m)^issue_closeout_review:', block)):
         return json_checked, False, False
