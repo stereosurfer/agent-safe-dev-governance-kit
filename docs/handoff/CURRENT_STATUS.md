@@ -4,7 +4,7 @@ This is the repository recovery snapshot. It is overwritten, not appended.
 Completed-work history and decision detail belong in GitHub issues, PRs,
 comments, releases, and merge commits.
 
-Last updated: `2026-09-24T03:59:57Z`
+Last updated: `2026-09-24T04:19:47Z`
 
 ## Durable source of truth
 
@@ -21,10 +21,10 @@ Last updated: `2026-09-24T03:59:57Z`
 
 ASGK v1.7.3 remains the latest completed source-only GitHub release under the
 Apache-2.0 license. Issue #372 coordinates the active ASGK 3.0 release program.
-Its preview.1 candidate is isolated on `codex/asgk-3-preview.1` at
-`1e0d82109141fe083f3fa469145200c6f7b3c3d0`; it is not the root product
-or a release. Issue #323 remains open as prior ASGK 2.0 program evidence, not
-the next-work router.
+Its preview.1 candidate is isolated on `codex/asgk-3-preview.1`; resolve that
+branch's live head before acting. It is not the root product or a release.
+Issue #323 remains open as prior ASGK 2.0 program evidence, not the next-work
+router.
 
 The product boundary is safe, smooth, traceable handoff between people and AI.
 The handoff remains independent of a specific model, provider, agent, or prior
@@ -54,8 +54,7 @@ issue: "#372 ASGK 3.0 source-only release program"
 pr: none
 branch: main
 state: active_program
-latest_completed_work_unit: "W6B issue #356 / merged PR #373"
-next_work_unit_decision: "Open a bounded #372 child issue to correct preview.1 recovery text before any root 3.0 cutover."
+next_work_unit_decision: "Reconcile live #372 child and PR state; finish candidate recovery before separately scoped root 3.0 cutover."
 ```
 
 ## Current validation entrypoint
@@ -92,11 +91,11 @@ model cache, or external preparation outputs are authorized by this status.
 
 ## Next safe action
 
-Continue under #372 from current `main`. First create a separately scoped
-candidate-recovery child issue with exact allowed paths and validation, then
-correct the isolated preview.1 recovery text before evaluating root cutover.
-Do not treat this status file, preview.1, superseded planning, or chat as
-executable authority. Do not read the excluded visual guide.
+Continue under #372 from current `main`. Check live PRs, child issues and the
+preview.1 ref to select one bounded work unit. Finish any remaining candidate
+recovery before opening a separately scoped root cutover. The selected issue
+or PR supplies allowed paths and validation; this status file, preview.1,
+superseded planning and chat do not. Do not read the excluded visual guide.
 
 ```yaml
 reference_scope:
