@@ -556,7 +556,11 @@ def parse_closeout_yaml_subset(source):
     """Parse a deliberately small two-space YAML subset; reject ambiguity."""
     lines = []
     for raw in source.splitlines():
-        if not raw.strip() or raw.lstrip().startswith('#'):
+        if not raw.strip():
+            continue
+        if raw.lstrip().startswith('#'):
+            if re.search(r'(?i)\bdraft\b', raw):
+                raise ValueError('Draft YAML comment')
             continue
         if '\t' in raw or raw.rstrip() != raw or raw.startswith(('---', '...')):
             raise ValueError('Unsupported YAML syntax')
@@ -675,8 +679,18 @@ def standalone_yaml_blocks(body):
     """Yield only top-level canonical YAML fences, not nested Markdown examples."""
     lines = body.splitlines()
     opening = None
+    in_html_comment = False
     start = 0
     for index, line in enumerate(lines):
+        if opening is None:
+            if in_html_comment:
+                if '-->' in line:
+                    in_html_comment = False
+                continue
+            if '<!--' in line:
+                if '-->' not in line.split('<!--', 1)[1]:
+                    in_html_comment = True
+                continue
         fence = re.fullmatch(r' {0,3}(`{3,}|~{3,})(.*)', line)
         if opening is None:
             if fence:

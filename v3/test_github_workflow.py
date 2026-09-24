@@ -458,7 +458,8 @@ class GithubWorkflowTests(unittest.TestCase):
         snapshot = copy.deepcopy(self.final)
         snapshot['issue']['state'] = 'closed'
         comment_url = self.packet['issue'] + '#issuecomment-95'
-        for opening, closing in (('````markdown', '````'), ('~~~~markdown', '~~~~')):
+        for opening, closing in (('````markdown', '````'), ('~~~~markdown', '~~~~'),
+                                 ('<!--', '-->')):
             with self.subTest(opening=opening):
                 snapshot['comments'] = [dict(
                     html_url=comment_url,
@@ -499,6 +500,7 @@ class GithubWorkflowTests(unittest.TestCase):
             canonical.replace('    decision_made: "Keep trace"', '    decision_made: .inf'),
             canonical.replace('    decision_made: "Keep trace"', '    decision_made: True'),
             canonical.replace('    decision_made: "Keep trace"', '    decision_made: 2026-09-25'),
+            canonical.replace('issue_closeout_review:', '# DRAFT — do not post\nissue_closeout_review:', 1),
             canonical.replace('\n```\n', '\n---\n```\n'),
             canonical + canonical,
         ]
