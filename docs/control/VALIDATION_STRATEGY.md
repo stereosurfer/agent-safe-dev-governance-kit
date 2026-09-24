@@ -208,8 +208,10 @@ Only one visible, top-level, duplicate-free canonical JSON closeout in a comment
 can receive a bounded shape check. Any raw HTML-marked comment, JSON inside an
 outer Markdown example fence, multiple JSON closeout fences (including
 alternate case or delimiter), mixed JSON/YAML closeouts, and an explicit DRAFT
-JSON primary decision do not create a checked edge. Search examines only named
-parsed decision fields, not extra metadata or unrelated comment prose. The strict canonical YAML subset also receives bounded
+JSON primary decision do not create a checked edge. A separate historical
+Markdown-fenced DRAFT example does not veto an otherwise final closeout.
+Search examines only named parsed decision, reusable-rule and applicability
+fields, not extra metadata or unrelated comment prose. The strict canonical YAML subset also receives bounded
 closeout shape checks. Only same-issue, substantive YAML yields a
 `yaml_subset_shape_checked` edge; malformed, unsupported, wrong-issue, or
 incomplete YAML remains a `candidate_unverified_yaml` pointer.

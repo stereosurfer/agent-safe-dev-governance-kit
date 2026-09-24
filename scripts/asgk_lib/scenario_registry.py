@@ -117,6 +117,12 @@ WORKFLOW_JSON_EXTRA_METADATA_SNAPSHOT = workflow_json_example_snapshot(
     WORKFLOW_JSON_FENCE.replace(
         '"decision_made":"Keep GitHub trace"',
         '"unrelated_label":"False positive search term","decision_made":"Keep GitHub trace"'))
+WORKFLOW_JSON_REUSE_RULE_SNAPSHOT = workflow_json_example_snapshot(
+    WORKFLOW_JSON_FENCE.replace(
+        '"decision":"Keep GitHub trace"',
+        '"decision":"Keep GitHub trace","reusable_rule":"Reusable-only term"'))
+WORKFLOW_JSON_FENCED_DRAFT_EXAMPLE_SNAPSHOT = workflow_json_example_snapshot(
+    '~~~markdown\nDRAFT — do not post or close issue.\n~~~\n\n' + WORKFLOW_JSON_FENCE)
 WORKFLOW_YAML_CANDIDATE_URL = WORKFLOW_ISSUE_URL + "#issuecomment-11"
 WORKFLOW_YAML_CANDIDATE_BODY = (
     '```yaml\nissue_closeout_review:\n  issue: "#1"\n  status: completed\n'
@@ -2172,6 +2178,35 @@ RETAINED_JSON_SCENARIOS = (
         expected_payload_fields=(("matches", []), ("candidates", [])),
     ),
     JsonScenario(
+        "workflow_search_json_reusable_rule_checked",
+        "workflow",
+        (*ASGK, "workflow", "search", "--snapshot", "{temp_input}",
+         "--query", "Reusable-only term", "--json"),
+        "positive", "pass", 0, (), WORKFLOW_PROOF_BOUNDARY,
+        temp_input=TempInput(content=WORKFLOW_JSON_REUSE_RULE_SNAPSHOT),
+        expected_payload_fields=(("matches", [{"url": WORKFLOW_CLOSEOUT_URL,
+                                                "kind": "comment",
+                                                "excerpt": json.loads(WORKFLOW_JSON_REUSE_RULE_SNAPSHOT)["comments"][0]["body"][:280],
+                                                "evidence_class": "json_shape_checked",
+                                                "source": "fixture", "captured_at": "2025-01-01T00:00:00Z"}]),
+                                 ("candidates", [])),
+    ),
+    JsonScenario(
+        "workflow_trace_json_fenced_draft_example_still_checked",
+        "workflow",
+        (*ASGK, "workflow", "trace", "--snapshot", "{temp_input}",
+         "--start", WORKFLOW_ISSUE_URL, "--json"),
+        "positive", "pass", 0, (), WORKFLOW_PROOF_BOUNDARY,
+        temp_input=TempInput(content=WORKFLOW_JSON_FENCED_DRAFT_EXAMPLE_SNAPSHOT),
+        expected_payload_fields=(("nodes", [
+            {"url": WORKFLOW_ISSUE_URL, "kind": "issue", "hops": 0,
+             "links": [WORKFLOW_CLOSEOUT_URL], "unresolved_shorthand_refs": [], "source": "fixture"},
+            {"url": WORKFLOW_CLOSEOUT_URL, "kind": "comment", "hops": 1,
+             "links": [WORKFLOW_ISSUE_URL], "unresolved_shorthand_refs": [],
+             "source": "fixture", "evidence_class": "json_shape_checked"},
+        ]), ("candidates", []), ("closeout_not_found", [])),
+    ),
+    JsonScenario(
         "workflow_search_canonical_yaml_shape_checked",
         "workflow",
         (*ASGK, "workflow", "search", "--snapshot", "{temp_input}",
@@ -2191,6 +2226,20 @@ RETAINED_JSON_SCENARIOS = (
                           "source": "fixture", "captured_at": "2025-01-01T00:00:00Z"}]),
             ("candidates", []),
         ),
+    ),
+    JsonScenario(
+        "workflow_search_canonical_yaml_applicability_checked",
+        "workflow",
+        (*ASGK, "workflow", "search", "--snapshot", "{temp_input}",
+         "--query", "Future cutovers.", "--json"),
+        "positive", "pass", 0, (), WORKFLOW_PROOF_BOUNDARY,
+        temp_input=TempInput(content=WORKFLOW_YAML_CHECKED_SNAPSHOT),
+        expected_payload_fields=(("matches", [{"url": WORKFLOW_YAML_CHECKED_URL,
+                                                "kind": "comment",
+                                                "excerpt": WORKFLOW_YAML_CHECKED_BODY[:280],
+                                                "evidence_class": "yaml_subset_shape_checked",
+                                                "source": "fixture", "captured_at": "2025-01-01T00:00:00Z"}]),
+                                 ("candidates", [])),
     ),
     JsonScenario(
         "workflow_trace_canonical_yaml_shape_checked",

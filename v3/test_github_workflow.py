@@ -661,6 +661,24 @@ class GithubWorkflowTests(unittest.TestCase):
                 issue_node = next(node for node in traced['nodes'] if node['url'] == issue_url)
                 self.assertIn(target['html_url'], issue_node['links'])
 
+    def test_fenced_historical_draft_example_does_not_veto_final_json(self):
+        snapshot = copy.deepcopy(self.indexed_final)
+        issue_url = snapshot['issue']['html_url']
+        target = next(comment for comment in snapshot['comments']
+                      if w.json_closeout_shape(comment['body'], issue_url))
+        original = target['body']
+        for opening, closing in (('~~~markdown', '~~~'), ('````markdown', '````')):
+            with self.subTest(opening=opening):
+                target['body'] = (opening + '\nDRAFT — do not post or close issue.\n'
+                                  + closing + '\n\n' + original)
+                self.assertEqual((True, False, False),
+                                 w.final_closeout_flags(target['body'], snapshot['issue']))
+                self.assertEqual('json_shape_checked',
+                                 w.search([snapshot], 'Keep GitHub as work ledger')['matches'][0]['evidence_class'])
+                issue_node = next(node for node in w.trace([snapshot], issue_url)['nodes']
+                                  if node['url'] == issue_url)
+                self.assertIn(target['html_url'], issue_node['links'])
+
     def test_json_closeout_inside_example_container_is_not_checked(self):
         snapshot = copy.deepcopy(self.indexed_final)
         issue_url = snapshot['issue']['html_url']
@@ -774,6 +792,34 @@ class GithubWorkflowTests(unittest.TestCase):
         self.assertEqual([], w.search([snapshot], 'False positive search term')['matches'])
         self.assertEqual('yaml_subset_shape_checked',
                          w.search([snapshot], 'Keep trace')['matches'][0]['evidence_class'])
+
+    def test_named_reuse_and_applicability_fields_are_searchable(self):
+        snapshot = copy.deepcopy(self.indexed_final)
+        issue_url = snapshot['issue']['html_url']
+        target = next(comment for comment in snapshot['comments']
+                      if w.json_closeout_shape(comment['body'], issue_url))
+        review = json.loads(target['body'].split('```json\n', 1)[1].split('\n```', 1)[0])
+        decision = review['issue_closeout_review']['decisions'][0]
+        decision['reusable_rule'] = 'Reusable-only term'
+        decision['applies_when'] = ['Applicability-only term']
+        decision['does_not_apply_when'] = ['Exclusion-only term']
+        target['body'] = '```json\n' + json.dumps(review) + '\n```'
+        for term in ('Reusable-only term', 'Applicability-only term', 'Exclusion-only term'):
+            with self.subTest(format='json', term=term):
+                self.assertEqual('json_shape_checked',
+                                 w.search([snapshot], term)['matches'][0]['evidence_class'])
+
+        yaml = self.canonical_yaml_closeout().replace(
+            '      evidence:\n',
+            '      reusable_rule: "Reusable-only term"\n'
+            '      applies_when:\n        - "Applicability-only term"\n'
+            '      does_not_apply_when:\n        - "Exclusion-only term"\n'
+            '      evidence:\n')
+        snapshot['comments'] = [dict(html_url=issue_url + '#issuecomment-136', body=yaml)]
+        for term in ('Reusable-only term', 'Applicability-only term', 'Exclusion-only term'):
+            with self.subTest(format='yaml', term=term):
+                self.assertEqual('yaml_subset_shape_checked',
+                                 w.search([snapshot], term)['matches'][0]['evidence_class'])
 
     def test_json_primary_decision_draft_is_not_final_closeout(self):
         snapshot = copy.deepcopy(self.indexed_final)

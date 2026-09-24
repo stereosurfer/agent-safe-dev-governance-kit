@@ -721,6 +721,24 @@ def standalone_closeout_fences(body, languages, *, reject_html_tags=False):
             opening = None
 
 
+def visible_unfenced_prose(body):
+    """Remove top-level Markdown fence content before checking draft labels."""
+    opening = None
+    prose = []
+    for line in body.splitlines():
+        fence = re.fullmatch(r' {0,3}(`{3,}|~{3,})(.*)', line)
+        if opening is None:
+            if fence:
+                opening = fence.group(1)
+            else:
+                prose.append(line)
+        elif (fence and fence.group(1)[0] == opening[0]
+              and len(fence.group(1)) >= len(opening)
+              and not fence.group(2).strip()):
+            opening = None
+    return '\n'.join(prose)
+
+
 def standalone_yaml_blocks(body):
     for block, canonical in standalone_closeout_fences(
             body, ('yaml', 'yml'), reject_html_tags=True):
@@ -765,7 +783,7 @@ def final_closeout_flags(body, issue):
     """Keep JSON shape evidence distinct from unverified YAML candidates."""
     if issue['state'] != 'closed':
         return False, False, False
-    prose = re.sub(r'(?ms)^```[^\n]*\n.*?^```[ \t]*$', '', body)
+    prose = visible_unfenced_prose(body)
     def draft_banner(line):
         line = line.strip()
         while True:
@@ -911,10 +929,12 @@ def search(snapshots, query):
             values.append(signal.get('reason'))
         for item in review['decisions']:
             if type(item) is dict:
-                values.extend((item.get('decision'), item.get('reason')))
-                refs = item.get('evidence')
-                if type(refs) is list:
-                    values.extend(refs)
+                values.extend((item.get('decision'), item.get('reason'),
+                               item.get('reusable_rule')))
+                for field in ('applies_when', 'does_not_apply_when', 'evidence'):
+                    entries = item.get(field)
+                    if type(entries) is list:
+                        values.extend(entries)
         return any(query.casefold() in value.casefold()
                    for value in values if type(value) is str)
 
