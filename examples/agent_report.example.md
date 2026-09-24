@@ -1,25 +1,30 @@
 # Agent Report
 
+Status: synthetic, incomplete shape example. No issue, PR, check result, or
+approval below is live. Copy the structure only after replacing every claim
+with evidence from the selected current work unit.
+
 ## Task ID
-TASK-000
+Illustrative GitHub issue #000 (not a second task identifier)
 
 ## Durable Source Of Truth
-GitHub issue #000
+Illustrative GitHub issue #000 and its eventual PR. Neither is live authority.
 
 ## Task Scope
-Issue-backed governance update inside allowed paths.
+Hypothetical issue-backed documentation update inside that issue's exact allowed
+paths. This example does not define them.
 
 ## Summary
-Updated governance scaffold.
+Drafted a hypothetical documentation correction; completion is not established.
 
 ## Files Inspected
-- AGENTS.md
+- AGENTS.md (illustrative read set, not an actual inspection)
 
 ## Files Changed
-- docs/control/example.md
+- docs/QUICKSTART.md (illustrative only; not a real diff)
 
 ## Key Decisions
-- Kept changes inside allowed paths.
+- Scope and path compliance would need the live issue and actual diff.
 
 ## Validation Run
 ```bash
@@ -27,27 +32,31 @@ python3 scripts/asgk.py doctor
 ```
 
 ## Validation Result
-Source doctor: pass for its named checks. This does not establish semantic
-correctness, target readiness, or merge approval.
+Not run for this synthetic example. A real report must name the run and source
+of its result; even a pass proves only the check's declared boundary, not
+semantic correctness, target readiness, or merge approval.
 
 ## Acceptance Criteria Status
-- [x] Required docs exist.
+- [ ] Compare the actual output to the live issue's acceptance sheet.
+- [ ] Record the linked PR, MDR, required checks/review and close-out state.
 
 ## Storage Boundary Evidence
-No external or target-owned storage writes were in scope. The issue did not
-select a runtime/output destination; none was created or inferred.
+Not checked in this synthetic example. A real report must use the live issue,
+diff and runtime-output evidence before claiming no external or target write.
 
 ## Runtime Artifact Status
-No runtime artifacts committed.
+Not checked in this synthetic example.
 
 ## Risks / Regressions
-None known.
+Unknown until actual diff, tests and review are inspected.
 
 ## Stop Condition Reached
-Work unit complete.
+Not reached. This sample cannot establish work completion, PR eligibility or
+issue closure.
 
 ## Open Questions
-None.
+Which live issue, exact diff, required checks and human gates apply?
 
 ## Suggested Next Task
-Open first smoke-test issue.
+Candidate only: a smoke test may be proposed through a new authorized issue
+after this work unit is closed; this report cannot dispatch it.

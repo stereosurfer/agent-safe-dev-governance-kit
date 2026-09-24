@@ -23,10 +23,13 @@ assessment finds a real gap.
 Read the smallest set of canonical documents required by the work unit.
 ```
 
-If two documents appear to disagree, prefer the document marked `canonical` for
-that topic in `docs/DOCUMENT_REGISTRY.md`. If a summary document disagrees with a
-canonical document, the summary document is stale and should be fixed in a
-separate issue.
+If two documents appear to disagree, use `docs/DOCUMENT_REGISTRY.md` to
+identify their intended owners, not to silently select a rule. When the
+disagreement affects scope, permissions, source of truth, validation,
+protected paths, runtime artifacts, human gates or merge behavior, stop and
+report it under `AGENTS.md`'s Conflict rule. Repair a stale summary through a
+scoped issue after that boundary is resolved; navigation does not grant
+authority to ignore a conflicting instruction.
 
 ## Progressive Disclosure Surfaces
 

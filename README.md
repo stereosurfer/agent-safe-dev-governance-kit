@@ -280,8 +280,10 @@ change, or v2.0 work is included.
 The [ASGK 3.0 program](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/372)
 is active, but 3.0 is not released. The GitHub workflow portion of preview.1
 and optional metadata-only catalog are integrated into the public CLI and
-`doctor`; templates, eleven source Skills, and real lifecycle/target evidence
-still need separately scoped work. The former 2.0 program and old runtime-adapter
+`doctor`. The existing root target navigation templates are optional references,
+not a required bundle; Stage 3 examples and their authority limits have been
+reviewed. Eleven source Skills and real lifecycle/target evidence still need
+separately scoped work. The former 2.0 program and old runtime-adapter
 roadmaps are history, not instructions for the next work unit.
 
 ## What The Generic Core Does Not Supply

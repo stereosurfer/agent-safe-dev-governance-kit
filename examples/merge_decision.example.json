@@ -1,8 +1,8 @@
 {
-  "issue": "#1",
-  "lane": "lane_00_controller",
+  "issue": "#000 (synthetic only)",
+  "lane": "illustrative_docs_change",
   "intelligence_level": "frontier",
-  "durable_source_of_truth": "GitHub issue #1 and the current PR",
+  "durable_source_of_truth": "Illustrative GitHub issue #000 and PR #000; neither exists or grants authority",
   "checks_passed": true,
   "allowed_paths_checked": true,
   "expected_output_checked": true,
@@ -10,7 +10,7 @@
   "schemas_checked": true,
   "storage_boundary": "no out-of-repo destination or target-owned storage write in this example issue",
   "runtime_artifact_boundary": "no runtime artifacts committed",
-  "safety_review": "pass",
+  "safety_review": "Synthetic positive shape only; a live review must cite the exact current head and evidence",
   "human_gates_checked": true,
   "validation_evidence_checked": true,
   "validation_claim_source": {
@@ -18,5 +18,5 @@
     "ci": "github_actions"
   },
   "result": "merge_allowed",
-  "reason": "All named checks passed and durable review of example head 0000000000000000000000000000000000000001 is recorded at https://github.com/example/repo/pull/1#issuecomment-1. Live PR eligibility and merge authority remain separate."
+  "reason": "Synthetic positive schema example: every true gate and source label is fictional, not a live check or OWNER review. A real current-head PR needs linked issue scope, actual CI and independent review, a complete MDR and applicable merge authority before merge_allowed can be claimed."
 }

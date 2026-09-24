@@ -9,9 +9,11 @@ under `examples/` as an adoption template.
 
 ```yaml
 human_examples:
-  purpose: small positive examples that humans and agents may inspect for shape
-  authority: not policy authority
+  purpose: illustrative shapes, not evidence that a real issue, report, check, PR or review exists
+  authority: no work, completion, merge or policy authority
   task_packet_boundary: examples show one mode; fallback local-work authority is conditional on verified GitHub unavailability and never grants PR or merge authority
+  agent_report_boundary: synthetic incomplete report; a doctor command alone cannot establish completion, PR/MDR readiness or issue closeout
+  merge_decision_boundary: synthetic positive schema shape required by source validation; merge_allowed and true gate flags are fictional, never current-head approval
   examples:
     - examples/task_packet.example.yaml
     - examples/merge_decision.example.json
@@ -61,6 +63,11 @@ compact_red_team_fixtures:
 ## Boundary Rules
 
 - Examples and fixtures are not policy authority.
+- A synthetic `merge_allowed` example is not an eligible live PR. Do not copy
+  its gate flags or validation-source labels into a real MDR without checking
+  the current head, linked issue, CI, review and applicable human boundary.
+- A sample Agent Report cannot close an issue, grant the next task or substitute
+  for actual PR/MDR and issue close-out evidence.
 - A fixture supplies input, not its own expected result. For retained JSON
   behavior, `scripts/asgk_lib/scenario_registry.py` alone records the exact
   owner command, polarity, exit, common result, finding-code multiset,
