@@ -7,8 +7,11 @@
 - Rejected direction retained: [#357](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/357), local commit 7e2cfc6.
 - Branch: codex/asgk-3-preview.1; original preview branch remains unchanged.
 - Scoped correction: [#362](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/362)
-  on `codex/asgk-3-preview.1-provenance-fix`, forked from the exact preview.1 head.
-- No merge, release, migration, target write or global Skill synchronization.
+  originated on `codex/asgk-3-preview.1-provenance-fix`; [#368](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/368)
+  governs its review and proposed integration into preview.1. Until that PR merges,
+  the correction remains on the separate branch. Verify the live PR state before
+  treating it as part of preview.1.
+- No merge to `main`, release, migration, target write or global Skill synchronization.
 - #323/#356 and the original dirty W6B worktree are separate and untouched.
 
 ## Candidate recovery
