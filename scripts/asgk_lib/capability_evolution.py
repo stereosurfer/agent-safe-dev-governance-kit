@@ -245,6 +245,13 @@ def run(args):
             result = browse(index, args.domain, args.branch, args.limit)
         print(json.dumps(result, ensure_ascii=False, indent=2))
         return 0 if result['result'] == 'pass' else 1
+    except RecursionError:
+        result = envelope(result='fail', checked=['index JSON parser depth limit'])
+        result['findings'] = [dict(
+            code='INDEX_DEPTH', field='index',
+            reason='Index JSON nesting exceeds the supported parser depth.', blocking=True)]
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+        return 1
     except (Invalid, OSError, ValueError, TypeError, KeyError) as error:
         finding = error.finding if isinstance(error, Invalid) else dict(
             code='INPUT_IO', field='index', reason=str(error), blocking=True)

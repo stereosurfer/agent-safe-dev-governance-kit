@@ -2,6 +2,8 @@ import copy
 import contextlib
 import io
 import json
+import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -225,6 +227,29 @@ class CapabilityIndexTests(unittest.TestCase):
             self.assertEqual('fail', result['result'])
             self.assertEqual('DUPLICATE_KEY', result['findings'][0]['code'])
             self.assertEqual([], validation_result_errors(result))
+
+    def test_deep_json_fails_in_common_envelope_with_wrapper_parity(self):
+        root = Path(__file__).resolve().parents[1]
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / 'index.json'
+            path.write_text('[' * 2000 + ']' * 2000, encoding='utf-8')
+            commands = (
+                [sys.executable, str(root / 'scripts/asgk.py'), 'catalog', 'check'],
+                [sys.executable, str(root / 'v3/capability_evolution.py'), 'check'],
+            )
+            outputs = []
+            for command in commands:
+                completed = subprocess.run([*command, '--index', str(path), '--json'],
+                                           cwd=root, capture_output=True, text=True, check=False)
+                self.assertEqual(1, completed.returncode)
+                self.assertNotIn('Traceback', completed.stderr)
+                result = json.loads(completed.stdout)
+                self.assertEqual('fail', result['result'])
+                self.assertEqual('INDEX_DEPTH', result['findings'][0]['code'])
+                self.assertEqual('index', result['findings'][0]['field'])
+                self.assertEqual([], validation_result_errors(result))
+                outputs.append(completed.stdout)
+            self.assertEqual(outputs[0], outputs[1])
 
     def test_max_length_pointer_output_is_bounded(self):
         template = self.index['records'][0]

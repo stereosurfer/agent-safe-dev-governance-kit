@@ -763,6 +763,13 @@ RETAINED_JSON_SCENARIOS = (
         temp_input=TempInput(content='{ "version": 1, "version": 1 }'),
     ),
     JsonScenario(
+        "catalog_index_json_too_deep", "catalog",
+        (*ASGK, "catalog", "check", "--index", "{temp_input}", "--json"),
+        "negative", "fail", 1, ("INDEX_DEPTH",), CATALOG_PROOF_BOUNDARY,
+        temp_input=TempInput(content="[" * 2000 + "]" * 2000),
+        expected_mechanically_checked=("index JSON parser depth limit",),
+    ),
+    JsonScenario(
         "catalog_invalid_reference", "catalog",
         (*ASGK, "catalog", "check", "--index", "{temp_input}", "--json"),
         "negative", "fail", 1, ("DURABLE_URL",), CATALOG_PROOF_BOUNDARY,
