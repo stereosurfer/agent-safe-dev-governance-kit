@@ -4137,6 +4137,11 @@ def check_w3b_handoff_projection(root):
             fail('status-check must ignore headings inside HTML comments')
 
     active_block = markdown_section(status_text, 'Active work')
+    active_issue_match = re.search(r'(?m)^issue:[^\n]+$', active_block)
+    if active_issue_match is None:
+        fail('canonical CURRENT_STATUS missing active issue field for negative checks')
+        return
+    active_issue_line = active_issue_match.group(0)
     assert_status_rejected(
         'duplicate Active work heading',
         status_text
@@ -4156,8 +4161,8 @@ def check_w3b_handoff_projection(root):
     assert_status_rejected(
         'duplicate issue field',
         status_text.replace(
-            'issue: "#323 ASGK 2.0 program"',
-            'issue: "#323 ASGK 2.0 program"\nissue: "#240 stale"',
+            active_issue_line,
+            active_issue_line + '\nissue: "#240 stale"',
             1,
         ),
         'exactly one issue field',
@@ -4165,8 +4170,8 @@ def check_w3b_handoff_projection(root):
     assert_status_rejected(
         'case-variant issue field',
         status_text.replace(
-            'issue: "#323 ASGK 2.0 program"',
-            'issue: "#323 ASGK 2.0 program"\nIssue: "#240 stale"',
+            active_issue_line,
+            active_issue_line + '\nIssue: "#240 stale"',
             1,
         ),
         'exactly one issue field',

@@ -4,7 +4,7 @@ This is the repository recovery snapshot. It is overwritten, not appended.
 Completed-work history and decision detail belong in GitHub issues, PRs,
 comments, releases, and merge commits.
 
-Last updated: `2026-08-04T16:00:00Z`
+Last updated: `2026-09-24T03:59:57Z`
 
 ## Durable source of truth
 
@@ -20,8 +20,11 @@ Last updated: `2026-08-04T16:00:00Z`
 ## Current snapshot
 
 ASGK v1.7.3 remains the latest completed source-only GitHub release under the
-Apache-2.0 license. ASGK 2.0 is an active document-driven evolution coordinated
-by issue #323.
+Apache-2.0 license. Issue #372 coordinates the active ASGK 3.0 release program.
+Its preview.1 candidate is isolated on `codex/asgk-3-preview.1` at
+`1e0d82109141fe083f3fa469145200c6f7b3c3d0`; it is not the root product
+or a release. Issue #323 remains open as prior ASGK 2.0 program evidence, not
+the next-work router.
 
 The product boundary is safe, smooth, traceable handoff between people and AI.
 The handoff remains independent of a specific model, provider, agent, or prior
@@ -40,21 +43,19 @@ engine.
 against an arbitrary target layout. A matching claim never proves target fit,
 governance depth, recommendation, approval, or readiness.
 
-The W5 truth-layer owners now describe the current product meaning, the
-document-driven self-evolution loop, this recovery snapshot, and canonical
-document ownership. Superseded planning material is not current product
-authority. The separate five-path authority-wording follow-up remains a
-decision point in #323 and is not silently included here.
+W6B's duplicate governance, decision, and handoff owners were removed from
+`main` by merged PR #373, closing issue #356. This does not complete the 3.0
+cutover. Superseded planning material is not current product authority.
 
 ## Active work
 
 ```yaml
-issue: "#323 ASGK 2.0 program"
+issue: "#372 ASGK 3.0 source-only release program"
 pr: none
 branch: main
 state: active_program
-latest_completed_work_unit: "W5 truth-layer replacement"
-next_work_unit_decision: "#323 must record whether the separately scoped five-path authority-wording follow-up proceeds before W6."
+latest_completed_work_unit: "W6B issue #356 / merged PR #373"
+next_work_unit_decision: "Open a bounded #372 child issue to correct preview.1 recovery text before any root 3.0 cutover."
 ```
 
 ## Current validation entrypoint
@@ -91,12 +92,11 @@ model cache, or external preparation outputs are authorized by this status.
 
 ## Next safe action
 
-Continue from current `main` using the approved #323 graph. First resolve the
-explicit five-path authority-wording decision point if it is required for W5
-closure; otherwise create the next exact child issue from the current program
-scope. Then proceed to W6 only from a fresh current-main scan and exact allowed
-paths. Do not revive superseded planning material, reintroduce a runtime
-adapter/routing model, or read the excluded visual guide.
+Continue under #372 from current `main`. First create a separately scoped
+candidate-recovery child issue with exact allowed paths and validation, then
+correct the isolated preview.1 recovery text before evaluating root cutover.
+Do not treat this status file, preview.1, superseded planning, or chat as
+executable authority. Do not read the excluded visual guide.
 
 ```yaml
 reference_scope:
