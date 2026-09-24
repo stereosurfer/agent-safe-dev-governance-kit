@@ -4,7 +4,7 @@ This is the repository recovery snapshot. It is overwritten, not appended.
 Completed-work history and decision detail belong in GitHub issues, PRs,
 comments, releases, and merge commits.
 
-Last updated: `2026-09-24T04:53:45Z`
+Last updated: `2026-09-24T11:04:35Z`
 
 ## Durable source of truth
 
@@ -21,11 +21,11 @@ Last updated: `2026-09-24T04:53:45Z`
 
 ASGK v1.7.3 remains the latest completed source-only GitHub release under the
 Apache-2.0 license. Issue #372 coordinates the active ASGK 3.0 release program.
-The recovered preview.1 source is present under `v3/` on main and its source
-branch remains separate; resolve live refs and issues before acting. This is a
-non-default candidate subtree, not the root product contract, installed Skills
-or a release. Issue #323 remains open as prior ASGK 2.0 program evidence, not
-the next-work router.
+The root README now states the 3.0 product meaning; bounded root navigation and
+control-source cutover work has also merged. The `v3/` preview.1 subtree remains
+candidate material, not the default root CLI, templates, source Skills, or a
+release. Resolve live refs and issues before claiming more. Issue #323 remains
+open as prior ASGK 2.0 program evidence, not the next-work router.
 
 The product boundary is safe, smooth, traceable handoff between people and AI.
 The handoff remains independent of a specific model, provider, agent, or prior
@@ -44,9 +44,9 @@ engine.
 against an arbitrary target layout. A matching claim never proves target fit,
 governance depth, recommendation, approval, or readiness.
 
-W6B's duplicate governance, decision, and handoff owners were removed from
-`main` by merged PR #373, closing issue #356. This does not complete the 3.0
-cutover. Superseded planning material is not current product authority.
+Superseded planning material is not current product authority. Completed source
+work and its accepted or rejected decisions are indexed from #372 and child
+issue close-outs, not repeated in this recovery snapshot.
 
 ## Active work
 
@@ -55,7 +55,7 @@ issue: "#372 ASGK 3.0 source-only release program"
 pr: none
 branch: main
 state: active_program
-next_work_unit_decision: "Reconcile live #372 child and PR state; after candidate-import closeout, use a separately scoped canonical root 3.0 cutover work unit."
+next_work_unit_decision: "Reconcile live #372 child and PR state; choose one unfinished, exact-scope 3.0 work unit. Root CLI/validator, templates and source Skills still need cutover before field tests, target pilot and release."
 ```
 
 ## Current validation entrypoint
@@ -92,12 +92,13 @@ model cache, or external preparation outputs are authorized by this status.
 
 ## Next safe action
 
-Continue under #372 from current `main`. Check live PRs, child issues and the
-preview.1 ref to select one bounded work unit. After candidate-import closeout,
-the next source work is a separately scoped canonical root cutover, not an
-assumption that `v3/` is already active governance. The selected issue or PR
-supplies allowed paths and validation; this status file, preview.1,
-superseded planning and chat do not. Do not read the excluded visual guide.
+Continue under #372 from current `main`. Check live PRs and child issues before
+selecting one bounded work unit. The root product framing is present, but root
+CLI/validator, templates and all eleven source Skills still need an
+evidence-backed 3.0 cutover; then prove cold handoff, GitHub/Kanban boundaries,
+target fit and release readiness. The selected issue or PR supplies allowed
+paths and validation; this status file, `v3/` candidate, superseded planning
+and chat do not. Do not read the excluded visual guide.
 
 ```yaml
 reference_scope:
