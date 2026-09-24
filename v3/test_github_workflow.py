@@ -462,6 +462,34 @@ class GithubWorkflowTests(unittest.TestCase):
                 '    decision_made: "Keep trace"', '    decision_made: "Keep #1 trace" # rationale'))]
         self.assertEqual([comment_url], [match['url'] for match in w.search([snapshot], 'Keep #1 trace')['matches']])
 
+    def test_yaml_closeout_duplicate_keys_and_bad_mapping_syntax_are_not_indexed(self):
+        snapshot = copy.deepcopy(self.final)
+        snapshot['issue']['state'] = 'closed'
+        comment_url = self.packet['issue'] + '#issuecomment-51'
+        canonical = self.canonical_yaml_closeout()
+        mutations = [
+            canonical.replace('\n```\n', '\n  decision_analysis: {}\n```\n'),
+            canonical.replace('\n```\n', '\n  decisions: []\n```\n'),
+            canonical.replace('\n```\n', '\n  "decision_analysis": {}\n```\n'),
+            canonical.replace('\n```\n', "\n  'decisions': []\n```\n"),
+            canonical.replace('    decision_made: "Keep trace"', '    decision_made:"Keep trace"'),
+            canonical.replace('    - decision: "Keep trace"', '    - decision:"Keep trace"'),
+            canonical.replace('    decision_made: "Keep trace"', '    decision_made: *alias'),
+            canonical.replace('  decision_analysis:\n', '  <<: *alias\n  decision_analysis:\n'),
+        ]
+        for body in mutations:
+            with self.subTest(body=body):
+                self.assertNotEqual(canonical, body)
+                snapshot['comments'] = [dict(html_url=comment_url, body=body)]
+                self.assertEqual([], w.search([snapshot], 'Keep trace')['matches'])
+                issue_node = next(node for node in w.trace([snapshot], self.packet['issue'])['nodes']
+                                  if node['url'] == self.packet['issue'])
+                self.assertNotIn(comment_url, issue_node['links'])
+        snapshot['comments'] = [dict(html_url=comment_url,
+            body=canonical.replace('        - "#1"',
+                                   '        - https://github.com/example/asgk-synthetic/issues/1'))]
+        self.assertEqual([comment_url], [match['url'] for match in w.search([snapshot], 'Keep trace')['matches']])
+
     def test_empty_or_partial_closeout_shapes_are_not_indexed(self):
         snapshot = copy.deepcopy(self.final)
         snapshot['issue']['state'] = 'closed'

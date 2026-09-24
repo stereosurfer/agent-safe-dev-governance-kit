@@ -523,8 +523,9 @@ def structured_closeout(body, issue_url):
 
     def yaml_section(lines, key, indent):
         marker = ' ' * indent + key + ':'
-        starts = [index for index, line in enumerate(lines) if line.rstrip() == marker]
-        if len(starts) != 1:
+        starts = [index for index, line in enumerate(lines)
+                  if line.startswith(marker) and (len(line) == len(marker) or line[len(marker)].isspace())]
+        if len(starts) != 1 or lines[starts[0]].rstrip() != marker:
             return None
         start = starts[0] + 1
         end = start
@@ -598,7 +599,8 @@ def structured_closeout(body, issue_url):
 
     def yaml_value(lines, key, indent):
         prefix = ' ' * indent + key + ':'
-        values = [yaml_scalar(line[len(prefix):]) for line in lines if line.startswith(prefix)]
+        values = [yaml_scalar(line[len(prefix):]) for line in lines
+                  if line.startswith(prefix) and (len(line) == len(prefix) or line[len(prefix)].isspace())]
         return values[0] if len(values) == 1 else None
 
     def yaml_items(lines, first_key, indent):
@@ -606,7 +608,35 @@ def structured_closeout(body, issue_url):
         starts = [index for index, line in enumerate(lines) if line.startswith(prefix)]
         return [lines[start:starts[index + 1] if index + 1 < len(starts) else len(lines)]
                 for index, start in enumerate(starts)
-                if lines[start].startswith(prefix + first_key + ':')]
+                if lines[start].startswith(prefix + first_key + ':')
+                and (len(lines[start]) == len(prefix + first_key + ':')
+                     or lines[start][len(prefix + first_key + ':')].isspace())]
+
+    def supported_yaml_lines(lines):
+        """Reject unsupported mapping syntax before applying the bounded index shape."""
+        mapping = re.compile(r'[A-Za-z_][A-Za-z0-9_-]*:(?:[ ]+.*)?\Z')
+        for line in lines:
+            if not line.strip() or line.lstrip().startswith('#'):
+                continue
+            if '\t' in line:
+                return False
+            source = line.lstrip(' ')
+            if source.startswith('- '):
+                item = source[2:]
+                if mapping.fullmatch(item):
+                    value = item.split(':', 1)[1].strip()
+                elif (re.match(r'[A-Za-z_][A-Za-z0-9_-]*:(?!//)\S', item)
+                      or re.match(r'["\'][^"\']+["\']:(?:\s|$)', item)):
+                    return False
+                else:
+                    value = item.strip()
+            else:
+                if not mapping.fullmatch(source):
+                    return False
+                value = source.split(':', 1)[1].strip()
+            if value.startswith(('&', '*', '!', '|', '>')):
+                return False
+        return True
 
     def yaml_evidence(item):
         raw = yaml_value(item, 'evidence', 6)
@@ -620,7 +650,7 @@ def structured_closeout(body, issue_url):
 
     def substantive_yaml(block):
         lines = block.splitlines()
-        if not lines or lines[0] != 'issue_closeout_review:':
+        if not lines or lines[0] != 'issue_closeout_review:' or not supported_yaml_lines(lines):
             return False
         review = yaml_section(lines, 'issue_closeout_review', 0)
         if review is None or yaml_value(review, 'issue', 2) not in (issue_url, '#' + number):
