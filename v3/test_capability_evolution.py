@@ -251,6 +251,12 @@ class CapabilityIndexTests(unittest.TestCase):
                 outputs.append(completed.stdout)
             self.assertEqual(outputs[0], outputs[1])
 
+    def test_depth_limit_is_independent_of_json_parser_version(self):
+        nested = 0
+        for _ in range(c.MAX_INDEX_DEPTH + 1):
+            nested = [nested]
+        self.fails('INDEX_DEPTH', lambda: c.validate_index(nested))
+
     def test_max_length_pointer_output_is_bounded(self):
         template = self.index['records'][0]
         template['title'] = 'T' * 120

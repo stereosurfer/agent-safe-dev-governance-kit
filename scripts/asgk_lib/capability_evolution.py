@@ -17,6 +17,7 @@ STATES = {'observed', 'verified', 'promoted', 'rejected', 'superseded'}
 ACTIVE = {'observed', 'verified', 'promoted'}
 ID = re.compile(r'[a-z0-9][a-z0-9-]{0,79}\Z')
 MAX_RESULTS = 20
+MAX_INDEX_DEPTH = 64
 PROOF = ('Catalog text matches, including negative applicability phrases, are bounded discovery hints, '
          'not applicability recommendations or a delivery question graph, instructions, task authority, '
          'Skill promotion or approval.')
@@ -56,6 +57,15 @@ def _link(value, field):
 
 def validate_index(index):
     """Validate metadata shape and reference syntax, not file existence or content."""
+    pending = [(index, 0)]
+    while pending:
+        value, depth = pending.pop()
+        require(depth <= MAX_INDEX_DEPTH, 'INDEX_DEPTH', 'index',
+                'Index JSON nesting exceeds the supported depth.')
+        if type(value) is dict:
+            pending.extend((child, depth + 1) for child in value.values())
+        elif type(value) is list:
+            pending.extend((child, depth + 1) for child in value)
     record(index, 'version purpose records', 'index')
     require(type(index['version']) is int and index['version'] == 1,
             'INDEX_VERSION', 'version', 'Expected version 1')
