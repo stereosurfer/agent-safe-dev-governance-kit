@@ -602,10 +602,11 @@ def structured_closeout(body, issue_url):
         return values[0] if len(values) == 1 else None
 
     def yaml_items(lines, first_key, indent):
-        prefix = ' ' * indent + '- ' + first_key + ':'
+        prefix = ' ' * indent + '- '
         starts = [index for index, line in enumerate(lines) if line.startswith(prefix)]
         return [lines[start:starts[index + 1] if index + 1 < len(starts) else len(lines)]
-                for index, start in enumerate(starts)]
+                for index, start in enumerate(starts)
+                if lines[start].startswith(prefix + first_key + ':')]
 
     def yaml_evidence(item):
         raw = yaml_value(item, 'evidence', 6)

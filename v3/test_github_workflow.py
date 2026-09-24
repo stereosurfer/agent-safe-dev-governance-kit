@@ -434,6 +434,20 @@ class GithubWorkflowTests(unittest.TestCase):
             ('    decision_made: "Keep trace"', '    decision_made: !tag text'),
             ('    decision_made: "Keep trace"', '    decision_made: {text: "fake"}'),
             ('        - "#1"', '        - #1'),
+            ('      - path: "Use a chat-only summary"\n'
+             '        reason: "It cannot be independently recovered."',
+             '      - path: "Use a chat-only summary"\n'
+             '      - note: "Other"\n'
+             '        reason: "It cannot be independently recovered."'),
+            ('    - decision: "Keep trace"\n'
+             '      reason: "The issue and PR evidence stays linked."\n'
+             '      evidence:\n'
+             '        - "#1"',
+             '    - decision: "Keep trace"\n'
+             '    - note: "Other"\n'
+             '      reason: "The issue and PR evidence stays linked."\n'
+             '      evidence:\n'
+             '        - "#1"'),
         ]
         for before, after in substitutions:
             with self.subTest(after=after):
