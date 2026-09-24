@@ -11,6 +11,7 @@ proof limits, CI, and the Merge Decision Record. Run:
 python3 scripts/asgk.py doctor
 python3 scripts/asgk.py negative all
 git diff --check
+git diff --check origin/main..HEAD
 ```
 
 For a live external/API/model/cloud/MCP action, target write, raw-source
