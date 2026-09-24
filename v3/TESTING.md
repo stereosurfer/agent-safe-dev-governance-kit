@@ -157,9 +157,11 @@ caller 選入的任意 PR 放進 `prs_in_scope`。輸出的 `relation_evidence` 
 文字連結來源，不是 GitHub `closingIssuesReferences`、語意關聯或核准證據。
 
 `search`／`trace` 只在提供的 issue 快照已是 closed、留言沒有草稿標頭，
-且與本 issue 編號相符、位於真正 fenced JSON 或 canonical fenced YAML 時，
+且與本 issue 編號相符、位於真正 fenced JSON 或 canonical fenced YAML，
+並有決定、理由、帶理由的否決路徑及至少一項有證據的 decision 時，
 才把 `issue_closeout_review` 視為可搜尋 close-out。
-純文字 marker、Markdown 引用中的範例和其他 issue 的 review 不會形成
+空 `decision_analysis`、只有標題的 YAML、純文字 marker、Markdown
+引用中的範例和其他 issue 的 review 不會形成
 issue → closeout comment 邊。舊式無結構的 prose close-out 可能因此不在
 搜尋結果，這是明確的查找邊界，不等於那些決策不存在；需要時仍查原始
 GitHub issue。即使結構吻合，工具也不驗證留言者、內容真偽或是否已完成。

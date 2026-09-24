@@ -490,31 +490,137 @@ def closeout_draft(snapshot, packet, report, root, status):
 
 
 def structured_closeout(body, issue_url):
-    """Recognize same-issue fenced closeouts, never a bare marker or quote."""
+    """Index a bounded, substantive same-issue closeout shape, not its truth."""
     number = issue_url.rsplit('/', 1)[1]
+    statuses = ('completed', 'closed_not_done', 'duplicate', 'superseded', 'blocked')
+
+    def material(value):
+        return (type(value) is str and bool(value.strip())
+                and value.strip().casefold() not in (
+                    'none', 'null', 'n/a', 'todo', 'tbd', 'pending', 'unknown',
+                    '|', '>', '-', '[]', '{}', '...',
+                ))
+
+    def substantive_json(review):
+        if review.get('issue') not in (issue_url, '#' + number) or review.get('status') not in statuses:
+            return False
+        analysis = review.get('decision_analysis')
+        if type(analysis) is not dict or not all(material(analysis.get(key))
+                for key in ('decision_made', 'why_this_path')):
+            return False
+        rejected = analysis.get('rejected_paths')
+        if type(rejected) is not list or not any(type(item) is dict
+                and material(item.get('path')) and material(item.get('reason')) for item in rejected):
+            return False
+        signal = analysis.get('reusable_signal')
+        if type(signal) is not dict or type(signal.get('applies_later')) is not bool or not material(signal.get('reason')):
+            return False
+        decisions = review.get('decisions')
+        return (type(decisions) is list and any(type(item) is dict
+                and material(item.get('decision')) and material(item.get('reason'))
+                and type(item.get('evidence')) is list
+                and any(material(ref) for ref in item['evidence']) for item in decisions))
+
+    def yaml_section(lines, key, indent):
+        marker = ' ' * indent + key + ':'
+        starts = [index for index, line in enumerate(lines) if line.rstrip() == marker]
+        if len(starts) != 1:
+            return None
+        start = starts[0] + 1
+        end = start
+        while end < len(lines):
+            line = lines[end]
+            if line.strip() and len(line) - len(line.lstrip(' ')) <= indent:
+                break
+            end += 1
+        return lines[start:end]
+
+    def yaml_scalar(raw):
+        raw = raw.strip()
+        if raw.startswith('"') and raw.endswith('"'):
+            try:
+                return json.loads(raw)
+            except (ValueError, TypeError):
+                return None
+        if raw.startswith("'") and raw.endswith("'"):
+            return raw[1:-1].replace("''", "'")
+        return raw
+
+    def yaml_value(lines, key, indent):
+        prefix = ' ' * indent + key + ':'
+        values = [yaml_scalar(line[len(prefix):]) for line in lines if line.startswith(prefix)]
+        return values[0] if len(values) == 1 else None
+
+    def yaml_items(lines, first_key, indent):
+        prefix = ' ' * indent + '- ' + first_key + ':'
+        starts = [index for index, line in enumerate(lines) if line.startswith(prefix)]
+        return [lines[start:starts[index + 1] if index + 1 < len(starts) else len(lines)]
+                for index, start in enumerate(starts)]
+
+    def yaml_evidence(item):
+        raw = yaml_value(item, 'evidence', 6)
+        if type(raw) is str and raw.startswith('[') and raw.endswith(']'):
+            try:
+                values = json.loads(raw)
+            except (ValueError, TypeError):
+                return False
+            return type(values) is list and any(material(value) for value in values)
+        if raw not in (None, ''):
+            return False
+        lines = yaml_section(item, 'evidence', 6)
+        return lines is not None and any(line.startswith('        - ')
+                and material(yaml_scalar(line[10:])) for line in lines)
+
+    def substantive_yaml(block):
+        lines = block.splitlines()
+        if not lines or lines[0] != 'issue_closeout_review:':
+            return False
+        review = yaml_section(lines, 'issue_closeout_review', 0)
+        if review is None or yaml_value(review, 'issue', 2) not in (issue_url, '#' + number):
+            return False
+        if yaml_value(review, 'status', 2) not in statuses:
+            return False
+        analysis = yaml_section(review, 'decision_analysis', 2)
+        if analysis is None or not all(material(yaml_value(analysis, key, 4))
+                for key in ('decision_made', 'why_this_path')):
+            return False
+        rejected = yaml_section(analysis, 'rejected_paths', 4)
+        if rejected is None or not any(material(yaml_scalar(item[0][len('      - path:'):]))
+                and material(yaml_value(item, 'reason', 8))
+                for item in yaml_items(rejected, 'path', 6)):
+            return False
+        signal = yaml_section(analysis, 'reusable_signal', 4)
+        if signal is None or yaml_value(signal, 'applies_later', 6) not in ('true', 'false'):
+            return False
+        if not material(yaml_value(signal, 'reason', 6)):
+            return False
+        decisions = yaml_section(review, 'decisions', 2)
+        return decisions is not None and any(material(yaml_scalar(item[0][len('    - decision:'):]))
+                and material(yaml_value(item, 'reason', 6)) and yaml_evidence(item)
+                for item in yaml_items(decisions, 'decision', 4))
+
+    def unique_json_pairs(items):
+        value = {}
+        for key, item in items:
+            if key in value:
+                raise ValueError('Duplicate closeout JSON key')
+            value[key] = item
+        return value
+
     for match in re.finditer(r'(?ms)^```(json|yaml)[ \t]*\n(.*?)^```[ \t]*$', body):
         language, block = match.groups()
         if language == 'json':
             try:
-                value = json.loads(block)
+                value = json.loads(block, object_pairs_hook=unique_json_pairs)
             except (ValueError, TypeError):
                 continue
             if type(value) is not dict or type(value.get('issue_closeout_review')) is not dict:
                 continue
             review = value['issue_closeout_review']
-            if (review.get('issue') in (issue_url, '#' + number)
-                    and review.get('status') in ('completed', 'closed_not_done', 'duplicate', 'superseded', 'blocked')
-                    and type(review.get('decision_analysis')) is dict):
+            if substantive_json(review):
                 return True
         else:
-            lines = block.splitlines()
-            if not lines or lines[0] != 'issue_closeout_review:':
-                continue
-            issue = re.search(r'(?m)^  issue:[ \t]*["\']?([^"\'\s]+)["\']?[ \t]*$', block)
-            status = re.search(r'(?m)^  status:[ \t]*(\w+)[ \t]*$', block)
-            if (issue and issue.group(1) in (issue_url, '#' + number)
-                    and status and status.group(1) in ('completed', 'closed_not_done', 'duplicate', 'superseded', 'blocked')
-                    and re.search(r'(?m)^  decision_analysis:[ \t]*$', block)):
+            if substantive_yaml(block):
                 return True
     return False
 

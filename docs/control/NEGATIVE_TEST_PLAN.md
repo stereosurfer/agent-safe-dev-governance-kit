@@ -262,14 +262,17 @@ target-fixture tree fingerprints. They validate only caller-supplied
 mechanical claims; they do not select claims or judge target fit, layout,
 governance depth, adaptation, readiness, recommendation, or approval.
 
-The `workflow` group pairs a supplied-snapshot trace success with an unresolved
-trace warning and malformed snapshot failure. Exact exits and finding codes
-(`WF_TRACE_INCOMPLETE`, `SNAPSHOT_VERSION`) prevent a partial decision tree
-from being reported as complete. The root `doctor` also runs workflow unit
-tests covering issue-backed projection, repository binding, stale packet,
-out-of-scope diff, draft-only handoff/closeout, GET-only capture, and safe
-output. These fixtures do not establish live GitHub authorization, semantic
-correctness, actual Kanban behavior, or independent human review.
+The `workflow` group pairs a supplied-snapshot trace of one substantive,
+same-issue closeout comment with an unresolved trace warning and malformed
+snapshot failure. Exact exits and finding codes (`WF_TRACE_INCOMPLETE`,
+`SNAPSHOT_VERSION`) prevent known missing links from being reported as a
+complete bounded traversal; they do not prove the full historical decision
+tree was supplied. Root `doctor` also runs workflow unit tests covering
+issue-backed projection, repository binding, stale packet, out-of-scope diff,
+draft-only handoff/closeout, GET-only capture, safe output, empty JSON/YAML
+closeout impostors, and duplicate-key JSON. These fixtures do not establish
+live GitHub authorization,
+semantic correctness, actual Kanban behavior, or independent human review.
 
 The `release-state` group pairs one three-document positive set with isolated
 stale-state and duplicate-ledger negatives. It locks exact exit, common result,

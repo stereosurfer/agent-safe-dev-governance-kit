@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import json
 
 from asgk_lib.release_state import (
     RELEASE_STATE_COMPLETE_CHECKED,
@@ -27,6 +28,37 @@ WORKFLOW_MINIMAL_SNAPSHOT = (
     '"body":"A scoped work unit","state":"closed",'
     '"updated_at":"2025-01-01T00:00:00Z"},"comments":[],"prs":[]}'
 )
+WORKFLOW_ISSUE_URL = "https://github.com/example/asgk-synthetic/issues/1"
+WORKFLOW_CLOSEOUT_URL = WORKFLOW_ISSUE_URL + "#issuecomment-10"
+WORKFLOW_CLOSEOUT_COMMENT = json.dumps({
+    "issue_closeout_review": {
+        "issue": WORKFLOW_ISSUE_URL,
+        "status": "completed",
+        "decision_analysis": {
+            "decision_made": "Keep GitHub trace",
+            "why_this_path": "The next worker needs durable issue evidence.",
+            "rejected_paths": [{
+                "path": "Chat-only summary",
+                "reason": "It cannot be independently recovered.",
+            }],
+            "reusable_signal": {
+                "applies_later": True,
+                "reason": "Keep a bounded decision trail for later handoff.",
+            },
+        },
+        "decisions": [{
+            "decision": "Keep GitHub trace",
+            "reason": "The issue closeout remains discoverable.",
+            "evidence": [WORKFLOW_ISSUE_URL],
+        }],
+    }
+}, separators=(",", ":"))
+WORKFLOW_CLOSEOUT_SNAPSHOT = json.loads(WORKFLOW_MINIMAL_SNAPSHOT)
+WORKFLOW_CLOSEOUT_SNAPSHOT["comments"] = [{
+    "html_url": WORKFLOW_CLOSEOUT_URL,
+    "body": "```json\n" + WORKFLOW_CLOSEOUT_COMMENT + "\n```",
+}]
+WORKFLOW_CLOSEOUT_SNAPSHOT = json.dumps(WORKFLOW_CLOSEOUT_SNAPSHOT, separators=(",", ":"))
 
 TARGET_EVIDENCE_EXPECTED_PROOF_BOUNDARY = (
     "Exit 0 proves only that every accepted caller-supplied mechanical claim "
@@ -1781,13 +1813,24 @@ RETAINED_JSON_SCENARIOS = (
         0,
         (),
         WORKFLOW_PROOF_BOUNDARY,
-        temp_input=TempInput(content=WORKFLOW_MINIMAL_SNAPSHOT),
+        temp_input=TempInput(content=WORKFLOW_CLOSEOUT_SNAPSHOT),
         expected_mechanically_checked=(
             "supplied snapshot shape", "durable URL links",
             "closed-issue structured closeout edge", "known-snapshot shorthand links",
             "bounded traversal and unresolved references",
         ),
-        expected_payload_fields=(("evidence_source", "supplied_snapshots"),),
+        expected_payload_fields=(
+            ("evidence_source", "supplied_snapshots"),
+            ("nodes", [
+                {"url": WORKFLOW_ISSUE_URL, "kind": "issue", "hops": 0,
+                 "links": [WORKFLOW_CLOSEOUT_URL], "unresolved_shorthand_refs": [],
+                 "source": "fixture"},
+                {"url": WORKFLOW_CLOSEOUT_URL, "kind": "comment", "hops": 1,
+                 "links": [WORKFLOW_ISSUE_URL], "unresolved_shorthand_refs": [],
+                 "source": "fixture"},
+            ]),
+            ("unresolved", []),
+        ),
     ),
     JsonScenario(
         "workflow_trace_unresolved_snapshot",
