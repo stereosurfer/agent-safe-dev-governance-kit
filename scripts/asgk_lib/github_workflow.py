@@ -677,6 +677,8 @@ def parse_closeout_yaml_subset(source):
 
 def standalone_yaml_blocks(body):
     """Yield only top-level canonical YAML fences, not nested Markdown examples."""
+    if re.search(r'(?i)<\s*/?\s*[A-Za-z][A-Za-z0-9-]*(?:\s|/?>)', body):
+        return
     lines = body.splitlines()
     opening = None
     in_html_comment = False
@@ -734,6 +736,10 @@ def final_closeout_flags(body, issue):
     if issue['state'] != 'closed' or re.search(r'(?i)\bdraft\b', prose):
         return False, False, False
     candidate = yaml_closeout_candidate(body)
+    if candidate and any(re.search(r'(?i)\bdraft\b', block)
+                         for block in standalone_yaml_blocks(body)
+                         if re.search(r'(?m)^issue_closeout_review:', block)):
+        return json_closeout_shape(body, issue['html_url']), False, False
     yaml_checked = candidate and yaml_closeout_shape(body, issue['html_url'])
     return json_closeout_shape(body, issue['html_url']), yaml_checked, candidate and not yaml_checked
 
@@ -826,7 +832,24 @@ def search(snapshots, query):
         if node['yaml_closeout_shape_checked']:
             block = next((item for item in standalone_yaml_blocks(node['body'])
                           if re.search(r'(?m)^issue_closeout_review:', item)), None)
-            return bool(block and query.casefold() in block.casefold())
+            if block is None:
+                return False
+
+            def scalar_values(value):
+                if type(value) is str:
+                    yield value
+                elif type(value) is dict:
+                    for item in value.values():
+                        yield from scalar_values(item)
+                elif type(value) is list:
+                    for item in value:
+                        yield from scalar_values(item)
+
+            try:
+                parsed = parse_closeout_yaml_subset(block)
+            except (ValueError, TypeError, json.JSONDecodeError):
+                return False
+            return any(query.casefold() in value.casefold() for value in scalar_values(parsed))
         return query.casefold() in node['body'].casefold()
 
     selected = [node for node in nodes.values() if node['kind'] == 'comment'

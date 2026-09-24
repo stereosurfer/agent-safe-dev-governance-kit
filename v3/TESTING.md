@@ -176,8 +176,10 @@ issue 不符或缺少實質欄位，只列為 `candidate_unverified_yaml`。輸�
 `warning`、`domain_result: incomplete`、exit 1。純文字 marker、Markdown
 引用範例與草稿不算候選。舊式 prose close-out 可能不在搜尋結果；這不代表
 決策不存在，必要時仍查原始 GitHub issue。
-已檢查的 YAML 搜尋只比對該 YAML 區塊；留言前言出現的字不會被誤標為
-已檢查的結案內容。JSON 路徑仍維持既有留言文字搜尋行為。
+含原始 HTML tag 的留言也保守不升格 YAML 邊，以免把隱藏或展示用區塊
+當成正式結案；需要時回到原始 issue 人工核對。
+已檢查的 YAML 搜尋只比對該區塊解析後的值；YAML 註解或留言前言出現的字
+不會被誤標為已檢查的結案內容。JSON 路徑仍維持既有留言文字搜尋行為。
 若追溯走到已關閉的 issue，提供的快照卻沒有 JSON 或 YAML 子集形狀檢查通過的結案
 或 YAML 候選，會回 `WF_CLOSEOUT_NOT_FOUND`、`warning`、`incomplete`、exit 1；
 舊式 prose 結案或未提供的留言仍可能存在。即使形狀檢查路徑回 pass，也只表示

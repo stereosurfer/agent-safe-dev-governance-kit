@@ -438,6 +438,27 @@ class GithubWorkflowTests(unittest.TestCase):
                 self.assertNotIn(comment_url, issue_node['links'])
                 self.assertIn('WF_CLOSEOUT_NOT_FOUND', [item['code'] for item in traced['findings']])
 
+    def test_draft_inside_yaml_never_promotes_closeout(self):
+        snapshot = copy.deepcopy(self.final)
+        snapshot['issue']['state'] = 'closed'
+        comment_url = self.packet['issue'] + '#issuecomment-97'
+        canonical = self.canonical_yaml_closeout()
+        bodies = (
+            canonical.replace('issue_closeout_review:', '# DRAFT — do not post\nissue_closeout_review:', 1),
+            canonical.replace('    decision_made: "Keep trace"',
+                              '    decision_made: "DRAFT — do not post or close issue"'),
+        )
+        for body in bodies:
+            with self.subTest(body=body):
+                snapshot['comments'] = [dict(html_url=comment_url, body=body)]
+                searched = w.search([snapshot], 'issue_closeout_review')
+                self.assertEqual([], searched['matches'])
+                self.assertEqual([], searched['candidates'])
+                traced = w.trace([snapshot], self.packet['issue'])
+                issue_node = next(node for node in traced['nodes'] if node['url'] == self.packet['issue'])
+                self.assertNotIn(comment_url, issue_node['links'])
+                self.assertIn('WF_CLOSEOUT_NOT_FOUND', [item['code'] for item in traced['findings']])
+
     def test_yaml_search_does_not_promote_prose_only_query(self):
         snapshot = copy.deepcopy(self.final)
         snapshot['issue']['state'] = 'closed'
@@ -454,12 +475,29 @@ class GithubWorkflowTests(unittest.TestCase):
         self.assertEqual([comment_url], [item['url'] for item in checked['matches']])
         self.assertEqual('yaml_subset_shape_checked', checked['matches'][0]['evidence_class'])
 
+    def test_yaml_search_ignores_non_substantive_comment_query(self):
+        snapshot = copy.deepcopy(self.final)
+        snapshot['issue']['state'] = 'closed'
+        comment_url = self.packet['issue'] + '#issuecomment-96'
+        snapshot['comments'] = [dict(
+            html_url=comment_url,
+            body=self.canonical_yaml_closeout().replace(
+                'issue_closeout_review:', '# Bulk-copy appears only in a YAML comment\nissue_closeout_review:', 1),
+        )]
+        searched = w.search([snapshot], 'Bulk-copy')
+        self.assertEqual('pass', searched['result'])
+        self.assertEqual([], searched['matches'])
+        self.assertEqual([], searched['candidates'])
+        checked = w.search([snapshot], 'Keep trace')
+        self.assertEqual('yaml_subset_shape_checked', checked['matches'][0]['evidence_class'])
+
     def test_nested_markdown_yaml_example_never_forms_closeout_edge(self):
         snapshot = copy.deepcopy(self.final)
         snapshot['issue']['state'] = 'closed'
         comment_url = self.packet['issue'] + '#issuecomment-95'
         for opening, closing in (('````markdown', '````'), ('~~~~markdown', '~~~~'),
-                                 ('<!--', '-->')):
+                                 ('<!--', '-->'), ('<pre>', '</pre>'),
+                                 ('<code>', '</code>'), ('<blockquote>', '</blockquote>')):
             with self.subTest(opening=opening):
                 snapshot['comments'] = [dict(
                     html_url=comment_url,
@@ -500,7 +538,6 @@ class GithubWorkflowTests(unittest.TestCase):
             canonical.replace('    decision_made: "Keep trace"', '    decision_made: .inf'),
             canonical.replace('    decision_made: "Keep trace"', '    decision_made: True'),
             canonical.replace('    decision_made: "Keep trace"', '    decision_made: 2026-09-25'),
-            canonical.replace('issue_closeout_review:', '# DRAFT — do not post\nissue_closeout_review:', 1),
             canonical.replace('\n```\n', '\n---\n```\n'),
             canonical + canonical,
         ]
