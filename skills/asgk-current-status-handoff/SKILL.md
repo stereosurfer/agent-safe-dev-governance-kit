@@ -10,6 +10,12 @@ Use this skill for interrupted work, long-running handoff, milestone transitions
 ## Authority
 
 `CURRENT_STATUS.md` is a compact recovery surface, not a history log. Historical detail belongs in GitHub issues, PRs, comments, and merge commits.
+An interrupted worker's bounded handoff belongs in its issue/PR or validated
+handoff packet, not automatically in repo-level CURRENT_STATUS. Record the
+actual branch/head, changes, checks and `not_run`/unknown results, remaining
+work and next gate as applicable; a successor rechecks live authority and
+does not inherit the prior worker's approval. These are conditional handoff
+facts, not a new universal field set.
 
 ## Default Rule
 

@@ -6,6 +6,8 @@ description: Use when opening or updating an ASGK pull request body; structures 
 # ASGK PR Evidence And Merge Decision
 
 Use this skill when creating a PR, refreshing PR evidence after CI, or preparing human review.
+An assigned worker may supply bounded output and evidence; the PR owner prepares
+the complete body. Ordinary workers need not load the full PR procedure.
 
 ## Authority
 
@@ -54,7 +56,9 @@ Each evidence item needs a limit or non-proof.
 5. Mark `checks_passed: true` only when validation evidence supports it. This
    means the named checks passed; it is not a claim of semantic correctness,
    upgrade completeness, install completeness, or stale-reference cleanup unless
-   those checks are explicitly listed with evidence.
+   those checks are explicitly listed with evidence. Tie CI, local checks and
+   reviewer evidence to the current code head; a passed older-head run is
+   superseded evidence, not a current-head pass.
 6. When a human gate applies, keep `human_gates_checked` pending or false until
    a durable current-head record says `decision: approved`. A
    `changes_requested` or `rejected` decision requires
@@ -62,6 +66,11 @@ Each evidence item needs a limit or non-proof.
    applies, cite the durable no-gate risk/path determination. The boolean is not
    evidence. Do not reuse review from a prior PR or an older head after new code
    commits unless the human reaffirms it.
+   Where independent review is required, record the actual reviewer identity
+   and judgment; a different role/profile label for the author is not an
+   independent review. A temporary program exception must be disclosed on its
+   own terms, not presented as ordinary program eligibility or personal OWNER
+   review of an unseen head.
 7. Only after all required evidence and human gates are complete, update every
    required mechanical gate to true and set `result: merge_allowed`. For GitHub
    PR event auto-routing, the declared result selects the body-level mode:
@@ -87,6 +96,11 @@ Each evidence item needs a limit or non-proof.
    recommendation, minimum bounded scope, target-owned state to preserve,
    material evidence, proof limits, and any exact `next_action_gate`. Do not
    require a fixed completion label or treat the assessment as approval.
+    For material method or Skill promotion, link the originating observations,
+    before/after behavior and negative regressions, rejected alternatives,
+    independent semantic review when required, exact changed Skill version,
+    and rollback. A Kanban completion receipt is evidence about a run, not
+    this PR's current-head decision.
 12. Before creating or editing a PR body, run local file-backed PR body
    preflight when available:
 

@@ -6,7 +6,8 @@ description: Use for ASGK source-only release preparation, human-gated release e
 # ASGK Release Prep
 
 Use this skill for source-only ASGK release planning, release execution, or
-release-state closeout.
+release-state closeout. It is a source-maintainer procedure, not routine worker
+governance; candidate-branch tests do not confer release authority.
 
 ## Authority
 
@@ -30,7 +31,7 @@ authority.
 
 ## Required Inputs
 
-- Release target: tag, title, target commit, and source-only boundary.
+- Release target: tag, title, exact target commit, release notes, and source-only boundary.
 - Release issue with explicit human approval before execution.
 - Local release-state documents mechanically checked for closeout:
   - `README.md`
@@ -64,7 +65,10 @@ release_prep_gate:
 ### 2. Execution
 
 Execute only when the release issue explicitly approves the exact tag, title,
-target commit, distribution path, final validation, and rollback or revoke plan.
+target commit, release notes, distribution path, final validation, and rollback
+or revoke plan. If the SHA, notes, title or distribution metadata changes after
+approval, stop and obtain the applicable refreshed human approval; do not
+silently reuse the earlier decision.
 
 Required execution evidence:
 
@@ -110,6 +114,9 @@ python3 scripts/asgk.py doctor
 A passing `release-state-check` is local-document evidence only. It does not
 prove that a tag or GitHub Release exists, establish semantic release readiness,
 or satisfy human approval or publication authority.
+Verify the remote tag points to the approved commit and the actual GitHub
+Release exists with the approved title, notes and source-only distribution;
+local files alone cannot establish those remote facts.
 
 If `release-state-check` fails for the current release after release execution,
 do not weaken the checker. Repair only current release state; apply

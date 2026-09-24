@@ -6,6 +6,9 @@ description: Use after an ASGK pull request merges; verifies issue closure, GitH
 # ASGK Post-Merge Closeout
 
 Use this skill immediately after a PR merges or when the user says a PR has merged.
+For an explicitly authorized issue closeout without a merge—duplicate,
+superseded, abandoned, blocked, or closed-not-done—apply the same decision
+quality floor, but do not invent merge evidence or use the completed-PR steps.
 
 ## Authority
 
@@ -47,6 +50,12 @@ that wider check.
     decision-analysis block using the repository's closeout-review guide.
     Bounded means scope-limited and evidence-dense, not abbreviated, lossy,
     simplified, or summary-only.
+    Preserve reasons, rejected paths, applicability limits and correction
+    links in the right direction. A failed unmerged PR can coexist with a
+    merged replacement; keep both in the issue lineage. For a method/Skill
+    change, link the originating observation, test, actual reviewer,
+    resulting version and rejected alternative without copying the full
+    task-owned Lesson or ledger into the closeout.
 12. Apply `docs/control/ISSUE_HYGIENE_GATE.md`: do not scan historical issues or
     create repo-file repair work solely to store routine closeout reviews.
 13. If the issue comment cannot be written or closeout evidence is unclear,
@@ -93,6 +102,9 @@ legacy_gap_result:
 Issue Closeout Reviews are mandatory closeout evidence, but they do not override
 AGENTS.md, current issue or PR scope, validators, control policies, merge
 decisions, CURRENT_STATUS, or human gates.
+GitHub closeout search/trace can locate bounded historical decisions before a
+broader read, but its result is not current authority or proof that all history
+was found.
 
 ## Stop States
 

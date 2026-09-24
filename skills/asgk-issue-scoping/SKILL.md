@@ -28,6 +28,8 @@ external action, or override repo rules.
 
 1. Classify the task lane and risk level.
 2. Propose the smallest work unit that can produce a reviewable output.
+   A worker assigned an existing issue may request a narrower refinement or
+   report a scope gap; it does not re-author the issue or expand its own scope.
 3. For upgrade or adoption work, run a read-only discovery pass before setting
    allowed paths. Include ASGK-derived docs, profiles, manifests, validators,
    planner references, and target-owned files that must be preserved but still
@@ -50,6 +52,13 @@ external action, or override repo rules.
    gate.
 9. For work that can claim completion, include the required completeness checks
    and the evidence boundary for what validation does not prove.
+   A role or capability ceiling can narrow the assignment, never grant a path
+   missing from the live issue. For target assessment, allow minimum change,
+   no change, or no adoption without a module menu or new semantic-only gate.
+   For a proposed method/Skill promotion, distinguish the originating observed
+   Lesson or ledger from authority to change a versioned method; scope its
+   affected Skill, evidence, regression, independent review when material,
+   and rollback under the existing issue/PR and human-gate rules.
 10. Create or update a GitHub issue before normal implementation. If GitHub is
     verifiably unavailable, write and validate the complete fallback before
     bounded local work, record the outage evidence, and keep a hard stop before
@@ -58,8 +67,14 @@ external action, or override repo rules.
     handing the issue to an executor. If the command is unavailable, record
     that boundary and manually verify the same fields without claiming a
     mechanical pass.
+12. Do not infer merge, publication, installed/global Skill synchronization or
+    target write permission from issue creation or assessment completion.
 
 ## Required Issue Fields
+
+These are the canonical fields for an ASGK-governed issue. A target that has
+not adopted ASGK keeps its own durable work contract; this Skill does not
+install the source issue form by implication.
 
 - `lane`
 - `intelligence_level`

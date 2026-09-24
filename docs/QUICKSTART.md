@@ -95,8 +95,10 @@ target bundle.
 ASGK ships source-distributed skills under `skills/`. They are reusable
 procedures, not a new authority layer. Use `docs/SKILL_PACK.md` for the full
 list, usage timing, client-installed mode, and repository-reference mode.
-Read the relevant Skill only when its trigger applies; the eleven `v3/skills`
-files are candidate proposals, not installed or active replacements.
+Read the relevant root Skill only when its trigger applies. The eleven
+`v3/skills` files preserve preview.1 candidate lineage, not installed or
+coequal operating instructions; source cutover does not synchronize any
+client-installed copy.
 
 For target adoption or a material upgrade, the relevant Skill guides a
 human-selected frontier-capability evaluator through evidence, boundaries,
