@@ -166,8 +166,9 @@ caller 選入的任意 PR 放進 `prs_in_scope`。輸出的 `relation_evidence` 
 具決定／理由／否決路徑／證據等必要形狀的 fenced YAML，分別能建立
 `json_shape_checked`、`yaml_subset_shape_checked` 的 issue → comment 邊；這仍只是
 結構檢查，不驗證作者、內容真偽、即時 GitHub 狀態或核准。
-含原始 HTML 標記的留言、外層 Markdown 範例圍住的 JSON，以及同一留言多份 JSON 結案
-（包括改用大寫語言標籤或波浪號 fence），都不能建立已檢查的邊；單一可見結案仍可通過。
+含原始 HTML 標記的留言、外層 Markdown 範例圍住的 JSON、同一留言多份 JSON 結案
+（包括改用大寫語言標籤或波浪號 fence）、JSON/YAML 混合結案與主要決策明示 DRAFT，
+都不能建立已檢查的邊；單一可見結案仍可通過。
 
 fenced YAML 的第一個非空白、非註解頂層行若為 `issue_closeout_review:`，
 但格式不受支援、格式有誤、
@@ -180,9 +181,8 @@ issue 不符或缺少實質欄位，只列為 `candidate_unverified_yaml`。輸�
 決策不存在，必要時仍查原始 GitHub issue。
 含原始 HTML tag 的留言也保守不升格 YAML 邊，以免把隱藏或展示用區塊
 當成正式結案；需要時回到原始 issue 人工核對。
-已檢查的 YAML 搜尋只比對解析後的決策分析與 decisions 欄位值；YAML 註解、
-額外欄位或留言前言出現的字不會被誤標為決策命中。JSON 也只搜尋已檢查結案的
-決策分析與 decisions 欄位；HTML 隱藏文字、其他範例與留言前言不會冒充已檢查的決策命中。
+已檢查的 YAML 與 JSON 搜尋只比對解析後指定的決策分析與 decisions 欄位值；
+YAML 註解、額外欄位、HTML 隱藏文字、其他範例與留言前言不會冒充已檢查的決策命中。
 若追溯走到已關閉的 issue，提供的快照卻沒有 JSON 或 YAML 子集形狀檢查通過的結案
 或 YAML 候選，會回 `WF_CLOSEOUT_NOT_FOUND`、`warning`、`incomplete`、exit 1；
 舊式 prose 結案或未提供的留言仍可能存在。即使形狀檢查路徑回 pass，也只表示

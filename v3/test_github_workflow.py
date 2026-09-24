@@ -726,6 +726,70 @@ class GithubWorkflowTests(unittest.TestCase):
         checked = w.search([snapshot], 'Keep GitHub as work ledger')
         self.assertEqual('json_shape_checked', checked['matches'][0]['evidence_class'])
 
+    def test_mixed_json_yaml_closeouts_never_form_checked_edge(self):
+        snapshot = copy.deepcopy(self.indexed_final)
+        issue_url = snapshot['issue']['html_url']
+        target = next(comment for comment in snapshot['comments']
+                      if w.json_closeout_shape(comment['body'], issue_url))
+        original = target['body']
+        yaml = self.canonical_yaml_closeout()
+        malformed = yaml.replace('    decision_made: "Keep trace"',
+                                 '    decision_made: "Contrary path"').replace(
+                                     '  status: completed', '  status: unknown')
+        for body in (original + '\n' + yaml, yaml + '\n' + original,
+                     original + '\n' + malformed):
+            with self.subTest(body=body[-80:]):
+                target['body'] = body
+                self.assertFalse(w.json_closeout_shape(body, issue_url))
+                self.assertFalse(w.yaml_closeout_shape(body, issue_url))
+                self.assertEqual((False, False, True),
+                                 w.final_closeout_flags(body, snapshot['issue']))
+                searched = w.search([snapshot], 'Keep trace')
+                self.assertEqual([], searched['matches'])
+                self.assertEqual('incomplete', searched['domain_result'])
+                traced = w.trace([snapshot], issue_url)
+                issue_node = next(node for node in traced['nodes'] if node['url'] == issue_url)
+                self.assertNotIn(target['html_url'], issue_node['links'])
+                self.assertEqual('incomplete', traced['domain_result'])
+                self.assertIn('WF_YAML_CANDIDATE_UNVERIFIED',
+                              [finding['code'] for finding in traced['findings']])
+
+    def test_unrecognized_decision_metadata_is_not_searchable(self):
+        snapshot = copy.deepcopy(self.indexed_final)
+        issue_url = snapshot['issue']['html_url']
+        target = next(comment for comment in snapshot['comments']
+                      if w.json_closeout_shape(comment['body'], issue_url))
+        review = json.loads(target['body'].split('```json\n', 1)[1].split('\n```', 1)[0])
+        review['issue_closeout_review']['decision_analysis']['unrelated_label'] = 'False positive search term'
+        target['body'] = '```json\n' + json.dumps(review) + '\n```'
+        self.assertTrue(w.json_closeout_shape(target['body'], issue_url))
+        self.assertEqual([], w.search([snapshot], 'False positive search term')['matches'])
+        self.assertEqual('json_shape_checked',
+                         w.search([snapshot], 'Keep GitHub as work ledger')['matches'][0]['evidence_class'])
+
+        snapshot['comments'] = [dict(html_url=issue_url + '#issuecomment-135',
+            body=self.canonical_yaml_closeout().replace(
+                '    decision_made: "Keep trace"',
+                '    unrelated_label: "False positive search term"\n    decision_made: "Keep trace"'))]
+        self.assertEqual([], w.search([snapshot], 'False positive search term')['matches'])
+        self.assertEqual('yaml_subset_shape_checked',
+                         w.search([snapshot], 'Keep trace')['matches'][0]['evidence_class'])
+
+    def test_json_primary_decision_draft_is_not_final_closeout(self):
+        snapshot = copy.deepcopy(self.indexed_final)
+        issue_url = snapshot['issue']['html_url']
+        target = next(comment for comment in snapshot['comments']
+                      if w.json_closeout_shape(comment['body'], issue_url))
+        review = json.loads(target['body'].split('```json\n', 1)[1].split('\n```', 1)[0])
+        review['issue_closeout_review']['decision_analysis']['decision_made'] = (
+            'DRAFT — do not post or close issue.')
+        target['body'] = '```json\n' + json.dumps(review) + '\n```'
+        self.assertEqual((False, False, False),
+                         w.final_closeout_flags(target['body'], snapshot['issue']))
+        self.assertEqual([], w.search([snapshot], 'DRAFT')['matches'])
+        traced = w.trace([snapshot], issue_url)
+        self.assertIn('WF_CLOSEOUT_NOT_FOUND', [finding['code'] for finding in traced['findings']])
+
     def test_explicit_draft_banner_never_promotes_json_closeout(self):
         snapshot = copy.deepcopy(self.indexed_final)
         issue_url = snapshot['issue']['html_url']

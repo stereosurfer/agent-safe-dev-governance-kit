@@ -168,9 +168,10 @@ profile into a smaller project. The default layer remains generic.
   closeout in the strict canonical YAML subset can yield a
   `yaml_subset_shape_checked` edge; unsupported or malformed YAML remains an
   unverified candidate. JSON needs one visible, top-level closeout block;
-  raw HTML-marked comments, nested-example closeouts, or multiple visible JSON
-  closeouts cannot create a checked edge. Search matches only parsed decision
-  fields, not comment preambles or hidden examples. Shape checking does not prove the decision, evidence,
+  raw HTML-marked comments, nested-example closeouts, multiple visible JSON
+  closeouts, mixed JSON/YAML closeouts, or an explicit DRAFT primary decision
+  cannot create a checked edge. Search matches only named parsed decision
+  fields, not extra metadata, comment preambles or hidden examples. Shape checking does not prove the decision, evidence,
   authorship, approval, or complete history. Use one
   snapshot per issue and one observation per PR per lookup; a closed issue
   without a recognizable supplied closeout is reported as incomplete, not

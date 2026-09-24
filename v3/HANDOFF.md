@@ -93,8 +93,9 @@ Preserve the rejected attempt and correction links; no reset, force push or sile
   duplicate-free JSON closeout and the
   strict canonical YAML subset can yield bounded shape-checked edges when
   same-issue substantive fields are present. Raw HTML-marked, outer-example,
-  or multiple JSON closeouts in one comment cannot yield a checked edge.
-  Checked search queries use parsed decision fields, not surrounding prose.
+  multiple JSON or mixed JSON/YAML closeouts in one comment, or an explicit
+  DRAFT primary decision cannot yield a checked edge. Checked search queries
+  use named parsed decision fields, not extra metadata or surrounding prose.
   Unsupported, malformed,
   wrong-issue, or incomplete YAML remains an unverified candidate and makes
   the affected lookup incomplete. It reports missing links and never invents

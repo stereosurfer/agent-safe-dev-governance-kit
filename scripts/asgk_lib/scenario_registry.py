@@ -109,6 +109,14 @@ WORKFLOW_JSON_TILDE_SECOND_SNAPSHOT = workflow_json_example_snapshot(
         "```json", "~~~json", 1).replace("\n```", "\n~~~", 1))
 WORKFLOW_JSON_UNRELATED_PREAMBLE_SNAPSHOT = workflow_json_example_snapshot(
     "Unrelated preamble only.\n\n" + WORKFLOW_JSON_FENCE)
+WORKFLOW_JSON_PRIMARY_DRAFT_SNAPSHOT = workflow_json_example_snapshot(
+    WORKFLOW_JSON_FENCE.replace(
+        '"decision_made":"Keep GitHub trace"',
+        '"decision_made":"DRAFT — do not post or close issue."'))
+WORKFLOW_JSON_EXTRA_METADATA_SNAPSHOT = workflow_json_example_snapshot(
+    WORKFLOW_JSON_FENCE.replace(
+        '"decision_made":"Keep GitHub trace"',
+        '"unrelated_label":"False positive search term","decision_made":"Keep GitHub trace"'))
 WORKFLOW_YAML_CANDIDATE_URL = WORKFLOW_ISSUE_URL + "#issuecomment-11"
 WORKFLOW_YAML_CANDIDATE_BODY = (
     '```yaml\nissue_closeout_review:\n  issue: "#1"\n  status: completed\n'
@@ -146,6 +154,8 @@ WORKFLOW_YAML_CHECKED_SNAPSHOT["comments"] = [{
     "html_url": WORKFLOW_YAML_CHECKED_URL, "body": WORKFLOW_YAML_CHECKED_BODY,
 }]
 WORKFLOW_YAML_CHECKED_SNAPSHOT = json.dumps(WORKFLOW_YAML_CHECKED_SNAPSHOT, separators=(",", ":"))
+WORKFLOW_MIXED_JSON_YAML_SNAPSHOT = workflow_json_example_snapshot(
+    WORKFLOW_JSON_FENCE + "\n" + WORKFLOW_YAML_CHECKED_BODY)
 WORKFLOW_MALFORMED_YAML_CANDIDATE_SNAPSHOT = json.loads(WORKFLOW_MINIMAL_SNAPSHOT)
 WORKFLOW_MALFORMED_YAML_CANDIDATE_SNAPSHOT["comments"] = [{
     "html_url": WORKFLOW_YAML_CANDIDATE_URL,
@@ -2114,6 +2124,43 @@ RETAINED_JSON_SCENARIOS = (
         temp_input=TempInput(content=WORKFLOW_JSON_TILDE_SECOND_SNAPSHOT),
         expected_payload_fields=(("closeout_not_found", [WORKFLOW_ISSUE_URL]),
                                  ("candidates", [])),
+    ),
+    JsonScenario(
+        "workflow_trace_mixed_json_yaml_not_checked",
+        "workflow",
+        (*ASGK, "workflow", "trace", "--snapshot", "{temp_input}",
+         "--start", WORKFLOW_ISSUE_URL, "--json"),
+        "negative", "warning", 1, ("WF_YAML_CANDIDATE_UNVERIFIED",),
+        WORKFLOW_PROOF_BOUNDARY,
+        expected_domain_result="incomplete",
+        temp_input=TempInput(content=WORKFLOW_MIXED_JSON_YAML_SNAPSHOT),
+        expected_payload_fields=(("closeout_not_found", []),
+                                 ("candidates", [{"url": WORKFLOW_CLOSEOUT_URL,
+                                                  "container_issue_url": WORKFLOW_ISSUE_URL,
+                                                  "evidence_class": "candidate_unverified_yaml",
+                                                  "source": "fixture",
+                                                  "captured_at": "2025-01-01T00:00:00Z"}])),
+    ),
+    JsonScenario(
+        "workflow_trace_json_primary_draft_not_checked",
+        "workflow",
+        (*ASGK, "workflow", "trace", "--snapshot", "{temp_input}",
+         "--start", WORKFLOW_ISSUE_URL, "--json"),
+        "negative", "warning", 1, ("WF_CLOSEOUT_NOT_FOUND",),
+        WORKFLOW_PROOF_BOUNDARY,
+        expected_domain_result="incomplete",
+        temp_input=TempInput(content=WORKFLOW_JSON_PRIMARY_DRAFT_SNAPSHOT),
+        expected_payload_fields=(("closeout_not_found", [WORKFLOW_ISSUE_URL]),
+                                 ("candidates", [])),
+    ),
+    JsonScenario(
+        "workflow_search_json_extra_metadata_not_checked",
+        "workflow",
+        (*ASGK, "workflow", "search", "--snapshot", "{temp_input}",
+         "--query", "False positive search term", "--json"),
+        "positive", "pass", 0, (), WORKFLOW_PROOF_BOUNDARY,
+        temp_input=TempInput(content=WORKFLOW_JSON_EXTRA_METADATA_SNAPSHOT),
+        expected_payload_fields=(("matches", []), ("candidates", [])),
     ),
     JsonScenario(
         "workflow_search_json_unrelated_preamble_not_checked",

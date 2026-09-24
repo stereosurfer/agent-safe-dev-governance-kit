@@ -98,8 +98,9 @@ target-owned assessment、普通 revert 與文件驅動自體進化都保留。
 `handoff` 和 `closeout` 只產生 GitHub comment 草稿，不自動 post／merge／close。
 搜尋以 issue close-out 為入口，不要求翻遍 repo；單一可見、頂層、無重複鍵的 JSON 與符合
 嚴格 canonical 子集、同 issue、具實質內容的 YAML 可形成有界的形狀檢查邊。
-含原始 HTML 標記的留言、外層 Markdown 範例中的 JSON，或同一留言多份 JSON 結案，
-不能形成已檢查的邊；搜尋只比對已解析的決策欄位，不把留言前言當成決策證據。
+含原始 HTML 標記的留言、外層 Markdown 範例中的 JSON、同一留言多份 JSON 或 JSON/YAML
+混合結案，或主要決策明示 DRAFT，都不能形成已檢查的邊；搜尋只比對已解析的指定決策欄位，
+不把額外 metadata 或留言前言當成決策證據。
 格式不符或無法核實的 YAML 仍只回傳候選網址；形狀檢查不驗證作者、
 內容真偽、核准或追溯完整性。
 每次查找同一 issue 只接受一份快照，同一 PR 也只接受一份觀測；已關閉 issue 若沒有提供可辨識的

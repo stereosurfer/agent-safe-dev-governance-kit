@@ -492,6 +492,9 @@ def closeout_draft(snapshot, packet, report, root, status):
 def checked_json_closeout(body, issue_url):
     """Return one visible canonical JSON review, never its truth or authority."""
 
+    if mixed_closeout_formats(body):
+        return None
+
     def unique_json_pairs(items):
         value = {}
         for key, item in items:
@@ -725,6 +728,15 @@ def standalone_yaml_blocks(body):
             yield block
 
 
+def mixed_closeout_formats(body):
+    """A single comment cannot assert both JSON and YAML closeout authority."""
+    json_marker = any('issue_closeout_review' in block for block, _ in
+                      standalone_closeout_fences(body, ('json',), reject_html_tags=True))
+    yaml_marker = any('issue_closeout_review' in block for block, _ in
+                      standalone_closeout_fences(body, ('yaml', 'yml'), reject_html_tags=True))
+    return json_marker and yaml_marker
+
+
 def yaml_closeout_candidate(body):
     """Find a standalone fenced pointer, not a parsed or shape-checked closeout."""
     for block in standalone_yaml_blocks(body):
@@ -736,6 +748,8 @@ def yaml_closeout_candidate(body):
 
 
 def yaml_closeout_shape(body, issue_url):
+    if mixed_closeout_formats(body):
+        return False
     markers = [block for block in standalone_yaml_blocks(body)
                if re.search(r'(?m)^issue_closeout_review:', block)]
     if len(markers) != 1:
@@ -778,7 +792,9 @@ def final_closeout_flags(body, issue):
             or re.match(r'(?i)^this is a[ \t]+draft'
                         r'(?:[ \t]+(?:closeout|review)\b|[ \t]*[-—–:.,!]|[ \t]*$)', line))
     explicit_draft = any(draft_banner(line) for line in prose.splitlines())
-    json_checked = not explicit_draft and json_closeout_shape(body, issue['html_url'])
+    json_review = checked_json_closeout(body, issue['html_url']) if not explicit_draft else None
+    json_checked = (json_review is not None and not draft_banner(
+        json_review['decision_analysis']['decision_made']))
     if explicit_draft:
         return json_checked, False, False
     candidate = yaml_closeout_candidate(body)
@@ -884,20 +900,23 @@ def candidate_pointer(node):
 def search(snapshots, query):
     words(query, 'query')
     nodes = index_snapshots(snapshots)
-    def scalar_values(value):
-        if type(value) is str:
-            yield value
-        elif type(value) is dict:
-            for item in value.values():
-                yield from scalar_values(item)
-        elif type(value) is list:
-            for item in value:
-                yield from scalar_values(item)
-
     def query_in_decisions(review):
-        decision_fields = [review['decision_analysis'], review['decisions']]
+        analysis = review['decision_analysis']
+        values = [analysis.get('decision_made'), analysis.get('why_this_path')]
+        for item in analysis.get('rejected_paths', []):
+            if type(item) is dict:
+                values.extend((item.get('path'), item.get('reason')))
+        signal = analysis.get('reusable_signal')
+        if type(signal) is dict:
+            values.append(signal.get('reason'))
+        for item in review['decisions']:
+            if type(item) is dict:
+                values.extend((item.get('decision'), item.get('reason')))
+                refs = item.get('evidence')
+                if type(refs) is list:
+                    values.extend(refs)
         return any(query.casefold() in value.casefold()
-                   for field in decision_fields for value in scalar_values(field))
+                   for value in values if type(value) is str)
 
     def query_in_closeout(node):
         if node['json_closeout_shape_checked']:
@@ -937,7 +956,7 @@ def search(snapshots, query):
         result['domain_result'] = 'incomplete'
         result['derived_state'] = 'incomplete'
         result['findings'] = [dict(code='WF_YAML_CANDIDATE_UNVERIFIED', field='candidates',
-            reason='Fenced YAML closeout pointers failed strict subset parsing or shape checks', blocking=False)]
+            reason='Fenced YAML closeout pointers failed strict subset parsing, shape checks, or the single-format requirement', blocking=False)]
     return result
 
 
@@ -1002,7 +1021,7 @@ def trace(snapshots, start, max_hops=5):
                 blocking=False))
         if candidates:
             result['findings'].append(dict(code='WF_YAML_CANDIDATE_UNVERIFIED', field='candidates',
-                reason='YAML candidate URLs failed strict subset parsing or shape checks and form no checked edge',
+                reason='YAML candidate URLs failed strict subset parsing, shape checks, or the single-format requirement and form no checked edge',
                 blocking=False))
         if closeout_not_found:
             result['findings'].append(dict(code='WF_CLOSEOUT_NOT_FOUND', field='closeout_not_found',

@@ -88,8 +88,9 @@ mandatory police Bot for every task. Review identity must be real, not a renamed
    unsupported, wrong-issue, or incomplete YAML remains a provenance-labeled
    unverified candidate URL and makes the affected lookup incomplete. JSON
    in raw HTML-marked comments or an outer Markdown example fence, or multiple
-   JSON closeouts in one comment, cannot form a checked edge. Search only uses
-   parsed decision fields for a checked closeout, not surrounding prose.
+   JSON closeouts or mixed JSON/YAML closeouts in one comment, or an explicit
+   DRAFT primary decision, cannot form a checked edge. Search uses only named
+   parsed decision fields for a checked closeout, not extra metadata or surrounding prose.
    Require one snapshot per issue and one observation per PR; a visited closed
    issue without either supplied closeout form remains incomplete, since older
    prose may exist. Even a passing shape-checked traversal is bounded, not proof of all

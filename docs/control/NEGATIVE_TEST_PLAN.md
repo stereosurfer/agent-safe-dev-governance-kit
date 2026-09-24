@@ -264,9 +264,10 @@ governance depth, adaptation, readiness, recommendation, or approval.
 
 The `workflow` group pairs supplied-snapshot traces of one visible,
 substantive, same-issue duplicate-free JSON closeout and strict canonical
-YAML-subset closeout shapes with HTML-marked, nested-example, and multiple
-JSON closeouts (including alternate fence case or delimiter) that must not
-form checked edges. Unrelated comment prose must not become a checked JSON
+YAML-subset closeout shapes with HTML-marked, nested-example, multiple
+JSON closeouts (including alternate fence case or delimiter), mixed JSON/YAML
+closeouts, and explicit DRAFT primary decisions that must not form checked edges.
+Unrelated comment prose or extra metadata must not become a checked JSON
 decision search hit; unresolved-link, malformed or
 wrong-issue YAML-candidate, and closed-issue-no-closeout warnings plus duplicate-issue
 snapshot rejection and malformed snapshot failure. Exact exits and finding
@@ -278,7 +279,7 @@ prove the full historical decision tree was supplied. Root `doctor` also runs
 workflow unit tests covering issue-backed projection, repository binding,
 stale packet, out-of-scope diff,
 draft-only handoff/closeout, GET-only capture, safe output, empty,
-duplicate-key, hidden/example, and multiple JSON closeouts, canonical
+duplicate-key, hidden/example, multiple or mixed-format closeouts, canonical
 YAML-subset shape-checked edges, and malformed
 YAML candidate visibility without promoting that candidate to a checked edge.
 Repeated same-issue snapshots are rejected even
