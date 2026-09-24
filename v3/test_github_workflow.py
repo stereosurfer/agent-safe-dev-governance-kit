@@ -423,6 +423,8 @@ class GithubWorkflowTests(unittest.TestCase):
         snapshot['issue']['state'] = 'closed'
         comment_url = self.packet['issue'] + '#issuecomment-93'
         for banner in ('DRAFT — do not post or close issue.',
+                       'DRAFT closeout — pending review',
+                       'DRAFT closeout — not posted',
                        'Status: DRAFT — do not post or close issue.',
                        '**Status:** DRAFT — do not post or close issue.',
                        'This is a DRAFT — do not post or close issue.'):
@@ -666,6 +668,8 @@ class GithubWorkflowTests(unittest.TestCase):
                       if w.json_closeout_shape(comment['body'], issue_url))
         original = target['body']
         for banner in ('DRAFT — do not post or close issue.',
+                       'DRAFT closeout — pending review',
+                       'DRAFT closeout — not posted',
                        'Status: DRAFT — do not post or close issue.',
                        '**Status:** DRAFT — do not post or close issue.',
                        'This is a DRAFT — do not post or close issue.',

@@ -755,7 +755,7 @@ def final_closeout_flags(body, issue):
                         r'(?:\*\*)?draft\b', line)
             or re.match(r'(?i)^(?:\[|\*{1,3})?draft(?:\]|\*{1,3})?'
                         r'(?:[ \t]+(?:closeout|review)\b(?:[ \t]+review\b)?)?'
-                        r'(?:[ \t]*$|[ \t]*[-—–:.,!(/][ \t]*(?:(?:do not|unposted|unfinalized)\b|$)'
+                        r'(?:[ \t]*$|[ \t]*[-—–:.,!(/]'
                         r'|[ \t]+do not[ \t]+(?:post|close|publish)\b)', line)
             or re.match(r'(?i)^this (?:closeout|review) is a[ \t]+draft\b', line)
             or re.match(r'(?i)^this is a[ \t]+draft'
