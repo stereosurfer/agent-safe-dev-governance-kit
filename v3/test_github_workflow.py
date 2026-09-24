@@ -48,6 +48,25 @@ class GithubWorkflowTests(unittest.TestCase):
     def observe(self):
         return w.observe_work(self.snapshot, self.packet, self.report, self.root)
 
+    def canonical_yaml_closeout(self):
+        return ('Completed.\n\n```yaml\nissue_closeout_review:\n  issue: "#1"\n'
+                '  status: completed\n'
+                '  decision_analysis:\n'
+                '    decision_made: "Keep trace"\n'
+                '    why_this_path: "The next worker needs the GitHub decision trail."\n'
+                '    rejected_paths:\n'
+                '      - path: "Use a chat-only summary"\n'
+                '        reason: "It cannot be independently recovered."\n'
+                '    reusable_signal:\n'
+                '      applies_later: true\n'
+                '      reason: "Keep bounded closeout evidence for later handoff."\n'
+                '  decisions:\n'
+                '    - decision: "Keep trace"\n'
+                '      reason: "The issue and PR evidence stays linked."\n'
+                '      evidence:\n'
+                '        - "#1"\n'
+                '```\n')
+
     def test_issue_projection_positive(self):
         self.assertEqual(self.packet, self.project())
         self.assertEqual('not_checked_fixture_without_remote', self.packet['checkout_identity'])
@@ -381,23 +400,7 @@ class GithubWorkflowTests(unittest.TestCase):
         snapshot = copy.deepcopy(self.final)
         snapshot['issue']['state'] = 'closed'
         snapshot['comments'] = [dict(html_url=self.packet['issue'] + '#issuecomment-50',
-            body='Completed.\n\n```yaml\nissue_closeout_review:\n  issue: "#1"\n'
-                 '  status: completed\n'
-                 '  decision_analysis:\n'
-                 '    decision_made: "Keep trace"\n'
-                 '    why_this_path: "The next worker needs the GitHub decision trail."\n'
-                 '    rejected_paths:\n'
-                 '      - path: "Use a chat-only summary"\n'
-                 '        reason: "It cannot be independently recovered."\n'
-                 '    reusable_signal:\n'
-                 '      applies_later: true\n'
-                 '      reason: "Keep bounded closeout evidence for later handoff."\n'
-                 '  decisions:\n'
-                 '    - decision: "Keep trace"\n'
-                 '      reason: "The issue and PR evidence stays linked."\n'
-                 '      evidence:\n'
-                 '        - "#1"\n'
-                 '```\n')]
+            body=self.canonical_yaml_closeout())]
         result = w.search([snapshot], 'Keep trace')
         self.assertEqual([snapshot['comments'][0]['html_url']], [x['url'] for x in result['matches']])
         issue_node = next(x for x in w.trace([snapshot], self.packet['issue'])['nodes']
@@ -410,6 +413,40 @@ class GithubWorkflowTests(unittest.TestCase):
         snapshot['comments'][0]['body'] = snapshot['comments'][0]['body'].replace(
             '    decision_made: "Keep trace"', '    decision_made: |')
         self.assertEqual([], w.search([snapshot], 'Keep trace')['matches'])
+
+    def test_yaml_closeout_scalar_impostors_are_not_indexed(self):
+        snapshot = copy.deepcopy(self.final)
+        snapshot['issue']['state'] = 'closed'
+        comment_url = self.packet['issue'] + '#issuecomment-50'
+        substitutions = [
+            ('    decision_made: "Keep trace"', '    decision_made: # no decision'),
+            ('    decision_made: "Keep trace"', '    decision_made: ~'),
+            ('    decision_made: "Keep trace"', '    decision_made: true'),
+            ('    decision_made: "Keep trace"', '    decision_made: false'),
+            ('    decision_made: "Keep trace"', '    decision_made: 0'),
+            ('    decision_made: "Keep trace"', '    decision_made: 1_000'),
+            ('    decision_made: "Keep trace"', '    decision_made: 2026-09-24'),
+            ('    decision_made: "Keep trace"', '    decision_made: yes'),
+            ('    decision_made: "Keep trace"', '    decision_made: [] # empty list'),
+            ('    decision_made: "Keep trace"', '    decision_made: "" # empty quoted'),
+            ('    decision_made: "Keep trace"', '    decision_made: null # null with inline comment'),
+            ('    decision_made: "Keep trace"', '    decision_made: *alias'),
+            ('    decision_made: "Keep trace"', '    decision_made: !tag text'),
+            ('    decision_made: "Keep trace"', '    decision_made: {text: "fake"}'),
+            ('        - "#1"', '        - #1'),
+        ]
+        for before, after in substitutions:
+            with self.subTest(after=after):
+                snapshot['comments'] = [dict(html_url=comment_url,
+                    body=self.canonical_yaml_closeout().replace(before, after))]
+                self.assertEqual([], w.search([snapshot], 'Keep trace')['matches'])
+                issue_node = next(node for node in w.trace([snapshot], self.packet['issue'])['nodes']
+                                  if node['url'] == self.packet['issue'])
+                self.assertNotIn(comment_url, issue_node['links'])
+        snapshot['comments'] = [dict(html_url=comment_url,
+            body=self.canonical_yaml_closeout().replace(
+                '    decision_made: "Keep trace"', '    decision_made: "Keep #1 trace" # rationale'))]
+        self.assertEqual([comment_url], [match['url'] for match in w.search([snapshot], 'Keep #1 trace')['matches']])
 
     def test_empty_or_partial_closeout_shapes_are_not_indexed(self):
         snapshot = copy.deepcopy(self.final)

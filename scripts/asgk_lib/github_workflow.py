@@ -537,6 +537,29 @@ def structured_closeout(body, issue_url):
 
     def yaml_scalar(raw):
         raw = raw.strip()
+        # This is a deliberately bounded YAML indexer, but comments and native
+        # null/bool scalars must not masquerade as substantive review text.
+        quote = None
+        index = 0
+        while index < len(raw):
+            char = raw[index]
+            if quote == '"' and char == '\\':
+                index += 2
+                continue
+            if char == quote:
+                if quote == "'" and index + 1 < len(raw) and raw[index + 1] == "'":
+                    index += 2
+                    continue
+                quote = None
+            elif quote is None:
+                if char in ('"', "'"):
+                    quote = char
+                elif char == '#' and (index == 0 or raw[index - 1].isspace()):
+                    raw = raw[:index].rstrip()
+                    break
+            index += 1
+        if quote is not None or not raw:
+            return None
         if raw.startswith('"') and raw.endswith('"'):
             try:
                 return json.loads(raw)
@@ -544,6 +567,33 @@ def structured_closeout(body, issue_url):
                 return None
         if raw.startswith("'") and raw.endswith("'"):
             return raw[1:-1].replace("''", "'")
+        if raw.startswith(('"', "'")):
+            return None
+        if raw.startswith('['):
+            try:
+                value = json.loads(raw)
+            except (ValueError, TypeError):
+                return None
+            return value if type(value) is list else None
+        if (raw.startswith(('{', '#', '&', '*', '!', '%', '|', '>', ',', ']', '}', '@', '`', '? ', '- '))
+                or raw in ('-', '?') or re.search(r':(?:\s|$)', raw)):
+            return None
+        if raw.casefold() in ('null', '~'):
+            return None
+        if raw.casefold() == 'true':
+            return True
+        if raw.casefold() == 'false':
+            return False
+        if raw.casefold() in ('yes', 'no', 'on', 'off'):
+            return None
+        numeric = raw.replace('_', '')
+        if (re.fullmatch(r'[-+]?0[xX][0-9a-fA-F]+', numeric)
+                or re.fullmatch(r'[-+]?0[oO][0-7]+', numeric)
+                or re.fullmatch(r'[-+]?0[bB][01]+', numeric)
+                or re.fullmatch(r'[-+]?(?:(?:[0-9]+(?:\.[0-9]*)?)|(?:\.[0-9]+))(?:[eE][-+]?[0-9]+)?', numeric)
+                or raw.casefold() in ('.inf', '+.inf', '-.inf', '.nan')
+                or re.fullmatch(r'[0-9]{4}-[0-9]{2}-[0-9]{2}(?:[Tt ][0-9:.+-]+[Zz]?)?', raw)):
+            return None
         return raw
 
     def yaml_value(lines, key, indent):
@@ -559,12 +609,8 @@ def structured_closeout(body, issue_url):
 
     def yaml_evidence(item):
         raw = yaml_value(item, 'evidence', 6)
-        if type(raw) is str and raw.startswith('[') and raw.endswith(']'):
-            try:
-                values = json.loads(raw)
-            except (ValueError, TypeError):
-                return False
-            return type(values) is list and any(material(value) for value in values)
+        if type(raw) is list:
+            return any(material(value) for value in raw)
         if raw not in (None, ''):
             return False
         lines = yaml_section(item, 'evidence', 6)
@@ -590,7 +636,7 @@ def structured_closeout(body, issue_url):
                 for item in yaml_items(rejected, 'path', 6)):
             return False
         signal = yaml_section(analysis, 'reusable_signal', 4)
-        if signal is None or yaml_value(signal, 'applies_later', 6) not in ('true', 'false'):
+        if signal is None or type(yaml_value(signal, 'applies_later', 6)) is not bool:
             return False
         if not material(yaml_value(signal, 'reason', 6)):
             return False
