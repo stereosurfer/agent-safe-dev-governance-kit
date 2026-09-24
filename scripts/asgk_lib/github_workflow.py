@@ -743,14 +743,16 @@ def final_closeout_flags(body, issue):
                 break
             line = stripped
         return bool(
-            (re.match(r'(?i)^(?:\[|\*{1,3})?draft\b', line)
-             and re.search(r"(?i)\b(?:do not|don't)[ \t]+(?:post|close|publish)\b", line))
+            (re.search(r'(?i)\bdraft\b', line)
+             and (re.search(r"(?i)\b(?:do not|don't)[ \t]+(?:post|close|publish)\b", line)
+                  or re.search(r'(?i)\b(?:unposted|unfinalized)\b', line)))
             or (re.match(r'(?i)^wip\b', line) and re.search(r'(?i)\bdraft\b', line))
             or re.match(r'(?i)^issue closeout review[^\n]*\bdraft\b', line)
             or re.match(r'(?i)^(?:\*\*)?status[ \t]*[:—–-](?:\*\*)?[ \t]*'
                         r'(?:\*\*)?draft\b', line)
             or re.match(r'(?i)^(?:\[|\*{1,3})?draft(?:\]|\*{1,3})?'
                         r'[ \t]*(?:[-—–:.,!]|$)', line)
+            or re.match(r'(?i)^this (?:closeout|review) is a[ \t]+draft\b', line)
             or re.match(r'(?i)^this is a[ \t]+draft\b', line))
     explicit_draft = any(draft_banner(line) for line in prose.splitlines())
     json_checked = not explicit_draft and json_closeout_shape(body, issue['html_url'])

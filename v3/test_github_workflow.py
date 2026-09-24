@@ -628,7 +628,13 @@ class GithubWorkflowTests(unittest.TestCase):
                        'Status — DRAFT — do not post or close issue.',
                        'DRAFT (do not post or close issue)',
                        'DRAFT / do not post or close issue',
-                       'WIP — DRAFT — do not post'):
+                       'WIP — DRAFT — do not post',
+                       'Unposted DRAFT — do not post or close issue.',
+                       'Unfinalized DRAFT — do not post or close issue.',
+                       'Unfinalized DRAFT closeout.',
+                       'This closeout is a DRAFT — do not post.',
+                       'This closeout is a DRAFT.',
+                       'Do not post — DRAFT closeout.'):
             with self.subTest(banner=banner):
                 target['body'] = banner + '\n\n' + original
                 searched = w.search([snapshot], 'Keep GitHub as work ledger')
