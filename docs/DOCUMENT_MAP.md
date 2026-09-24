@@ -94,7 +94,6 @@ roles:
   status: Current handoff or state surface.
   script: Executable validation or hygiene behavior.
   historical_evidence: Archived repo-local evidence; never current authority or target-project state.
-  candidate_reference: Non-default candidate evidence for a scoped integration; never current root authority.
 ```
 
 ## Default Entry Summary

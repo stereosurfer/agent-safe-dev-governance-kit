@@ -64,7 +64,6 @@ roles:
   script: Executable validation or hygiene behavior.
   skill: Source-distributed reusable agent procedure.
   historical_evidence: Superseded or archival material for bounded historical or migration lookup; never current authority.
-  candidate_reference: Non-default design or test evidence for an explicitly scoped integration; never current root authority.
 ```
 
 ## Entry And Startup Documents
@@ -84,9 +83,9 @@ roles:
 
 ## Non-default 3.0 Candidate Entry
 
-| Document | Role | Purpose | Read by default | Read when | Authority boundary |
-|---|---|---|---:|---|---|
-| `v3/README.md` | candidate_reference | Bounded entry to candidate design, tests, Kanban mapping, capability evolution, and its own handoff | no | a live #372 child issue or PR explicitly scopes candidate comparison | Cannot replace current root AGENTS, README, CURRENT_STATUS, live issue/PR, or canonical control documents |
+| Document | Purpose | Read by default | Read when | Authority boundary |
+|---|---|---:|---|---|
+| `v3/README.md` | Bounded entry to candidate design, tests, Kanban mapping, capability evolution, and its own handoff | no | a live #372 child issue or PR explicitly scopes candidate comparison | Cannot replace current root AGENTS, README, CURRENT_STATUS, live issue/PR, or canonical control documents |
 
 The candidate entry routes to its own relevant files on demand; this registry
 does not make all of `v3/**` a default read set or a second governance spine.
