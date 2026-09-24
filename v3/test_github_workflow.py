@@ -588,6 +588,36 @@ class GithubWorkflowTests(unittest.TestCase):
         other['issue']['body'] = 'Conflicting current body'
         self.fails('SNAPSHOT_CONFLICT', lambda: w.search([self.indexed_final, other], 'GitHub'))
 
+    def test_repeated_issue_snapshots_fail_in_both_orders_even_when_body_matches(self):
+        first = copy.deepcopy(self.final)
+        second = copy.deepcopy(first)
+        second['issue']['state'] = 'closed'
+        second['comments'] = [dict(html_url=self.packet['issue'] + '#issuecomment-82',
+                                   body=self.canonical_yaml_closeout())]
+        for snapshots in ((first, second), (second, first), (first, copy.deepcopy(first))):
+            with self.subTest(states=[snapshot['issue']['state'] for snapshot in snapshots]):
+                self.fails('SNAPSHOT_CONFLICT', lambda: w.search(list(snapshots), 'Keep trace'))
+                self.fails('SNAPSHOT_CONFLICT', lambda: w.trace(list(snapshots), self.packet['issue']))
+
+    def test_closed_issue_without_supplied_closeout_is_incomplete(self):
+        snapshot = copy.deepcopy(self.final)
+        snapshot['issue']['state'] = 'closed'
+        snapshot['issue']['body'] = 'No linked decision evidence.'
+        snapshot['comments'] = []
+        snapshot['prs'] = []
+        for comments in ([], [dict(html_url=self.packet['issue'] + '#issuecomment-83',
+                                  body='Older prose-only closeout; consult the issue.')]):
+            with self.subTest(comments=comments):
+                snapshot['comments'] = comments
+                result = w.trace([snapshot], self.packet['issue'])
+                self.assertEqual('warning', result['result'])
+                self.assertEqual('incomplete', result['domain_result'])
+                self.assertEqual([self.packet['issue']], result['closeout_not_found'])
+                self.assertEqual([], result['candidates'])
+                self.assertEqual(['WF_CLOSEOUT_NOT_FOUND'],
+                                 [finding['code'] for finding in result['findings']])
+                self.assertEqual([], w.validation_result_errors(result))
+
     def test_capture_get_only(self):
         response = type('Result', (), {'returncode': 0, 'stdout': '[]'})()
         with patch.object(w.subprocess, 'run', return_value=response) as mocked:

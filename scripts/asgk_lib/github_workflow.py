@@ -566,10 +566,15 @@ def final_closeout_flags(body, issue):
 def index_snapshots(snapshots):
     nodes = {}
     known = {}
+    seen_issues = set()
     for snapshot in snapshots:
         validate_snapshot(snapshot)
         repository = snapshot['repository']
         issue = snapshot['issue']
+        issue_identity = (repository.casefold(), issue['number'])
+        require(issue_identity not in seen_issues, 'SNAPSHOT_CONFLICT', issue['html_url'],
+                'Provide exactly one snapshot per issue in one lookup; choose the current version explicitly')
+        seen_issues.add(issue_identity)
         key = (repository, str(issue['number']))
         require(key not in known or known[key] == issue['html_url'], 'SNAPSHOT_CONFLICT', issue['html_url'],
                 'An issue and PR cannot share one GitHub number in the same repository')
@@ -614,6 +619,8 @@ def index_snapshots(snapshots):
                                json_closeout_shape_checked=json_checked,
                                candidate_unverified_yaml=yaml_candidate,
                                candidate_closeout_urls=sorted(yaml_candidate_urls) if kind == 'issue' else [],
+                               json_closeout_urls=sorted(json_closeout_urls) if kind == 'issue' else [],
+                               issue_state=issue['state'] if kind == 'issue' else None,
                                container_issue_url=issue['html_url'] if issue_comment else None,
                                source=snapshot['source'], captured_at=snapshot['captured_at'])
     return nodes
@@ -637,7 +644,7 @@ def search(snapshots, query):
     candidates = [candidate_pointer(node) for node in selected if node['candidate_unverified_yaml']]
     result = envelope('warning' if candidates else 'pass', matches=matches,
                       candidates=candidates,
-                      search_scope='Only supplied closed-issue snapshots: duplicate-free JSON shape matches and '
+                      search_scope='One supplied snapshot per issue; closed-issue duplicate-free JSON shape matches and '
                       'unverified fenced YAML candidate pointers; no repository scan or truth check')
     result['not_checked'].append('YAML syntax, self-declared issue identity, or decision substance')
     if candidates:
@@ -655,6 +662,7 @@ def trace(snapshots, start, max_hops=5):
     todo = [(start, 0)]
     visited = set(); found = []; unresolved = []; frontier = []; unresolved_shorthand = set()
     candidates = {}
+    closeout_not_found = set()
     while todo:
         link, depth = todo.pop(0)
         if link in visited:
@@ -671,18 +679,24 @@ def trace(snapshots, start, max_hops=5):
                 candidates[candidate_url] = candidate_pointer(nodes[candidate_url])
         if node['candidate_unverified_yaml']:
             candidates[link] = candidate_pointer(node)
+        if (node['kind'] == 'issue' and node['issue_state'] == 'closed'
+                and not node['json_closeout_urls'] and not node['candidate_closeout_urls']):
+            closeout_not_found.add(link)
         unresolved_shorthand.update(node['unresolved_shorthand_refs'])
         if depth < max_hops:
             todo.extend((ref, depth + 1) for ref in node['links'])
         else:
             frontier.extend(ref for ref in node['links'] if ref not in visited)
-    incomplete = bool(unresolved or frontier or unresolved_shorthand or candidates)
+    incomplete = bool(unresolved or frontier or unresolved_shorthand or candidates or closeout_not_found)
     result = envelope('warning' if incomplete else 'pass', nodes=found,
                     unresolved=sorted(set(unresolved)), hop_limit_frontier=sorted(set(frontier)),
                     unresolved_shorthand_refs=sorted(unresolved_shorthand),
                     candidates=[candidates[key] for key in sorted(candidates)],
-                    trace_scope='Linked snapshot evidence only; JSON shape-checked closeout edges and separate '
-                    'unverified YAML candidate pointers; unresolved shorthand is not guessed to be an issue or PR')
+                    closeout_not_found=sorted(closeout_not_found),
+                    trace_scope='One supplied snapshot per issue and linked evidence only; JSON shape-checked '
+                    'closeout edges and separate unverified YAML candidate pointers; visited closed issues '
+                    'without either are incomplete; a pass does not prove complete history; unresolved '
+                    'shorthand is not guessed to be an issue or PR')
     result['not_checked'].append('YAML syntax, self-declared issue identity, or decision substance')
     if incomplete:
         result['domain_result'] = 'incomplete'
@@ -695,6 +709,10 @@ def trace(snapshots, start, max_hops=5):
             result['findings'].append(dict(code='WF_YAML_CANDIDATE_UNVERIFIED', field='candidates',
                 reason='YAML candidate URLs are visible but cannot form a shape-checked decision-tree edge',
                 blocking=False))
+        if closeout_not_found:
+            result['findings'].append(dict(code='WF_CLOSEOUT_NOT_FOUND', field='closeout_not_found',
+                reason='A visited closed issue has no supplied JSON shape-checked closeout or YAML candidate; '
+                'legacy prose or an omitted snapshot may still exist', blocking=False))
     return result
 
 
@@ -891,11 +909,13 @@ def run(args):
                 'check': ['current supplied issue/refinement', 'packet digest', 'issue/comment/PR-head consistency'],
                 'card-draft': ['supplied snapshot shape, freshness and declared non-fixture source label', 'checked issue-backed packet',
                                'controller-supplied provenance and bounded card fields'],
-                'search': ['supplied snapshot shape', 'closed-issue duplicate-free JSON closeout shape',
+                'search': ['supplied snapshot shape', 'single snapshot per issue',
+                           'closed-issue duplicate-free JSON closeout shape',
                            'fenced YAML candidate marker without syntax validation', 'case-insensitive query match'],
-                'trace': ['supplied snapshot shape', 'durable URL links',
+                'trace': ['supplied snapshot shape', 'single snapshot per issue', 'durable URL links',
                           'closed-issue JSON shape-checked closeout edge',
-                          'separate unverified YAML candidate URLs', 'known-snapshot shorthand links',
+                          'separate unverified YAML candidate URLs',
+                          'visited closed-issue closeout presence', 'known-snapshot shorthand links',
                           'bounded traversal and unresolved references'],
                 'demo': ['synthetic lifecycle fixture', 'local in-place git change', 'partial handoff', 'closeout/search/trace'],
             }.get(command, [])

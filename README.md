@@ -159,7 +159,9 @@ profile into a smaller project. The default layer remains generic.
   closeout search/trace through `python3 scripts/asgk.py workflow --help`.
   Capture uses GitHub GET only; supplied snapshots and local observations do
   not grant current issue authority or approval. YAML closeout comments are
-  unverified candidate pointers, not complete decision-tree edges.
+  unverified candidate pointers, not complete decision-tree edges. Use one
+  snapshot per issue per lookup; a closed issue without a recognizable supplied
+  closeout is reported as incomplete, not silently treated as a complete trace.
 - Negative fixtures for governance hygiene, PR bodies, handoff packets,
   caller-supplied target evidence, and stale current-status patterns.
 - Explicit validation-boundary wording so `doctor` evidence is not treated as a

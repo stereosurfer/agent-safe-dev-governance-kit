@@ -201,8 +201,12 @@ blocked and warning; unresolved links or YAML closeout candidates carry
 `domain_result: incomplete` and a nonblocking finding, with a nonzero exit.
 Only duplicate-free JSON receives bounded closeout shape checks; fenced YAML
 is an unparsed `candidate_unverified_yaml` pointer, never a complete edge.
-Snapshot labels and locally
-configured remotes do not authenticate GitHub state or grant issue authority.
+Each lookup accepts only one snapshot per issue; duplicate issue inputs fail
+closed. A visited closed issue without either supplied closeout form warns with
+`WF_CLOSEOUT_NOT_FOUND`; legacy prose may still exist. A JSON-path `pass` is
+bounded traversal evidence, never proof of complete GitHub history. Snapshot
+labels and locally configured remotes do not authenticate GitHub state or grant
+issue authority.
 The fixed-shape target checker, install
 planner, and compact target-upgrade manifest checker were removed in the ASGK
 2.0 clean cutover. The parallel compact red-team runner remains outside common
@@ -534,7 +538,7 @@ proves:
   - branch-specific scenarios may additionally lock exact mechanically_checked and not_checked lists
   - positive and negative retained scenarios remain paired
   - target-evidence scenarios lock arbitrary-layout success, four distinct mismatch codes, and no-claim incompleteness
-  - workflow scenarios lock JSON shape-checked trace success, YAML candidate trace/search incompleteness, unresolved-trace warning, and invalid snapshot failure with exact exit and finding codes
+  - workflow scenarios lock JSON shape-checked trace success, YAML candidate trace/search incompleteness, closed-issue closeout absence, duplicate-issue snapshot rejection, unresolved-trace warning, and invalid snapshot failure with exact exit and finding codes
   - canonical and compact task-packet commands remain byte-for-byte equivalent
   - the canonical source command and bootstrap compatibility wrapper remain byte-for-byte equivalent for positive and negative inventory scenarios
   - controlled missing, malformed, unavailable, and missing-executable inputs emit exactly one JSON object

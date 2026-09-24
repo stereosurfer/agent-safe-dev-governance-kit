@@ -1838,9 +1838,10 @@ RETAINED_JSON_SCENARIOS = (
         WORKFLOW_PROOF_BOUNDARY,
         temp_input=TempInput(content=WORKFLOW_CLOSEOUT_SNAPSHOT),
         expected_mechanically_checked=(
-            "supplied snapshot shape", "durable URL links",
+            "supplied snapshot shape", "single snapshot per issue", "durable URL links",
             "closed-issue JSON shape-checked closeout edge",
-            "separate unverified YAML candidate URLs", "known-snapshot shorthand links",
+            "separate unverified YAML candidate URLs", "visited closed-issue closeout presence",
+            "known-snapshot shorthand links",
             "bounded traversal and unresolved references",
         ),
         expected_payload_fields=(
@@ -1855,6 +1856,7 @@ RETAINED_JSON_SCENARIOS = (
             ]),
             ("unresolved", []),
             ("candidates", []),
+            ("closeout_not_found", []),
         ),
     ),
     JsonScenario(
@@ -1870,9 +1872,10 @@ RETAINED_JSON_SCENARIOS = (
         expected_domain_result="incomplete",
         temp_input=TempInput(content=WORKFLOW_YAML_CANDIDATE_SNAPSHOT),
         expected_mechanically_checked=(
-            "supplied snapshot shape", "durable URL links",
+            "supplied snapshot shape", "single snapshot per issue", "durable URL links",
             "closed-issue JSON shape-checked closeout edge",
-            "separate unverified YAML candidate URLs", "known-snapshot shorthand links",
+            "separate unverified YAML candidate URLs", "visited closed-issue closeout presence",
+            "known-snapshot shorthand links",
             "bounded traversal and unresolved references",
         ),
         expected_payload_fields=(
@@ -1883,6 +1886,7 @@ RETAINED_JSON_SCENARIOS = (
                              "container_issue_url": WORKFLOW_ISSUE_URL,
                              "evidence_class": "candidate_unverified_yaml",
                              "source": "fixture", "captured_at": "2025-01-01T00:00:00Z"}]),
+            ("closeout_not_found", []),
         ),
     ),
     JsonScenario(
@@ -1898,7 +1902,8 @@ RETAINED_JSON_SCENARIOS = (
         expected_domain_result="incomplete",
         temp_input=TempInput(content=WORKFLOW_MALFORMED_YAML_CANDIDATE_SNAPSHOT),
         expected_mechanically_checked=(
-            "supplied snapshot shape", "closed-issue duplicate-free JSON closeout shape",
+            "supplied snapshot shape", "single snapshot per issue",
+            "closed-issue duplicate-free JSON closeout shape",
             "fenced YAML candidate marker without syntax validation", "case-insensitive query match",
         ),
         expected_payload_fields=(
@@ -1908,6 +1913,45 @@ RETAINED_JSON_SCENARIOS = (
                              "container_issue_url": WORKFLOW_ISSUE_URL,
                              "evidence_class": "candidate_unverified_yaml",
                              "source": "fixture", "captured_at": "2025-01-01T00:00:00Z"}]),
+        ),
+    ),
+    JsonScenario(
+        "workflow_trace_closed_issue_closeout_not_found",
+        "workflow",
+        (*ASGK, "workflow", "trace", "--snapshot", "{temp_input}",
+         "--start", WORKFLOW_ISSUE_URL, "--json"),
+        "negative",
+        "warning",
+        1,
+        ("WF_CLOSEOUT_NOT_FOUND",),
+        WORKFLOW_PROOF_BOUNDARY,
+        expected_domain_result="incomplete",
+        temp_input=TempInput(content=WORKFLOW_MINIMAL_SNAPSHOT),
+        expected_mechanically_checked=(
+            "supplied snapshot shape", "single snapshot per issue", "durable URL links",
+            "closed-issue JSON shape-checked closeout edge",
+            "separate unverified YAML candidate URLs", "visited closed-issue closeout presence",
+            "known-snapshot shorthand links", "bounded traversal and unresolved references",
+        ),
+        expected_payload_fields=(
+            ("evidence_source", "supplied_snapshots"),
+            ("closeout_not_found", [WORKFLOW_ISSUE_URL]),
+            ("candidates", []),
+        ),
+    ),
+    JsonScenario(
+        "workflow_search_duplicate_issue_snapshot",
+        "workflow",
+        (*ASGK, "workflow", "search", "--snapshot", "{temp_input}",
+         "--snapshot", "{temp_input}", "--query", "trace", "--json"),
+        "negative",
+        "fail",
+        1,
+        ("SNAPSHOT_CONFLICT",),
+        WORKFLOW_PROOF_BOUNDARY,
+        temp_input=TempInput(content=WORKFLOW_MINIMAL_SNAPSHOT),
+        expected_mechanically_checked=(
+            "workflow input handling and failure classification up to the reported boundary",
         ),
     ),
     JsonScenario(
@@ -1923,9 +1967,10 @@ RETAINED_JSON_SCENARIOS = (
         expected_domain_result="incomplete",
         temp_input=TempInput(content=WORKFLOW_MINIMAL_SNAPSHOT),
         expected_mechanically_checked=(
-            "supplied snapshot shape", "durable URL links",
+            "supplied snapshot shape", "single snapshot per issue", "durable URL links",
             "closed-issue JSON shape-checked closeout edge",
-            "separate unverified YAML candidate URLs", "known-snapshot shorthand links",
+            "separate unverified YAML candidate URLs", "visited closed-issue closeout presence",
+            "known-snapshot shorthand links",
             "bounded traversal and unresolved references",
         ),
         expected_payload_fields=(("evidence_source", "supplied_snapshots"),),

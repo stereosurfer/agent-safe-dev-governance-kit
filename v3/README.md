@@ -93,6 +93,8 @@ target-owned assessment、普通 revert 與文件驅動自體進化都保留。
 `handoff` 和 `closeout` 只產生 GitHub comment 草稿，不自動 post／merge／close。
 搜尋以 issue close-out 為入口，不要求翻遍 repo；JSON 只做有限形狀檢查，
 YAML 只回傳待核實候選網址，遇到候選不能宣稱追溯完整。
+每次查找同一 issue 只接受一份快照；已關閉 issue 若沒有提供可辨識的
+結案，也會明示不完整，不能把舊式文字結案當成不存在。
 
 本目錄源自從原 `codex/asgk-3-preview` 另開的 preview.1 候選分支，原候選不變。
 它的 GitHub workflow 部分已由 #397 整合到根目錄 CLI 與 doctor；

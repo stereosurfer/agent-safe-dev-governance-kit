@@ -157,7 +157,9 @@ caller 選入的任意 PR 放進 `prs_in_scope`。輸出的 `relation_evidence` 
 文字連結來源，不是 GitHub `closingIssuesReferences`、語意關聯或核准證據。
 
 `search`／`trace` 只從 caller 提供、顯示已 closed 的 issue 快照讀取非草稿
-留言。只有無重複鍵、同 issue、具決定／理由／否決路徑／證據等必要形狀的
+留言。每次查找同一 issue 只能提供一份快照；即使兩份看似相同也會以
+`SNAPSHOT_CONFLICT` 拒絕，須先自行選定當前版本，避免輸入順序左右追溯。
+只有無重複鍵、同 issue、具決定／理由／否決路徑／證據等必要形狀的
 fenced JSON 能建立 `json_shape_checked` 的 issue → comment 邊；這仍只是
 結構檢查，不驗證作者、內容真偽、即時 GitHub 狀態或核准。
 
@@ -169,6 +171,10 @@ YAML 候選的 URL、來源及快照時間會另列於 `candidates`，不建立�
 `warning`、`domain_result: incomplete`、exit 1。純文字 marker、Markdown
 引用範例與草稿不算候選。舊式 prose close-out 可能不在搜尋結果；這不代表
 決策不存在，必要時仍查原始 GitHub issue。
+若追溯走到已關閉的 issue，提供的快照卻沒有 JSON 形狀檢查通過的結案
+或 YAML 候選，會回 `WF_CLOSEOUT_NOT_FOUND`、`warning`、`incomplete`、exit 1；
+舊式 prose 結案或未提供的留言仍可能存在。即使 JSON 路徑回 pass，也只表示
+已提供快照內的有界連結走訪完成，絕不證明全部歷史決策均已收齊。
 `trace` 只把 `#N` 縮寫連到本次快照中已知的 issue 或 PR；未知編號列入
 `unresolved_shorthand_refs`，不再一律猜成 issue。補上對應快照才能解開該邊；
 沒有提供快照不代表 GitHub 上不存在該決策。
