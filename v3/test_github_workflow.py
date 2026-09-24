@@ -661,6 +661,71 @@ class GithubWorkflowTests(unittest.TestCase):
                 issue_node = next(node for node in traced['nodes'] if node['url'] == issue_url)
                 self.assertIn(target['html_url'], issue_node['links'])
 
+    def test_json_closeout_inside_example_container_is_not_checked(self):
+        snapshot = copy.deepcopy(self.indexed_final)
+        issue_url = snapshot['issue']['html_url']
+        target = next(comment for comment in snapshot['comments']
+                      if w.json_closeout_shape(comment['body'], issue_url))
+        original = target['body']
+        for opening, closing in (('<!--', '-->'),
+                                 ('~~~~markdown', '~~~~'),
+                                 ('````markdown', '````'),
+                                 ('<details><summary>Example, not final</summary>', '</details>'),
+                                 ('<pre>', '</pre>')):
+            with self.subTest(opening=opening):
+                target['body'] = opening + '\n' + original + '\n' + closing
+                self.assertFalse(w.json_closeout_shape(target['body'], issue_url))
+                searched = w.search([snapshot], 'Keep GitHub as work ledger')
+                self.assertEqual([], searched['matches'])
+                traced = w.trace([snapshot], issue_url)
+                issue_node = next(node for node in traced['nodes']
+                                  if node['url'] == issue_url)
+                self.assertNotIn(target['html_url'], issue_node['links'])
+                self.assertIn('WF_CLOSEOUT_NOT_FOUND',
+                              [finding['code'] for finding in traced['findings']])
+
+        target['body'] = 'Earlier example omitted.\n\n' + original
+        self.assertTrue(w.json_closeout_shape(target['body'], issue_url))
+        checked = w.search([snapshot], 'Keep GitHub as work ledger')
+        self.assertEqual('json_shape_checked', checked['matches'][0]['evidence_class'])
+
+        target['body'] = '<!-- Hidden contrary proposal. -->\n\n' + original
+        self.assertFalse(w.json_closeout_shape(target['body'], issue_url))
+        self.assertEqual([], w.search([snapshot], 'Hidden contrary proposal')['matches'])
+
+        target['body'] = 'Unrelated preamble only.\n\n' + original
+        self.assertTrue(w.json_closeout_shape(target['body'], issue_url))
+        self.assertEqual([], w.search([snapshot], 'Unrelated preamble only')['matches'])
+
+    def test_multiple_json_closeouts_in_one_comment_are_not_checked(self):
+        snapshot = copy.deepcopy(self.indexed_final)
+        issue_url = snapshot['issue']['html_url']
+        target = next(comment for comment in snapshot['comments']
+                      if w.json_closeout_shape(comment['body'], issue_url))
+        original = target['body']
+        self.assertIn('Keep GitHub as work ledger', original)
+        conflicting = original.replace('Keep GitHub as work ledger',
+                                       'Reject GitHub as work ledger', 1)
+        variants = (conflicting,
+                    conflicting.replace('```json', '```JSON', 1),
+                    conflicting.replace('```json', '~~~json', 1).replace('\n```', '\n~~~', 1))
+        for second in variants:
+            with self.subTest(second=second[:20]):
+                target['body'] = original + '\n' + second
+                self.assertFalse(w.json_closeout_shape(target['body'], issue_url))
+                searched = w.search([snapshot], 'Keep GitHub as work ledger')
+                self.assertEqual([], searched['matches'])
+                traced = w.trace([snapshot], issue_url)
+                issue_node = next(node for node in traced['nodes'] if node['url'] == issue_url)
+                self.assertNotIn(target['html_url'], issue_node['links'])
+                self.assertIn('WF_CLOSEOUT_NOT_FOUND',
+                              [finding['code'] for finding in traced['findings']])
+
+        target['body'] = original
+        self.assertTrue(w.json_closeout_shape(target['body'], issue_url))
+        checked = w.search([snapshot], 'Keep GitHub as work ledger')
+        self.assertEqual('json_shape_checked', checked['matches'][0]['evidence_class'])
+
     def test_explicit_draft_banner_never_promotes_json_closeout(self):
         snapshot = copy.deepcopy(self.indexed_final)
         issue_url = snapshot['issue']['html_url']

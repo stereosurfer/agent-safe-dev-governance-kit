@@ -489,10 +489,8 @@ def closeout_draft(snapshot, packet, report, root, status):
     return result, text
 
 
-def json_closeout_shape(body, issue_url):
-    """Check only a duplicate-free JSON shape; never infer truth or authority."""
-    def substantive_json(review):
-        return substantive_closeout_shape(review, issue_url)
+def checked_json_closeout(body, issue_url):
+    """Return one visible canonical JSON review, never its truth or authority."""
 
     def unique_json_pairs(items):
         value = {}
@@ -505,17 +503,27 @@ def json_closeout_shape(body, issue_url):
     def reject_nonstandard_constant(value):
         raise ValueError('Nonstandard JSON constant: ' + value)
 
-    for match in re.finditer(r'(?ms)^```json[ \t]*\n(.*?)^```[ \t]*$', body):
+    closeouts = []
+    for block, canonical in standalone_closeout_fences(
+            body, ('json',), reject_html_tags=True):
         try:
-            value = json.loads(match.group(1), object_pairs_hook=unique_json_pairs,
+            value = json.loads(block, object_pairs_hook=unique_json_pairs,
                                parse_constant=reject_nonstandard_constant)
         except (ValueError, TypeError):
+            if 'issue_closeout_review' in block:
+                return None
             continue
-        if type(value) is not dict or type(value.get('issue_closeout_review')) is not dict:
-            continue
-        if substantive_json(value['issue_closeout_review']):
-            return True
-    return False
+        if type(value) is dict and 'issue_closeout_review' in value:
+            if not canonical:
+                return None
+            closeouts.append(value['issue_closeout_review'])
+    if len(closeouts) == 1 and substantive_closeout_shape(closeouts[0], issue_url):
+        return closeouts[0]
+    return None
+
+
+def json_closeout_shape(body, issue_url):
+    return checked_json_closeout(body, issue_url) is not None
 
 
 def substantive_closeout_shape(review, issue_url):
@@ -675,9 +683,10 @@ def parse_closeout_yaml_subset(source):
     return value
 
 
-def standalone_yaml_blocks(body):
-    """Yield only top-level canonical YAML fences, not nested Markdown examples."""
-    if re.search(r'(?i)<\s*(?:[!?]|/?\s*[A-Za-z][A-Za-z0-9-]*(?:\s|/?>))', body):
+def standalone_closeout_fences(body, languages, *, reject_html_tags=False):
+    """Yield visible top-level format fences with exact-canonical status."""
+    if (reject_html_tags and re.search(
+            r'(?i)<\s*(?:[!?]|/?\s*[A-Za-z][A-Za-z0-9-]*(?:\s|/?>))', body)):
         return
     lines = body.splitlines()
     opening = None
@@ -699,13 +708,21 @@ def standalone_yaml_blocks(body):
                 opening = fence.group(1)
                 start = index + 1
                 info = fence.group(2).strip()
-                canonical = line.startswith('```') and len(opening) == 3 and info in ('yaml', 'yml')
+                relevant = info.casefold() in languages
+                canonical = line.startswith('```') and len(opening) == 3 and info in languages
             continue
         if (fence and fence.group(1)[0] == opening[0]
                 and len(fence.group(1)) >= len(opening) and not fence.group(2).strip()):
-            if canonical:
-                yield '\n'.join(lines[start:index])
+            if relevant:
+                yield '\n'.join(lines[start:index]), canonical
             opening = None
+
+
+def standalone_yaml_blocks(body):
+    for block, canonical in standalone_closeout_fences(
+            body, ('yaml', 'yml'), reject_html_tags=True):
+        if canonical:
+            yield block
 
 
 def yaml_closeout_candidate(body):
@@ -867,33 +884,35 @@ def candidate_pointer(node):
 def search(snapshots, query):
     words(query, 'query')
     nodes = index_snapshots(snapshots)
+    def scalar_values(value):
+        if type(value) is str:
+            yield value
+        elif type(value) is dict:
+            for item in value.values():
+                yield from scalar_values(item)
+        elif type(value) is list:
+            for item in value:
+                yield from scalar_values(item)
+
+    def query_in_decisions(review):
+        decision_fields = [review['decision_analysis'], review['decisions']]
+        return any(query.casefold() in value.casefold()
+                   for field in decision_fields for value in scalar_values(field))
+
     def query_in_closeout(node):
-        if node['json_closeout_shape_checked'] and query.casefold() in node['body'].casefold():
-            return True
+        if node['json_closeout_shape_checked']:
+            review = checked_json_closeout(node['body'], node['container_issue_url'])
+            return review is not None and query_in_decisions(review)
         if node['yaml_closeout_shape_checked']:
             block = next((item for item in standalone_yaml_blocks(node['body'])
                           if re.search(r'(?m)^issue_closeout_review:', item)), None)
             if block is None:
                 return False
-
-            def scalar_values(value):
-                if type(value) is str:
-                    yield value
-                elif type(value) is dict:
-                    for item in value.values():
-                        yield from scalar_values(item)
-                elif type(value) is list:
-                    for item in value:
-                        yield from scalar_values(item)
-
             try:
                 parsed = parse_closeout_yaml_subset(block)
             except (ValueError, TypeError, json.JSONDecodeError):
                 return False
-            review = parsed['issue_closeout_review']
-            decision_fields = [review['decision_analysis'], review['decisions']]
-            return any(query.casefold() in value.casefold()
-                       for field in decision_fields for value in scalar_values(field))
+            return query_in_decisions(parsed['issue_closeout_review'])
         return query.casefold() in node['body'].casefold()
 
     selected = [node for node in nodes.values() if node['kind'] == 'comment'
@@ -907,10 +926,11 @@ def search(snapshots, query):
     result = envelope('warning' if candidates else 'pass', matches=matches,
                       candidates=candidates,
                       search_scope='One selected snapshot per issue and one observation per PR; closed-issue '
-                      'duplicate-free JSON and strict YAML-subset shape matches, plus unverified fenced YAML candidates; '
+                      'one visible canonical JSON and strict YAML-subset decision-field shape matches, '
+                      'plus unverified fenced YAML candidates; '
                       'no repository scan or truth check')
     result['mechanically_checked'] = ['supplied snapshot shape', 'single selected observation per issue and PR',
-        'closed-issue duplicate-free JSON closeout shape',
+        'closed-issue single visible canonical JSON closeout shape',
         'strict YAML-subset closeout shape and matching issue identity', 'case-insensitive query match']
     result['not_checked'].append('closeout decision substance and cited evidence authenticity')
     if candidates:

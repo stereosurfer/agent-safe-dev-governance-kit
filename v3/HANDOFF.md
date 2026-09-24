@@ -89,9 +89,13 @@ Preserve the rejected attempt and correction links; no reset, force push or sile
 - Capture is not atomic; a saved snapshot is not live authority or authenticated evidence.
 - Local committed diff observation does not retain uncommitted patch contents or inspect ignored/external side effects.
 - Checks report evidence coverage, not command execution, approval or semantic correctness.
-- Search/trace indexes only supplied snapshots: duplicate-free JSON and the
+- Search/trace indexes only supplied snapshots: one visible, top-level,
+  duplicate-free JSON closeout and the
   strict canonical YAML subset can yield bounded shape-checked edges when
-  same-issue substantive fields are present. Unsupported, malformed,
+  same-issue substantive fields are present. Raw HTML-marked, outer-example,
+  or multiple JSON closeouts in one comment cannot yield a checked edge.
+  Checked search queries use parsed decision fields, not surrounding prose.
+  Unsupported, malformed,
   wrong-issue, or incomplete YAML remains an unverified candidate and makes
   the affected lookup incomplete. It reports missing links and never invents
   history, authorship, content truth, evidence authenticity, or approval.

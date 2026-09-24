@@ -80,6 +80,35 @@ WORKFLOW_CLOSEOUT_SNAPSHOT["comments"] = [{
     "body": "```json\n" + WORKFLOW_CLOSEOUT_COMMENT + "\n```",
 }]
 WORKFLOW_CLOSEOUT_SNAPSHOT = json.dumps(WORKFLOW_CLOSEOUT_SNAPSHOT, separators=(",", ":"))
+
+
+def workflow_json_example_snapshot(body):
+    snapshot = json.loads(WORKFLOW_CLOSEOUT_SNAPSHOT)
+    snapshot["comments"][0]["body"] = body
+    return json.dumps(snapshot, separators=(",", ":"))
+
+
+WORKFLOW_JSON_FENCE = "```json\n" + WORKFLOW_CLOSEOUT_COMMENT + "\n```"
+WORKFLOW_JSON_HTML_COMMENT_SNAPSHOT = workflow_json_example_snapshot(
+    "<!--\n" + WORKFLOW_JSON_FENCE + "\n-->")
+WORKFLOW_JSON_HTML_SIDEBAND_SNAPSHOT = workflow_json_example_snapshot(
+    "<!-- Hidden contrary proposal. -->\n" + WORKFLOW_JSON_FENCE)
+WORKFLOW_JSON_DETAILS_SNAPSHOT = workflow_json_example_snapshot(
+    "<details><summary>Example, not final</summary>\n"
+    + WORKFLOW_JSON_FENCE + "\n</details>")
+WORKFLOW_JSON_NESTED_FENCE_SNAPSHOT = workflow_json_example_snapshot(
+    "~~~~markdown\n" + WORKFLOW_JSON_FENCE + "\n~~~~")
+WORKFLOW_JSON_MULTIPLE_CLOSEOUTS_SNAPSHOT = workflow_json_example_snapshot(
+    WORKFLOW_JSON_FENCE + "\n" + WORKFLOW_JSON_FENCE.replace(
+        "Keep GitHub trace", "Reject GitHub trace"))
+WORKFLOW_JSON_UPPERCASE_SECOND_SNAPSHOT = workflow_json_example_snapshot(
+    WORKFLOW_JSON_FENCE + "\n" + WORKFLOW_JSON_FENCE.replace(
+        "```json", "```JSON", 1))
+WORKFLOW_JSON_TILDE_SECOND_SNAPSHOT = workflow_json_example_snapshot(
+    WORKFLOW_JSON_FENCE + "\n" + WORKFLOW_JSON_FENCE.replace(
+        "```json", "~~~json", 1).replace("\n```", "\n~~~", 1))
+WORKFLOW_JSON_UNRELATED_PREAMBLE_SNAPSHOT = workflow_json_example_snapshot(
+    "Unrelated preamble only.\n\n" + WORKFLOW_JSON_FENCE)
 WORKFLOW_YAML_CANDIDATE_URL = WORKFLOW_ISSUE_URL + "#issuecomment-11"
 WORKFLOW_YAML_CANDIDATE_BODY = (
     '```yaml\nissue_closeout_review:\n  issue: "#1"\n  status: completed\n'
@@ -2003,6 +2032,99 @@ RETAINED_JSON_SCENARIOS = (
         ),
     ),
     JsonScenario(
+        "workflow_trace_json_html_comment_not_checked",
+        "workflow",
+        (*ASGK, "workflow", "trace", "--snapshot", "{temp_input}",
+         "--start", WORKFLOW_ISSUE_URL, "--json"),
+        "negative", "warning", 1, ("WF_CLOSEOUT_NOT_FOUND",),
+        WORKFLOW_PROOF_BOUNDARY,
+        expected_domain_result="incomplete",
+        temp_input=TempInput(content=WORKFLOW_JSON_HTML_COMMENT_SNAPSHOT),
+        expected_payload_fields=(("closeout_not_found", [WORKFLOW_ISSUE_URL]),
+                                 ("candidates", [])),
+    ),
+    JsonScenario(
+        "workflow_trace_json_html_sideband_not_checked",
+        "workflow",
+        (*ASGK, "workflow", "trace", "--snapshot", "{temp_input}",
+         "--start", WORKFLOW_ISSUE_URL, "--json"),
+        "negative", "warning", 1, ("WF_CLOSEOUT_NOT_FOUND",),
+        WORKFLOW_PROOF_BOUNDARY,
+        expected_domain_result="incomplete",
+        temp_input=TempInput(content=WORKFLOW_JSON_HTML_SIDEBAND_SNAPSHOT),
+        expected_payload_fields=(("closeout_not_found", [WORKFLOW_ISSUE_URL]),
+                                 ("candidates", [])),
+    ),
+    JsonScenario(
+        "workflow_trace_json_details_example_not_checked",
+        "workflow",
+        (*ASGK, "workflow", "trace", "--snapshot", "{temp_input}",
+         "--start", WORKFLOW_ISSUE_URL, "--json"),
+        "negative", "warning", 1, ("WF_CLOSEOUT_NOT_FOUND",),
+        WORKFLOW_PROOF_BOUNDARY,
+        expected_domain_result="incomplete",
+        temp_input=TempInput(content=WORKFLOW_JSON_DETAILS_SNAPSHOT),
+        expected_payload_fields=(("closeout_not_found", [WORKFLOW_ISSUE_URL]),
+                                 ("candidates", [])),
+    ),
+    JsonScenario(
+        "workflow_trace_json_nested_fence_not_checked",
+        "workflow",
+        (*ASGK, "workflow", "trace", "--snapshot", "{temp_input}",
+         "--start", WORKFLOW_ISSUE_URL, "--json"),
+        "negative", "warning", 1, ("WF_CLOSEOUT_NOT_FOUND",),
+        WORKFLOW_PROOF_BOUNDARY,
+        expected_domain_result="incomplete",
+        temp_input=TempInput(content=WORKFLOW_JSON_NESTED_FENCE_SNAPSHOT),
+        expected_payload_fields=(("closeout_not_found", [WORKFLOW_ISSUE_URL]),
+                                 ("candidates", [])),
+    ),
+    JsonScenario(
+        "workflow_trace_json_multiple_closeouts_not_checked",
+        "workflow",
+        (*ASGK, "workflow", "trace", "--snapshot", "{temp_input}",
+         "--start", WORKFLOW_ISSUE_URL, "--json"),
+        "negative", "warning", 1, ("WF_CLOSEOUT_NOT_FOUND",),
+        WORKFLOW_PROOF_BOUNDARY,
+        expected_domain_result="incomplete",
+        temp_input=TempInput(content=WORKFLOW_JSON_MULTIPLE_CLOSEOUTS_SNAPSHOT),
+        expected_payload_fields=(("closeout_not_found", [WORKFLOW_ISSUE_URL]),
+                                 ("candidates", [])),
+    ),
+    JsonScenario(
+        "workflow_trace_json_uppercase_second_not_checked",
+        "workflow",
+        (*ASGK, "workflow", "trace", "--snapshot", "{temp_input}",
+         "--start", WORKFLOW_ISSUE_URL, "--json"),
+        "negative", "warning", 1, ("WF_CLOSEOUT_NOT_FOUND",),
+        WORKFLOW_PROOF_BOUNDARY,
+        expected_domain_result="incomplete",
+        temp_input=TempInput(content=WORKFLOW_JSON_UPPERCASE_SECOND_SNAPSHOT),
+        expected_payload_fields=(("closeout_not_found", [WORKFLOW_ISSUE_URL]),
+                                 ("candidates", [])),
+    ),
+    JsonScenario(
+        "workflow_trace_json_tilde_second_not_checked",
+        "workflow",
+        (*ASGK, "workflow", "trace", "--snapshot", "{temp_input}",
+         "--start", WORKFLOW_ISSUE_URL, "--json"),
+        "negative", "warning", 1, ("WF_CLOSEOUT_NOT_FOUND",),
+        WORKFLOW_PROOF_BOUNDARY,
+        expected_domain_result="incomplete",
+        temp_input=TempInput(content=WORKFLOW_JSON_TILDE_SECOND_SNAPSHOT),
+        expected_payload_fields=(("closeout_not_found", [WORKFLOW_ISSUE_URL]),
+                                 ("candidates", [])),
+    ),
+    JsonScenario(
+        "workflow_search_json_unrelated_preamble_not_checked",
+        "workflow",
+        (*ASGK, "workflow", "search", "--snapshot", "{temp_input}",
+         "--query", "Unrelated preamble only", "--json"),
+        "positive", "pass", 0, (), WORKFLOW_PROOF_BOUNDARY,
+        temp_input=TempInput(content=WORKFLOW_JSON_UNRELATED_PREAMBLE_SNAPSHOT),
+        expected_payload_fields=(("matches", []), ("candidates", [])),
+    ),
+    JsonScenario(
         "workflow_search_canonical_yaml_shape_checked",
         "workflow",
         (*ASGK, "workflow", "search", "--snapshot", "{temp_input}",
@@ -2011,7 +2133,7 @@ RETAINED_JSON_SCENARIOS = (
         temp_input=TempInput(content=WORKFLOW_YAML_CHECKED_SNAPSHOT),
         expected_mechanically_checked=(
             "supplied snapshot shape", "single selected observation per issue and PR",
-            "closed-issue duplicate-free JSON closeout shape",
+            "closed-issue single visible canonical JSON closeout shape",
             "strict YAML-subset closeout shape and matching issue identity",
             "case-insensitive query match",
         ),
@@ -2091,7 +2213,7 @@ RETAINED_JSON_SCENARIOS = (
         temp_input=TempInput(content=WORKFLOW_MALFORMED_YAML_CANDIDATE_SNAPSHOT),
         expected_mechanically_checked=(
             "supplied snapshot shape", "single selected observation per issue and PR",
-            "closed-issue duplicate-free JSON closeout shape",
+            "closed-issue single visible canonical JSON closeout shape",
             "strict YAML-subset closeout shape and matching issue identity", "case-insensitive query match",
         ),
         expected_payload_fields=(

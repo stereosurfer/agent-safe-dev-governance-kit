@@ -262,9 +262,13 @@ target-fixture tree fingerprints. They validate only caller-supplied
 mechanical claims; they do not select claims or judge target fit, layout,
 governance depth, adaptation, readiness, recommendation, or approval.
 
-The `workflow` group pairs supplied-snapshot traces of substantive,
-same-issue duplicate-free JSON and strict canonical YAML-subset closeout shapes
-with unresolved-link, malformed or wrong-issue YAML-candidate, and closed-issue-no-closeout warnings plus duplicate-issue
+The `workflow` group pairs supplied-snapshot traces of one visible,
+substantive, same-issue duplicate-free JSON closeout and strict canonical
+YAML-subset closeout shapes with HTML-marked, nested-example, and multiple
+JSON closeouts (including alternate fence case or delimiter) that must not
+form checked edges. Unrelated comment prose must not become a checked JSON
+decision search hit; unresolved-link, malformed or
+wrong-issue YAML-candidate, and closed-issue-no-closeout warnings plus duplicate-issue
 snapshot rejection and malformed snapshot failure. Exact exits and finding
 codes (`WF_TRACE_INCOMPLETE`,
 `WF_YAML_CANDIDATE_UNVERIFIED`, `WF_CLOSEOUT_NOT_FOUND`, `SNAPSHOT_CONFLICT`,
@@ -273,8 +277,9 @@ closeout from being reported as a complete bounded traversal; they do not
 prove the full historical decision tree was supplied. Root `doctor` also runs
 workflow unit tests covering issue-backed projection, repository binding,
 stale packet, out-of-scope diff,
-draft-only handoff/closeout, GET-only capture, safe output, empty and
-duplicate-key JSON, canonical YAML-subset shape-checked edges, and malformed
+draft-only handoff/closeout, GET-only capture, safe output, empty,
+duplicate-key, hidden/example, and multiple JSON closeouts, canonical
+YAML-subset shape-checked edges, and malformed
 YAML candidate visibility without promoting that candidate to a checked edge.
 Repeated same-issue snapshots are rejected even
 when identical; workflow unit tests also reject repeated PR observations across
