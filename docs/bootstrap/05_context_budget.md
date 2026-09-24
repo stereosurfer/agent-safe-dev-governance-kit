@@ -1,37 +1,22 @@
 # 05 Context Budget
 
-## Default limits
+This is a short entry to the canonical
+[Context Budget Policy](../control/CONTEXT_BUDGET_POLICY.md), not a second set
+of limits.
 
-```yaml
-context_budget:
-  max_files_per_task: 5
-  max_changed_files_per_pr: 10
-  max_issue_scope: one_atomic_outcome
-  max_context_sources:
-    - current issue
-    - affected files
-    - relevant contracts
-    - current status doc
-```
+Start with `AGENTS.md`, `README.md`, `docs/handoff/CURRENT_STATUS.md`, and the
+selected live GitHub issue or PR. For executable work, that authority records
+an exact `context_read_set` and `project_specific_validation`. Read only what
+is relevant, then record any justified expansion. No fixed per-task file count
+or per-PR changed-file count overrides the issue's scope and validation.
 
-## Task packet required context
+A task packet is optional. `issue_refinement` may only narrow a live issue;
+`github_unavailable_fallback` is a bounded local-work exception during a
+verified outage and cannot authorize a PR or external action. Neither is a
+second task authority.
 
-Every task packet must include:
-
-- objective
-- allowed paths
-- expected output
-- acceptance criteria
-- stop conditions
-- durable source of truth
-
-## Stop when
-
-```yaml
-stop_when:
-  - context_is_insufficient
-  - task_touches_forbidden_path
-  - schema_change_required_but_not_authorized
-  - tests_fail_for_unrelated_reasons
-  - new_dependency_required
-```
+Stop when required context or allowed paths are missing, the selected authority
+conflicts with another source, a protected or human-gated action lacks
+authorization, or validation cannot establish the required result. Do not solve
+context pressure by silently skipping a gate or treating a named read-set class
+as an automatic document bundle.

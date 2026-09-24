@@ -2,9 +2,11 @@
 
 Status: active control policy.
 
-This policy defines the repository context an AI agent should read for one work
-unit. It exists to reduce token use, prevent context overload, and keep agents
-from merging similar-but-distinct governance rules into inaccurate summaries.
+This policy defines how a human or AI worker chooses repository context for one
+work unit. It reduces overload without hiding the active issue, a required
+control, or contradictory evidence. It sets no numeric per-task file limit:
+the exact issue or qualifying PR read set and the task's risk determine what
+must be read.
 
 ## Authority Boundary
 
@@ -39,10 +41,10 @@ item.
 core_rules:
   - use_the_smallest_sufficient_context_set
   - do_not_read_the_whole_repository_by_default
-  - record_exact_context_read_set_before_editing
+  - use_the_issue_or_qualifying_PR_exact_context_read_set_before_editing
   - use_named_read_set_only_as_advisory_classification
   - record_context_expansion_when_extra_files_are_read
-  - treat_context_read_set_as_the_task_level_file_gate
+  - treat_context_read_set_as_a_read_boundary_not_write_or_merge_authority
   - keep_context_budget_notes_in_existing_PR_or_agent_report_surfaces
   - do_not_create_a_separate_context_pack_or_sidecar_context_artifact
 ```
@@ -80,11 +82,14 @@ to them.
 
 ## Selecting A Read Set
 
-Before changing files, record the smallest exact `context_read_set`. A named
-read-set classification may help choose those paths, but the classification
-never implies files, authority, or permission. If more than one classification
-appears relevant, record only the exact paths required and any expansion
-reason.
+Before changing files, use the selected issue or qualifying PR's smallest
+exact `context_read_set`. An optional `issue_refinement` packet may narrow it,
+never expand or replace the issue. Named classes below are prompts to check
+relevance, not automatic document bundles or a second task identity. If more
+than one class appears relevant, read only the exact paths needed and record
+any expansion reason in the existing issue, PR, or handoff surface. The read
+set does not grant permission to edit its files; `allowed_paths` remains the
+write boundary.
 
 ```yaml
 context_read_set_selection:
@@ -102,11 +107,14 @@ context_read_set_selection:
     - context_read_set_missing
     - issue_template_option_disagrees_with_this_policy
     - selected_read_set_would_hide_a_human_gate
-    - selected_read_set_requires_files_outside_allowed_scope
+    - a_repository_read_path_is_missing_or_outside_the_repository
+    - private_material_would_be_read_without_authorization
 ```
 
-These read sets are the canonical task-type guide. Do not add a second task-type
-table that repeats them in different words.
+These read-set classes are advisory navigation examples. They never override
+an issue's exact read set, the default startup set, a human gate, or a relevant
+canonical owner. Do not create another classification table with competing
+read requirements.
 
 ## Read Sets
 
@@ -119,21 +127,18 @@ read_sets:
       - README.md
       - docs/handoff/CURRENT_STATUS.md
       - open PRs or current issue when relevant
-    max_initial_documents: 4
+    initial_documents: 4
     expand_when:
       - current status points to a specific control document
       - active issue names a specific file
 
   handoff_recovery:
     use_when: "Resuming work after interruption, tool switch, model switch, or handoff."
-    read:
-      - AGENTS.md
-      - docs/handoff/CURRENT_STATUS.md
-      - active GitHub issue
+    consider_when_relevant:
       - active PR if one exists
-      - docs/control/HANDOFF_PACKET.md
-      - docs/DOCUMENT_MAP.md
-    also_read_from_packet:
+      - docs/control/HANDOFF_PACKET.md if a packet exists or its rules are in question
+      - docs/DOCUMENT_MAP.md if the next canonical owner is unclear
+    if_packet_exists_consider:
       - must_read
       - modified_files
       - allowed_paths
@@ -149,19 +154,16 @@ read_sets:
       - next_safe_action_empty
       - validation_status_unknown
       - allowed_paths_missing
-      - must_read_missing
+      - packet_exists_and_must_read_missing
       - handoff_packet_conflicts_with_active_pr
       - human_gate_detected_without_approval
 
   docs_only:
     use_when: "Bounded documentation changes that do not alter policy semantics, validators, schemas, dependencies, or workflows."
-    read:
-      - AGENTS.md
-      - docs/handoff/CURRENT_STATUS.md
-      - current GitHub issue or PR
+    consider_when_relevant:
       - target file
-      - .github/PULL_REQUEST_TEMPLATE.md
-    optional_read:
+      - .github/PULL_REQUEST_TEMPLATE.md when drafting a PR body
+    additional_candidates:
       - docs/DOCUMENT_MAP.md
     stop_if:
       - required_change_outside_allowed_paths
@@ -170,13 +172,10 @@ read_sets:
 
   control_policy:
     use_when: "Governance or control documents such as work-unit state, low-risk merge, human gates, issue hygiene, context budget, or handoff packets."
-    read:
-      - AGENTS.md
-      - docs/handoff/CURRENT_STATUS.md
-      - docs/DOCUMENT_MAP.md
-      - current GitHub issue or PR
+    consider_when_relevant:
       - target control document
-      - related canonical control document named by DOCUMENT_MAP.md or DOCUMENT_REGISTRY.md
+      - docs/DOCUMENT_MAP.md if canonical ownership is unclear
+      - related canonical control document named by the target or Document Map
     expand_when:
       - canonical owner is unclear
       - target document references another control document
@@ -274,11 +273,13 @@ read_sets:
     use_when: "Artifact promotion, source/input class boundaries, downstream output, external calls, import/export, provider/model calls, or publication readiness."
     read:
       - AGENTS.md
+      - current GitHub issue or PR
+      - docs/control/HUMAN_GATED_OPERATIONS.md
+    read_for_actual_artifact_promotion:
       - docs/bootstrap/13_artifact_promotion_policy.md
       - docs/bootstrap/15_source_or_input_class_matrix.md
       - docs/bootstrap/16_downstream_promotion_matrix.md
       - docs/bootstrap/17_readiness_audit_policy.md
-      - current GitHub issue or PR
     optional_read:
       - contracts/promotion_gate.contract.yaml
       - schemas/promotion_gate.schema.json
@@ -311,6 +312,12 @@ read_sets:
 Selecting a read set is a context classification only. It never makes a
 protected path safe to edit, never approves merge, and never replaces the
 current issue or PR allowed paths.
+
+For an external call, import/export, provider/model call, or publication that
+does not use promoted artifacts, the artifact-promotion documents above are
+not generic prerequisites. The current issue's exact read set must still
+include relevant controls, including Human-Gated Operations for an applicable
+human gate. A context class cannot waive that gate.
 
 ## Context Expansion
 
@@ -399,8 +406,10 @@ action.
 
 ## Token-Saving Rules
 
-1. Prefer task packets, issue bodies, handoff packets, and current-status
-   documents over full conversation history.
+1. Prefer the live issue or qualifying PR, compact current status, and a
+   handoff packet when one exists over full conversation history. A task
+   packet is optional issue refinement or verified GitHub-outage fallback,
+   never a second authority.
 2. Prefer canonical documents over summaries.
 3. Prefer changed-file lists and validator output over reading unrelated docs.
 4. Prefer scripts for mechanical checks.
@@ -432,6 +441,6 @@ maintenance_rules:
   - do_not_use_future_CLI_wrapper_plans_to_expand_current_startup_context
 ```
 
-Superseded runtime-specific profile and adapter plans are not current ASGK 2.0
+Superseded runtime-specific profile and adapter plans have no current product
 authority and must not expand the default startup context. Any future proposal
 requires a new durable issue justified from current needs.

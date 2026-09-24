@@ -15,7 +15,7 @@ Use this matrix to decide:
 - whether the current issue or PR scope is still appropriate;
 - whether a human gate applies;
 - whether low-risk autonomous merge can even be considered;
-- which context read set is required.
+- which advisory context guide may point to relevant controls.
 
 `lane` and `intelligence_level` are task metadata. They do not create a second
 source of authority and do not bypass GitHub issue-first work.
@@ -48,7 +48,7 @@ If these sources conflict, stop and report the conflict.
 
 ## Capability Matrix
 
-| Task type | Minimum level | Low-risk merge possible | Human gate required | Context read set | Notes |
+| Task type | Minimum level | Low-risk merge possible | Human gate required | Context guide | Notes |
 |---|---:|---:|---:|---|---|
 | typo / formatting in docs | `fast_basic` | yes | no | `docs_only` | Must stay inside allowed paths. |
 | small docs extraction or inventory | `fast_basic` | no PR unless output committed | no | `docs_only` | Avoid policy interpretation. |
@@ -116,7 +116,7 @@ Before completion, verify:
 
 1. The issue or PR authorized the actual files changed.
 2. The minimum level still matches the work performed.
-3. The required context read set was used or an override was recorded.
+3. The issue or qualifying PR's exact `context_read_set` was used, and any necessary expansion was recorded; a guide name never supplied files automatically.
 4. Human-gated operations are not being merged without approval.
 5. Low-risk merge is allowed by this matrix and the merge policies.
 6. Adoption or material-upgrade assessments preserve model judgment and do not
