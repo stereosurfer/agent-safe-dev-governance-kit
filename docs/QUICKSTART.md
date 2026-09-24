@@ -11,9 +11,11 @@ When policy details matter, follow the canonical documents named in
 
 ## What ASGK Sets Up
 
-ASGK is a GitHub-native governance kit for AI-assisted repository work. It makes
-GitHub issues, pull requests, validation, merge decisions, and handoff files the
-durable source of truth.
+ASGK is a GitHub-native governance kit for AI-assisted repository work. A live
+GitHub issue or qualifying PR authorizes bounded work; repository rules define
+durable constraints. Validation supplies evidence, merge decisions record the
+gate outcome, and a compact handoff helps the next person or AI resume. None of
+those evidence or recovery surfaces creates new work authority.
 
 It does not replace your coding agent, project architecture, runtime, package
 manager, installer, or orchestration system. A human, Codex, Claude Code,
