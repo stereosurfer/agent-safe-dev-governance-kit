@@ -150,9 +150,9 @@ periodic_or_milestone_review_when_requested:
 
 These triggers select procedures, not extra approvals. A recurring Codex-only
 website run does not need Hermes, Kanban, Group or a Bot profile. Its schedule
-is not current write/publication authority; the target's own issue/PR and
-content contract determine the bounded change. A read-only target assessment
-may recommend no ASGK installation when existing controls are sufficient.
+is not current write/publication authority; existing or adopted target-owned
+issue/PR and content controls determine the bounded change. A read-only target
+assessment may recommend no ASGK installation when existing controls suffice.
 
 Lessons and ledgers from research, video, translation or other work belong to
 their task-owned evidence home. A bounded capability index can point to

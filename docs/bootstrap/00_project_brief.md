@@ -29,8 +29,8 @@ human gates, handoff state, and close-out trail needed for that replacement.
 GitHub owns governed work and decision lineage. A task-owned delivery package
 may own its current questions and evidence; a capability repository may index
 prior Lessons and versioned methods. These do not replace GitHub authority.
-Kanban, when used, owns runtime card/run state; it is optional, including for
-Codex-and-GitHub-only work.
+When ASGK is used alongside Kanban, that runtime owns card/run state; Kanban
+is absent from the Codex-and-GitHub-only path.
 
 ## Primary Outputs
 

@@ -82,11 +82,11 @@ skills
 ```
 
 ASGK does not require Hermes, Kanban, a persistent Bot, or a separate police
-agent. When a runtime uses Kanban, its cards/runs belong there while GitHub
-retains work scope, PR/MDR, and closeout authority. Codex and GitHub alone can
-use the repository-governance loop; a recurring schedule starts a run but is
-not that run's permission to edit or publish. The no-Hermes recurring-website
-case is a required 3.0 acceptance test, not yet a proven deployment.
+agent. When ASGK is used alongside Kanban, cards/runs belong to that runtime
+while GitHub retains ASGK work scope, PR/MDR, and closeout authority. Codex
+and GitHub alone can use the repository-governance loop; a recurring schedule
+starts a run, not that run's permission to edit or publish. The no-Hermes
+website case is a required 3.0 acceptance test, not a proven deployment yet.
 
 Research, video, and translation are examples of capability evolution, not
 mandatory ASGK modules. A task's question/evidence graph belongs to its own
@@ -94,8 +94,8 @@ delivery contract. Reusable Lessons and methods can be discovered in bounded
 slices and promoted to a versioned Skill only through the applicable issue,
 PR, tests, review, and any existing human gate that applies. A large lesson
 corpus calls for progressive disclosure, not full-context loading or inflated
-Bot memory. This 3.0 model is
-documented in the candidate; root Skills and CLI have not yet been cut over.
+Bot memory. The 3.0 model is documented in the candidate; root Skills and CLI
+have not yet been cut over.
 
 Skills are not a new authority layer or a substitute for model judgment. They
 direct attention to relevant evidence, safety boundaries, uncertainty, and stop
