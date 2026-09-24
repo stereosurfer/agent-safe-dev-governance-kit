@@ -23,9 +23,11 @@ Use `docs/DOCUMENT_MAP.md` only if the work unit points to additional context.
 
 ## Procedure
 
-1. Check live open PRs before selecting an issue.
-2. If a PR is open, treat it as the current work boundary and inspect only what
-   is needed for that PR. Distinguish its GitHub lifecycle state from its
+1. Check live open PRs before selecting an issue. An unrelated open PR does not
+   displace an explicitly assigned issue or receiver handoff; identify the
+   relevant work unit instead of adopting the first PR in the list.
+2. If a relevant PR is open, treat it as the current work boundary and inspect
+   only what is needed for that PR. Distinguish its GitHub lifecycle state from its
    `merge_decision.result`:
    - draft or ready-for-review with `merge_blocked` is reviewable work, not
      merge eligibility;
@@ -50,7 +52,7 @@ Use `docs/DOCUMENT_MAP.md` only if the work unit points to additional context.
    comments, and decision record, and restart authorized work from current
    `main` on a fresh branch. A closed-unmerged PR did not change `main` and
    needs no revert.
-6. If no PR is open, compare live open issues with `CURRENT_STATUS.md`. A
+6. If no relevant PR is open, compare live open issues with `CURRENT_STATUS.md`. A
    closed-unmerged PR is historical evidence, not authority for new edits.
 7. If `CURRENT_STATUS.md` is stale but live GitHub state is clear, prefer live
    GitHub state and plan a status refresh only when repo-level recovery state
@@ -60,10 +62,10 @@ Use `docs/DOCUMENT_MAP.md` only if the work unit points to additional context.
    unavailable, proceed only from a complete validated fallback after confirming
    that no escalation trigger applies, and keep a hard stop before PR, merge,
    protected-path exception, or external action.
-9. Before reporting `ready_for_work_unit`, confirm the authority contains the
-   canonical 13 task fields plus separate `context_read_set` and
-   `project_specific_validation` gates. When the repository provides the
-   command, run:
+9. For an ASGK-governed work unit, before reporting `ready_for_work_unit`,
+   confirm the authority contains the canonical 13 task fields plus separate
+   `context_read_set` and `project_specific_validation` gates. When the
+   repository provides the command, run:
 
    ```bash
    python3 scripts/asgk.py work-unit-check --issue <number> --authority-only --json
@@ -74,6 +76,28 @@ Use `docs/DOCUMENT_MAP.md` only if the work unit points to additional context.
    and both gates. If a source-distributed target lacks this command, record
    validation as unavailable and perform a bounded manual check; do not convert
    command absence into a false validator failure.
+   Do not impose this source repository's exact issue form on a target that
+   has not adopted ASGK; first use the target's own current authority and,
+   when adoption is the question, the read-only target assessment Skill.
+10. When receiving a bounded handoff, verify the selected live issue or PR,
+    current head, allowed and forbidden paths, non-goals, remaining work,
+    validation evidence and next gate. A packet or role ceiling may narrow this
+    scope, never grant more. Preserve actor/run provenance where relevant; a
+    message acknowledgement or prior worker's approval is not completion.
+11. Label a controller-supplied snapshot, card, or cached packet as a
+    projection. A URL, search result, packet digest, or model assertion is not
+    evidence that this receiver read the current GitHub authority. If no
+    permitted observable live read is available, leave a partial handoff with
+    the unknowns and stop before repository mutation, except for the already
+    defined, independently verified GitHub-outage path: a complete validated
+    `github_unavailable_fallback` may bound local work inside its recorded
+    scope when no escalation applies, but never a PR or external action. A
+    saved snapshot alone is not outage evidence.
+
+If this work actually uses a Kanban runtime, its card/lease/completion state is
+runtime evidence only. Check its exact GitHub link and completion contract;
+`done` is not PR merge or issue closeout. This conditional branch does not
+require Kanban, Hermes, a Bot, or a second reviewer for ordinary startup.
 
 ## Stop States
 

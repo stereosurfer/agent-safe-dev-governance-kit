@@ -1,15 +1,22 @@
 ---
 name: asgk-post-merge-closeout
-description: Use after an ASGK pull request merges; verifies issue closure, GitHub closing references, closeout evidence, and recommends CURRENT_STATUS refresh only when stale status would mislead the next session.
+description: Use after an ASGK pull request merges or for a separately authorized non-merge issue closeout; verifies outcome evidence, decision lineage, and whether CURRENT_STATUS would mislead the next session.
 ---
 
 # ASGK Post-Merge Closeout
 
 Use this skill immediately after a PR merges or when the user says a PR has merged.
+For an explicitly authorized issue closeout without a merge—duplicate,
+superseded, abandoned, blocked, or closed-not-done—apply the same decision
+quality floor, but do not invent merge evidence or use the completed-PR steps.
 
 ## Authority
 
-This skill closes only work that is already satisfied by durable GitHub and repo evidence. It must not start the next work unit unless a separate durable issue already authorizes it.
+This skill closes only a completed-PR outcome supported by durable GitHub and
+repo evidence, or a separately authorized non-merge outcome supported by its
+own disposition evidence. A non-merge closeout is not a claim that the original
+objective was completed. It must not start the next work unit unless a separate
+durable issue already authorizes it.
 
 This skill is not a governance health check. Ordinary "PR merged" or "anything
 else?" closeout must stay limited to the current PR, the current issue,
@@ -20,12 +27,22 @@ that wider check.
 
 ## Required Inputs
 
-- Merged PR number.
-- Expected closing issue number.
-- Merge commit.
-- Latest `main`.
+For a completed-PR outcome: merged PR number, expected closing issue number,
+merge commit and latest `main`.
+
+For a separately authorized non-merge outcome: selected issue, exact closeout
+authority, live issue state, outcome (`duplicate`, `superseded`, `abandoned`,
+`blocked`, or `closed_not_done`), related issue/PR/correction links, and current
+repo recovery state. A merge commit is neither required nor invented.
 
 ## Procedure
+
+For a completed-PR outcome, perform steps 1–5. For an authorized non-merge
+outcome, instead verify that the issue is not being represented as completed
+work, record the reason and relationship to any successor or failed attempt,
+then continue with the applicable evidence, closeout-review, status and stop
+steps below. Do not close a live executable issue merely because a draft
+closeout or failed PR exists.
 
 1. Confirm the PR is merged and record the merge commit.
 2. Inspect `closingIssuesReferences`.
@@ -34,7 +51,8 @@ that wider check.
 5. If the issue was not satisfied, stop with a blocker report.
 6. Keep closeout comments compact. Link to the PR, release, CI, or validator
    evidence instead of repeating full validation logs already preserved there.
-7. If the merged PR changed `skills/*`, remind the operator that
+7. If the completed PR or non-merge issue disposition involved changes to
+   `skills/*`, remind the operator that
    source-distributed skills do not automatically update installed client
    skills. Do not write to installed/global skill directories unless explicitly
    asked. Record `installed_skill_sync` as `not_applicable`, `reminder_given`,
@@ -47,6 +65,12 @@ that wider check.
     decision-analysis block using the repository's closeout-review guide.
     Bounded means scope-limited and evidence-dense, not abbreviated, lossy,
     simplified, or summary-only.
+    Preserve reasons, rejected paths, applicability limits and correction
+    links in the right direction. A failed unmerged PR can coexist with a
+    merged replacement; keep both in the issue lineage. For a method/Skill
+    change, link the originating observation, test, actual reviewer,
+    resulting version and rejected alternative without copying the full
+    task-owned Lesson or ledger into the closeout.
 12. Apply `docs/control/ISSUE_HYGIENE_GATE.md`: do not scan historical issues or
     create repo-file repair work solely to store routine closeout reviews.
 13. If the issue comment cannot be written or closeout evidence is unclear,
@@ -60,12 +84,12 @@ that wider check.
 
 ```yaml
 status_refresh_required_when:
-  - active work still points to the merged PR, closed issue, or merged branch
-  - next safe action points to completed pre-merge work
+  - active work still points to the merged PR, closed issue, or obsolete branch
+  - next safe action points to completed pre-merge work or a superseded issue
   - release, public visibility, license, milestone, readiness, or handoff recovery state changed
   - leaving CURRENT_STATUS unchanged would make the next session choose the wrong next action
 status_refresh_not_required_when:
-  - CURRENT_STATUS already describes the post-merge repo state accurately
+  - CURRENT_STATUS already describes the post-closeout repo state accurately
   - PR did not change active work, next safe action, or gated repo-level state
   - issue and PR history already hold the completed-work details
 ```
@@ -93,10 +117,16 @@ legacy_gap_result:
 Issue Closeout Reviews are mandatory closeout evidence, but they do not override
 AGENTS.md, current issue or PR scope, validators, control policies, merge
 decisions, CURRENT_STATUS, or human gates.
+GitHub closeout search/trace can locate bounded historical decisions before a
+broader read, but its result is not current authority or proof that all history
+was found.
 
 ## Stop States
 
-- `blocked`: PR not merged, issue not satisfied, closeout evidence is missing, or the required issue closeout decision-analysis comment is missing.
+- `blocked`: a claimed completed PR is not merged; a non-merge closure lacks
+  exact authority, outcome or relationship evidence; the issue is not
+  satisfied at its claimed outcome; or the required closeout decision-analysis
+  comment is missing.
 - `no_status_refresh_needed`: issue and status surfaces are accurate.
 - `status_refresh_required`: repo-level recovery state would mislead the next session.
 - `closed_out`: issue and status surfaces are accurate.

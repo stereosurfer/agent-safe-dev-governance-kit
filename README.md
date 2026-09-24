@@ -101,7 +101,9 @@ PR, tests, review, and any existing human gate that applies. A large lesson
 corpus calls for progressive disclosure, not full-context loading or inflated
 Bot memory. The optional metadata-only catalog is available through the public
 root CLI; it does not read Lesson bodies, determine applicability, or promote a
-method. The eleven root Skills have not yet been cut over.
+method. The eleven root source Skills have been synthesized for the 3.0
+operating contract under [#405](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/405);
+actual independent handoff and target evidence remain release gates.
 
 Skills are not a new authority layer or a substitute for model judgment. They
 direct attention to relevant evidence, safety boundaries, uncertainty, and stop
@@ -177,9 +179,11 @@ profile into a smaller project. The default layer remains generic.
 - PR-level status validation for draft state, mergeability, review decision,
   status checks, PR-body policy, changed-path hygiene, and GitHub closing issue
   references.
-- Eleven source-distributed ASGK Skills under `skills/`, used by relevant
-  responsibility and stage; they are not loaded or installed as a bundle by
-  default. The eleven `v3/skills/` files remain candidate proposals.
+- Eleven source-distributed ASGK Skills under `skills/`, synthesized from
+  current rules and preview.1 proposals and used by relevant responsibility
+  and stage; they are not loaded or installed as a bundle by default. The
+  eleven `v3/skills/` files remain historical candidate evidence, not a second
+  active pack.
 - Document map and context-budget guidance so agents read the smallest
   sufficient context instead of the whole repository.
 - Read-only `target-evidence-check` diagnostics for explicit caller-supplied
@@ -282,9 +286,10 @@ is active, but 3.0 is not released. The GitHub workflow portion of preview.1
 and optional metadata-only catalog are integrated into the public CLI and
 `doctor`. The existing root target navigation templates are optional references,
 not a required bundle; Stage 3 examples and their authority limits have been
-reviewed. Eleven source Skills and real lifecycle/target evidence still need
-separately scoped work. The former 2.0 program and old runtime-adapter
-roadmaps are history, not instructions for the next work unit.
+reviewed. Eleven source Skills have been synthesized under #405; real
+lifecycle/target evidence still needs separately scoped work. The former 2.0
+program and old runtime-adapter roadmaps are history, not instructions for the
+next work unit.
 
 ## What The Generic Core Does Not Supply
 

@@ -86,6 +86,10 @@ A newer source file, renamed path, or version difference is not by itself a
 target gap. The comparison must reason about responsibilities and effects, not
 source-tree conformity. Do not create a fixed completeness matrix or require
 every source surface to appear in the target.
+Even a major-version source delta is not a migration mandate. A candidate
+packet or Skill set cannot replace the target's issue authority or become a
+required bundle. Do not copy ASGK's CURRENT_STATUS, map, secrets, installed
+global Skills, or migration ledger into target-owned state.
 
 ### 4. Use Deterministic Tools Only As Bounded Evidence
 

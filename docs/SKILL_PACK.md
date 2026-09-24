@@ -1,8 +1,9 @@
 # ASGK Skill Pack
 
-Status: eleven current source-distributed root Skills. The eleven `v3/skills`
-entrypoints are candidate proposals under #372, not installed replacements or
-proof of a released 3.0 Skill pack.
+Status: eleven current source-distributed root Skills synthesized for the 3.0
+operating contract under #405. The eleven `v3/skills` entrypoints retain
+preview.1 candidate lineage, not installed replacements or proof of a released
+3.0 product. Source cutover alone is not independent handoff or target evidence.
 
 ASGK skills are reusable operating procedures for agents working in an
 ASGK-governed repository. They reduce repeated rule reading and after-the-fact
@@ -75,8 +76,8 @@ skill mechanism.
 
 This is an explicit client choice, not an automatic synchronization or bulk
 installation. Record the version actually loaded when it matters to a test or
-handoff. The candidate `v3/skills/` copies remain separate until their own
-reviewed root-source cutover; do not load both versions as coequal authority.
+handoff. The historical `v3/skills/` copies are not coequal with the
+reviewed root-source pack; do not load both versions as operating authority.
 
 Use this mode when the agent client supports native skill discovery. The skill
 metadata can trigger at the right moment without loading all ASGK rules into the
@@ -161,7 +162,7 @@ memory nor that index grants work scope or merges a change. See
 `docs/EVOLUTION_MODEL.md` for the state-owner distinction and
 `python3 scripts/asgk.py catalog --help` for optional metadata-only discovery.
 `v3/CAPABILITY_EVOLUTION.md` explains provenance and proof limits; the eleven
-`v3/skills/` remain candidate proposals.
+`v3/skills/` remain candidate evidence, not the current operating pack.
 
 ## Design Constraints
 

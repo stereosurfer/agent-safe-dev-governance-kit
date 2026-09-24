@@ -5,8 +5,9 @@
 `python3 scripts/asgk.py workflow --help`；`v3/asgk3.py` 與
 `v3/github_workflow.py` 只做代理，不是第二套規則。能力目錄的公開入口是
 `python3 scripts/asgk.py catalog --help`，`v3/capability_evolution.py` 也只代理；
-根目錄兩份 target 導覽模板已是可選參考，不在 `v3/`；11 個 `v3/skills/`
-仍是候選提案，3.0 尚未發布。
+根目錄兩份 target 導覽模板已是可選參考，不在 `v3/`；11 個根目錄 Skills
+已依 #405 綜合修訂，`v3/skills/` 留作候選歷史而非第二套現行規則。
+3.0 尚未發布。
 
 **ASGK 是一套讓人與 AI 能安全、順利交接工作的規則與工具。**
 看得懂工作狀態、接得下去長期工作、查得清楚證據與決策；
@@ -78,9 +79,11 @@ Issue 必須符合既有 canonical scope；工具重用原有 parser 檢查提�
 startup、issue scoping、PR evidence/MDR、gatekeeper、closeout、current status、
 evidence audit、health check、release prep、target adoption、upgrade assessment。
 
-候選版讓控制層按工作階段使用 Skill，不要求每個 worker 讀完整治理庫；
+根目錄正式來源吸收候選版可證實的交接改進，按工作階段使用 Skill，
+不要求每個 worker 讀完整治理庫；
 也修正「語意判斷自動多出人工 gate」與「只有合併後才有 closeout」的誤導。
-本分支測試只讀需要的候選 Skill，不要同時載入兩個版本。尚未安裝或全域同步。
+需要回溯 preview.1 時只讀對應候選 Skill；日常工作用根目錄版，
+不要同時載入兩個版本。尚未安裝或全域同步。
 
 研究、影音與翻譯都是能力演進的例子。Bot memory 保持輕薄；大量任務證據由
 各領域自己的交付契約管理。研究員的實例是「Agent 入口 → 當前問題節點 →

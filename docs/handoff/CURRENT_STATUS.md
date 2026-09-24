@@ -4,7 +4,7 @@ This is the repository recovery snapshot. It is overwritten, not appended.
 Completed-work history and decision detail belong in GitHub issues, PRs,
 comments, releases, and merge commits.
 
-Last updated: `2026-09-24T15:04:28Z`
+Last updated: `2026-09-24T15:24:57Z`
 
 ## Durable source of truth
 
@@ -26,7 +26,8 @@ control-source, GitHub workflow CLI, and optional metadata-only catalog CLI
 cutovers are represented in current source. Both public namespaces use root
 library owners and `doctor` runs their regression checks. The root target
 templates are optional; Stage 3 examples are reviewed, not live-work proof.
-Eleven `v3/` Skills remain candidates. Root target templates are optional
+Eleven root Skills are synthesized under #405; `v3/skills/` remains candidate
+history, not an active second pack. Root target templates are optional
 references, not default target installs. Resolve live refs; #323 is prior 2.0
 evidence, not the next-work router.
 
@@ -58,7 +59,7 @@ issue: "#372 ASGK 3.0 source-only release program"
 pr: none
 branch: main
 state: active_program
-next_work_unit_decision: "Reconcile live #372 child and PR state; choose one exact-scope unit. Cut over eleven source Skills before field tests, target pilot and release."
+next_work_unit_decision: "Reconcile live #372 child and PR state; choose one exact-scope unit. Run Stage 4 cold handoff, no-Hermes website/GitHub-Kanban and target-owned pilot evidence before release audit."
 ```
 
 ## Current validation entrypoint
@@ -96,8 +97,8 @@ model cache, or external preparation outputs are authorized by this status.
 ## Next safe action
 
 Continue under #372 from current `main`; inspect live PRs and child issues
-before selecting one bounded unit. Cut over eleven source Skills, then prove
-cold handoff, GitHub/Kanban, target fit and release. Only the selected issue or
+before selecting one bounded unit. Prove cold handoff, GitHub/Kanban, target
+fit and release in the remaining stages. Only the selected issue or
 PR supplies scope; status, unpromoted `v3/` material, old plans and chat do not.
 Do not read the excluded visual guide.
 

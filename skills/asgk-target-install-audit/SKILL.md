@@ -74,6 +74,9 @@ Use direct target evidence to understand:
 
 Do not infer that a mechanism is absent from a missing ASGK-named file. Find the
 target's actual equivalent before describing a gap.
+An existing GitHub issue/PR/CI/review loop may already supply sufficient
+handoff for a low-risk target. Hermes, Kanban, persistent roles, an ASGK-named
+file, or a copied source layout is never required merely to use this Skill.
 
 ### 3. Gather Evidence And Compare Responsibilities
 
@@ -110,7 +113,7 @@ Judge, from the target evidence:
 
 Do not choose from a module menu, fixed install bundle, file-classification
 scheme, or two-path adoption choice. The recommendation may conclude that no
-change is warranted.
+change or no ASGK adoption is warranted.
 
 ### 6. State Confidence And Unknowns
 

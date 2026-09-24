@@ -27,12 +27,17 @@ authorizes a wider health check.
    repository, that is usually `python3 scripts/asgk.py doctor`; in target
    repositories, use their local validation command instead of source-repo
    parity checks.
-5. Sample recent PRs for Merge Decision, Current Status Impact, closing references, and validation evidence.
+5. Name the audit time/issue sample, then sample relevant PRs for Merge Decision,
+   Current Status Impact, closing references, and validation evidence. When
+   reconstructing a decision, use bounded closeout search/trace before broad
+   code-history reading; these pointers do not grant current work authority.
 6. Check for release or closeout residue: merged PRs with open issues, stale
    active work, missing status refresh, or human-gated work without explicit
    approval.
 7. Apply `docs/control/ISSUE_HYGIENE_GATE.md` before recommending work from
-   observations.
+   observations. Separate active blockers from historical or pre-rule gaps;
+   missing old reviews, optional upgrades, and source-shape differences do not
+   automatically authorize backfill or repair.
 8. Produce a compact health report. Recommend bounded follow-up issues only for
    current blockers or explicit scoped backfill/cleanup.
 
@@ -42,6 +47,9 @@ authorizes a wider health check.
 - `watch`: observations or minor evidence gaps; no immediate blocker.
 - `blocked`: stale status, open satisfied issue, failed local validation,
   missing closing references, or unresolved human-gated residue.
+
+A sampled `healthy` result is bounded to the stated sample; it does not certify
+the whole repository or semantic safety from a green validator.
 
 ## Exit Artifact
 

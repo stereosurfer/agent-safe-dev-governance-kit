@@ -138,7 +138,9 @@ folder scheme. Small tasks may need only an issue/PR and compact handoff.
 
 `python3 scripts/asgk.py catalog --help` exposes optional discovery over an
 explicitly supplied metadata index. The `v3/` catalog entry is a compatibility
-wrapper; the candidate Skills remain neither root-cut-over nor installed.
+wrapper. The root Skills were synthesized under #405; the separate
+`v3/skills/` files remain historical candidates and no installed client copy
+is silently updated.
 Catalog checks cannot prove a referenced file or GitHub link exists, a textual
 hit is applicable, or a target's substantive conclusion is sound.
 
@@ -188,9 +190,10 @@ The root workflow and catalog implementations are canonical under
 `scripts/asgk_lib/`; their named `v3/` compatibility wrappers and focused
 tests support the public CLI and `doctor`. The two root target-navigation
 templates under `templates/` are optional, assessment-guided references, not
-required target files or uncut-over `v3/` templates. The eleven proposed
-`v3/skills/` and unpromoted design proposals remain non-default candidates
-under #372 until separately reviewed. Optional Hermes/Kanban run state is
+required target files or uncut-over `v3/` templates. The eleven root Skills
+under `skills/` were synthesized under #405; proposed `v3/skills/` files and
+unpromoted design material remain non-default candidate lineage. Optional
+Hermes/Kanban run state is
 outside this map and never replaces GitHub work authority. A Codex+GitHub-only
 recurring content job has no Kanban dependency; its schedule is a trigger, not
 the current write or publication decision. Target assessment may also conclude

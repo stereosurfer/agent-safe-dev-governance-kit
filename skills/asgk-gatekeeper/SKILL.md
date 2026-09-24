@@ -63,6 +63,12 @@ later one.
    risk/path determination. A boolean, green workflow, or prior-PR review is not
    approval evidence. A new code commit invalidates older review unless
    reaffirmed.
+   When the scoped change calls for independent review, compare actual actor
+   identities and judgment evidence. The author wearing a `reviewer` profile,
+   a self-written passing regression, or a Kanban `done` state is not an
+   independent current-head review. A source-program merge exception, if any,
+   must be recorded separately from ordinary policy and cannot become release
+   or target-write authority.
 8. Compare the PR's completion claim with the issue acceptance sheet. Named
    checks passing means only those checks passed; it does not prove semantic
    correctness, upgrade completeness, install completeness, or stale-reference
@@ -85,7 +91,9 @@ Choose exactly one state, in this precedence order: `blocked`,
 - `blocked`: a non-human validator or current CI failure exists, evidence is
   stale or ambiguous, issue-required completion evidence is missing, or the
   durable result is `merge_blocked` for a reason other than a sole named human
-  decision. A coherent blocked PR may still be ready for review.
+  decision. A coherent blocked PR may still be ready for review. When stale
+  checks and an unresolved human gate coexist, report `blocked` first and
+  record the human gate as an additional unresolved condition.
 - `requires_human`: no non-human blocker remains and the only unresolved
   condition is a specific human-gated decision, issue/policy-required semantic
   acceptance, or a human-only merge decision that no canonical policy

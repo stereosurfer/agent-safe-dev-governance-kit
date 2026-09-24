@@ -17,7 +17,7 @@ snapshot. Read root `AGENTS.md`, `README.md`,
 - [#362](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/362)'s provenance correction was integrated by [PR #369](https://github.com/stereosurfer/agent-safe-dev-governance-kit/pull/369) into preview.1 as `62438b4c3c6439678226498b0ebc75d26a639fa3`; [#368](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/368) closed after that non-default-base merge.
 - [#370](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/370)'s observed Lesson was integrated by PR #371. Its [closeout](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/370#issuecomment-5806869845) preserves the pre-merge MDR timing exception: the OWNER merged the reviewed head, but the PR body's earlier `merge_blocked`/pending record must not be rewritten as an on-time gate pass.
 - [#377](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/377)'s entry/handoff recovery was integrated by [PR #380](https://github.com/stereosurfer/agent-safe-dev-governance-kit/pull/380) into preview.1 as `1d530176f05880ef90e36cfb2eccc87cb6c5bbb3`; it did not change main by itself.
-- [#381](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/381) was the bounded candidate-subtree import decision. #397 integrates the GitHub workflow and #399 the optional metadata-only catalog into the root CLI. These integrations do not require a target to adopt the two optional root navigation templates, cut over the eleven source Skills, authorize target migration or release, or synchronize installed/global Skills. Earlier W6B and status PRs remain historical evidence, not next-work routing.
+- [#381](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/381) was the bounded candidate-subtree import decision. #397 integrates the GitHub workflow and #399 the optional metadata-only catalog into the root CLI; #405 synthesizes the eleven root source Skills. None requires a target to adopt the optional root navigation templates, authorizes target migration or release, or synchronizes installed/global Skills. Earlier W6B and status PRs remain historical evidence, not next-work routing.
 
 ## Candidate recovery
 
@@ -38,9 +38,9 @@ reuse existing source functions. Its commands capture
 read-only snapshots, project an issue, preserve partial handoff, draft issue closeout,
 and search/trace linked GitHub comments. In-place committed changes are supported.
 
-The eleven `v3/skills` candidate Skills are reviewed proposals, not the eleven
-current root `skills/` instructions or a second governance authority. Do not
-install them alongside the root set; load only the one needed for
+The eleven `v3/skills` candidate Skills are historical proposals, not the eleven
+current synthesized root `skills/` instructions or a second governance
+authority. Do not install them alongside the root set; load only the one needed for
 the current role. A completed closeout keeps closed unmerged PR attempts beside
 the merged replacement and blocks unresolved open attempts.
 
@@ -96,7 +96,9 @@ Preserve the rejected attempt and correction links; no reset, force push or sile
   Supply only one selected snapshot per issue and one observation per PR; a
   visited closed issue with no recognizable supplied closeout warns, and even
   a JSON pass is not proof of historical completeness.
-- No independent behavioral proof for the candidate Skills yet; format checks are narrower.
+- Candidate format checks alone were not behavioral proof; #405 records bounded
+  root-Skill synthesis and probes. Stage 4 independent live handoff and target
+  proof remain outstanding.
 - Kanban bridge and card-draft are not an installed adapter or runtime-enforced
   tool policy. The one successful Luna negative-path run does not prove that
   another model/run will obey the card. #367 and #370's separately scoped writes
@@ -108,6 +110,7 @@ Preserve the rejected attempt and correction links; no reset, force push or sile
 
 Presence of this subtree on `main` changes no root operating rule by itself.
 #397 makes the GitHub workflow implementation/CLI canonical; #399 does the same
-for optional metadata-only catalog discovery, not the full `v3/` subtree. Preview.1
+for optional metadata-only catalog discovery; #405 synthesizes root Skills
+without promoting the full `v3/` subtree. Preview.1
 and its source commits preserve candidate lineage; do not delete a branch or
 worktree automatically.
