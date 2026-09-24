@@ -119,6 +119,7 @@ STATIC_REQUIRED_SOURCE_PATHS_BY_ROLE = {
     "source_execution_surfaces": (
         "scripts/asgk.py",
         "scripts/asgk_lib/__init__.py",
+        "scripts/asgk_lib/capability_evolution.py",
         "scripts/asgk_lib/common.py",
         "scripts/asgk_lib/compact_handoff.py",
         "scripts/asgk_lib/github_workflow.py",
@@ -143,6 +144,10 @@ STATIC_REQUIRED_SOURCE_PATHS_BY_ROLE = {
     "workflow_regression_tests": (
         "v3/test_asgk3.py",
         "v3/test_github_workflow.py",
+    ),
+    "catalog_regression_tests": (
+        "v3/capability_evolution.py",
+        "v3/test_capability_evolution.py",
     ),
     "source_target_evidence_fixtures": (
         "examples/target_evidence/arbitrary_layout/notes/project.marker",
@@ -173,6 +178,7 @@ REGISTERED_FILE_OPTIONS = frozenset(
         "--current-status",
         "--file",
         "--github-event",
+        "--index",
         "--json-file",
         "--paths-file",
         "--pr-body",
@@ -4508,6 +4514,7 @@ def check_scenario_registry_projection(root):
         'source-validation',
         'target-evidence',
         'workflow',
+        'catalog',
     }
     actual_behaviors = {
         scenario.get("group") for scenario in retained_scenarios
@@ -4646,10 +4653,10 @@ def check_scenario_registry_projection(root):
             for scenario in parity_scenarios
             if scenario.get("group") == group
         }
-        for group in {'compact-task-packet', 'source-validation'}
+        for group in {'compact-task-packet', 'source-validation', 'catalog'}
     }
     if (
-        len(parity_scenarios) != 4
+        len(parity_scenarios) != 6
         or set(scenario.get("group") for scenario in parity_scenarios)
         != set(parity_groups)
         or any(
@@ -4658,7 +4665,7 @@ def check_scenario_registry_projection(root):
         )
     ):
         fail(
-            'task-packet alias and source-wrapper parity must each retain '
+            'task-packet, source-wrapper and catalog-wrapper parity must each retain '
             'one positive and one negative case'
         )
     if not {'retained-json', 'controlled-errors', 'scenario-runner', 'all'}.issubset(

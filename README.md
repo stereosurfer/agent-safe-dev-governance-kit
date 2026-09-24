@@ -31,8 +31,9 @@ issue
 Accepted, rejected, superseded, and reverted paths remain in that GitHub
 lineage. The bounded issue closeout review is a fast decision-tree entrypoint,
 not a second work ledger. A separate task-owned delivery package may hold its
-current questions and evidence; a versioned capability catalog may help find
-prior Lessons and methods. Neither grants current work authority.
+current questions and evidence; the optional `scripts/asgk.py catalog` command
+finds bounded metadata pointers to prior Lessons and methods from an explicitly
+supplied index. Neither grants current work authority.
 
 The core principle is:
 
@@ -98,8 +99,9 @@ delivery contract. Reusable Lessons and methods can be discovered in bounded
 slices and promoted to a versioned Skill only through the applicable issue,
 PR, tests, review, and any existing human gate that applies. A large lesson
 corpus calls for progressive disclosure, not full-context loading or inflated
-Bot memory. The 3.0 model is documented in the candidate; the capability
-catalog and root Skills have not yet been cut over.
+Bot memory. The optional metadata-only catalog is available through the public
+root CLI; it does not read Lesson bodies, determine applicability, or promote a
+method. The eleven root Skills have not yet been cut over.
 
 Skills are not a new authority layer or a substitute for model judgment. They
 direct attention to relevant evidence, safety boundaries, uncertainty, and stop
@@ -163,6 +165,10 @@ profile into a smaller project. The default layer remains generic.
   snapshot per issue and one observation per PR per lookup; a closed issue
   without a recognizable supplied closeout is reported as incomplete, not
   silently treated as a complete trace.
+- Optional metadata-only Lesson/method discovery through
+  `python3 scripts/asgk.py catalog --help`, using an explicit caller-supplied
+  index. Text hits are bounded pointers, not applicability recommendations,
+  work authority, or Skill promotion.
 - Negative fixtures for governance hygiene, PR bodies, handoff packets,
   caller-supplied target evidence, and stale current-status patterns.
 - Explicit validation-boundary wording so `doctor` evidence is not treated as a
@@ -273,9 +279,9 @@ change, or v2.0 work is included.
 
 The [ASGK 3.0 program](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/372)
 is active, but 3.0 is not released. The GitHub workflow portion of preview.1
-is integrated into the public CLI and `doctor`; the capability catalog,
-templates, eleven source Skills, and real lifecycle/target evidence still need
-separately scoped work. The former 2.0 program and old runtime-adapter
+and optional metadata-only catalog are integrated into the public CLI and
+`doctor`; templates, eleven source Skills, and real lifecycle/target evidence
+still need separately scoped work. The former 2.0 program and old runtime-adapter
 roadmaps are history, not instructions for the next work unit.
 
 ## What The Generic Core Does Not Supply

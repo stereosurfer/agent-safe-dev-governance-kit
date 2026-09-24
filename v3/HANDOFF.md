@@ -1,7 +1,8 @@
 # ASGK 3.0 candidate lineage handoff
 
-The GitHub workflow CLI is now canonical under `scripts/asgk_lib/` and
-`python3 scripts/asgk.py workflow` through #397. This file records preview.1
+The GitHub workflow and optional catalog CLI are now canonical under
+`scripts/asgk_lib/`, exposed as `python3 scripts/asgk.py workflow` and
+`python3 scripts/asgk.py catalog` through #397 and #399, respectively. This file records preview.1
 history and remaining candidate limits; it is not the repository recovery
 snapshot. Read root `AGENTS.md`, `README.md`,
 `docs/handoff/CURRENT_STATUS.md`, and the live work issue first.
@@ -16,7 +17,7 @@ snapshot. Read root `AGENTS.md`, `README.md`,
 - [#362](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/362)'s provenance correction was integrated by [PR #369](https://github.com/stereosurfer/agent-safe-dev-governance-kit/pull/369) into preview.1 as `62438b4c3c6439678226498b0ebc75d26a639fa3`; [#368](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/368) closed after that non-default-base merge.
 - [#370](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/370)'s observed Lesson was integrated by PR #371. Its [closeout](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/370#issuecomment-5806869845) preserves the pre-merge MDR timing exception: the OWNER merged the reviewed head, but the PR body's earlier `merge_blocked`/pending record must not be rewritten as an on-time gate pass.
 - [#377](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/377)'s entry/handoff recovery was integrated by [PR #380](https://github.com/stereosurfer/agent-safe-dev-governance-kit/pull/380) into preview.1 as `1d530176f05880ef90e36cfb2eccc87cb6c5bbb3`; it did not change main by itself.
-- [#381](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/381) was the bounded candidate-subtree import decision. #397 integrates only the GitHub workflow portion into the root CLI; it does not activate the capability catalog, templates, source Skills, target migration, release or global Skill synchronization. Earlier W6B and status PRs remain historical evidence, not next-work routing.
+- [#381](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/381) was the bounded candidate-subtree import decision. #397 integrates the GitHub workflow and #399 the optional metadata-only catalog into the root CLI. Neither activates templates, source Skills, target migration, release or global Skill synchronization. Earlier W6B and status PRs remain historical evidence, not next-work routing.
 
 ## Candidate recovery
 
@@ -100,12 +101,13 @@ Preserve the rejected attempt and correction links; no reset, force push or sile
   tool policy. The one successful Luna negative-path run does not prove that
   another model/run will obey the card. #367 and #370's separately scoped writes
   do not prove general write confinement or production safety.
-- The capability catalog is a synthetic metadata projection, not a delivery question
+- The optional capability catalog is a metadata projection, not a delivery question
   graph or proof of actual Research, Video or Translation workflow quality. The linked
   research package is a concrete domain-owned delivery implementation; ASGK does not
   impose its exact filenames or toolchain on video and translation targets.
 
 Presence of this subtree on `main` changes no root operating rule by itself.
-#397 makes only the GitHub workflow implementation/CLI canonical. Preview.1
+#397 makes the GitHub workflow implementation/CLI canonical; #399 does the same
+for optional metadata-only catalog discovery, not the full `v3/` subtree. Preview.1
 and its source commits preserve candidate lineage; do not delete a branch or
 worktree automatically.

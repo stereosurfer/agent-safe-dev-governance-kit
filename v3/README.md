@@ -3,8 +3,9 @@
 本目錄保留 preview.1 設計與測試來源。GitHub workflow 的正式實作已移至
 `scripts/asgk_lib/github_workflow.py`，公開入口是
 `python3 scripts/asgk.py workflow --help`；`v3/asgk3.py` 與
-`v3/github_workflow.py` 只做代理，不是第二套規則。能力目錄、模板與
-11 個 `v3/skills/` 仍是候選，3.0 尚未發布。
+`v3/github_workflow.py` 只做代理，不是第二套規則。能力目錄的公開入口是
+`python3 scripts/asgk.py catalog --help`，`v3/capability_evolution.py` 也只代理；
+模板與 11 個 `v3/skills/` 仍是候選，3.0 尚未發布。
 
 **ASGK 是一套讓人與 AI 能安全、順利交接工作的規則與工具。**
 看得懂工作狀態、接得下去長期工作、查得清楚證據與決策；

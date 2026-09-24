@@ -193,8 +193,13 @@ cannot disappear.
 The retained JSON surface is policy-gate, PR status, work unit, task packet,
 handoff, compact handoff, compact issue scope, compact scope lock, compact PR
 report, compact PR body, context budget, workspace state, source validation,
-caller-supplied target evidence, and the namespaced GitHub workflow. The
-workflow's `capture` uses GET only; `packet`, `card-draft`, `handoff`,
+caller-supplied target evidence, the namespaced GitHub workflow, and optional
+metadata-only capability catalog. Catalog `check|browse|select` requires an
+explicit index and checks shape, reference syntax and bounded metadata only;
+no match or omitted results warn with nonzero exit. It does not fetch content,
+validate referenced files or URLs, recommend applicability, promote a Skill,
+or establish authority. The workflow's `capture` uses GET only; `packet`,
+`card-draft`, `handoff`,
 `closeout`, `search`, `trace` and `demo` create local projections or drafts,
 not GitHub or Kanban writes. Its common `result` distinguishes pass, fail,
 blocked and warning; unresolved links or YAML closeout candidates carry
@@ -236,7 +241,8 @@ proves:
   - the issue, PR, handoff, validation, and scenario projections remain aligned
   - doctor executes the same registered negative and exact scenarios used by CI
   - doctor also runs the root-workflow fixture regression tests through the public CLI
-  - the source required set includes the canonical workflow modules and both workflow test files, so absent tests cannot silently count as zero passing tests
+  - doctor also runs the focused catalog tests and exact positive/negative CLI scenarios
+  - the source required set includes the canonical workflow and catalog modules and their focused tests, so absent tests cannot silently count as zero passing tests
   - a caller-supplied source inventory has the supported shape and includes the retained required paths
 does_not_prove:
   - that a supplied-inventory path exists or that its contents were inspected
@@ -542,6 +548,7 @@ proves:
   - positive and negative retained scenarios remain paired
   - target-evidence scenarios lock arbitrary-layout success, four distinct mismatch codes, and no-claim incompleteness
   - workflow scenarios lock JSON shape-checked trace success, YAML candidate trace/search incompleteness, closed-issue closeout absence, duplicate-issue snapshot rejection, unresolved-trace warning, and invalid snapshot failure with exact exit and finding codes
+  - catalog scenarios lock an observed-index and one-level browse pass, no-match and omitted-result warnings, and invalid purpose, duplicate-key and unreviewed-promotion failures
   - canonical and compact task-packet commands remain byte-for-byte equivalent
   - the canonical source command and bootstrap compatibility wrapper remain byte-for-byte equivalent for positive and negative inventory scenarios
   - controlled missing, malformed, unavailable, and missing-executable inputs emit exactly one JSON object

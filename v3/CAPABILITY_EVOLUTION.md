@@ -1,7 +1,8 @@
 # Capability evolution — experience without memory inflation
 
-Preview.1 contract for Research, Video, Translation and other long-running workflows.
-These are examples, not an ASGK module menu. A persistent Bot is an operator; a Skill
+This page describes optional root catalog metadata discovery, using Research,
+Video and Translation as examples rather than required modules. A persistent
+Bot is an operator; a Skill
 is a versioned method; GitHub issue/PR/commit and closeout are the governed change
 lineage. A Kanban card may carry a run. None of these roles should absorb the others.
 
@@ -104,18 +105,28 @@ accepted and rejected branches in a short decision analysis. Merging a Skill cha
 does not silently rewrite an already-running Bot's context; the next run checks the
 version it actually loaded.
 
-## Candidate metadata demonstration
+## Optional public metadata discovery
 
-`v3/capability_evolution.py` reads an explicitly supplied *capability catalog*. It
-validates metadata shape and offers `browse` for one catalog level or `select` for
+`scripts/asgk_lib/capability_evolution.py` owns the public behavior;
+`v3/capability_evolution.py` is a thin compatibility entry. The public command
+reads only an explicitly supplied *capability catalog*. It validates metadata
+shape and offers `browse` for one catalog level or `select` for
 bounded pointers:
 
 ```bash
-python3 v3/capability_evolution.py check --index v3/examples/capability_index.json
-python3 v3/capability_evolution.py browse --index v3/examples/capability_index.json --domain research
-python3 v3/capability_evolution.py browse --index v3/examples/capability_index.json --domain research --branch source-context
-python3 v3/capability_evolution.py select --index v3/examples/capability_index.json --domain research --branch source-context --query handoff
+python3 scripts/asgk.py catalog check --index v3/examples/capability_index.json
+python3 scripts/asgk.py catalog browse --index v3/examples/capability_index.json --domain research
+python3 scripts/asgk.py catalog browse --index v3/examples/capability_index.json --domain research --branch source-context
+python3 scripts/asgk.py catalog select --index v3/examples/capability_index.json --domain research --branch source-context --query handoff
 ```
+
+No index is loaded by default. `pass` means only the named metadata checks
+completed; no match or omitted results return `warning`,
+`domain_result: incomplete`, a stable finding, and a nonzero exit. Invalid input
+returns `fail`.
+A text hit can come from `does_not_apply_when`, so it is never an applicability
+recommendation. Per-field length limits bound the returned metadata without
+limiting the number of records in the source index.
 
 The fixture is illustrative and its records are **observed**, not a real promotion or
 research proof. This catalog does **not** implement or validate the source repository's

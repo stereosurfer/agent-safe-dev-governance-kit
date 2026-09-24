@@ -285,6 +285,16 @@ lock case-insensitive repository alias handling for number collisions and `#N`
 resolution. These fixtures do not establish live GitHub authorization, semantic
 correctness, actual Kanban behavior, or independent human review.
 
+The `catalog` group checks explicit-index metadata-only discovery. Exact
+scenarios pair an observed-index and bounded browse pass with no-match and
+omitted-result warnings (`CATALOG_NO_MATCH`, `CATALOG_RESULTS_OMITTED`) and
+invalid-purpose, duplicate-JSON-key and unsupported-promotion failures.
+Focused unit tests cover rejected/superseded exclusion, non-recommendation
+for textual hits in negative applicability phrases, per-field output bounds,
+local supersession contradictions, and no implicit Lesson-body read. These
+checks do not establish record truth, applicability, independent review,
+method promotion, target delivery quality or authority.
+
 The `release-state` group pairs one three-document positive set with isolated
 stale-state and duplicate-ledger negatives. It locks exact exit, common result,
 finding-code multiset, checked and unchecked claims, `human_gate.status:

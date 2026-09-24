@@ -2,12 +2,16 @@ import copy
 import contextlib
 import io
 import json
+import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 import asgk3
 import capability_evolution as c
+from asgk_lib.validation_result import validation_result_errors
 
 
 FIXTURE = Path(__file__).parent / 'examples' / 'capability_index.json'
@@ -34,7 +38,8 @@ class CapabilityIndexTests(unittest.TestCase):
             self.assertIn('current task authority', result['not_checked'])
             self.assertIn('delivery question graph', result['not_checked'])
             self.assertIn('per-work question completion', result['not_checked'])
-            self.assertIn('not a delivery question graph', result['proof_boundary'])
+            self.assertIn('not applicability recommendations', result['proof_boundary'])
+            self.assertEqual([], validation_result_errors(result))
 
     def test_delivery_question_graph_cannot_masquerade_as_catalog(self):
         self.index['purpose'] = 'delivery_question_graph'
@@ -54,7 +59,10 @@ class CapabilityIndexTests(unittest.TestCase):
 
     def test_no_match_is_incomplete_not_false_success(self):
         result = c.select(self.index, 'research', 'unfindable-needle')
-        self.assertEqual('incomplete', result['result'])
+        self.assertEqual('warning', result['result'])
+        self.assertEqual('incomplete', result['domain_result'])
+        self.assertEqual('CATALOG_NO_MATCH', result['findings'][0]['code'])
+        self.assertEqual([], validation_result_errors(result))
 
     def test_browse_reveals_only_one_branch_at_a_time(self):
         root = c.browse(self.index, 'research')
@@ -67,8 +75,8 @@ class CapabilityIndexTests(unittest.TestCase):
         self.assertEqual([], leaf['children'])
 
     def test_branch_filters_search_without_loading_other_topics(self):
-        self.assertEqual('incomplete', c.select(self.index, 'research', 'handoff',
-                                               branch=['other-topic'])['result'])
+        self.assertEqual('warning', c.select(self.index, 'research', 'handoff',
+                                            branch=['other-topic'])['result'])
 
     def test_rejected_and_superseded_not_default_instructions(self):
         for state in ('rejected', 'superseded'):
@@ -117,7 +125,22 @@ class CapabilityIndexTests(unittest.TestCase):
         self.assertEqual(500, result['total_matches'])
         self.assertEqual(7, len(result['pointers']))
         self.assertEqual(493, result['omitted'])
+        self.assertEqual('warning', result['result'])
+        self.assertEqual('incomplete', result['domain_result'])
+        self.assertEqual('CATALOG_RESULTS_OMITTED', result['findings'][0]['code'])
         self.assertLess(len(json.dumps(result)), 6500)
+
+    def test_branch_limit_is_partial_not_complete(self):
+        for number in range(3):
+            item = copy.deepcopy(self.index['records'][0])
+            item['id'] = f'extra-{number}'
+            item['tree_path'] = [f'extra-{number}']
+            self.index['records'].append(item)
+        result = c.browse(self.index, 'research', limit=2)
+        self.assertEqual('warning', result['result'])
+        self.assertEqual('incomplete', result['domain_result'])
+        self.assertEqual('CATALOG_RESULTS_OMITTED', result['findings'][0]['code'])
+        self.assertEqual(2, len(result['children']))
 
     def test_cli_does_not_open_content_ref(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -157,6 +180,113 @@ class CapabilityIndexTests(unittest.TestCase):
         catalog = asgk3.load(LIVE_LESSON_INDEX)
         catalog['records'][0]['state'] = 'promoted'
         self.fails('PROMOTION_PROVENANCE', lambda: c.validate_index(catalog))
+
+    def test_negative_applicability_text_is_not_a_recommendation(self):
+        self.assertIn('verified', self.index['records'][0]['does_not_apply_when'])
+        result = c.select(self.index, 'research', 'verified')
+        self.assertEqual('pass', result['result'])
+        self.assertIn('negative applicability phrases', result['proof_boundary'])
+        self.assertNotIn('recommendation', result['pointers'][0])
+
+    def test_oversized_pointer_metadata_fails_before_output(self):
+        item = self.index['records'][0]
+        for field, value in (
+            ('content_ref', 'x' * 257),
+            ('source_ref', 'https://github.com/example/repo/issues/' + '1' * 513),
+            ('capability_version', 'v' * 65),
+        ):
+            original = item[field]
+            item[field] = value
+            with self.subTest(field=field):
+                self.fails('DURABLE_URL' if field == 'source_ref' else 'METADATA_LENGTH'
+                           if field == 'content_ref' else 'CAPABILITY_VERSION',
+                           lambda: c.validate_index(self.index))
+            item[field] = original
+
+    def test_query_length_is_bounded(self):
+        self.fails('QUERY_LENGTH', lambda: c.select(self.index, 'research', 'x' * 321))
+
+    def test_observed_version_and_active_supersession_fail(self):
+        item = self.index['records'][0]
+        item['capability_version'] = 'v1'
+        self.fails('STATE_PROVENANCE', lambda: c.validate_index(self.index))
+        item['capability_version'] = None
+        other = copy.deepcopy(item)
+        other['id'] = 'another-active'
+        other['supersedes'] = [item['id']]
+        self.index['records'].append(other)
+        self.fails('ACTIVE_SUPERSESSION', lambda: c.validate_index(self.index))
+
+    def test_duplicate_json_key_is_rejected(self):
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / 'index.json'
+            path.write_text('{"version":1,"version":1}', encoding='utf-8')
+            output = io.StringIO()
+            with contextlib.redirect_stdout(output):
+                self.assertEqual(1, c.main(['check', '--index', str(path)]))
+            result = json.loads(output.getvalue())
+            self.assertEqual('fail', result['result'])
+            self.assertEqual('DUPLICATE_KEY', result['findings'][0]['code'])
+            self.assertEqual([], validation_result_errors(result))
+
+    def test_deep_json_fails_in_common_envelope_with_wrapper_parity(self):
+        root = Path(__file__).resolve().parents[1]
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / 'index.json'
+            path.write_text('[' * 2000 + ']' * 2000, encoding='utf-8')
+            commands = (
+                [sys.executable, str(root / 'scripts/asgk.py'), 'catalog', 'check'],
+                [sys.executable, str(root / 'v3/capability_evolution.py'), 'check'],
+            )
+            outputs = []
+            for command in commands:
+                completed = subprocess.run([*command, '--index', str(path), '--json'],
+                                           cwd=root, capture_output=True, text=True, check=False)
+                self.assertEqual(1, completed.returncode)
+                self.assertNotIn('Traceback', completed.stderr)
+                result = json.loads(completed.stdout)
+                self.assertEqual('fail', result['result'])
+                self.assertEqual('INDEX_DEPTH', result['findings'][0]['code'])
+                self.assertEqual('index', result['findings'][0]['field'])
+                self.assertEqual(['index JSON nesting depth limit'], result['mechanically_checked'])
+                self.assertEqual('Index JSON nesting exceeds the supported depth.',
+                                 result['findings'][0]['reason'])
+                self.assertEqual([], validation_result_errors(result))
+                outputs.append(completed.stdout)
+            self.assertEqual(outputs[0], outputs[1])
+
+    def test_depth_limit_is_independent_of_json_parser_version(self):
+        nested = 0
+        for _ in range(c.MAX_INDEX_DEPTH + 1):
+            nested = [nested]
+        self.fails('INDEX_DEPTH', lambda: c.validate_index(nested))
+        output = io.StringIO()
+        with mock.patch('asgk_lib.capability_evolution.load', return_value=nested):
+            with contextlib.redirect_stdout(output):
+                self.assertEqual(1, c.main(['check', '--index', 'synthetic-index.json']))
+        result = json.loads(output.getvalue())
+        self.assertEqual('INDEX_DEPTH', result['findings'][0]['code'])
+        self.assertEqual('Index JSON nesting exceeds the supported depth.',
+                         result['findings'][0]['reason'])
+        self.assertEqual(['index JSON nesting depth limit'], result['mechanically_checked'])
+        self.assertEqual([], validation_result_errors(result))
+
+    def test_max_length_pointer_output_is_bounded(self):
+        template = self.index['records'][0]
+        template['title'] = 'T' * 120
+        template['summary'] = 'S' * 320
+        template['content_ref'] = 'p/' + 'x' * 254
+        template['source_ref'] = 'https://github.com/a/b/issues/' + '1' * 460
+        self.index['records'] = []
+        for number in range(100):
+            item = copy.deepcopy(template)
+            item['id'] = f'max-{number}'
+            self.index['records'].append(item)
+        result = c.select(self.index, 'research', 'T', limit=20)
+        self.assertEqual('warning', result['result'])
+        self.assertEqual(80, result['omitted'])
+        self.assertLess(len(json.dumps(result)), 65000)
+        self.assertEqual([], validation_result_errors(result))
 
 
 if __name__ == '__main__':
