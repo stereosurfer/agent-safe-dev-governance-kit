@@ -2,7 +2,7 @@
   "issue": "#1",
   "lane": "lane_00_controller",
   "intelligence_level": "frontier",
-  "durable_source_of_truth": "docs/control/CONTROL_LAYER_V0.md",
+  "durable_source_of_truth": "GitHub issue #1 and the current PR",
   "checks_passed": true,
   "allowed_paths_checked": true,
   "expected_output_checked": true,

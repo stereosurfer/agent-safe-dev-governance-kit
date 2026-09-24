@@ -63,8 +63,8 @@ storage_surfaces:
 | Issue closeout comment | GitHub issue comment | durable | forbidden | no | no | GitHub issue comment owns identity |
 | Merge commit | Git commit history | durable | native git history | no | no | commit SHA owns identity |
 | Raw CI logs | GitHub Actions | platform-managed | forbidden | only if explicitly exported for audit | no | use workflow/run ID if exported |
-| Agent report | GitHub comment preferred; compact repo log optional | durable or compact append | compact link only in `AGENT_LOG.md` | no | no | issue/PR number plus UTC timestamp |
-| Decision entry | `docs/handoff/DECISIONS.md` | compact append | allowed, compact only | no | no | date + decision id or issue/PR reference |
+| Agent report | GitHub issue or PR comment | durable | forbidden | no | no | issue/PR number plus UTC timestamp |
+| Decision entry | GitHub issue or PR comment, including bounded close-out review | durable | forbidden | no | no | issue/PR number plus decision reference |
 | Current repo status | `docs/handoff/CURRENT_STATUS.md` | overwritten | allowed, compact only | no | no | single current status file |
 | Small fixture | `examples/` or `tests/fixtures/` | version-controlled | allowed if sanitized and intentional | no | no | descriptive name, no private data |
 | Raw source capture | Artifact Root | durable if authorized | forbidden | allowed if source/input class permits | temporary copy only | `sources/<source_class>/<artifact_id>/` |

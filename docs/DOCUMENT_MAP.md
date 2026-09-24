@@ -45,10 +45,6 @@ progressive_disclosure_surfaces:
       - current issue changes document ownership
       - current issue changes document-map or registry structure
       - validation or reviewer feedback points to registry mismatch
-  policy:
-    path: docs/control/DOCUMENT_MAP_POLICY.md
-    purpose: document-map size limits, split ownership, and maintenance rules
-    read_by_default: false
   read_sets:
     path: docs/control/CONTEXT_BUDGET_POLICY.md
     purpose: context read sets, expansion rules, and context reporting
@@ -107,7 +103,6 @@ default_entry_summary:
   context_read_sets: docs/control/CONTEXT_BUDGET_POLICY.md
   adoption_assessment: docs/INSTALL_SURFACE.md
   skill_pack: docs/SKILL_PACK.md
-  map_policy: docs/control/DOCUMENT_MAP_POLICY.md
 ```
 
 ## Target Project Boundary
@@ -134,5 +129,5 @@ document bundle, adoption declaration, module picker, or new approval gate.
    boundaries to `docs/INSTALL_SURFACE.md`, not this file.
 4. Add skill-pack usage guidance to `docs/SKILL_PACK.md`, not this file.
 5. Keep this file small enough to act as a router.
-6. If this router exceeds the limits in `docs/control/DOCUMENT_MAP_POLICY.md`,
-   stop and open a document-map maintenance issue.
+6. If this router becomes too large or its ownership is ambiguous, stop and open
+   a document-map maintenance issue.
