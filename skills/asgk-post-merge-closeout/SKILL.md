@@ -12,7 +12,11 @@ quality floor, but do not invent merge evidence or use the completed-PR steps.
 
 ## Authority
 
-This skill closes only work that is already satisfied by durable GitHub and repo evidence. It must not start the next work unit unless a separate durable issue already authorizes it.
+This skill closes only a completed-PR outcome supported by durable GitHub and
+repo evidence, or a separately authorized non-merge outcome supported by its
+own disposition evidence. A non-merge closeout is not a claim that the original
+objective was completed. It must not start the next work unit unless a separate
+durable issue already authorizes it.
 
 This skill is not a governance health check. Ordinary "PR merged" or "anything
 else?" closeout must stay limited to the current PR, the current issue,
@@ -47,7 +51,8 @@ closeout or failed PR exists.
 5. If the issue was not satisfied, stop with a blocker report.
 6. Keep closeout comments compact. Link to the PR, release, CI, or validator
    evidence instead of repeating full validation logs already preserved there.
-7. If the merged PR changed `skills/*`, remind the operator that
+7. If the completed PR or non-merge issue disposition involved changes to
+   `skills/*`, remind the operator that
    source-distributed skills do not automatically update installed client
    skills. Do not write to installed/global skill directories unless explicitly
    asked. Record `installed_skill_sync` as `not_applicable`, `reminder_given`,
@@ -79,12 +84,12 @@ closeout or failed PR exists.
 
 ```yaml
 status_refresh_required_when:
-  - active work still points to the merged PR, closed issue, or merged branch
-  - next safe action points to completed pre-merge work
+  - active work still points to the merged PR, closed issue, or obsolete branch
+  - next safe action points to completed pre-merge work or a superseded issue
   - release, public visibility, license, milestone, readiness, or handoff recovery state changed
   - leaving CURRENT_STATUS unchanged would make the next session choose the wrong next action
 status_refresh_not_required_when:
-  - CURRENT_STATUS already describes the post-merge repo state accurately
+  - CURRENT_STATUS already describes the post-closeout repo state accurately
   - PR did not change active work, next safe action, or gated repo-level state
   - issue and PR history already hold the completed-work details
 ```

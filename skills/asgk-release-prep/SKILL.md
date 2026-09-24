@@ -64,11 +64,14 @@ release_prep_gate:
 
 ### 2. Execution
 
-Execute only when the release issue explicitly approves the exact tag, title,
-target commit, release notes, distribution path, final validation, and rollback
-or revoke plan. If the SHA, notes, title or distribution metadata changes after
-approval, stop and obtain the applicable refreshed human approval; do not
-silently reuse the earlier decision.
+Execute only when the separate release issue and human approval cover the tag,
+title, target commit, distribution path, final validation, and rollback or
+revoke plan required by the release policy. Record the release notes or
+description as execution evidence within that approved scope. If a later SHA,
+notes, title, or distribution change falls outside the approved release scope
+or materially changes its claims, stop for a refreshed human decision; do not
+silently stretch the earlier approval. This Skill does not add a standalone
+release-notes approval gate to canonical policy.
 
 Required execution evidence:
 
