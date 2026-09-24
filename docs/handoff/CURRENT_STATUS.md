@@ -26,7 +26,8 @@ control-source, GitHub workflow CLI, and optional metadata-only catalog CLI
 cutovers are represented in current source. Both public namespaces use root
 library owners and `doctor` runs their regression checks. The root target
 templates are optional; Stage 3 examples are reviewed, not live-work proof.
-Eleven `v3/` Skills remain candidates. Resolve live refs before claiming more;
+Eleven `v3/` Skills remain candidates; `docs/EVOLUTION_MODEL.md` still has a
+stale template-candidate sentence needing scoped repair. Resolve live refs;
 #323 is prior 2.0 evidence, not the next-work router.
 
 The product boundary is safe, smooth, traceable handoff between people and AI.
@@ -57,7 +58,7 @@ issue: "#372 ASGK 3.0 source-only release program"
 pr: none
 branch: main
 state: active_program
-next_work_unit_decision: "Reconcile live #372 child and PR state; choose one unfinished, exact-scope 3.0 work unit. Eleven source Skills still need cutover before field tests, target pilot and release."
+next_work_unit_decision: "Reconcile live #372 child and PR state; choose one exact-scope unit. Correct EVOLUTION_MODEL template wording, then cut over eleven source Skills before field tests, target pilot and release."
 ```
 
 ## Current validation entrypoint
@@ -95,9 +96,9 @@ model cache, or external preparation outputs are authorized by this status.
 ## Next safe action
 
 Continue under #372 from current `main`; inspect live PRs and child issues
-before selecting one bounded unit. All eleven source Skills still need
-evidence-backed 3.0 cutover, then cold handoff, GitHub/Kanban, target-fit and
-release proof. The selected issue or PR supplies allowed paths and checks;
+before selecting one bounded unit. Correct the stale EVOLUTION_MODEL template
+claim, then cut over eleven source Skills and prove cold handoff,
+GitHub/Kanban, target fit and release. The selected issue or PR supplies scope;
 status, unpromoted `v3/` material, old plans and chat do not. Do not read the
 excluded visual guide.
 
