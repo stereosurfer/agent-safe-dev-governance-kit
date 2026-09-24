@@ -141,7 +141,9 @@ question graph, or a substitute for reading the cited issue and its limits.
 
 The small regression checks the real pointer's shape, bounded branch browsing,
 selection without loading the Lesson body, and rejection of an unsupported
-`promoted` label. Passing it proves metadata behavior only. #370's GitHub PR,
-independent review, and closeout can supply the separate change-decision
-lineage only after those steps actually occur; the catalog does not establish
-their completion.
+`promoted` label. Passing it proves metadata behavior only. [PR #371](https://github.com/stereosurfer/agent-safe-dev-governance-kit/pull/371)
+merged this observed Lesson into preview.1 as `1e0d82109141fe083f3fa469145200c6f7b3c3d0`;
+[#370's closeout](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/370#issuecomment-5806869845)
+links the change decision and preserves the pre-merge MDR timing exception.
+That GitHub lineage is now durable, but it does not independently reproduce the
+Lesson, prove later use, promote a Skill rule, or establish release readiness.

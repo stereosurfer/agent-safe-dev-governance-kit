@@ -2,42 +2,42 @@
 
 ## Current authority and lineage
 
-- Preview.1 scope: [#359](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/359).
+- [#372](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/372) coordinates the formal 3.0 release program. One live child issue or qualifying PR, not this handoff or #372 alone, authorizes a source change.
+- Preview.1's earlier scoped design review is [#359](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/359).
 - Parent candidate: [#358](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/358), commit af7b143fa5b0d3c33d3b9e0cbe8f64434ee124ea.
 - Rejected direction retained: [#357](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/357), local commit 7e2cfc6.
-- Branch: codex/asgk-3-preview.1; original preview branch remains unchanged.
-- Scoped correction: [#362](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/362)
-  originated on `codex/asgk-3-preview.1-provenance-fix`; [#368](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/368)
-  governs its review and proposed integration into preview.1. Until that PR merges,
-  the correction remains on the separate branch. Verify the live PR state before
-  treating it as part of preview.1.
-- No merge to `main`, release, migration, target write or global Skill synchronization.
-- #323/#356 and the original dirty W6B worktree are separate and untouched.
+- Branch: `codex/asgk-3-preview.1`; resolve its **live** head before a new action. Its last completed field-test baseline is [PR #371](https://github.com/stereosurfer/agent-safe-dev-governance-kit/pull/371)'s merge `1e0d82109141fe083f3fa469145200c6f7b3c3d0`, not a guarantee that the branch still points there. The original preview branch is separate.
+- [#362](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/362)'s provenance correction was integrated by [PR #369](https://github.com/stereosurfer/agent-safe-dev-governance-kit/pull/369) into preview.1 as `62438b4c3c6439678226498b0ebc75d26a639fa3`; [#368](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/368) closed after that non-default-base merge.
+- [#370](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/370)'s observed Lesson was integrated by PR #371. Its [closeout](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/370#issuecomment-5806869845) preserves the pre-merge MDR timing exception: the OWNER merged the reviewed head, but the PR body's earlier `merge_blocked`/pending record must not be rewritten as an on-time gate pass.
+- No preview.1-to-`main` merge, v3 release, target migration or global Skill synchronization has occurred. Main separately contains W6B [PR #373](https://github.com/stereosurfer/agent-safe-dev-governance-kit/pull/373) and recovery-status [PR #376](https://github.com/stereosurfer/agent-safe-dev-governance-kit/pull/376) / [PR #379](https://github.com/stereosurfer/agent-safe-dev-governance-kit/pull/379); do not treat the candidate's older root files as current-main state.
 
 ## Candidate recovery
 
-Read v3/README.md, v3/DESIGN.md, this file and #358. Follow v3/TESTING.md when testing.
-Read #359 for this revision's exact scope. Open KANBAN_BRIDGE only for a Kanban run;
-open CAPABILITY_EVOLUTION only for a capability/lesson task.
-Use only the relevant v3/skills entrypoint for the controller/receiver role.
-Root v2 instructions and canonical policies still govern this repository's actual mutations.
+For an actual repository mutation, start with the **current main** `AGENTS.md`,
+`README.md`, `docs/handoff/CURRENT_STATUS.md`, and the selected live issue or PR.
+The preview branch's root copies may lag main; if instructions conflict, stop.
+For candidate recovery, read [README](README.md) and this handoff first. Expand
+only for the question: [DESIGN](DESIGN.md) for ownership/architecture,
+[TESTING](TESTING.md) for checks, [KANBAN_BRIDGE](KANBAN_BRIDGE.md) for a Hermes
+run, or [CAPABILITY_EVOLUTION](CAPABILITY_EVOLUTION.md) for Lessons. Open the
+relevant `v3/skills` entrypoint only when its procedure is needed. Follow links
+to #357–#371 for a specific decision trace; do not load that history by default.
+The live child issue or PR still supplies exact allowed paths and validation.
 
 The prior standalone compiler/receipt demo has been replaced as the public entrypoint.
 GitHub issue parsing and refinement reuse existing source functions. New commands capture
 read-only snapshots, project an issue, preserve partial handoff, draft issue closeout,
 and search/trace linked GitHub comments. In-place committed changes are supported.
 
-All eleven source Skills were read and evaluated. Eleven short branch-local candidates
-implement the responsibility changes and correct identified gate/closeout ambiguity.
-Existing source Skills remain the baseline for comparison; installed copies are unchanged.
-Preview.1 edits only six relevant candidate Skills; the other five remain as reviewed in
-the parent candidate. A completed closeout now keeps closed unmerged PR attempts beside
+The eleven branch-local candidate Skills are reviewed proposals, not installed
+instructions or a second governance authority. Load only the one needed for
+the current role. A completed closeout keeps closed unmerged PR attempts beside
 the merged replacement and blocks unresolved open attempts.
 
 ## Evidence and next action
 
 Parent-candidate checks, failures and live-read provenance remain in #358 comments.
-Preview.1's bounded checks and remaining research-reference gap belong to #359;
+Preview.1's bounded checks and research-reference correction belong to #359;
 they must not be silently reported as parent-candidate proof. #362 adds a
 `card-draft` command: it accepts a fresh, checked, non-fixture issue packet and
 emits a controller-supplied Kanban card draft without posting to Hermes or GitHub.
@@ -58,6 +58,8 @@ implementation objective. These runs are evidence about this bounded negative
 path, not proof of an executable live issue-read path, independent reviewer,
 human cold-start, target pilot or release.
 
+The separate [#367](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/367) Hermes issue-comment write test and #370 fixed-path Lesson commit are field evidence, not a v3 CLI posting feature or an installed runtime adapter. Check their own issue records for current credential and closeout state before relying on them.
+
 The linked [research-runtime-macos delivery contract](https://github.com/stereosurfer/research-runtime-macos/blob/d09eac50c3cd12c1427dadaf5c09d1c8f7dfd38e/docs/PACKAGE_FORMAT.md)
 and [synthetic example](https://github.com/stereosurfer/research-runtime-macos/tree/d09eac50c3cd12c1427dadaf5c09d1c8f7dfd38e/examples/research-package-demo)
 have been compared with this candidate. They demonstrate a stable answer contract,
@@ -66,12 +68,14 @@ evidence unit reading route, human handoff, source map and separate raw audit la
 Preview.1 now distinguishes this task-owned delivery graph from its optional
 cross-work capability catalog. The catalog is not a replacement for the package
 contract and does not validate research completion.
+The #370 Lesson remains `observed`; PR #371's review/merge/closeout provide a
+decision trail, not independent reproduction, Skill promotion or later-use proof.
 Do not interpret “candidate works” as authority to migrate other repos or finish W1–W10.
 Preserve the rejected attempt and correction links; no reset, force push or silent deletion.
 
 ## Known implementation limits
 
-- No automated GitHub posting, PR creation, merge, closure, Bot setup or publication.
+- The preview CLI does not automate GitHub posting, PR creation, merge, closure, Bot setup or publication. Separate #367/#370 field tests used other scoped tools; they are not CLI features.
 - Capture is not atomic; a saved snapshot is not live authority or authenticated evidence.
 - Local committed diff observation does not retain uncommitted patch contents or inspect ignored/external side effects.
 - Checks report evidence coverage, not command execution, approval or semantic correctness.
@@ -79,11 +83,12 @@ Preserve the rejected attempt and correction links; no reset, force push or sile
 - No independent behavioral proof for the candidate Skills yet; format checks are narrower.
 - Kanban bridge and card-draft are not an installed adapter or runtime-enforced
   tool policy. The one successful Luna negative-path run does not prove that
-  another model/run will obey the card or that a worker can execute a write task.
+  another model/run will obey the card. #367 and #370's separately scoped writes
+  do not prove general write confinement or production safety.
 - The capability catalog is a synthetic metadata projection, not a delivery question
   graph or proof of actual Research, Video or Translation workflow quality. The linked
   research package is a concrete domain-owned delivery implementation; ASGK does not
   impose its exact filenames or toolchain on video and translation targets.
 
-Ignoring this branch preserves v2. Its source commits survive temporary worktree removal;
+Ignoring this branch leaves current `main` unchanged. Its source commits survive temporary worktree removal;
 do not delete either worktree automatically.

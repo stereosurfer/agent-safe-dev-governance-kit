@@ -17,6 +17,15 @@ GitHub 仍是正式工作紀錄；工作包、搜尋快取都不是第二套權�
 Hermes Kanban 可保存 Bot 的卡片、run 與 review 狀態，但不能取代 GitHub
 issue 的授權、PR/MDR 或 close-out。獨立 reviewer 守材料／能力升格等關口，
 不是每件事都要經過一個常駐「警察 Bot」。
+沒有 Hermes 的 Codex＋GitHub 工作也可沿用 GitHub 骨幹；定期排程只負責啟動，
+不是當次寫入或發布授權。這是 [#372 的必要驗收案例](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/372#issuecomment-5807050375)，
+尚未由本候選版的網站試點證明，也不預設每個網站都需要導入 ASGK。
+
+若要在這個 repo 實際修改檔案，先讀**目前 main** 的 `AGENTS.md`、`README.md`、
+`docs/handoff/CURRENT_STATUS.md` 和選定的 live issue／PR；候選分支內較舊的根目錄
+文件不能取代它們。[#372](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/372)
+只協調 3.0 發布工作，不單獨授權寫入。若只是接手評估候選版，先讀本頁與
+[候選交接](HANDOFF.md)；設計、測試、Kanban、Lesson 與歷史證據按問題逐層展開。
 
 ## 從這裡測試
 
@@ -83,5 +92,14 @@ target-owned assessment、普通 revert 與文件驅動自體進化都保留。
 真正 Bot／Kanban 的範圍化交接已有 #361 實測，但其首次 issue 核對聲稱失敗；
 這不是生產安全或獨立 reviewer 證明。修正後的重測結果見 #362；target pilot
 仍未實測。
+[#369](https://github.com/stereosurfer/agent-safe-dev-governance-kit/pull/369) 已把修正合併進
+preview.1；[#371](https://github.com/stereosurfer/agent-safe-dev-governance-kit/pull/371)
+也已合併一筆 `observed` Lesson。#370 的[結案](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/370#issuecomment-5806869845)
+保留了合併前 MDR 尚為 `merge_blocked` 的時間差，不把事後結案冒充事前通關。
+Hermes 的[#367 留言測試](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/367)
+與 #370 限定路徑寫入是分別受控的實測，不是本 CLI 已有自動 GitHub 發文功能，
+也不證明一般寫入隔離或可上線。
 跨供應商接手仍是可攜性不變量，但不是自動選型功能，也不是本次主要瓶頸。
-你的 2.0 原始工作區與全域 Skills 都保持不動。
+目前 main 另有 W6B 清理與交接狀態更新（包含
+[#379](https://github.com/stereosurfer/agent-safe-dev-governance-kit/pull/379)）；
+候選分支尚未切入 main 或同步全域 Skills。

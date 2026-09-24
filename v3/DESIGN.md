@@ -1,8 +1,10 @@
 # ASGK 3.0 — GitHub-native design contract
 
 Experimental preview.1 branch contract; [scoped review #359](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/359).
-Branches from the #358 GitHub-native candidate without overwriting it, and does not
-supersede current v2 repository policies.
+Branches from the #358 GitHub-native candidate without overwriting it. The
+[formal 3.0 program #372](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/372)
+now coordinates promotion, but this candidate document does not supersede the
+current main repository policies or any live child issue's exact authority.
 
 ## Product invariants
 
@@ -86,7 +88,8 @@ does not authorize closing the issue. Non-merge outcomes preserve their own reas
 
 ## All eleven Skills — full-content review
 
-All eleven source SKILL.md files were read. Existing files remain the v2 baseline;
+All eleven source SKILL.md files were read. The root copies on this candidate
+branch are a fork-time comparison baseline, not guaranteed current-main rules;
 the eleven revised candidate entrypoints are under v3/skills. These responsibility
 changes are not a bulk installation and do not amend root policy or merge authority.
 
@@ -118,9 +121,12 @@ cached history is not current scope. Keep those limits explicit.
 
 ## Document-driven evolution
 
-Retain #357 → #358 → #359 → branch commits → validation → user testing → later PR/MDR/closeout
-if authorized. Do not erase the failed attempt. Independent later use and target-owned
-evidence remain necessary for self-evolution and portability claims.
+Retain #357 → #358 → #359 → candidate branch commits → [PR #369](https://github.com/stereosurfer/agent-safe-dev-governance-kit/pull/369)
+and [PR #371](https://github.com/stereosurfer/agent-safe-dev-governance-kit/pull/371)
+→ their #368/#370 closeouts → #372's later bounded promotion work. Do not erase
+failed attempts or turn #370's pre-merge MDR timing exception into an on-time
+approval. Independent later use and target-owned evidence remain necessary for
+self-evolution and portability claims.
 
 Capability work across Research, Video and Translation follows
 [CAPABILITY_EVOLUTION](CAPABILITY_EVOLUTION.md): many lessons/ledgers are permitted,
@@ -133,6 +139,11 @@ indexes do not. This is a generic handoff invariant, not a requirement that ever
 target use the research package's exact files, three mandatory modules or an
 automatic agent router.
 
-Existing v2 root documents, policies, validators, issue/PR templates and eleven Skills
-remain intact during this experiment. The user tests the branch before choosing what to
-migrate. This does not complete W1–W10, publish 3.0 or bypass root repository rules.
+The candidate branch still contains root files from its earlier fork; main has
+since changed through W6B [PR #373](https://github.com/stereosurfer/agent-safe-dev-governance-kit/pull/373)
+and recovery-status [PR #376](https://github.com/stereosurfer/agent-safe-dev-governance-kit/pull/376) / [PR #379](https://github.com/stereosurfer/agent-safe-dev-governance-kit/pull/379).
+Do not call the older root copies current authority or treat a head-to-head diff
+as the candidate's source patch. #372 requires a separately reviewed canonical
+cutover across root entry, policies, validators, templates and all eleven Skills.
+This document change does not perform that cutover, publish 3.0, or bypass
+current main rules.
