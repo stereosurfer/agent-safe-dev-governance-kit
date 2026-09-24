@@ -23,18 +23,19 @@ Updated governance scaffold.
 
 ## Validation Run
 ```bash
-python3 scripts/check_project.py
-python3 scripts/validate_bootstrap.py
+python3 scripts/asgk.py doctor
 ```
 
 ## Validation Result
-pass
+Source doctor: pass for its named checks. This does not establish semantic
+correctness, target readiness, or merge approval.
 
 ## Acceptance Criteria Status
 - [x] Required docs exist.
 
 ## Storage Boundary Evidence
-No Artifact Root or Local State Root writes.
+No external or target-owned storage writes were in scope. The issue did not
+select a runtime/output destination; none was created or inferred.
 
 ## Runtime Artifact Status
 No runtime artifacts committed.

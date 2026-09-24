@@ -89,10 +89,12 @@ roles:
 
 The candidate entry routes to its own relevant files on demand; this registry
 does not make all of `v3/**` a default read set or a second governance spine.
-The existing specialized storage, execution-lane, and artifact-promotion rows
-are not reclassified by this navigation-only update. Their 3.0 disposition
-requires separately scoped semantic review of each active owner and its inbound
-references; the candidate entry does not grant them new authority.
+The fixed three-root storage family was retired by #391; source record placement
+and runtime commit hygiene have the separate owners listed below. The existing
+execution-lane and artifact-promotion rows are not reclassified by that
+storage-boundary work. Their 3.0 disposition still requires separately scoped
+semantic review of each active owner and its inbound references; the candidate
+entry does not grant them new authority.
 
 ## Target Assessment And Optional References
 
@@ -209,30 +211,19 @@ summary_only:
   - docs/bootstrap/11_auto_merge_policy.md
 ```
 
-## Storage And Runtime Boundary Documents
+## Source Records And Runtime Boundary Documents
 
 | Document | Role | Canonical for | Read by default | Read when | Owned by lane |
 |---|---|---|---:|---|---|
-| `docs/architecture/STORAGE_PROFILE.md` | canonical | Code Repo / Artifact Root / Local State Root model | no | storage, workspace, artifact, cache, or sync work | `lane_01_architecture` |
-| `docs/architecture/LOG_AND_RECORD_RETENTION_POLICY.md` | canonical | log and record placement, Artifact Root structure, Local State Root structure, retention, and naming conventions | no | log/record placement, artifact/local-state planning, field-test storage planning | `lane_05_security` |
-| `docs/architecture/CACHE_AND_STATE_POLICY.md` | canonical | cache and live local state placement | no | cache, SQLite, preview, model-cache work | `lane_05_security` |
-| `docs/architecture/WORKSPACE_LOCK_POLICY.md` | canonical | workspace lock behavior and sync-folder warning | no | artifact root writes, app runtime validation | `lane_05_security` |
-| `docs/architecture/RUNTIME_ARTIFACT_POLICY.md` | canonical | runtime artifact commit boundaries | no | PR hygiene, artifact path changes | `lane_05_security` |
-| `docs/bootstrap/02_storage_roots.md` | summary | short bootstrap-level storage overview | no | bootstrap orientation only | `lane_01_architecture` |
-| `contracts/storage_profile.contract.yaml` | contract | storage-profile invariants | no | storage schema/contract changes | `lane_02_schema_contracts` |
-| `schemas/storage_profile.schema.json` | schema | machine-readable storage profile structure | no | storage fixture or schema validation work | `lane_02_schema_contracts` |
+| `docs/architecture/LOG_AND_RECORD_RETENTION_POLICY.md` | canonical | ASGK governance record placement, task-owned output boundary, retention decision inputs | no | record placement, handoff, or task-output work | `lane_05_security` |
+| `docs/architecture/RUNTIME_ARTIFACT_POLICY.md` | canonical | ASGK source runtime/private artifact commit boundary | no | PR hygiene, artifact path changes | `lane_05_security` |
 
-Canonical ownership rule for storage work:
+Canonical ownership rule for ASGK source records:
 
 ```yaml
-storage_canonical_source: docs/architecture/STORAGE_PROFILE.md
 retention_canonical_source: docs/architecture/LOG_AND_RECORD_RETENTION_POLICY.md
-storage_summaries:
-  - docs/bootstrap/02_storage_roots.md
-storage_specialized_policies:
-  - docs/architecture/CACHE_AND_STATE_POLICY.md
-  - docs/architecture/WORKSPACE_LOCK_POLICY.md
-  - docs/architecture/RUNTIME_ARTIFACT_POLICY.md
+runtime_artifact_canonical_source: docs/architecture/RUNTIME_ARTIFACT_POLICY.md
+target_storage_layout: target_owned_when_relevant
 ```
 
 ## Bootstrap Documents
@@ -240,8 +231,7 @@ storage_specialized_policies:
 | Document | Role | Canonical for | Read by default | Read when | Owned by lane |
 |---|---|---|---:|---|---|
 | `docs/bootstrap/00_project_brief.md` | canonical | project mission and non-goals | no | project initialization, mission changes | `lane_01_architecture` |
-| `docs/bootstrap/01_physical_boundaries.md` | canonical | writable paths, protected paths, forbidden actions | no | path, security, filesystem, CI, PR hygiene work | `lane_05_security` |
-| `docs/bootstrap/02_storage_roots.md` | summary | short bootstrap-level storage overview | no | bootstrap orientation only | `lane_01_architecture` |
+| `docs/bootstrap/01_physical_boundaries.md` | summary | short source path and runtime boundary overview; AGENTS and Human-Gated Operations own authority | no | path, security, filesystem, CI, PR hygiene work | `lane_05_security` |
 | `docs/bootstrap/03_tech_stack.md` | canonical | declared stack and dependency policy | no | dependency or toolchain changes | `lane_03_backend` |
 | `docs/bootstrap/04_file_structure.md` | canonical | top-level file layout and dependency direction | no | new directories, repo structure changes | `lane_01_architecture` |
 | `docs/bootstrap/05_context_budget.md` | summary | basic task context limits | no | task scoping, token-budget review | `lane_00_controller` |

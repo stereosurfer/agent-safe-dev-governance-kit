@@ -8,7 +8,7 @@
   "expected_output_checked": true,
   "contracts_checked": true,
   "schemas_checked": true,
-  "storage_boundary": "no artifact_root or local_state_root writes",
+  "storage_boundary": "no out-of-repo destination or target-owned storage write in this example issue",
   "runtime_artifact_boundary": "no runtime artifacts committed",
   "safety_review": "pass",
   "human_gates_checked": true,

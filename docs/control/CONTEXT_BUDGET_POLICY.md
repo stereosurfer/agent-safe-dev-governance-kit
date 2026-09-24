@@ -228,21 +228,20 @@ read_sets:
       - contract_semantics_unclear
 
   security_or_storage:
-    use_when: "Filesystem, protected-path, Artifact Root, Local State Root, cache, private material, or externalized responsibility boundaries."
+    use_when: "Filesystem, protected-path, runtime-artifact, private material, or task-specific storage and externalized responsibility boundaries."
     read:
       - AGENTS.md
       - docs/bootstrap/01_physical_boundaries.md
-      - docs/architecture/STORAGE_PROFILE.md
       - docs/architecture/RUNTIME_ARTIFACT_POLICY.md
       - docs/control/HUMAN_GATED_OPERATIONS.md
       - current GitHub issue or PR
+    read_when_record_placement_or_retention_is_decided:
+      - docs/architecture/LOG_AND_RECORD_RETENTION_POLICY.md
     optional_read:
-      - docs/architecture/CACHE_AND_STATE_POLICY.md
-      - docs/architecture/WORKSPACE_LOCK_POLICY.md
       - docs/architecture/EXTERNALIZED_RESPONSIBILITY_BOUNDARY.md
     stop_if:
       - broader_filesystem_permission_required
-      - protected_path_change_required
+      - protected_path_change_required_without_explicit_issue_scope
       - cloud_or_external_api_gate_required
       - private_source_material_required
 
