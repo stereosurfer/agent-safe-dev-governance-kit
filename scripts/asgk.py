@@ -35,6 +35,7 @@ from asgk_lib.compact_handoff import (
     valid_follow_up_issue,
 )
 from asgk_lib.handoff import evaluate_handoff_file, is_material_handoff_text
+from asgk_lib.github_workflow import add_parser as add_workflow_parser
 from asgk_lib.release_state import check_release_state_docs
 from asgk_lib.status_policy import (
     CANONICAL_CURRENT_STATUS_PATH,
@@ -2457,6 +2458,8 @@ def cmd_doctor(_args: argparse.Namespace) -> int:
         ["python3", "scripts/asgk.py", "validate"],
         ["git", "diff", "--check"],
         ["python3", "scripts/asgk.py", "status-check"],
+        ["python3", "-m", "unittest", "discover", "-s", "v3", "-p", "test_asgk3.py"],
+        ["python3", "-m", "unittest", "discover", "-s", "v3", "-p", "test_github_workflow.py"],
     ]
     baseline = run_many(commands)
     scenarios = run_negative_case("all")
@@ -4637,6 +4640,8 @@ def cmd_workspace_state_check(args: argparse.Namespace) -> int:
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="ASGK minimal validation CLI.")
     sub = parser.add_subparsers(dest="command", required=True)
+
+    add_workflow_parser(sub)
 
     p = sub.add_parser("doctor", help="Run baseline positive and negative checks.")
     p.set_defaults(func=cmd_doctor)

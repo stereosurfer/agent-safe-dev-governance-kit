@@ -1,7 +1,8 @@
 # Document Registry
 
 Status: active ASGK repository-local document registry; 3.0 root integration is
-in progress, and `v3/` remains non-default candidate source.
+in progress. The GitHub workflow is canonical under `scripts/asgk_lib/`;
+remaining `v3/` material is non-default candidate source.
 
 This file is the complete ASGK repository document registry and canonical
 ownership table.
@@ -85,7 +86,7 @@ roles:
 
 | Document | Purpose | Read by default | Read when | Authority boundary |
 |---|---|---:|---|---|
-| `v3/README.md` | Bounded entry to candidate design, tests, Kanban mapping, capability evolution, and its own handoff | no | a live #372 child issue or PR explicitly scopes candidate comparison | Cannot replace current root AGENTS, README, CURRENT_STATUS, live issue/PR, or canonical control documents |
+| `v3/README.md` | Bounded entry to preview lineage, candidate Kanban/capability design and tests; its workflow CLI is a thin root-library compatibility projection | no | a live #372 child issue or PR explicitly scopes candidate comparison | Cannot replace current root AGENTS, README, CURRENT_STATUS, live issue/PR, or canonical control documents |
 
 The candidate entry routes to its own relevant files on demand; this registry
 does not make all of `v3/**` a default read set or a second governance spine.
@@ -289,12 +290,15 @@ disagree, stop and open a schema/contract alignment issue.
 | `scripts/governance_hygiene.py` | script | changed-path and protected-path hygiene | no | path hygiene, negative changed-path checks, future CLI work | `lane_06_ci_github` |
 | `scripts/policy_gate_check.py` | script | read-only fail-closed PR-body policy gate check without low-risk inference | no | policy-gate validation, PR-body gate coherence review | `lane_06_ci_github` |
 | `scripts/asgk_lib/validation_result.py` | script | dependency-free common envelope construction and fail-closed self-validation | no | retained JSON command, finding, result, or proof-boundary changes | `lane_06_ci_github` |
+| `scripts/asgk_lib/workflow_common.py` | script | shared strict JSON, normalized path, digest and new-output helpers for the GitHub workflow | no | workflow projection, snapshot, draft-output or decision-trace work | `lane_06_ci_github` |
+| `scripts/asgk_lib/github_workflow.py` | script | sole GitHub workflow implementation: GET-only snapshot capture, issue-backed projection, draft-only handoff/closeout, supplied-snapshot search/trace with JSON shape-checked edges versus unverified YAML candidates, and common-envelope result boundary | no | GitHub workflow command, work projection, Kanban card draft or closeout-trace review | `lane_06_ci_github` |
+| `v3/test_asgk3.py`, `v3/test_github_workflow.py` | script/fixture | required GitHub-workflow regression tests invoked by root doctor; preview wrappers have no independent implementation authority | no | workflow source change, doctor/CI coverage audit, or preview compatibility review | `lane_06_ci_github` |
 | `scripts/asgk_lib/scenario_registry.py` | script | sole executable owner of retained JSON owner commands, including target evidence, polarity, exact exits, results, finding-code multisets, human-gate states, proof boundaries, optional branch-specific checked/unchecked claims, task-packet alias parity, and source-wrapper parity | no | validator behavior, negative coverage, doctor, or CI scenario changes | `lane_06_ci_github` |
 | `scripts/asgk_lib/scenario_runner.py` | script | exact scenario execution, one-JSON-object verification, alias parity, and false-evidence self-tests | no | validator evidence or scenario-runner changes | `lane_06_ci_github` |
 | `scripts/asgk_lib/negative.py` | script | thin public negative-command facade over the canonical registered scenario groups | no | negative CLI routing or compatibility review | `lane_06_ci_github` |
 | `scripts/asgk_lib/negative_cases.py` | script | compatibility projection to `scenario_registry.py`; owns no expectation | no | bounded compatibility removal or regression review | `lane_06_ci_github` |
 | `scripts/asgk_lib/negative_runner.py` | script | compatibility projection to `scenario_runner.py`; owns no execution semantics | no | bounded compatibility removal or regression review | `lane_06_ci_github` |
-| `scripts/asgk.py` | script | ASGK CLI facade for canonical source validation, caller-supplied target evidence, common retained-JSON projections, and repository-governance checks; no mechanical target command owns fit, depth, recommendation, or approval | no | local source validation, target evidence, status/closeout/handoff/PR checks, or policy-gate checks | `lane_06_ci_github` |
+| `scripts/asgk.py` | script | ASGK CLI facade for canonical source validation, caller-supplied target evidence, GitHub workflow projections, common retained-JSON projections, and repository-governance checks; no mechanical command owns fit, depth, recommendation, or approval | no | local source validation, target evidence, workflow, status/closeout/handoff/PR checks, or policy-gate checks | `lane_06_ci_github` |
 | `scripts/pr_governance_preflight.py` | script | thin file-backed PR body preflight before `gh pr create` or `gh pr edit` | no | PR body create/edit, local preflight before GitHub Actions, target adoption of ASGK CLI tooling | `lane_06_ci_github` |
 | `.github/workflows/bootstrap-validation.yml` | template/script | GitHub Actions projection of doctor plus dynamic PR-event policy routing and changed-path hygiene; owns no duplicate fixture list | no | CI/workflow changes | `lane_06_ci_github` |
 | `.github/PULL_REQUEST_TEMPLATE.md` | template | required PR body sections, Current Status Impact, and Merge Decision Record surface | no | PR creation/review, current-status impact classification, template changes, `asgk.py pr-body-check` | `lane_06_ci_github` |

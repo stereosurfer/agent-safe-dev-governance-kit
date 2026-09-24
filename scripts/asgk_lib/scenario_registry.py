@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import json
 
 from asgk_lib.release_state import (
     RELEASE_STATE_COMPLETE_CHECKED,
@@ -13,6 +14,74 @@ EXPECTED_FAILURE = "expected_failure"
 EXPECTED_SUCCESS = "expected_success"
 
 ASGK = ("python3", "scripts/asgk.py")
+
+WORKFLOW_PROOF_BOUNDARY = (
+    "GitHub snapshots are observed evidence, not live or authenticated authorization. "
+    "Local remote configuration and textual PR links are not authenticated repository identity "
+    "or semantic GitHub linkage. No merge approval, test-execution attestation, runtime sandbox "
+    "or external-side-effect audit."
+)
+WORKFLOW_MINIMAL_SNAPSHOT = (
+    '{"version":1,"source":"fixture","captured_at":"2025-01-01T00:00:00Z",'
+    '"repository":"example/asgk-synthetic","issue":{"number":1,'
+    '"html_url":"https://github.com/example/asgk-synthetic/issues/1",'
+    '"body":"A scoped work unit","state":"closed",'
+    '"updated_at":"2025-01-01T00:00:00Z"},"comments":[],"prs":[]}'
+)
+WORKFLOW_ISSUE_URL = "https://github.com/example/asgk-synthetic/issues/1"
+WORKFLOW_CLOSEOUT_URL = WORKFLOW_ISSUE_URL + "#issuecomment-10"
+WORKFLOW_CLOSEOUT_COMMENT = json.dumps({
+    "issue_closeout_review": {
+        "issue": WORKFLOW_ISSUE_URL,
+        "status": "completed",
+        "decision_analysis": {
+            "decision_made": "Keep GitHub trace",
+            "why_this_path": "The next worker needs durable issue evidence.",
+            "rejected_paths": [{
+                "path": "Chat-only summary",
+                "reason": "It cannot be independently recovered.",
+            }],
+            "reusable_signal": {
+                "applies_later": True,
+                "reason": "Keep a bounded decision trail for later handoff.",
+            },
+        },
+        "decisions": [{
+            "decision": "Keep GitHub trace",
+            "reason": "The issue closeout remains discoverable.",
+            "evidence": [WORKFLOW_ISSUE_URL],
+        }],
+    }
+}, separators=(",", ":"))
+WORKFLOW_CLOSEOUT_SNAPSHOT = json.loads(WORKFLOW_MINIMAL_SNAPSHOT)
+WORKFLOW_CLOSEOUT_SNAPSHOT["comments"] = [{
+    "html_url": WORKFLOW_CLOSEOUT_URL,
+    "body": "```json\n" + WORKFLOW_CLOSEOUT_COMMENT + "\n```",
+}]
+WORKFLOW_CLOSEOUT_SNAPSHOT = json.dumps(WORKFLOW_CLOSEOUT_SNAPSHOT, separators=(",", ":"))
+WORKFLOW_YAML_CANDIDATE_URL = WORKFLOW_ISSUE_URL + "#issuecomment-11"
+WORKFLOW_YAML_CANDIDATE_BODY = (
+    '```yaml\nissue_closeout_review:\n  issue: "#1"\n  status: completed\n'
+    '  decision_analysis:\n    decision_made: "Keep GitHub trace"\n'
+    '    why_this_path: "The next worker needs the GitHub trail."\n'
+    '    rejected_paths:\n      - path: "Chat only"\n        reason: "Cannot recover it."\n'
+    '    reusable_signal:\n      applies_later: true\n      reason: "Retain a bounded link."\n'
+    '  decisions:\n    - decision: "Keep GitHub trace"\n'
+    '      reason: "The issue remains discoverable."\n      evidence: ["#1"]\n```'
+)
+WORKFLOW_YAML_CANDIDATE_SNAPSHOT = json.loads(WORKFLOW_MINIMAL_SNAPSHOT)
+WORKFLOW_YAML_CANDIDATE_SNAPSHOT["comments"] = [{
+    "html_url": WORKFLOW_YAML_CANDIDATE_URL,
+    "body": WORKFLOW_YAML_CANDIDATE_BODY,
+}]
+WORKFLOW_YAML_CANDIDATE_SNAPSHOT = json.dumps(WORKFLOW_YAML_CANDIDATE_SNAPSHOT, separators=(",", ":"))
+WORKFLOW_MALFORMED_YAML_CANDIDATE_SNAPSHOT = json.loads(WORKFLOW_MINIMAL_SNAPSHOT)
+WORKFLOW_MALFORMED_YAML_CANDIDATE_SNAPSHOT["comments"] = [{
+    "html_url": WORKFLOW_YAML_CANDIDATE_URL,
+    "body": '```yaml\nissue_closeout_review:\n  issue: "#999"\n  decision_analysis: {}\n```',
+}]
+WORKFLOW_MALFORMED_YAML_CANDIDATE_SNAPSHOT = json.dumps(
+    WORKFLOW_MALFORMED_YAML_CANDIDATE_SNAPSHOT, separators=(",", ":"))
 
 TARGET_EVIDENCE_EXPECTED_PROOF_BOUNDARY = (
     "Exit 0 proves only that every accepted caller-supplied mechanical claim "
@@ -1756,6 +1825,172 @@ RETAINED_JSON_SCENARIOS = (
         SOURCE_INVENTORY_PROOF_BOUNDARY,
         expected_mechanically_checked=SOURCE_INVENTORY_CHECKED,
         expected_not_checked=SOURCE_INVENTORY_NOT_CHECKED,
+    ),
+    JsonScenario(
+        "workflow_trace_supplied_snapshot",
+        "workflow",
+        (*ASGK, "workflow", "trace", "--snapshot", "{temp_input}",
+         "--start", "https://github.com/example/asgk-synthetic/issues/1", "--json"),
+        "positive",
+        "pass",
+        0,
+        (),
+        WORKFLOW_PROOF_BOUNDARY,
+        temp_input=TempInput(content=WORKFLOW_CLOSEOUT_SNAPSHOT),
+        expected_mechanically_checked=(
+            "supplied snapshot shape", "single selected observation per issue and PR", "durable URL links",
+            "closed-issue JSON shape-checked closeout edge",
+            "separate unverified YAML candidate URLs", "visited closed-issue closeout presence",
+            "known-snapshot shorthand links",
+            "bounded traversal and unresolved references",
+        ),
+        expected_payload_fields=(
+            ("evidence_source", "supplied_snapshots"),
+            ("nodes", [
+                {"url": WORKFLOW_ISSUE_URL, "kind": "issue", "hops": 0,
+                 "links": [WORKFLOW_CLOSEOUT_URL], "unresolved_shorthand_refs": [],
+                 "source": "fixture"},
+                {"url": WORKFLOW_CLOSEOUT_URL, "kind": "comment", "hops": 1,
+                 "links": [WORKFLOW_ISSUE_URL], "unresolved_shorthand_refs": [],
+                 "source": "fixture"},
+            ]),
+            ("unresolved", []),
+            ("candidates", []),
+            ("closeout_not_found", []),
+        ),
+    ),
+    JsonScenario(
+        "workflow_trace_yaml_candidate_incomplete",
+        "workflow",
+        (*ASGK, "workflow", "trace", "--snapshot", "{temp_input}",
+         "--start", WORKFLOW_ISSUE_URL, "--json"),
+        "negative",
+        "warning",
+        1,
+        ("WF_YAML_CANDIDATE_UNVERIFIED",),
+        WORKFLOW_PROOF_BOUNDARY,
+        expected_domain_result="incomplete",
+        temp_input=TempInput(content=WORKFLOW_YAML_CANDIDATE_SNAPSHOT),
+        expected_mechanically_checked=(
+            "supplied snapshot shape", "single selected observation per issue and PR", "durable URL links",
+            "closed-issue JSON shape-checked closeout edge",
+            "separate unverified YAML candidate URLs", "visited closed-issue closeout presence",
+            "known-snapshot shorthand links",
+            "bounded traversal and unresolved references",
+        ),
+        expected_payload_fields=(
+            ("evidence_source", "supplied_snapshots"),
+            ("nodes", [{"url": WORKFLOW_ISSUE_URL, "kind": "issue", "hops": 0,
+                        "links": [], "unresolved_shorthand_refs": [], "source": "fixture"}]),
+            ("candidates", [{"url": WORKFLOW_YAML_CANDIDATE_URL,
+                             "container_issue_url": WORKFLOW_ISSUE_URL,
+                             "evidence_class": "candidate_unverified_yaml",
+                             "source": "fixture", "captured_at": "2025-01-01T00:00:00Z"}]),
+            ("closeout_not_found", []),
+        ),
+    ),
+    JsonScenario(
+        "workflow_search_malformed_yaml_candidate_incomplete",
+        "workflow",
+        (*ASGK, "workflow", "search", "--snapshot", "{temp_input}",
+         "--query", "issue_closeout_review", "--json"),
+        "negative",
+        "warning",
+        1,
+        ("WF_YAML_CANDIDATE_UNVERIFIED",),
+        WORKFLOW_PROOF_BOUNDARY,
+        expected_domain_result="incomplete",
+        temp_input=TempInput(content=WORKFLOW_MALFORMED_YAML_CANDIDATE_SNAPSHOT),
+        expected_mechanically_checked=(
+            "supplied snapshot shape", "single selected observation per issue and PR",
+            "closed-issue duplicate-free JSON closeout shape",
+            "fenced YAML candidate marker without syntax validation", "case-insensitive query match",
+        ),
+        expected_payload_fields=(
+            ("evidence_source", "supplied_snapshots"),
+            ("matches", []),
+            ("candidates", [{"url": WORKFLOW_YAML_CANDIDATE_URL,
+                             "container_issue_url": WORKFLOW_ISSUE_URL,
+                             "evidence_class": "candidate_unverified_yaml",
+                             "source": "fixture", "captured_at": "2025-01-01T00:00:00Z"}]),
+        ),
+    ),
+    JsonScenario(
+        "workflow_trace_closed_issue_closeout_not_found",
+        "workflow",
+        (*ASGK, "workflow", "trace", "--snapshot", "{temp_input}",
+         "--start", WORKFLOW_ISSUE_URL, "--json"),
+        "negative",
+        "warning",
+        1,
+        ("WF_CLOSEOUT_NOT_FOUND",),
+        WORKFLOW_PROOF_BOUNDARY,
+        expected_domain_result="incomplete",
+        temp_input=TempInput(content=WORKFLOW_MINIMAL_SNAPSHOT),
+        expected_mechanically_checked=(
+            "supplied snapshot shape", "single selected observation per issue and PR", "durable URL links",
+            "closed-issue JSON shape-checked closeout edge",
+            "separate unverified YAML candidate URLs", "visited closed-issue closeout presence",
+            "known-snapshot shorthand links", "bounded traversal and unresolved references",
+        ),
+        expected_payload_fields=(
+            ("evidence_source", "supplied_snapshots"),
+            ("closeout_not_found", [WORKFLOW_ISSUE_URL]),
+            ("candidates", []),
+        ),
+    ),
+    JsonScenario(
+        "workflow_search_duplicate_issue_snapshot",
+        "workflow",
+        (*ASGK, "workflow", "search", "--snapshot", "{temp_input}",
+         "--snapshot", "{temp_input}", "--query", "trace", "--json"),
+        "negative",
+        "fail",
+        1,
+        ("SNAPSHOT_CONFLICT",),
+        WORKFLOW_PROOF_BOUNDARY,
+        temp_input=TempInput(content=WORKFLOW_MINIMAL_SNAPSHOT),
+        expected_mechanically_checked=(
+            "workflow input handling and failure classification up to the reported boundary",
+        ),
+    ),
+    JsonScenario(
+        "workflow_trace_unresolved_snapshot",
+        "workflow",
+        (*ASGK, "workflow", "trace", "--snapshot", "{temp_input}",
+         "--start", "https://github.com/example/asgk-synthetic/issues/2", "--json"),
+        "negative",
+        "warning",
+        1,
+        ("WF_TRACE_INCOMPLETE",),
+        WORKFLOW_PROOF_BOUNDARY,
+        expected_domain_result="incomplete",
+        temp_input=TempInput(content=WORKFLOW_MINIMAL_SNAPSHOT),
+        expected_mechanically_checked=(
+            "supplied snapshot shape", "single selected observation per issue and PR", "durable URL links",
+            "closed-issue JSON shape-checked closeout edge",
+            "separate unverified YAML candidate URLs", "visited closed-issue closeout presence",
+            "known-snapshot shorthand links",
+            "bounded traversal and unresolved references",
+        ),
+        expected_payload_fields=(("evidence_source", "supplied_snapshots"),),
+    ),
+    JsonScenario(
+        "workflow_snapshot_version_invalid",
+        "workflow",
+        (*ASGK, "workflow", "search", "--snapshot", "{temp_input}", "--query", "trace", "--json"),
+        "negative",
+        "fail",
+        1,
+        ("SNAPSHOT_VERSION",),
+        WORKFLOW_PROOF_BOUNDARY,
+        temp_input=TempInput(
+            content=WORKFLOW_MINIMAL_SNAPSHOT,
+            replacements=(('"version":1', '"version":2'),),
+        ),
+        expected_mechanically_checked=(
+            "workflow input handling and failure classification up to the reported boundary",
+        ),
     ),
 )
 

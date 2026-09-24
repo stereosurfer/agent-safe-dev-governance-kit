@@ -262,6 +262,29 @@ target-fixture tree fingerprints. They validate only caller-supplied
 mechanical claims; they do not select claims or judge target fit, layout,
 governance depth, adaptation, readiness, recommendation, or approval.
 
+The `workflow` group pairs a supplied-snapshot trace of one substantive,
+same-issue duplicate-free JSON closeout shape with unresolved-link,
+YAML-candidate, and closed-issue-no-closeout warnings plus duplicate-issue
+snapshot rejection and malformed snapshot failure. Exact exits and finding
+codes (`WF_TRACE_INCOMPLETE`,
+`WF_YAML_CANDIDATE_UNVERIFIED`, `WF_CLOSEOUT_NOT_FOUND`, `SNAPSHOT_CONFLICT`,
+`SNAPSHOT_VERSION`) prevent known missing links, unparsed YAML, or absent supplied
+closeout from being reported as a complete bounded traversal; they do not
+prove the full historical decision tree was supplied. Root `doctor` also runs
+workflow unit tests covering issue-backed projection, repository binding,
+stale packet, out-of-scope diff,
+draft-only handoff/closeout, GET-only capture, safe output, empty and
+duplicate-key JSON, and canonical/malformed YAML candidate visibility without
+a complete decision-tree edge. Repeated same-issue snapshots are rejected even
+when identical; workflow unit tests also reject repeated PR observations across
+different issues in both input orders. The exact registry duplicate-input case
+covers the issue snapshot, while the cross-issue PR case is unit-level because
+the scenario runner prepares only one temporary snapshot file. Other issues may
+link to the selected PR URL without repeating its observation. Unit tests also
+lock case-insensitive repository alias handling for number collisions and `#N`
+resolution. These fixtures do not establish live GitHub authorization, semantic
+correctness, actual Kanban behavior, or independent human review.
+
 The `release-state` group pairs one three-document positive set with isolated
 stale-state and duplicate-ledger negatives. It locks exact exit, common result,
 finding-code multiset, checked and unchecked claims, `human_gate.status:

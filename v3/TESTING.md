@@ -1,4 +1,10 @@
-# ASGK 3.0 preview.1 — 使用與反證
+# ASGK 3.0 GitHub workflow — 使用與反證
+
+GitHub workflow 由根目錄的 `scripts/asgk.py workflow` 執行；
+`v3/asgk3.py` 是相容入口。能力目錄仍是獨立候選，不在 root `doctor`
+的這組 workflow command 驗收內。所有工作流結果為 common JSON envelope；
+未解決或含 YAML 候選的 trace 是 `warning`、`domain_result: incomplete`、
+exit 1，不是成功的完整決策樹。
 
 測試的是 GitHub 工作治理，不是只有離線檔案封包。
 所有輸出由 caller 指定；選新的目錄，避免覆寫。
@@ -6,9 +12,9 @@
 ## 一輪端到端測試
 
 ```bash
-python3 v3/asgk3.py demo --out /tmp/asgk3-github-demo
-python3 v3/asgk3.py search --snapshot /tmp/asgk3-github-demo/artifacts/final-snapshot.json --snapshot /tmp/asgk3-github-demo/artifacts/prior-snapshot.json --query "work ledger"
-python3 v3/asgk3.py trace --snapshot /tmp/asgk3-github-demo/artifacts/final-snapshot.json --snapshot /tmp/asgk3-github-demo/artifacts/prior-snapshot.json --start https://github.com/example/asgk-synthetic/issues/1 --max-hops 5
+python3 scripts/asgk.py workflow demo --out /tmp/asgk3-github-demo
+python3 scripts/asgk.py workflow search --snapshot /tmp/asgk3-github-demo/artifacts/final-snapshot.json --snapshot /tmp/asgk3-github-demo/artifacts/prior-snapshot.json --query "work ledger"
+python3 scripts/asgk.py workflow trace --snapshot /tmp/asgk3-github-demo/artifacts/final-snapshot.json --snapshot /tmp/asgk3-github-demo/artifacts/prior-snapshot.json --start https://github.com/example/asgk-synthetic/issues/1 --max-hops 5
 ```
 
 依序讀取輸出的：
@@ -59,10 +65,10 @@ python3 -m unittest discover -s v3 -p 'test_*.py' -v
 ## 真實 GitHub 讀取與投影
 
 ```bash
-python3 v3/asgk3.py capture --repo OWNER/REPO --issue N --pr P --out /tmp/asgk3-live
-python3 v3/asgk3.py packet --snapshot /tmp/asgk3-live/snapshot.json --repo-root /path/to/repo --actor ACTOR --run RUN --out /tmp/asgk3-work
-python3 v3/asgk3.py check --snapshot /tmp/asgk3-live/snapshot.json --packet /tmp/asgk3-work/packet.json --repo-root /path/to/repo
-python3 v3/asgk3.py card-draft --snapshot /tmp/asgk3-live/snapshot.json --packet /tmp/asgk3-work/packet.json --repo-root /path/to/repo --out /tmp/asgk3-card
+python3 scripts/asgk.py workflow capture --repo OWNER/REPO --issue N --pr P --out /tmp/asgk3-live
+python3 scripts/asgk.py workflow packet --snapshot /tmp/asgk3-live/snapshot.json --repo-root /path/to/repo --actor ACTOR --run RUN --out /tmp/asgk3-work
+python3 scripts/asgk.py workflow check --snapshot /tmp/asgk3-live/snapshot.json --packet /tmp/asgk3-work/packet.json --repo-root /path/to/repo
+python3 scripts/asgk.py workflow card-draft --snapshot /tmp/asgk3-live/snapshot.json --packet /tmp/asgk3-work/packet.json --repo-root /path/to/repo --out /tmp/asgk3-card
 ```
 
 沒有 PR 時省略 `--pr`；多個相關 PR 可重複提供，不自動搜索或採用其他 PR。
@@ -127,8 +133,8 @@ Uncommitted state 會產生 blocked handoff；檔案仍原封不動，不能說�
 副作用、測試是否真的執行與 runtime sandbox 不是此檢查能證明的內容。
 
 ```bash
-python3 v3/asgk3.py handoff --snapshot SNAPSHOT --packet PACKET --report REPORT --repo-root REPO --out /tmp/asgk3-handoff
-python3 v3/asgk3.py closeout --snapshot FINAL-SNAPSHOT --packet PACKET --report REPORT --repo-root REPO --status completed --out /tmp/asgk3-closeout
+python3 scripts/asgk.py workflow handoff --snapshot SNAPSHOT --packet PACKET --report REPORT --repo-root REPO --out /tmp/asgk3-handoff
+python3 scripts/asgk.py workflow closeout --snapshot FINAL-SNAPSHOT --packet PACKET --report REPORT --repo-root REPO --status completed --out /tmp/asgk3-closeout
 ```
 
 Handoff 草稿放回 scoped issue/PR；取得真實 comment URL 後，作為下一個 assignment
@@ -150,15 +156,28 @@ body/comment 明確指向該 PR；否則 closeout 回報 `UNRELATED_PR`，不會
 caller 選入的任意 PR 放進 `prs_in_scope`。輸出的 `relation_evidence` 只是
 文字連結來源，不是 GitHub `closingIssuesReferences`、語意關聯或核准證據。
 
-`search`／`trace` 只在提供的 issue 快照已是 closed、留言沒有草稿標頭，
-且與本 issue 編號相符、位於真正 fenced JSON 或 canonical fenced YAML 時，
-才把 `issue_closeout_review` 視為可搜尋 close-out。
-純文字 marker、Markdown 引用中的範例和其他 issue 的 review 不會形成
-issue → closeout comment 邊。舊式無結構的 prose close-out 可能因此不在
-搜尋結果，這是明確的查找邊界，不等於那些決策不存在；需要時仍查原始
-GitHub issue。即使結構吻合，工具也不驗證留言者、內容真偽或是否已完成。
-因此這仍是「提供的快照顯示已關閉」的機械線索，不能以本地 JSON 當成
-GitHub 實際結案或人類核准證明。
+`search`／`trace` 只從 caller 提供、顯示已 closed 的 issue 快照讀取非草稿
+留言。每次查找同一 issue 只能提供一份快照，同一 PR 也只能出現在一份快照中；
+即使兩份看似相同也會以 `SNAPSHOT_CONFLICT` 拒絕，須先自行選定當前版本，
+避免輸入順序左右追溯。其他 issue 可連到該 PR 網址，不必重複提供其觀測。
+同一 GitHub repo 的 owner/name 大小寫差異不會繞過編號衝突檢查，`#N` 也會
+在這些別名間使用同一已知編號表；這仍不驗證來源身分或連結語意。
+只有無重複鍵、同 issue、具決定／理由／否決路徑／證據等必要形狀的
+fenced JSON 能建立 `json_shape_checked` 的 issue → comment 邊；這仍只是
+結構檢查，不驗證作者、內容真偽、即時 GitHub 狀態或核准。
+
+fenced YAML 若開頭帶 `issue_closeout_review:`，一律只列為
+`candidate_unverified_yaml`。工具不解析其 issue 編號或內容；輸出的
+`container_issue_url` 僅表示留言所屬快照，不能當成 YAML 自稱的 issue。
+YAML 候選的 URL、來源及快照時間會另列於 `candidates`，不建立上述完整邊；
+即使看起來符合範本，或雖然格式有誤，搜尋／追溯遇到候選仍回
+`warning`、`domain_result: incomplete`、exit 1。純文字 marker、Markdown
+引用範例與草稿不算候選。舊式 prose close-out 可能不在搜尋結果；這不代表
+決策不存在，必要時仍查原始 GitHub issue。
+若追溯走到已關閉的 issue，提供的快照卻沒有 JSON 形狀檢查通過的結案
+或 YAML 候選，會回 `WF_CLOSEOUT_NOT_FOUND`、`warning`、`incomplete`、exit 1；
+舊式 prose 結案或未提供的留言仍可能存在。即使 JSON 路徑回 pass，也只表示
+已提供快照內的有界連結走訪完成，絕不證明全部歷史決策均已收齊。
 `trace` 只把 `#N` 縮寫連到本次快照中已知的 issue 或 PR；未知編號列入
 `unresolved_shorthand_refs`，不再一律猜成 issue。補上對應快照才能解開該邊；
 沒有提供快照不代表 GitHub 上不存在該決策。

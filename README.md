@@ -70,7 +70,11 @@ separate responsibilities.
 
 The latest release is source-only. This repository's root entrypoints remain
 current-main governance while [the 3.0 program](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/372)
-integrates and tests a non-default candidate under [`v3/`](v3/README.md):
+integrates and tests the remaining non-default candidate material under
+[`v3/`](v3/README.md). The GitHub work-projection workflow is owned by
+`scripts/asgk_lib/github_workflow.py` and exposed through
+`python3 scripts/asgk.py workflow --help`; `v3/asgk3.py` is a compatibility
+entry, not a second implementation:
 
 ```text
 repo core
@@ -94,8 +98,8 @@ delivery contract. Reusable Lessons and methods can be discovered in bounded
 slices and promoted to a versioned Skill only through the applicable issue,
 PR, tests, review, and any existing human gate that applies. A large lesson
 corpus calls for progressive disclosure, not full-context loading or inflated
-Bot memory. The 3.0 model is documented in the candidate; root Skills and CLI
-have not yet been cut over.
+Bot memory. The 3.0 model is documented in the candidate; the capability
+catalog and root Skills have not yet been cut over.
 
 Skills are not a new authority layer or a substitute for model judgment. They
 direct attention to relevant evidence, safety boundaries, uncertainty, and stop
@@ -151,6 +155,14 @@ profile into a smaller project. The default layer remains generic.
 - `docs/handoff/CURRENT_STATUS.md` as a compact recovery surface.
 - Current-status policy that makes status updates post-merge-safe by default.
 - Local validation through `python3 scripts/asgk.py doctor`.
+- GitHub snapshot/work projection, draft-only handoff and closeout, and bounded
+  closeout search/trace through `python3 scripts/asgk.py workflow --help`.
+  Capture uses GitHub GET only; supplied snapshots and local observations do
+  not grant current issue authority or approval. YAML closeout comments are
+  unverified candidate pointers, not complete decision-tree edges. Use one
+  snapshot per issue and one observation per PR per lookup; a closed issue
+  without a recognizable supplied closeout is reported as incomplete, not
+  silently treated as a complete trace.
 - Negative fixtures for governance hygiene, PR bodies, handoff packets,
   caller-supplied target evidence, and stale current-status patterns.
 - Explicit validation-boundary wording so `doctor` evidence is not treated as a
@@ -260,10 +272,10 @@ schema, workflow, repository visibility change, cloud/API/model lane, MCP
 change, or v2.0 work is included.
 
 The [ASGK 3.0 program](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/372)
-is active, but 3.0 is not released. Preview.1-derived `v3/**` is present on
-`main` only as a non-default candidate. Root authority, public CLI, templates,
-and eleven source Skills still need separately scoped cutover and real
-lifecycle/target evidence. The former 2.0 program and old runtime-adapter
+is active, but 3.0 is not released. The GitHub workflow portion of preview.1
+is integrated into the public CLI and `doctor`; the capability catalog,
+templates, eleven source Skills, and real lifecycle/target evidence still need
+separately scoped work. The former 2.0 program and old runtime-adapter
 roadmaps are history, not instructions for the next work unit.
 
 ## What The Generic Core Does Not Supply

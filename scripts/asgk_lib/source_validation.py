@@ -121,6 +121,7 @@ STATIC_REQUIRED_SOURCE_PATHS_BY_ROLE = {
         "scripts/asgk_lib/__init__.py",
         "scripts/asgk_lib/common.py",
         "scripts/asgk_lib/compact_handoff.py",
+        "scripts/asgk_lib/github_workflow.py",
         "scripts/asgk_lib/handoff.py",
         "scripts/asgk_lib/negative.py",
         "scripts/asgk_lib/negative_cases.py",
@@ -134,9 +135,14 @@ STATIC_REQUIRED_SOURCE_PATHS_BY_ROLE = {
         "scripts/asgk_lib/text_fields.py",
         "scripts/asgk_lib/validation_result.py",
         "scripts/asgk_lib/workspace_state.py",
+        "scripts/asgk_lib/workflow_common.py",
         "scripts/governance_hygiene.py",
         "scripts/policy_gate_check.py",
         "scripts/pr_governance_preflight.py",
+    ),
+    "workflow_regression_tests": (
+        "v3/test_asgk3.py",
+        "v3/test_github_workflow.py",
     ),
     "source_target_evidence_fixtures": (
         "examples/target_evidence/arbitrary_layout/notes/project.marker",
@@ -4501,6 +4507,7 @@ def check_scenario_registry_projection(root):
         'workspace-state',
         'source-validation',
         'target-evidence',
+        'workflow',
     }
     actual_behaviors = {
         scenario.get("group") for scenario in retained_scenarios

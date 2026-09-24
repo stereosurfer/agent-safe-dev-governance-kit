@@ -193,7 +193,24 @@ cannot disappear.
 The retained JSON surface is policy-gate, PR status, work unit, task packet,
 handoff, compact handoff, compact issue scope, compact scope lock, compact PR
 report, compact PR body, context budget, workspace state, source validation,
-and caller-supplied target evidence. The fixed-shape target checker, install
+caller-supplied target evidence, and the namespaced GitHub workflow. The
+workflow's `capture` uses GET only; `packet`, `card-draft`, `handoff`,
+`closeout`, `search`, `trace` and `demo` create local projections or drafts,
+not GitHub or Kanban writes. Its common `result` distinguishes pass, fail,
+blocked and warning; unresolved links or YAML closeout candidates carry
+`domain_result: incomplete` and a nonblocking finding, with a nonzero exit.
+Only duplicate-free JSON receives bounded closeout shape checks; fenced YAML
+is an unparsed `candidate_unverified_yaml` pointer, never a complete edge.
+Each lookup accepts only one snapshot per issue and one observation per PR;
+duplicate issue or PR inputs fail closed, even if their visible bodies match.
+Repository owner/name spelling is case-folded for duplicate-number and `#N`
+resolution within the supplied snapshot set.
+A visited closed issue without either supplied closeout form warns with
+`WF_CLOSEOUT_NOT_FOUND`; legacy prose may still exist. A JSON-path `pass` is
+bounded traversal evidence, never proof of complete GitHub history. Snapshot
+labels and locally configured remotes do not authenticate GitHub state or grant
+issue authority.
+The fixed-shape target checker, install
 planner, and compact target-upgrade manifest checker were removed in the ASGK
 2.0 clean cutover. The parallel compact red-team runner remains outside common
 envelope authority pending its separately scoped removal.
@@ -218,6 +235,8 @@ proves:
   - present schema and example JSON is parseable where checked
   - the issue, PR, handoff, validation, and scenario projections remain aligned
   - doctor executes the same registered negative and exact scenarios used by CI
+  - doctor also runs the root-workflow fixture regression tests through the public CLI
+  - the source required set includes the canonical workflow modules and both workflow test files, so absent tests cannot silently count as zero passing tests
   - a caller-supplied source inventory has the supported shape and includes the retained required paths
 does_not_prove:
   - that a supplied-inventory path exists or that its contents were inspected
@@ -522,6 +541,7 @@ proves:
   - branch-specific scenarios may additionally lock exact mechanically_checked and not_checked lists
   - positive and negative retained scenarios remain paired
   - target-evidence scenarios lock arbitrary-layout success, four distinct mismatch codes, and no-claim incompleteness
+  - workflow scenarios lock JSON shape-checked trace success, YAML candidate trace/search incompleteness, closed-issue closeout absence, duplicate-issue snapshot rejection, unresolved-trace warning, and invalid snapshot failure with exact exit and finding codes
   - canonical and compact task-packet commands remain byte-for-byte equivalent
   - the canonical source command and bootstrap compatibility wrapper remain byte-for-byte equivalent for positive and negative inventory scenarios
   - controlled missing, malformed, unavailable, and missing-executable inputs emit exactly one JSON object
