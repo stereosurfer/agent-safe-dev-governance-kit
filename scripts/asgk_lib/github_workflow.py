@@ -567,26 +567,33 @@ def index_snapshots(snapshots):
     nodes = {}
     known = {}
     seen_issues = set()
+    seen_prs = set()
     for snapshot in snapshots:
         validate_snapshot(snapshot)
         repository = snapshot['repository']
+        repository_key = repository.casefold()
         issue = snapshot['issue']
-        issue_identity = (repository.casefold(), issue['number'])
+        issue_identity = (repository_key, issue['number'])
         require(issue_identity not in seen_issues, 'SNAPSHOT_CONFLICT', issue['html_url'],
                 'Provide exactly one snapshot per issue in one lookup; choose the current version explicitly')
         seen_issues.add(issue_identity)
-        key = (repository, str(issue['number']))
+        key = (repository_key, str(issue['number']))
         require(key not in known or known[key] == issue['html_url'], 'SNAPSHOT_CONFLICT', issue['html_url'],
                 'An issue and PR cannot share one GitHub number in the same repository')
         known[key] = issue['html_url']
         for item in snapshot['prs']:
             pr = item['pr']
-            key = (repository, str(pr['number']))
+            pr_identity = (repository_key, pr['number'])
+            require(pr_identity not in seen_prs, 'SNAPSHOT_CONFLICT', pr['html_url'],
+                    'Provide exactly one observation per PR in one lookup; choose the current version explicitly')
+            seen_prs.add(pr_identity)
+            key = (repository_key, str(pr['number']))
             require(key not in known or known[key] == pr['html_url'], 'SNAPSHOT_CONFLICT', pr['html_url'],
                     'An issue and PR cannot share one GitHub number in the same repository')
             known[key] = pr['html_url']
     for snapshot in snapshots:
         issue = snapshot['issue']
+        repository_key = snapshot['repository'].casefold()
         comment_flags = {c['html_url']: final_closeout_flags(c['body'], issue)
                          for c in snapshot['comments']}
         json_closeout_urls = [link for link, flags in comment_flags.items() if flags[0]]
@@ -606,10 +613,10 @@ def index_snapshots(snapshots):
                 require(nodes[link]['body'] == body, 'SNAPSHOT_CONFLICT', link, 'Conflicting snapshots; select a current version explicitly')
             refs = set(LINK.findall(body))
             shorthand = set(re.findall(r'(?<![\w/-])#(\d+)\b', body))
-            refs.update(known[(snapshot['repository'], n)] for n in shorthand
-                        if (snapshot['repository'], n) in known)
+            refs.update(known[(repository_key, n)] for n in shorthand
+                        if (repository_key, n) in known)
             unresolved_shorthand = sorted('#' + n for n in shorthand
-                                          if (snapshot['repository'], n) not in known)
+                                          if (repository_key, n) not in known)
             if kind == 'issue':
                 refs.update(json_closeout_urls)
             issue_comment = kind == 'comment' and link.startswith(issue['html_url'] + '#issuecomment-')
@@ -644,8 +651,9 @@ def search(snapshots, query):
     candidates = [candidate_pointer(node) for node in selected if node['candidate_unverified_yaml']]
     result = envelope('warning' if candidates else 'pass', matches=matches,
                       candidates=candidates,
-                      search_scope='One supplied snapshot per issue; closed-issue duplicate-free JSON shape matches and '
-                      'unverified fenced YAML candidate pointers; no repository scan or truth check')
+                      search_scope='One selected snapshot per issue and one observation per PR; closed-issue '
+                      'duplicate-free JSON shape matches and unverified fenced YAML candidate pointers; '
+                      'no repository scan or truth check')
     result['not_checked'].append('YAML syntax, self-declared issue identity, or decision substance')
     if candidates:
         result['domain_result'] = 'incomplete'
@@ -693,8 +701,8 @@ def trace(snapshots, start, max_hops=5):
                     unresolved_shorthand_refs=sorted(unresolved_shorthand),
                     candidates=[candidates[key] for key in sorted(candidates)],
                     closeout_not_found=sorted(closeout_not_found),
-                    trace_scope='One supplied snapshot per issue and linked evidence only; JSON shape-checked '
-                    'closeout edges and separate unverified YAML candidate pointers; visited closed issues '
+                    trace_scope='One selected snapshot per issue and one observation per PR; linked evidence only; '
+                    'JSON shape-checked closeout edges and separate unverified YAML candidate pointers; visited closed issues '
                     'without either are incomplete; a pass does not prove complete history; unresolved '
                     'shorthand is not guessed to be an issue or PR')
     result['not_checked'].append('YAML syntax, self-declared issue identity, or decision substance')
@@ -909,10 +917,10 @@ def run(args):
                 'check': ['current supplied issue/refinement', 'packet digest', 'issue/comment/PR-head consistency'],
                 'card-draft': ['supplied snapshot shape, freshness and declared non-fixture source label', 'checked issue-backed packet',
                                'controller-supplied provenance and bounded card fields'],
-                'search': ['supplied snapshot shape', 'single snapshot per issue',
+                'search': ['supplied snapshot shape', 'single selected observation per issue and PR',
                            'closed-issue duplicate-free JSON closeout shape',
                            'fenced YAML candidate marker without syntax validation', 'case-insensitive query match'],
-                'trace': ['supplied snapshot shape', 'single snapshot per issue', 'durable URL links',
+                'trace': ['supplied snapshot shape', 'single selected observation per issue and PR', 'durable URL links',
                           'closed-issue JSON shape-checked closeout edge',
                           'separate unverified YAML candidate URLs',
                           'visited closed-issue closeout presence', 'known-snapshot shorthand links',

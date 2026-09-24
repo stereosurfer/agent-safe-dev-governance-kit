@@ -1838,7 +1838,7 @@ RETAINED_JSON_SCENARIOS = (
         WORKFLOW_PROOF_BOUNDARY,
         temp_input=TempInput(content=WORKFLOW_CLOSEOUT_SNAPSHOT),
         expected_mechanically_checked=(
-            "supplied snapshot shape", "single snapshot per issue", "durable URL links",
+            "supplied snapshot shape", "single selected observation per issue and PR", "durable URL links",
             "closed-issue JSON shape-checked closeout edge",
             "separate unverified YAML candidate URLs", "visited closed-issue closeout presence",
             "known-snapshot shorthand links",
@@ -1872,7 +1872,7 @@ RETAINED_JSON_SCENARIOS = (
         expected_domain_result="incomplete",
         temp_input=TempInput(content=WORKFLOW_YAML_CANDIDATE_SNAPSHOT),
         expected_mechanically_checked=(
-            "supplied snapshot shape", "single snapshot per issue", "durable URL links",
+            "supplied snapshot shape", "single selected observation per issue and PR", "durable URL links",
             "closed-issue JSON shape-checked closeout edge",
             "separate unverified YAML candidate URLs", "visited closed-issue closeout presence",
             "known-snapshot shorthand links",
@@ -1902,7 +1902,7 @@ RETAINED_JSON_SCENARIOS = (
         expected_domain_result="incomplete",
         temp_input=TempInput(content=WORKFLOW_MALFORMED_YAML_CANDIDATE_SNAPSHOT),
         expected_mechanically_checked=(
-            "supplied snapshot shape", "single snapshot per issue",
+            "supplied snapshot shape", "single selected observation per issue and PR",
             "closed-issue duplicate-free JSON closeout shape",
             "fenced YAML candidate marker without syntax validation", "case-insensitive query match",
         ),
@@ -1928,7 +1928,7 @@ RETAINED_JSON_SCENARIOS = (
         expected_domain_result="incomplete",
         temp_input=TempInput(content=WORKFLOW_MINIMAL_SNAPSHOT),
         expected_mechanically_checked=(
-            "supplied snapshot shape", "single snapshot per issue", "durable URL links",
+            "supplied snapshot shape", "single selected observation per issue and PR", "durable URL links",
             "closed-issue JSON shape-checked closeout edge",
             "separate unverified YAML candidate URLs", "visited closed-issue closeout presence",
             "known-snapshot shorthand links", "bounded traversal and unresolved references",
@@ -1967,7 +1967,7 @@ RETAINED_JSON_SCENARIOS = (
         expected_domain_result="incomplete",
         temp_input=TempInput(content=WORKFLOW_MINIMAL_SNAPSHOT),
         expected_mechanically_checked=(
-            "supplied snapshot shape", "single snapshot per issue", "durable URL links",
+            "supplied snapshot shape", "single selected observation per issue and PR", "durable URL links",
             "closed-issue JSON shape-checked closeout edge",
             "separate unverified YAML candidate URLs", "visited closed-issue closeout presence",
             "known-snapshot shorthand links",

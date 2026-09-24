@@ -92,9 +92,9 @@ Preserve the rejected attempt and correction links; no reset, force push or sile
   shape-checked edge, while YAML closeouts remain visible only as unverified
   candidate URLs and make the affected lookup incomplete. It reports missing
   links and never invents history, authorship, approval or YAML semantics.
-  Supply only one selected snapshot per issue; a visited closed issue with no
-  recognizable supplied closeout warns, and even a JSON pass is not proof of
-  historical completeness.
+  Supply only one selected snapshot per issue and one observation per PR; a
+  visited closed issue with no recognizable supplied closeout warns, and even
+  a JSON pass is not proof of historical completeness.
 - No independent behavioral proof for the candidate Skills yet; format checks are narrower.
 - Kanban bridge and card-draft are not an installed adapter or runtime-enforced
   tool policy. The one successful Luna negative-path run does not prove that

@@ -276,9 +276,14 @@ stale packet, out-of-scope diff,
 draft-only handoff/closeout, GET-only capture, safe output, empty and
 duplicate-key JSON, and canonical/malformed YAML candidate visibility without
 a complete decision-tree edge. Repeated same-issue snapshots are rejected even
-when identical, so input order cannot select the winning state. These fixtures
-do not establish live GitHub authorization, semantic correctness, actual Kanban
-behavior, or independent human review.
+when identical; workflow unit tests also reject repeated PR observations across
+different issues in both input orders. The exact registry duplicate-input case
+covers the issue snapshot, while the cross-issue PR case is unit-level because
+the scenario runner prepares only one temporary snapshot file. Other issues may
+link to the selected PR URL without repeating its observation. Unit tests also
+lock case-insensitive repository alias handling for number collisions and `#N`
+resolution. These fixtures do not establish live GitHub authorization, semantic
+correctness, actual Kanban behavior, or independent human review.
 
 The `release-state` group pairs one three-document positive set with isolated
 stale-state and duplicate-ledger negatives. It locks exact exit, common result,

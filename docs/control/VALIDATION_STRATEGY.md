@@ -201,8 +201,11 @@ blocked and warning; unresolved links or YAML closeout candidates carry
 `domain_result: incomplete` and a nonblocking finding, with a nonzero exit.
 Only duplicate-free JSON receives bounded closeout shape checks; fenced YAML
 is an unparsed `candidate_unverified_yaml` pointer, never a complete edge.
-Each lookup accepts only one snapshot per issue; duplicate issue inputs fail
-closed. A visited closed issue without either supplied closeout form warns with
+Each lookup accepts only one snapshot per issue and one observation per PR;
+duplicate issue or PR inputs fail closed, even if their visible bodies match.
+Repository owner/name spelling is case-folded for duplicate-number and `#N`
+resolution within the supplied snapshot set.
+A visited closed issue without either supplied closeout form warns with
 `WF_CLOSEOUT_NOT_FOUND`; legacy prose may still exist. A JSON-path `pass` is
 bounded traversal evidence, never proof of complete GitHub history. Snapshot
 labels and locally configured remotes do not authenticate GitHub state or grant

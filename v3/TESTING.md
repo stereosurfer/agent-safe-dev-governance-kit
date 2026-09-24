@@ -157,8 +157,11 @@ caller 選入的任意 PR 放進 `prs_in_scope`。輸出的 `relation_evidence` 
 文字連結來源，不是 GitHub `closingIssuesReferences`、語意關聯或核准證據。
 
 `search`／`trace` 只從 caller 提供、顯示已 closed 的 issue 快照讀取非草稿
-留言。每次查找同一 issue 只能提供一份快照；即使兩份看似相同也會以
-`SNAPSHOT_CONFLICT` 拒絕，須先自行選定當前版本，避免輸入順序左右追溯。
+留言。每次查找同一 issue 只能提供一份快照，同一 PR 也只能出現在一份快照中；
+即使兩份看似相同也會以 `SNAPSHOT_CONFLICT` 拒絕，須先自行選定當前版本，
+避免輸入順序左右追溯。其他 issue 可連到該 PR 網址，不必重複提供其觀測。
+同一 GitHub repo 的 owner/name 大小寫差異不會繞過編號衝突檢查，`#N` 也會
+在這些別名間使用同一已知編號表；這仍不驗證來源身分或連結語意。
 只有無重複鍵、同 issue、具決定／理由／否決路徑／證據等必要形狀的
 fenced JSON 能建立 `json_shape_checked` 的 issue → comment 邊；這仍只是
 結構檢查，不驗證作者、內容真偽、即時 GitHub 狀態或核准。

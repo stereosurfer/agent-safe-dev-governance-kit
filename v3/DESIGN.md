@@ -82,10 +82,10 @@ mandatory police Bot for every task. Review identity must be real, not a renamed
 5. Search explicit snapshots for closeout comments and trace durable links with bounded
    hops. Duplicate-free JSON may form a shape-checked edge; fenced YAML is only a
    provenance-labeled, unparsed candidate URL and makes the affected lookup incomplete.
-   Require one snapshot per issue; a visited closed issue without either supplied
-   closeout form remains incomplete, since older prose may exist. Even a passing
-   JSON traversal is bounded, not proof of all historical decisions. Do not read
-   the entire repo or invent links.
+   Require one snapshot per issue and one observation per PR; a visited closed
+   issue without either supplied closeout form remains incomplete, since older
+   prose may exist. Even a passing JSON traversal is bounded, not proof of all
+   historical decisions. Do not read the entire repo or invent links.
 
 Committed in-place changes use exact git base/head. Partial work can be handed off with
 missing receipts/checks recorded as blockers. Local checks do not cover ignored files,

@@ -599,6 +599,48 @@ class GithubWorkflowTests(unittest.TestCase):
                 self.fails('SNAPSHOT_CONFLICT', lambda: w.search(list(snapshots), 'Keep trace'))
                 self.fails('SNAPSHOT_CONFLICT', lambda: w.trace(list(snapshots), self.packet['issue']))
 
+    def test_repeated_pr_observations_across_issues_fail_in_both_orders(self):
+        first = copy.deepcopy(self.final)
+        second = copy.deepcopy(self.prior)
+        second['prs'] = copy.deepcopy(first['prs'])
+        second['prs'][0]['pr'].update(state='open', merged=False, merge_commit_sha=None)
+        self.assertNotEqual(first['issue']['number'], second['issue']['number'])
+        self.assertEqual(first['prs'][0]['pr']['html_url'], second['prs'][0]['pr']['html_url'])
+        for snapshots in ((first, second), (second, first),
+                          (first, dict(second, prs=copy.deepcopy(first['prs'])))):
+            with self.subTest(states=[snapshot['prs'][0]['pr']['state'] for snapshot in snapshots]):
+                self.fails('SNAPSHOT_CONFLICT', lambda: w.search(list(snapshots), 'GitHub'))
+                self.fails('SNAPSHOT_CONFLICT', lambda: w.trace(list(snapshots), self.packet['issue']))
+
+    def test_other_issue_can_link_to_one_selected_pr_observation(self):
+        other = copy.deepcopy(self.prior)
+        pr_url = self.indexed_final['prs'][0]['pr']['html_url']
+        other['issue']['body'] += '\nRelated PR: ' + pr_url
+        result = w.trace([self.indexed_final, other], other['issue']['html_url'])
+        self.assertTrue(any(node['url'] == pr_url and node['kind'] == 'pr'
+                            for node in result['nodes']))
+
+    def test_repository_case_alias_cannot_hide_issue_pr_number_collision(self):
+        first = copy.deepcopy(self.final)
+        other = copy.deepcopy(self.prior)
+        other['repository'] = 'Example/ASGK-Synthetic'
+        other['issue'].update(number=3, html_url='https://github.com/Example/ASGK-Synthetic/issues/3')
+        other['comments'] = []
+        for snapshots in ((first, other), (other, first)):
+            self.fails('SNAPSHOT_CONFLICT', lambda: w.search(list(snapshots), 'GitHub'))
+
+    def test_shorthand_links_across_repository_case_alias(self):
+        first = copy.deepcopy(self.final)
+        other = copy.deepcopy(self.prior)
+        other['repository'] = 'Example/ASGK-Synthetic'
+        other['issue']['html_url'] = 'https://github.com/Example/ASGK-Synthetic/issues/2'
+        other['issue']['body'] = 'Related PR #3.'
+        other['comments'] = []
+        result = w.trace([first, other], other['issue']['html_url'])
+        issue_node = next(node for node in result['nodes'] if node['url'] == other['issue']['html_url'])
+        self.assertIn(first['prs'][0]['pr']['html_url'], issue_node['links'])
+        self.assertNotIn('#3', issue_node['unresolved_shorthand_refs'])
+
     def test_closed_issue_without_supplied_closeout_is_incomplete(self):
         snapshot = copy.deepcopy(self.final)
         snapshot['issue']['state'] = 'closed'
