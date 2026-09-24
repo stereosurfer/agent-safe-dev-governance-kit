@@ -695,10 +695,8 @@ def yaml_closeout_shape(body, issue_url):
 
 def final_closeout_flags(body, issue):
     """Keep JSON shape evidence distinct from unverified YAML candidates."""
-    if (issue['state'] != 'closed'
-            or re.search(r'(?im)^#{1,6}[ \t]+issue closeout review[^\n]*\bdraft\b', body)
-            or re.search(r'(?im)^[ \t]*(?:#{1,6}[ \t]+)?(?:\*\*)?draft\b', body)
-            or re.search(r'(?im)^[ \t]*(?:(?:\*\*)?status(?:\*\*)?[ \t]*:|\*\*status:[ \t]*\*\*)[ \t]*(?:\*\*)?draft\b', body)):
+    prose = re.sub(r'(?ms)^```[^\n]*\n.*?^```[ \t]*$', '', body)
+    if issue['state'] != 'closed' or re.search(r'(?i)\bdraft\b', prose):
         return False, False, False
     candidate = yaml_closeout_candidate(body)
     yaml_checked = candidate and yaml_closeout_shape(body, issue['html_url'])

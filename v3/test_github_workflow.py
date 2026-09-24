@@ -424,7 +424,8 @@ class GithubWorkflowTests(unittest.TestCase):
         comment_url = self.packet['issue'] + '#issuecomment-93'
         for banner in ('DRAFT — do not post or close issue.',
                        'Status: DRAFT — do not post or close issue.',
-                       '**Status:** DRAFT — do not post or close issue.'):
+                       '**Status:** DRAFT — do not post or close issue.',
+                       'This is a DRAFT — do not post or close issue.'):
             with self.subTest(banner=banner):
                 snapshot['comments'] = [dict(
                     html_url=comment_url,
