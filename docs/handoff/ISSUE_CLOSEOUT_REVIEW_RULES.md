@@ -33,7 +33,7 @@ surface_boundaries:
   pr_body: "What this PR changed, how it was validated, and whether it can merge."
   issue_closeout_comment: "Completion evidence and issue closure state."
   current_status: "Compact recovery state for the next session."
-  decisions_log: "Durable architecture or governance decisions only."
+  github_issue_pr_mdr: "Durable decisions, accepted/rejected paths, exact-head merge rationale and their evidence links; no second decision ledger."
   issue_closeout_review_rules: "Rules for reusable issue-level decisions, pitfalls, preventions, and promotion candidates."
 ```
 

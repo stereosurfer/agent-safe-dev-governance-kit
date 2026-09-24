@@ -87,7 +87,7 @@ roles:
 
 | Document | Purpose | Read by default | Read when | Authority boundary |
 |---|---|---:|---|---|
-| `v3/README.md` | Bounded entry to preview lineage, candidate Kanban/Skills/templates, and tests; workflow and optional catalog CLI are thin root-library compatibility projections | no | a live #372 child issue or PR explicitly scopes candidate comparison | Cannot replace current root AGENTS, README, CURRENT_STATUS, live issue/PR, or canonical control documents |
+| `v3/README.md` | Bounded entry to preview lineage, non-default Kanban/Skill proposals, and tests; workflow and optional catalog CLI are thin root-library compatibility projections; root target templates are already optional references | no | a live #372 child issue or PR explicitly scopes candidate comparison | Cannot replace current root AGENTS, README, CURRENT_STATUS, live issue/PR, or canonical control documents |
 
 The candidate entry routes to its own relevant files on demand; this registry
 does not make all of `v3/**` a default read set or a second governance spine.
@@ -252,7 +252,8 @@ target_storage_layout: target_owned_when_relevant
 | `.github/ISSUE_TEMPLATE/agent_task.yml` | template | GitHub issue authority-capture projection for the 13 fields plus two execution gates | no | issue-template or work-unit authority changes | `lane_06_ci_github` |
 | `examples/task_packet.example.yaml` | example | sample GitHub-unavailable fallback; conditional local-work scope only, never PR or merge authority | no | onboarding, task-packet examples | `lane_07_docs_handoff` |
 | `schemas/agent_report.schema.json` | schema | machine-readable report fields | no | report validation work | `lane_02_schema_contracts` |
-| `examples/agent_report.example.md` | example | sample report | no | onboarding, report examples | `lane_07_docs_handoff` |
+| `examples/agent_report.example.md` | example | synthetic incomplete report shape, not issue completion or a next-task grant | no | onboarding, report examples | `lane_07_docs_handoff` |
+| `examples/merge_decision.example.json` | example | synthetic positive merge-decision schema shape, not a live head review or merge approval | no | schema/source-validation examples | `lane_07_docs_handoff` |
 
 Canonical ownership rule for task packets:
 

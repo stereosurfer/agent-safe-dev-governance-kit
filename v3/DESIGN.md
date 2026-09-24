@@ -3,15 +3,17 @@
 Preview.1-derived design; [scoped review #359](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/359).
 The GitHub work-projection implementation is canonical under
 `scripts/asgk_lib/github_workflow.py` and public through
-`scripts/asgk.py workflow` after #397. The capability catalog, templates and
-eleven proposed Skills remain candidates; this document is not a second
+`scripts/asgk.py workflow` after #397. The optional capability catalog is also
+public through `scripts/asgk.py catalog` after #399. The two root target
+navigation templates are optional references, not `v3/` candidates; eleven
+proposed `v3/skills/` remain candidates. This document is not a second
 authority for issue scope, approval or release.
 This design descends from the #358 GitHub-native candidate without overwriting
 it. The [formal 3.0 program #372](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/372)
 coordinates promotion. [#381](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/381)
-imported the candidate subtree to main as non-default source; #397 promotes
-only its GitHub workflow implementation. Neither step supersedes root policies
-or any live child issue's exact authority.
+imported the candidate subtree to main as non-default source; #397 and #399
+promoted the GitHub workflow and metadata-only catalog implementations.
+Neither step supersedes root policies or any live child issue's exact authority.
 
 ## Product invariants
 
@@ -145,8 +147,9 @@ Capability work across Research, Video and Translation follows
 [CAPABILITY_EVOLUTION](CAPABILITY_EVOLUTION.md): many lessons/ledgers are permitted,
 while discovery and full-context loading are progressive. The source
 [research package contract](https://github.com/stereosurfer/research-runtime-macos/blob/d09eac50c3cd12c1427dadaf5c09d1c8f7dfd38e/docs/PACKAGE_FORMAT.md)
-demonstrates task-owned question/observation/evidence traversal; the candidate
-capability catalog indexes reusable experience *outside* that active delivery graph.
+demonstrates task-owned question/observation/evidence traversal; the optional
+public capability catalog indexes reusable metadata *outside* that active
+delivery graph.
 A reviewed PR promotes a method into a versioned Skill; Bot memory and retrieval
 indexes do not. This is a generic handoff invariant, not a requirement that every
 target use the research package's exact files, three mandatory modules or an
@@ -156,7 +159,9 @@ The preview.1 branch still contains root files from its earlier fork; main has
 since changed through W6B [PR #373](https://github.com/stereosurfer/agent-safe-dev-governance-kit/pull/373)
 and recovery-status [PR #376](https://github.com/stereosurfer/agent-safe-dev-governance-kit/pull/376) / [PR #379](https://github.com/stereosurfer/agent-safe-dev-governance-kit/pull/379).
 Do not call the older root copies current authority or treat a head-to-head diff
-as the candidate's source patch. #397 promotes the GitHub workflow CLI into
-the root entry and doctor, not the whole `v3/` subtree. #372 still requires
-separately reviewed capability, template, Skill, field-test and release work.
+as the candidate's source patch. #397 and #399 promoted the GitHub workflow and
+optional metadata catalog into the root entry and doctor, not the whole `v3/`
+subtree. The optional root target templates have been reviewed without making
+them required target files. #372 still requires separately reviewed Skill,
+field-test and release work.
 This document does not publish 3.0 or bypass current main rules.

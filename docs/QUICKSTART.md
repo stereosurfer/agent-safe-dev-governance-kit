@@ -41,10 +41,12 @@ reads the explicit `--repo-root`; project-specific tests run in the target's
 own checkout.
 
 Do not treat ASGK as a runtime package or a universal target-repository shape.
-The latest completed source-only release is v1.7.3. The `v3/` subtree on this
-source repository's main is a non-default candidate under #372, not a released
-CLI or a required target install. Source guidance may be selectively adapted
-when a target-owned assessment recommends it, or not adopted at all.
+The latest completed source-only release is v1.7.3. The public root CLI now
+includes the #397 GitHub workflow and #399 optional catalog cutovers, but 3.0
+is not released. The remaining `v3/` material is non-default candidate or
+compatibility source, not a required target install. Source guidance and the
+optional root target templates may be adapted only when a target-owned
+assessment recommends them; no adoption may also be the right outcome.
 
 ## Before You Start
 

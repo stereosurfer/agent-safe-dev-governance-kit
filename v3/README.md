@@ -5,7 +5,8 @@
 `python3 scripts/asgk.py workflow --help`；`v3/asgk3.py` 與
 `v3/github_workflow.py` 只做代理，不是第二套規則。能力目錄的公開入口是
 `python3 scripts/asgk.py catalog --help`，`v3/capability_evolution.py` 也只代理；
-模板與 11 個 `v3/skills/` 仍是候選，3.0 尚未發布。
+根目錄兩份 target 導覽模板已是可選參考，不在 `v3/`；11 個 `v3/skills/`
+仍是候選提案，3.0 尚未發布。
 
 **ASGK 是一套讓人與 AI 能安全、順利交接工作的規則與工具。**
 看得懂工作狀態、接得下去長期工作、查得清楚證據與決策；
@@ -99,7 +100,7 @@ YAML 只回傳待核實候選網址，遇到候選不能宣稱追溯完整。
 
 本目錄源自從原 `codex/asgk-3-preview` 另開的 preview.1 候選分支，原候選不變。
 它的 GitHub workflow 部分已由 #397 整合到根目錄 CLI 與 doctor；
-其餘候選來源不是已發布或已證實安全的產品。
+其餘尚未整合的候選來源不是已發布或已證實安全的產品。
 真正 Bot／Kanban 的範圍化交接已有 #361 實測，但其首次 issue 核對聲稱失敗；
 這不是生產安全或獨立 reviewer 證明。修正後的重測結果見 #362；target pilot
 仍未實測。
@@ -112,5 +113,5 @@ Hermes 的[#367 留言測試](https://github.com/stereosurfer/agent-safe-dev-gov
 也不證明一般寫入隔離或可上線。
 跨供應商接手仍是可攜性不變量，但不是自動選型功能，也不是本次主要瓶頸。
 舊 #379/#381 是候選匯入階段的決策與證據，不是目前的下一工作指令。
-後續工作依 #372 的 live child issue；不得由候選來源推定模板、能力目錄、
-全域 Skills 同步或發布已獲授權。
+後續工作依 #372 的 live child issue；不得由候選來源推定 root 模板的
+target 採用、Lesson 適用性、全域 Skills 同步或發布已獲授權。
