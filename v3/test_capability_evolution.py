@@ -9,6 +9,7 @@ import capability_evolution as c
 
 
 FIXTURE = Path(__file__).parent / 'examples' / 'capability_index.json'
+LIVE_LESSON_INDEX = Path(__file__).parent / 'capabilities' / 'index.json'
 
 
 class CapabilityIndexTests(unittest.TestCase):
@@ -122,6 +123,30 @@ class CapabilityIndexTests(unittest.TestCase):
             path.write_text(json.dumps(self.index), encoding='utf-8')
             # The example's content_ref paths are intentionally not materialized.
             self.assertEqual(0, c.main(['check', '--index', str(path)]))
+
+    def test_first_live_lesson_is_only_a_bounded_observed_pointer(self):
+        catalog = asgk3.load(LIVE_LESSON_INDEX)
+        self.assertEqual(1, len(c.validate_index(catalog)['records']))
+        item = catalog['records'][0]
+        self.assertEqual('github-nondefault-base-closeout-368', item['id'])
+        self.assertEqual('observed', item['state'])
+        self.assertEqual('v3/lessons/github-nondefault-base-closeout.md', item['content_ref'])
+        self.assertIsNone(item['decision_ref'])
+        self.assertIsNone(item['capability_version'])
+        root = c.browse(catalog, 'governance')
+        self.assertEqual([], root['pointers'])
+        self.assertEqual([{'branch': ['github'], 'record_count': 1}], root['children'])
+        leaf = c.browse(catalog, 'governance', ['github', 'nondefault-base', 'closeout'])
+        self.assertEqual([item['id']], [pointer['id'] for pointer in leaf['pointers']])
+        result = c.select(catalog, 'governance', 'closeout', branch=['github'])
+        self.assertEqual([item['id']], [pointer['id'] for pointer in result['pointers']])
+        self.assertNotIn('applies_when', result['pointers'][0])
+        self.assertIn('record content', result['not_checked'])
+
+    def test_first_live_lesson_cannot_claim_promotion_without_provenance(self):
+        catalog = asgk3.load(LIVE_LESSON_INDEX)
+        catalog['records'][0]['state'] = 'promoted'
+        self.fails('PROMOTION_PROVENANCE', lambda: c.validate_index(catalog))
 
 
 if __name__ == '__main__':

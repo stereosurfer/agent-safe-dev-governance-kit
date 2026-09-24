@@ -127,3 +127,19 @@ negative graph/link/path cases; it must not be certified by this catalog's green
 Larger capability corpora can shard indexes by domain/question; the active Skill points
 to the relevant shard instead of concatenating all records. A stale index is repaired
 through a bounded change, never silently treated as current authority.
+
+## First live observed Lesson candidate
+
+Issue [#370](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/370)
+tests the loop with one case from the [#368 closeout](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/368#issuecomment-5805341585).
+`v3/capabilities/index.json` is a one-record discovery pointer to
+`v3/lessons/github-nondefault-base-closeout.md`. The Lesson stays `observed`:
+the closeout reports a manual issue closure after PR #369 merged to a
+non-default base, but this record does not independently reproduce GitHub's
+behavior or promote a Skill rule. The index is not task authority, a delivery
+question graph, or a substitute for reading the cited issue and its limits.
+
+The small regression checks the real pointer's shape, bounded branch browsing,
+selection without loading the Lesson body, and rejection of an unsupported
+`promoted` label. Passing it proves metadata behavior only; #370's GitHub PR,
+independent review, and closeout supply the separate change-decision lineage.
