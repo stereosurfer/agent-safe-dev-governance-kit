@@ -677,7 +677,7 @@ def parse_closeout_yaml_subset(source):
 
 def standalone_yaml_blocks(body):
     """Yield only top-level canonical YAML fences, not nested Markdown examples."""
-    if re.search(r'(?i)<\s*/?\s*[A-Za-z][A-Za-z0-9-]*(?:\s|/?>)', body):
+    if re.search(r'(?i)<\s*(?:[!?]|/?\s*[A-Za-z][A-Za-z0-9-]*(?:\s|/?>))', body):
         return
     lines = body.splitlines()
     opening = None
@@ -732,16 +732,20 @@ def yaml_closeout_shape(body, issue_url):
 
 def final_closeout_flags(body, issue):
     """Keep JSON shape evidence distinct from unverified YAML candidates."""
-    prose = re.sub(r'(?ms)^```[^\n]*\n.*?^```[ \t]*$', '', body)
-    if issue['state'] != 'closed' or re.search(r'(?i)\bdraft\b', prose):
+    if issue['state'] != 'closed':
         return False, False, False
+    legacy_json_draft = re.search(r'(?im)^#{1,6}[ \t]+issue closeout review[^\n]*\bdraft\b', body)
+    json_checked = not legacy_json_draft and json_closeout_shape(body, issue['html_url'])
+    prose = re.sub(r'(?ms)^```[^\n]*\n.*?^```[ \t]*$', '', body)
+    if re.search(r'(?i)\bdraft\b', prose):
+        return json_checked, False, False
     candidate = yaml_closeout_candidate(body)
     if candidate and any(re.search(r'(?i)\bdraft\b', block)
                          for block in standalone_yaml_blocks(body)
                          if re.search(r'(?m)^issue_closeout_review:', block)):
-        return json_closeout_shape(body, issue['html_url']), False, False
+        return json_checked, False, False
     yaml_checked = candidate and yaml_closeout_shape(body, issue['html_url'])
-    return json_closeout_shape(body, issue['html_url']), yaml_checked, candidate and not yaml_checked
+    return json_checked, yaml_checked, candidate and not yaml_checked
 
 
 def index_snapshots(snapshots):
@@ -849,7 +853,10 @@ def search(snapshots, query):
                 parsed = parse_closeout_yaml_subset(block)
             except (ValueError, TypeError, json.JSONDecodeError):
                 return False
-            return any(query.casefold() in value.casefold() for value in scalar_values(parsed))
+            review = parsed['issue_closeout_review']
+            decision_fields = [review['decision_analysis'], review['decisions']]
+            return any(query.casefold() in value.casefold()
+                       for field in decision_fields for value in scalar_values(field))
         return query.casefold() in node['body'].casefold()
 
     selected = [node for node in nodes.values() if node['kind'] == 'comment'

@@ -491,13 +491,23 @@ class GithubWorkflowTests(unittest.TestCase):
         checked = w.search([snapshot], 'Keep trace')
         self.assertEqual('yaml_subset_shape_checked', checked['matches'][0]['evidence_class'])
 
+        snapshot['comments'] = [dict(
+            html_url=comment_url,
+            body=self.canonical_yaml_closeout().replace(
+                '  status: completed', '  status: completed\n  unrelated_label: "Bulk-copy"', 1),
+        )]
+        unrelated = w.search([snapshot], 'Bulk-copy')
+        self.assertEqual([], unrelated['matches'])
+        self.assertEqual([], unrelated['candidates'])
+
     def test_nested_markdown_yaml_example_never_forms_closeout_edge(self):
         snapshot = copy.deepcopy(self.final)
         snapshot['issue']['state'] = 'closed'
         comment_url = self.packet['issue'] + '#issuecomment-95'
         for opening, closing in (('````markdown', '````'), ('~~~~markdown', '~~~~'),
                                  ('<!--', '-->'), ('<pre>', '</pre>'),
-                                 ('<code>', '</code>'), ('<blockquote>', '</blockquote>')):
+                                 ('<code>', '</code>'), ('<blockquote>', '</blockquote>'),
+                                 ('<![CDATA[', ']]>'), ('<?render', '?>')):
             with self.subTest(opening=opening):
                 snapshot['comments'] = [dict(
                     html_url=comment_url,
@@ -576,6 +586,19 @@ class GithubWorkflowTests(unittest.TestCase):
         self.assertNotIn(bad_url, issue_node['links'])
         self.assertEqual('incomplete', traced['domain_result'])
 
+
+    def test_json_closeout_survives_ordinary_draft_prose(self):
+        snapshot = copy.deepcopy(self.indexed_final)
+        issue_url = snapshot['issue']['html_url']
+        target = next(comment for comment in snapshot['comments']
+                      if w.json_closeout_shape(comment['body'], issue_url))
+        target['body'] = 'Note: the draft design was rejected.\n\n' + target['body']
+        searched = w.search([snapshot], 'Keep GitHub as work ledger')
+        self.assertEqual('pass', searched['result'])
+        self.assertEqual('json_shape_checked', searched['matches'][0]['evidence_class'])
+        traced = w.trace([snapshot], issue_url)
+        issue_node = next(node for node in traced['nodes'] if node['url'] == issue_url)
+        self.assertIn(target['html_url'], issue_node['links'])
 
     def test_empty_or_partial_json_closeout_shapes_are_not_indexed(self):
         snapshot = copy.deepcopy(self.final)
