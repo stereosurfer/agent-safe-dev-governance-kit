@@ -158,8 +158,10 @@ Lessons and ledgers from research, video, translation or other work belong to
 their task-owned evidence home. A bounded capability index can point to
 reusable observations; a reviewed Skill PR can promote a method. Neither Bot
 memory nor that index grants work scope or merges a change. See
-`docs/EVOLUTION_MODEL.md` for the state-owner distinction and the candidate
-`v3/CAPABILITY_EVOLUTION.md` for the proposed progressive-disclosure pattern.
+`docs/EVOLUTION_MODEL.md` for the state-owner distinction and
+`python3 scripts/asgk.py catalog --help` for optional metadata-only discovery.
+`v3/CAPABILITY_EVOLUTION.md` explains provenance and proof limits; the eleven
+`v3/skills/` remain candidate proposals.
 
 ## Design Constraints
 

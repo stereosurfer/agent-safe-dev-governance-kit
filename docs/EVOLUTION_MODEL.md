@@ -1,8 +1,8 @@
 # ASGK Evolution Model
 
-Status: current document-driven self-evolution model; the 3.0 capability
-projection under #372 is still a non-default candidate, not a released product
-contract.
+Status: current document-driven self-evolution model. The optional 3.0
+metadata catalog is a public CLI projection, not a released product contract
+or a default read requirement.
 
 This document defines how ASGK improves itself as a document-driven system. It
 is a durable model, not a progress log, release plan, maturity ledger, or
@@ -136,10 +136,11 @@ memory keeps identity and pointers, not the entire method or audit corpus.
 The research package's thought-tree shape is an example, not a mandatory ASGK
 folder scheme. Small tasks may need only an issue/PR and compact handoff.
 
-The `v3/` capability catalog and candidate Skills illustrate this design but
-are not yet the default root CLI or installed Skills. Its structural checks
-cannot prove a referenced file exists, that a method is applicable, or that a
-target's substantive conclusion is sound.
+`python3 scripts/asgk.py catalog --help` exposes optional discovery over an
+explicitly supplied metadata index. The `v3/` catalog entry is a compatibility
+wrapper; the candidate Skills remain neither root-cut-over nor installed.
+Catalog checks cannot prove a referenced file or GitHub link exists, a textual
+hit is applicable, or a target's substantive conclusion is sound.
 
 ## Evidence And Judgment Boundaries
 
@@ -179,6 +180,7 @@ mechanical_entrypoints:
   - python3 scripts/asgk.py negative all
   - python3 scripts/asgk.py check-pr --pr <number>
   - python3 scripts/asgk.py target-evidence-check ...
+  - python3 scripts/asgk.py catalog --help
 ```
 
 The map is a navigation aid. It does not create a second authority layer.

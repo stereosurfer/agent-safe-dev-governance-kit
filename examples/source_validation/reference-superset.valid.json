@@ -90,6 +90,7 @@
     "schemas/validation_result.schema.json",
     "scripts/asgk.py",
     "scripts/asgk_lib/__init__.py",
+    "scripts/asgk_lib/capability_evolution.py",
     "scripts/asgk_lib/common.py",
     "scripts/asgk_lib/compact_handoff.py",
     "scripts/asgk_lib/github_workflow.py",
@@ -125,7 +126,11 @@
     "templates/DOCUMENT_MAP.template.md",
     "templates/DOCUMENT_REGISTRY.template.md",
     "templates/task_packet.template.yaml",
+    "v3/capabilities/index.json",
+    "v3/capability_evolution.py",
+    "v3/examples/capability_index.json",
     "v3/test_asgk3.py",
+    "v3/test_capability_evolution.py",
     "v3/test_github_workflow.py"
   ]
 }

@@ -15,6 +15,27 @@ EXPECTED_SUCCESS = "expected_success"
 
 ASGK = ("python3", "scripts/asgk.py")
 
+CATALOG_PROOF_BOUNDARY = (
+    "Catalog text matches, including negative applicability phrases, are bounded discovery hints, "
+    "not applicability recommendations or a delivery question graph, instructions, task authority, "
+    "Skill promotion or approval."
+)
+CATALOG_EXAMPLE = "v3/examples/capability_index.json"
+CATALOG_PARTIAL_RECORD = {
+    "id": "case-one", "kind": "lesson", "domain": "research", "tree_path": ["handoff"],
+    "state": "observed", "title": "Handoff case", "summary": "Handoff metadata only",
+    "tags": ["handoff"], "applies_when": "A handoff case exists.",
+    "does_not_apply_when": "No handoff case exists.",
+    "source_ref": "https://github.com/example/repo/issues/1", "evidence_refs": [],
+    "content_ref": "lessons/one.md", "decision_ref": None, "supersedes": [],
+    "capability_version": None,
+}
+CATALOG_PARTIAL_INDEX = json.dumps({
+    "version": 1, "purpose": "capability_catalog",
+    "records": [CATALOG_PARTIAL_RECORD, dict(CATALOG_PARTIAL_RECORD, id="case-two",
+                                             tree_path=["other"], content_ref="lessons/two.md")],
+})
+
 WORKFLOW_PROOF_BOUNDARY = (
     "GitHub snapshots are observed evidence, not live or authenticated authorization. "
     "Local remote configuration and textual PR links are not authenticated repository identity "
@@ -683,6 +704,100 @@ SOURCE_INPUT_NOT_CHECKED = (
 
 
 RETAINED_JSON_SCENARIOS = (
+    JsonScenario(
+        "catalog_check_observed", "catalog",
+        (*ASGK, "catalog", "check", "--index", "v3/capabilities/index.json", "--json"),
+        "positive", "pass", 0, (), CATALOG_PROOF_BOUNDARY,
+        expected_payload_fields=(("count", 1), ("projection", "capability_catalog")),
+    ),
+    JsonScenario(
+        "catalog_browse_one_level", "catalog",
+        (*ASGK, "catalog", "browse", "--index", CATALOG_EXAMPLE,
+         "--domain", "research", "--json"),
+        "positive", "pass", 0, (), CATALOG_PROOF_BOUNDARY,
+        expected_payload_fields=(("children", [{"branch": ["source-context"], "record_count": 1}]),
+                                 ("pointers", []), ("projection", "capability_catalog")),
+    ),
+    JsonScenario(
+        "catalog_select_no_match", "catalog",
+        (*ASGK, "catalog", "select", "--index", CATALOG_EXAMPLE,
+         "--domain", "research", "--query", "unfindable-needle", "--json"),
+        "negative", "warning", 1, ("CATALOG_NO_MATCH",), CATALOG_PROOF_BOUNDARY,
+        expected_payload_fields=(("domain_result", "incomplete"), ("pointers", []), ("omitted", 0)),
+    ),
+    JsonScenario(
+        "catalog_select_limit_incomplete", "catalog",
+        (*ASGK, "catalog", "select", "--index", "{temp_input}",
+         "--domain", "research", "--query", "handoff", "--limit", "1", "--json"),
+        "negative", "warning", 1, ("CATALOG_RESULTS_OMITTED",), CATALOG_PROOF_BOUNDARY,
+        temp_input=TempInput(content=CATALOG_PARTIAL_INDEX),
+        expected_payload_fields=(("domain_result", "incomplete"), ("omitted", 1), ("total_matches", 2)),
+    ),
+    JsonScenario(
+        "catalog_browse_limit_incomplete", "catalog",
+        (*ASGK, "catalog", "browse", "--index", "{temp_input}",
+         "--domain", "research", "--limit", "1", "--json"),
+        "negative", "warning", 1, ("CATALOG_RESULTS_OMITTED",), CATALOG_PROOF_BOUNDARY,
+        temp_input=TempInput(content=CATALOG_PARTIAL_INDEX),
+        expected_payload_fields=(("domain_result", "incomplete"), ("omitted", 1)),
+    ),
+    JsonScenario(
+        "catalog_negative_phrase_is_text_hit_only", "catalog",
+        (*ASGK, "catalog", "select", "--index", CATALOG_EXAMPLE,
+         "--domain", "research", "--query", "verified", "--json"),
+        "positive", "pass", 0, (), CATALOG_PROOF_BOUNDARY,
+        expected_payload_fields=(("total_matches", 1), ("projection", "capability_catalog")),
+    ),
+    JsonScenario(
+        "catalog_wrong_purpose", "catalog",
+        (*ASGK, "catalog", "check", "--index", "{temp_input}", "--json"),
+        "negative", "fail", 1, ("INDEX_PURPOSE",), CATALOG_PROOF_BOUNDARY,
+        temp_input=TempInput(source=CATALOG_EXAMPLE,
+                             replacements=(("\"purpose\": \"capability_catalog\"",
+                                            "\"purpose\": \"delivery_question_graph\""),)),
+    ),
+    JsonScenario(
+        "catalog_duplicate_json_key", "catalog",
+        (*ASGK, "catalog", "check", "--index", "{temp_input}", "--json"),
+        "negative", "fail", 1, ("DUPLICATE_KEY",), CATALOG_PROOF_BOUNDARY,
+        temp_input=TempInput(content='{ "version": 1, "version": 1 }'),
+    ),
+    JsonScenario(
+        "catalog_invalid_reference", "catalog",
+        (*ASGK, "catalog", "check", "--index", "{temp_input}", "--json"),
+        "negative", "fail", 1, ("DURABLE_URL",), CATALOG_PROOF_BOUNDARY,
+        temp_input=TempInput(source=CATALOG_EXAMPLE,
+                             replacements=(("https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/359",
+                                            "https://example.com/not-github"),)),
+    ),
+    JsonScenario(
+        "catalog_unreviewed_promotion", "catalog",
+        (*ASGK, "catalog", "check", "--index", "{temp_input}", "--json"),
+        "negative", "fail", 1, ("PROMOTION_PROVENANCE",), CATALOG_PROOF_BOUNDARY,
+        temp_input=TempInput(source=CATALOG_EXAMPLE,
+                             replacements=(("\"state\": \"observed\"",
+                                            "\"state\": \"promoted\""),)),
+    ),
+    JsonScenario(
+        "catalog_retired_records_not_selected", "catalog",
+        (*ASGK, "catalog", "select", "--index", "{temp_input}",
+         "--domain", "research", "--query", "handoff", "--json"),
+        "negative", "warning", 1, ("CATALOG_NO_MATCH",), CATALOG_PROOF_BOUNDARY,
+        temp_input=TempInput(source=CATALOG_EXAMPLE,
+                             replacements=(("\"state\": \"observed\"",
+                                            "\"state\": \"rejected\""),)),
+        expected_payload_fields=(("domain_result", "incomplete"), ("pointers", [])),
+    ),
+    JsonScenario(
+        "catalog_superseded_records_not_selected", "catalog",
+        (*ASGK, "catalog", "select", "--index", "{temp_input}",
+         "--domain", "research", "--query", "handoff", "--json"),
+        "negative", "warning", 1, ("CATALOG_NO_MATCH",), CATALOG_PROOF_BOUNDARY,
+        temp_input=TempInput(source=CATALOG_EXAMPLE,
+                             replacements=(("\"state\": \"observed\"",
+                                            "\"state\": \"superseded\""),)),
+        expected_payload_fields=(("domain_result", "incomplete"), ("pointers", [])),
+    ),
     JsonScenario(
         "policy_event_allowed",
         "policy-gate",
@@ -2956,6 +3071,20 @@ JSON_SCENARIOS = (*RETAINED_JSON_SCENARIOS, *CONTROLLED_ERROR_SCENARIOS)
 
 
 PARITY_SCENARIOS = (
+    ParityScenario(
+        "catalog_wrapper_check_parity", "catalog",
+        (*ASGK, "catalog", "check", "--index", "v3/capabilities/index.json"),
+        ("python3", "v3/capability_evolution.py", "check", "--index", "v3/capabilities/index.json"),
+        "positive",
+    ),
+    ParityScenario(
+        "catalog_wrapper_no_match_parity", "catalog",
+        (*ASGK, "catalog", "select", "--index", CATALOG_EXAMPLE,
+         "--domain", "research", "--query", "unfindable-needle"),
+        ("python3", "v3/capability_evolution.py", "select", "--index", CATALOG_EXAMPLE,
+         "--domain", "research", "--query", "unfindable-needle"),
+        "negative",
+    ),
     ParityScenario(
         "task_packet_alias_positive_parity",
         "compact-task-packet",

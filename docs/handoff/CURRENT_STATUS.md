@@ -4,7 +4,7 @@ This is the repository recovery snapshot. It is overwritten, not appended.
 Completed-work history and decision detail belong in GitHub issues, PRs,
 comments, releases, and merge commits.
 
-Last updated: `2026-09-24T11:34:38Z`
+Last updated: `2026-09-24T13:38:24Z`
 
 ## Durable source of truth
 
@@ -22,11 +22,11 @@ Last updated: `2026-09-24T11:34:38Z`
 ASGK v1.7.3 remains the latest completed source-only GitHub release under the
 Apache-2.0 license. Issue #372 coordinates the active ASGK 3.0 release program.
 The root README states the 3.0 product meaning; bounded root navigation,
-control-source and GitHub workflow CLI cutover are represented in current
-source. `scripts/asgk.py workflow` uses one root-library owner and `doctor`
-runs its regression checks. The remaining `v3/` capability catalog, templates
-and source Skills are not default or released. Resolve live refs and issues
-before claiming more. Issue #323 remains
+control-source, GitHub workflow CLI, and optional metadata-only catalog CLI
+cutovers are represented in current source. Both public namespaces use root
+library owners and `doctor` runs their regression checks. The remaining
+`v3/` templates and source Skills are not default or released. Resolve live
+refs and issues before claiming more. Issue #323 remains
 open as prior ASGK 2.0 program evidence, not the next-work router.
 
 The product boundary is safe, smooth, traceable handoff between people and AI.
@@ -57,7 +57,7 @@ issue: "#372 ASGK 3.0 source-only release program"
 pr: none
 branch: main
 state: active_program
-next_work_unit_decision: "Reconcile live #372 child and PR state; choose one unfinished, exact-scope 3.0 work unit. Capability catalog, templates and source Skills still need cutover before field tests, target pilot and release."
+next_work_unit_decision: "Reconcile live #372 child and PR state; choose one unfinished, exact-scope 3.0 work unit. Templates and source Skills still need cutover before field tests, target pilot and release."
 ```
 
 ## Current validation entrypoint
@@ -96,10 +96,11 @@ model cache, or external preparation outputs are authorized by this status.
 
 Continue under #372 from current `main`. Check live PRs and child issues before
 selecting one bounded work unit. The root product framing is present, but root
-capability catalog, templates and all eleven source Skills still need an
-evidence-backed 3.0 cutover; then prove cold handoff, GitHub/Kanban boundaries,
-target fit and release readiness. The selected issue or PR supplies allowed
-paths and validation; this status file, `v3/` candidate, superseded planning
+templates and all eleven source Skills still need an evidence-backed 3.0
+cutover; the optional catalog is metadata-only. Then prove cold handoff,
+GitHub/Kanban boundaries, target fit and release readiness. The selected issue
+or PR supplies allowed paths and validation; this status file, `v3/` candidate,
+superseded planning
 and chat do not. Do not read the excluded visual guide.
 
 ```yaml

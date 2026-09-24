@@ -44,14 +44,14 @@ contract 被明確設定、run/worktree 可復原、reviewer 是實際不同的�
 dispatch 與 scratch 清理要以當前安裝設定核對，不能只依此文件推定。
 
 `v3/CAPABILITY_EVOLUTION.md` 區分工作自己的交付問題樹與跨工作可再利用的
-能力目錄；`capability_evolution.py` 只示範後者的候選 metadata 索引，
+能力目錄；公開 `scripts/asgk.py catalog` 只檢查後者的 metadata 索引，
 不判定前者是否完成。先選 domain／branch；工具只回傳少量 leaf 指標，
 全文由接手者按需要另行開啟。例子：
 
 ```bash
-python3 v3/capability_evolution.py browse --index v3/examples/capability_index.json --domain research
-python3 v3/capability_evolution.py browse --index v3/examples/capability_index.json --domain research --branch source-context
-python3 v3/capability_evolution.py select --index v3/examples/capability_index.json --domain research --branch source-context --query handoff
+python3 scripts/asgk.py catalog browse --index v3/examples/capability_index.json --domain research
+python3 scripts/asgk.py catalog browse --index v3/examples/capability_index.json --domain research --branch source-context
+python3 scripts/asgk.py catalog select --index v3/examples/capability_index.json --domain research --branch source-context --query handoff
 python3 -m unittest discover -s v3 -p 'test_*.py' -v
 ```
 
@@ -59,7 +59,7 @@ python3 -m unittest discover -s v3 -p 'test_*.py' -v
 `observed` 不誤標為已升格、虛構案例不冒充真實證據、交付問題圖不能冒充能力
 目錄，以及 rejected/superseded 不當成現行指令。這不證明交付問題樹的語意品質、
 實際資料研究流程或真實 reviewer 獨立性；研究包要由其領域契約另行驗證。
-`content_ref` 僅檢查路徑語法，`check`／`browse`／`select` 不確認檔案存在；
+`content_ref` 僅檢查路徑語法及長度，`check`／`browse`／`select` 不確認檔案存在；
 其輸出把存在性列在 `not_checked`，不能把 pointer 當成已讀到的 Lesson。
 
 ## 真實 GitHub 讀取與投影
