@@ -88,7 +88,7 @@ WORKFLOW_YAML_CANDIDATE_BODY = (
     '    rejected_paths:\n      - path: "Chat only"\n        reason: "Cannot recover it."\n'
     '    reusable_signal:\n      applies_later: true\n      reason: "Retain a bounded link."\n'
     '  decisions:\n    - decision: "Keep GitHub trace"\n'
-    '      reason: "The issue remains discoverable."\n      evidence: ["#1"]\n```'
+    '        reason: "The issue remains discoverable."\n      evidence: ["#1"]\n```'
 )
 WORKFLOW_YAML_CANDIDATE_SNAPSHOT = json.loads(WORKFLOW_MINIMAL_SNAPSHOT)
 WORKFLOW_YAML_CANDIDATE_SNAPSHOT["comments"] = [{
@@ -96,6 +96,27 @@ WORKFLOW_YAML_CANDIDATE_SNAPSHOT["comments"] = [{
     "body": WORKFLOW_YAML_CANDIDATE_BODY,
 }]
 WORKFLOW_YAML_CANDIDATE_SNAPSHOT = json.dumps(WORKFLOW_YAML_CANDIDATE_SNAPSHOT, separators=(",", ":"))
+WORKFLOW_YAML_CHECKED_URL = WORKFLOW_ISSUE_URL + "#issuecomment-12"
+WORKFLOW_YAML_CHECKED_BODY = (
+    '```yaml\nissue_closeout_review:\n  issue: "#1"\n  status: completed\n'
+    '  scope_summary: "Root Skills source cutover."\n  prs_in_scope:\n'
+    '    - pr: "#1"\n      role: "Source change and review."\n'
+    '  decision_analysis:\n    decision_made: "Keep root Skills."\n'
+    '    why_this_path: "Preserve live gates."\n    rejected_paths:\n'
+    '      - path: "Bulk-copy eleven shorter candidates."\n'
+    '        reason: "They omit live gates."\n    reusable_signal:\n'
+    '      applies_later: true\n      reason: "Review each Skill."\n'
+    '  decisions:\n    - decision: "Preserve current gates."\n'
+    '      reason: "Candidate procedures omit them."\n'
+    '      applies_when: ["Future cutovers."]\n'
+    '      evidence: ["#1"]\n'
+    '  promotion_candidates:\n    validator_updates: [none]\n```'
+)
+WORKFLOW_YAML_CHECKED_SNAPSHOT = json.loads(WORKFLOW_MINIMAL_SNAPSHOT)
+WORKFLOW_YAML_CHECKED_SNAPSHOT["comments"] = [{
+    "html_url": WORKFLOW_YAML_CHECKED_URL, "body": WORKFLOW_YAML_CHECKED_BODY,
+}]
+WORKFLOW_YAML_CHECKED_SNAPSHOT = json.dumps(WORKFLOW_YAML_CHECKED_SNAPSHOT, separators=(",", ":"))
 WORKFLOW_MALFORMED_YAML_CANDIDATE_SNAPSHOT = json.loads(WORKFLOW_MINIMAL_SNAPSHOT)
 WORKFLOW_MALFORMED_YAML_CANDIDATE_SNAPSHOT["comments"] = [{
     "html_url": WORKFLOW_YAML_CANDIDATE_URL,
@@ -1961,7 +1982,7 @@ RETAINED_JSON_SCENARIOS = (
         temp_input=TempInput(content=WORKFLOW_CLOSEOUT_SNAPSHOT),
         expected_mechanically_checked=(
             "supplied snapshot shape", "single selected observation per issue and PR", "durable URL links",
-            "closed-issue JSON shape-checked closeout edge",
+            "closed-issue JSON and strict YAML-subset shape-checked closeout edges",
             "separate unverified YAML candidate URLs", "visited closed-issue closeout presence",
             "known-snapshot shorthand links",
             "bounded traversal and unresolved references",
@@ -1974,11 +1995,56 @@ RETAINED_JSON_SCENARIOS = (
                  "source": "fixture"},
                 {"url": WORKFLOW_CLOSEOUT_URL, "kind": "comment", "hops": 1,
                  "links": [WORKFLOW_ISSUE_URL], "unresolved_shorthand_refs": [],
-                 "source": "fixture"},
+                 "source": "fixture", "evidence_class": "json_shape_checked"},
             ]),
             ("unresolved", []),
             ("candidates", []),
             ("closeout_not_found", []),
+        ),
+    ),
+    JsonScenario(
+        "workflow_search_canonical_yaml_shape_checked",
+        "workflow",
+        (*ASGK, "workflow", "search", "--snapshot", "{temp_input}",
+         "--query", "Bulk-copy", "--json"),
+        "positive", "pass", 0, (), WORKFLOW_PROOF_BOUNDARY,
+        temp_input=TempInput(content=WORKFLOW_YAML_CHECKED_SNAPSHOT),
+        expected_mechanically_checked=(
+            "supplied snapshot shape", "single selected observation per issue and PR",
+            "closed-issue duplicate-free JSON closeout shape",
+            "strict YAML-subset closeout shape and matching issue identity",
+            "case-insensitive query match",
+        ),
+        expected_payload_fields=(
+            ("matches", [{"url": WORKFLOW_YAML_CHECKED_URL, "kind": "comment",
+                          "excerpt": WORKFLOW_YAML_CHECKED_BODY[:280],
+                          "evidence_class": "yaml_subset_shape_checked",
+                          "source": "fixture", "captured_at": "2025-01-01T00:00:00Z"}]),
+            ("candidates", []),
+        ),
+    ),
+    JsonScenario(
+        "workflow_trace_canonical_yaml_shape_checked",
+        "workflow",
+        (*ASGK, "workflow", "trace", "--snapshot", "{temp_input}",
+         "--start", WORKFLOW_ISSUE_URL, "--json"),
+        "positive", "pass", 0, (), WORKFLOW_PROOF_BOUNDARY,
+        temp_input=TempInput(content=WORKFLOW_YAML_CHECKED_SNAPSHOT),
+        expected_mechanically_checked=(
+            "supplied snapshot shape", "single selected observation per issue and PR", "durable URL links",
+            "closed-issue JSON and strict YAML-subset shape-checked closeout edges",
+            "separate unverified YAML candidate URLs", "visited closed-issue closeout presence",
+            "known-snapshot shorthand links", "bounded traversal and unresolved references",
+        ),
+        expected_payload_fields=(
+            ("nodes", [
+                {"url": WORKFLOW_ISSUE_URL, "kind": "issue", "hops": 0,
+                 "links": [WORKFLOW_YAML_CHECKED_URL], "unresolved_shorthand_refs": [], "source": "fixture"},
+                {"url": WORKFLOW_YAML_CHECKED_URL, "kind": "comment", "hops": 1,
+                 "links": [WORKFLOW_ISSUE_URL], "unresolved_shorthand_refs": [],
+                 "source": "fixture", "evidence_class": "yaml_subset_shape_checked"},
+            ]),
+            ("candidates", []), ("closeout_not_found", []),
         ),
     ),
     JsonScenario(
@@ -1995,7 +2061,7 @@ RETAINED_JSON_SCENARIOS = (
         temp_input=TempInput(content=WORKFLOW_YAML_CANDIDATE_SNAPSHOT),
         expected_mechanically_checked=(
             "supplied snapshot shape", "single selected observation per issue and PR", "durable URL links",
-            "closed-issue JSON shape-checked closeout edge",
+            "closed-issue JSON and strict YAML-subset shape-checked closeout edges",
             "separate unverified YAML candidate URLs", "visited closed-issue closeout presence",
             "known-snapshot shorthand links",
             "bounded traversal and unresolved references",
@@ -2026,7 +2092,7 @@ RETAINED_JSON_SCENARIOS = (
         expected_mechanically_checked=(
             "supplied snapshot shape", "single selected observation per issue and PR",
             "closed-issue duplicate-free JSON closeout shape",
-            "fenced YAML candidate marker without syntax validation", "case-insensitive query match",
+            "strict YAML-subset closeout shape and matching issue identity", "case-insensitive query match",
         ),
         expected_payload_fields=(
             ("evidence_source", "supplied_snapshots"),
@@ -2051,7 +2117,7 @@ RETAINED_JSON_SCENARIOS = (
         temp_input=TempInput(content=WORKFLOW_MINIMAL_SNAPSHOT),
         expected_mechanically_checked=(
             "supplied snapshot shape", "single selected observation per issue and PR", "durable URL links",
-            "closed-issue JSON shape-checked closeout edge",
+            "closed-issue JSON and strict YAML-subset shape-checked closeout edges",
             "separate unverified YAML candidate URLs", "visited closed-issue closeout presence",
             "known-snapshot shorthand links", "bounded traversal and unresolved references",
         ),
@@ -2090,7 +2156,7 @@ RETAINED_JSON_SCENARIOS = (
         temp_input=TempInput(content=WORKFLOW_MINIMAL_SNAPSHOT),
         expected_mechanically_checked=(
             "supplied snapshot shape", "single selected observation per issue and PR", "durable URL links",
-            "closed-issue JSON shape-checked closeout edge",
+            "closed-issue JSON and strict YAML-subset shape-checked closeout edges",
             "separate unverified YAML candidate URLs", "visited closed-issue closeout presence",
             "known-snapshot shorthand links",
             "bounded traversal and unresolved references",

@@ -3,7 +3,7 @@
 GitHub workflow 由根目錄的 `scripts/asgk.py workflow` 執行；
 `v3/asgk3.py` 是相容入口。能力目錄仍是獨立候選，不在 root `doctor`
 的這組 workflow command 驗收內。所有工作流結果為 common JSON envelope；
-未解決或含 YAML 候選的 trace 是 `warning`、`domain_result: incomplete`、
+未解決或含未驗證 YAML 候選的 trace 是 `warning`、`domain_result: incomplete`、
 exit 1，不是成功的完整決策樹。
 
 測試的是 GitHub 工作治理，不是只有離線檔案封包。
@@ -162,21 +162,25 @@ caller 選入的任意 PR 放進 `prs_in_scope`。輸出的 `relation_evidence` 
 避免輸入順序左右追溯。其他 issue 可連到該 PR 網址，不必重複提供其觀測。
 同一 GitHub repo 的 owner/name 大小寫差異不會繞過編號衝突檢查，`#N` 也會
 在這些別名間使用同一已知編號表；這仍不驗證來源身分或連結語意。
-只有無重複鍵、同 issue、具決定／理由／否決路徑／證據等必要形狀的
-fenced JSON 能建立 `json_shape_checked` 的 issue → comment 邊；這仍只是
+無重複鍵的 fenced JSON，以及符合嚴格 canonical YAML 子集、同 issue、
+具決定／理由／否決路徑／證據等必要形狀的 fenced YAML，分別能建立
+`json_shape_checked`、`yaml_subset_shape_checked` 的 issue → comment 邊；這仍只是
 結構檢查，不驗證作者、內容真偽、即時 GitHub 狀態或核准。
 
-fenced YAML 若開頭帶 `issue_closeout_review:`，一律只列為
-`candidate_unverified_yaml`。工具不解析其 issue 編號或內容；輸出的
+fenced YAML 的第一個非空白、非註解頂層行若為 `issue_closeout_review:`，
+但格式不受支援、格式有誤、
+issue 不符或缺少實質欄位，只列為 `candidate_unverified_yaml`。輸出的
 `container_issue_url` 僅表示留言所屬快照，不能當成 YAML 自稱的 issue。
-YAML 候選的 URL、來源及快照時間會另列於 `candidates`，不建立上述完整邊；
-即使看起來符合範本，或雖然格式有誤，搜尋／追溯遇到候選仍回
+候選的 URL、來源及快照時間會另列於 `candidates`，不建立已檢查的邊；
+搜尋／追溯遇到候選仍回
 `warning`、`domain_result: incomplete`、exit 1。純文字 marker、Markdown
 引用範例與草稿不算候選。舊式 prose close-out 可能不在搜尋結果；這不代表
 決策不存在，必要時仍查原始 GitHub issue。
-若追溯走到已關閉的 issue，提供的快照卻沒有 JSON 形狀檢查通過的結案
+已檢查的 YAML 搜尋只比對該 YAML 區塊；留言前言出現的字不會被誤標為
+已檢查的結案內容。JSON 路徑仍維持既有留言文字搜尋行為。
+若追溯走到已關閉的 issue，提供的快照卻沒有 JSON 或 YAML 子集形狀檢查通過的結案
 或 YAML 候選，會回 `WF_CLOSEOUT_NOT_FOUND`、`warning`、`incomplete`、exit 1；
-舊式 prose 結案或未提供的留言仍可能存在。即使 JSON 路徑回 pass，也只表示
+舊式 prose 結案或未提供的留言仍可能存在。即使形狀檢查路徑回 pass，也只表示
 已提供快照內的有界連結走訪完成，絕不證明全部歷史決策均已收齊。
 `trace` 只把 `#N` 縮寫連到本次快照中已知的 issue 或 PR；未知編號列入
 `unresolved_shorthand_refs`，不再一律猜成 issue。補上對應快照才能解開該邊；

@@ -162,8 +162,11 @@ profile into a smaller project. The default layer remains generic.
 - GitHub snapshot/work projection, draft-only handoff and closeout, and bounded
   closeout search/trace through `python3 scripts/asgk.py workflow --help`.
   Capture uses GitHub GET only; supplied snapshots and local observations do
-  not grant current issue authority or approval. YAML closeout comments are
-  unverified candidate pointers, not complete decision-tree edges. Use one
+  not grant current issue authority or approval. A same-issue, substantive
+  closeout in the strict canonical YAML subset can yield a
+  `yaml_subset_shape_checked` edge; unsupported or malformed YAML remains an
+  unverified candidate. Shape checking does not prove the decision, evidence,
+  authorship, approval, or complete history. Use one
   snapshot per issue and one observation per PR per lookup; a closed issue
   without a recognizable supplied closeout is reported as incomplete, not
   silently treated as a complete trace.
