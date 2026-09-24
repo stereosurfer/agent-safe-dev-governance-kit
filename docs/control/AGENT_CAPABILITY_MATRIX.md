@@ -116,7 +116,7 @@ Before completion, verify:
 
 1. The issue or PR authorized the actual files changed.
 2. The minimum level still matches the work performed.
-3. The issue or qualifying PR's exact `context_read_set` was used, and any necessary expansion was recorded; a guide name never supplied files automatically.
+3. The issue or qualifying PR's exact `context_read_set` includes the `read` entries of any class whose `use_when` matches the actual work, and any necessary expansion was recorded. A class label alone never waives a required control.
 4. Human-gated operations are not being merged without approval.
 5. Low-risk merge is allowed by this matrix and the merge policies.
 6. Adoption or material-upgrade assessments preserve model judgment and do not

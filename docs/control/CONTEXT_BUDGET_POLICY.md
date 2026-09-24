@@ -29,9 +29,10 @@ does_not_control:
 ```
 
 All repository work still uses the generic repo-agent governance core in
-`AGENTS.md`. A context read set only decides which additional documents may be
-read for a bounded work unit. Each repository path must name one existing
-in-root regular file. Durable issue, PR, and URL references must be complete
+`AGENTS.md`. The selected exact context read set names the additional items to
+read for a bounded work unit; it cannot omit a control required by the actual
+task. Each repository path must name one existing in-root regular file. Durable
+issue, PR, and URL references must be complete
 whole-item references; prose such as "whatever is useful" is not a read-set
 item.
 
@@ -86,11 +87,16 @@ Before changing files, use the selected issue or qualifying PR's smallest
 exact `context_read_set`. An optional `issue_refinement` packet may narrow it,
 never expand or replace the issue. Do not silently omit an item in the selected
 exact set; narrow it through an authorized refinement or correct the issue.
-Named classes below are prompts to check relevance, not automatic document
-bundles or a second task identity. If more than one class appears relevant,
-use the exact set and record any needed expansion reason in the existing issue,
-PR, or handoff surface. The read set does not grant permission to edit its
-files; `allowed_paths` remains the write boundary.
+Named class labels below are prompts to check relevance, not a second task
+identity or permission source. When a class's `use_when` matches the actual
+work, its `read` entries remain required. A `read_when_*` entry is required
+when its condition applies; `consider_when_relevant` and `optional_read` are
+candidates unless the exact issue/PR set names them. If the selected exact set
+omits a required control, stop and correct the issue or qualifying PR before work;
+do not silently skip it or treat a classification label as a waiver. Record
+any needed expansion reason in the existing issue, PR, or handoff surface. The
+read set does not grant permission to edit its files; `allowed_paths` remains
+the write boundary.
 
 ```yaml
 context_read_set_selection:
@@ -108,14 +114,16 @@ context_read_set_selection:
     - context_read_set_missing
     - issue_template_option_disagrees_with_this_policy
     - selected_read_set_would_hide_a_human_gate
+    - matching_class_required_read_missing_from_exact_set
     - a_repository_read_path_is_missing_or_outside_the_repository
     - private_material_would_be_read_without_authorization
 ```
 
-These read-set classes are advisory navigation examples. They never override
-an issue's exact read set, the default startup set, a human gate, or a relevant
-canonical owner. Do not create another classification table with competing
-read requirements.
+Class selection is advisory navigation, but a matching class's `read` entries
+are not optional. They do not grant new work authority or override the issue,
+default startup set, human gate, or canonical owner. Reconcile a missing
+required item in the exact issue/PR read set before proceeding. Do not create
+another classification table with competing read requirements.
 
 ## Read Sets
 
@@ -276,7 +284,7 @@ read_sets:
       - AGENTS.md
       - current GitHub issue or PR
       - docs/control/HUMAN_GATED_OPERATIONS.md
-    read_for_actual_artifact_promotion:
+    read_when_artifact_promotion_or_readiness_applies:
       - docs/bootstrap/13_artifact_promotion_policy.md
       - docs/bootstrap/15_source_or_input_class_matrix.md
       - docs/bootstrap/16_downstream_promotion_matrix.md
@@ -315,10 +323,13 @@ protected path safe to edit, never approves merge, and never replaces the
 current issue or PR allowed paths.
 
 For an external call, import/export, provider/model call, or publication that
-does not use promoted artifacts, the artifact-promotion documents above are
-not generic prerequisites. The current issue's exact read set must still
-include relevant controls, including Human-Gated Operations for an applicable
-human gate. A context class cannot waive that gate.
+does not rely on any source, generated, candidate, validated, or promoted
+artifact subject to promotion or readiness rules, the artifact-specific
+documents above are not generic prerequisites. If such an artifact is involved,
+read the applicable promotion/readiness controls before the downstream action,
+regardless of whether it has already been promoted. The current issue's exact
+read set must still include relevant controls, including Human-Gated Operations
+for an applicable human gate. A context class cannot waive that gate.
 
 ## Context Expansion
 

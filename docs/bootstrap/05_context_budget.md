@@ -20,5 +20,7 @@ second task authority.
 Stop when required context or allowed paths are missing, the selected authority
 conflicts with another source, a protected or human-gated action lacks
 authorization, or validation cannot establish the required result. Do not solve
-context pressure by silently skipping a gate or treating a named read-set class
-as an automatic document bundle.
+context pressure by silently skipping a gate. A named class is not authority,
+but when its stated `use_when` matches the work, its required `read` entries
+must be present in the exact issue/PR set; correct the authority if they are
+missing.
