@@ -1,0 +1,40 @@
+{
+  "description": "Synthetic GitHub-shaped work, not a real issue, PR, approval or release.",
+  "issue_fields": {
+    "lane": "repository_change",
+    "intelligence_level": "frontier",
+    "reason": "Synthetic coverage of the complete GitHub work spine.",
+    "durable_source_of_truth": "https://github.com/example/asgk-synthetic/issues/1",
+    "objective": "Update the greeting while preserving GitHub work lineage.",
+    "plan": [
+      "Edit README.md in place",
+      "Report evidence and request independent review"
+    ],
+    "checklist": [
+      "Greeting updated",
+      "Evidence linked"
+    ],
+    "acceptance_sheet": [
+      "A receiver can identify scope, evidence and next action"
+    ],
+    "allowed_paths": [
+      "README.md"
+    ],
+    "expected_output": "Updated greeting and issue-linked handoff.",
+    "non_goals": [
+      "No publication, unrelated changes or automatic model routing"
+    ],
+    "stop_conditions": [
+      "No credentials or secrets.txt access",
+      "Stop on scope conflict"
+    ],
+    "rollback_expectations": "Authorized ordinary git revert; no history rewrite.",
+    "context_read_set": [
+      "README.md",
+      "https://github.com/example/asgk-synthetic/issues/1"
+    ],
+    "project_specific_validation": [
+      "greeting_present"
+    ]
+  }
+}

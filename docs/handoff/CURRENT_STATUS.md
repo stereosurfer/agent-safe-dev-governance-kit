@@ -4,7 +4,7 @@ This is the repository recovery snapshot. It is overwritten, not appended.
 Completed-work history and decision detail belong in GitHub issues, PRs,
 comments, releases, and merge commits.
 
-Last updated: `2026-09-24T04:19:47Z`
+Last updated: `2026-09-24T04:53:45Z`
 
 ## Durable source of truth
 
@@ -21,10 +21,11 @@ Last updated: `2026-09-24T04:19:47Z`
 
 ASGK v1.7.3 remains the latest completed source-only GitHub release under the
 Apache-2.0 license. Issue #372 coordinates the active ASGK 3.0 release program.
-Its preview.1 candidate is isolated on `codex/asgk-3-preview.1`; resolve that
-branch's live head before acting. It is not the root product or a release.
-Issue #323 remains open as prior ASGK 2.0 program evidence, not the next-work
-router.
+The recovered preview.1 source is present under `v3/` on main and its source
+branch remains separate; resolve live refs and issues before acting. This is a
+non-default candidate subtree, not the root product contract, installed Skills
+or a release. Issue #323 remains open as prior ASGK 2.0 program evidence, not
+the next-work router.
 
 The product boundary is safe, smooth, traceable handoff between people and AI.
 The handoff remains independent of a specific model, provider, agent, or prior
@@ -54,7 +55,7 @@ issue: "#372 ASGK 3.0 source-only release program"
 pr: none
 branch: main
 state: active_program
-next_work_unit_decision: "Reconcile live #372 child and PR state; finish candidate recovery before separately scoped root 3.0 cutover."
+next_work_unit_decision: "Reconcile live #372 child and PR state; after candidate-import closeout, use a separately scoped canonical root 3.0 cutover work unit."
 ```
 
 ## Current validation entrypoint
@@ -92,9 +93,10 @@ model cache, or external preparation outputs are authorized by this status.
 ## Next safe action
 
 Continue under #372 from current `main`. Check live PRs, child issues and the
-preview.1 ref to select one bounded work unit. Finish any remaining candidate
-recovery before opening a separately scoped root cutover. The selected issue
-or PR supplies allowed paths and validation; this status file, preview.1,
+preview.1 ref to select one bounded work unit. After candidate-import closeout,
+the next source work is a separately scoped canonical root cutover, not an
+assumption that `v3/` is already active governance. The selected issue or PR
+supplies allowed paths and validation; this status file, preview.1,
 superseded planning and chat do not. Do not read the excluded visual guide.
 
 ```yaml
