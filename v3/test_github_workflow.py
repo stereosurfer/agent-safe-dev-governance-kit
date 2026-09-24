@@ -617,7 +617,13 @@ class GithubWorkflowTests(unittest.TestCase):
                        '# Issue Closeout Review DRAFT',
                        '**DRAFT** — do not post or close issue.',
                        '## DRAFT — do not post or close issue.',
-                       '⚠️ DRAFT — do not post or close issue.'):
+                       '⚠️ DRAFT — do not post or close issue.',
+                       'DRAFT - do not post or close issue.',
+                       '> DRAFT — do not post or close issue.',
+                       '- DRAFT — do not post or close issue.',
+                       '***DRAFT*** — do not post or close issue.',
+                       '[DRAFT] — do not post or close issue.',
+                       'Status — DRAFT — do not post or close issue.'):
             with self.subTest(banner=banner):
                 target['body'] = banner + '\n\n' + original
                 searched = w.search([snapshot], 'Keep GitHub as work ledger')

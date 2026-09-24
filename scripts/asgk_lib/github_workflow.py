@@ -735,12 +735,21 @@ def final_closeout_flags(body, issue):
     if issue['state'] != 'closed':
         return False, False, False
     prose = re.sub(r'(?ms)^```[^\n]*\n.*?^```[ \t]*$', '', body)
-    explicit_draft = re.search(
-        r'(?im)^[ \t]*(?:#{1,6}[ \t]+issue closeout review[^\n]*\bdraft\b'
-        r'|(?:\*\*)?status[ \t]*:(?:\*\*)?[ \t]*(?:\*\*)?draft\b'
-        r'|(?:#{1,6}[ \t]+|⚠️?[ \t]*)?(?:\*\*)?draft(?:\*\*)?'
-        r'(?:[ \t]*[—–:.,!]|[ \t]*$)'
-        r'|this is a[ \t]+draft\b)', prose)
+    def draft_banner(line):
+        line = line.strip()
+        while True:
+            stripped = re.sub(r'^(?:#{1,6}[ \t]+|>[ \t]*|[-*+][ \t]+|⚠️?[ \t]*)', '', line)
+            if stripped == line:
+                break
+            line = stripped
+        return bool(
+            re.match(r'(?i)^issue closeout review[^\n]*\bdraft\b', line)
+            or re.match(r'(?i)^(?:\*\*)?status[ \t]*[:—–-](?:\*\*)?[ \t]*'
+                        r'(?:\*\*)?draft\b', line)
+            or re.match(r'(?i)^(?:\[|\*{1,3})?draft(?:\]|\*{1,3})?'
+                        r'[ \t]*(?:[-—–:.,!]|$)', line)
+            or re.match(r'(?i)^this is a[ \t]+draft\b', line))
+    explicit_draft = any(draft_banner(line) for line in prose.splitlines())
     json_checked = not explicit_draft and json_closeout_shape(body, issue['html_url'])
     if re.search(r'(?i)\bdraft\b', prose):
         return json_checked, False, False
