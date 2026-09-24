@@ -1,6 +1,6 @@
 ---
 name: asgk-post-merge-closeout
-description: Use after an ASGK pull request merges; verifies issue closure, GitHub closing references, closeout evidence, and recommends CURRENT_STATUS refresh only when stale status would mislead the next session.
+description: Use after an ASGK pull request merges or for a separately authorized non-merge issue closeout; verifies outcome evidence, decision lineage, and whether CURRENT_STATUS would mislead the next session.
 ---
 
 # ASGK Post-Merge Closeout
@@ -23,12 +23,22 @@ that wider check.
 
 ## Required Inputs
 
-- Merged PR number.
-- Expected closing issue number.
-- Merge commit.
-- Latest `main`.
+For a completed-PR outcome: merged PR number, expected closing issue number,
+merge commit and latest `main`.
+
+For a separately authorized non-merge outcome: selected issue, exact closeout
+authority, live issue state, outcome (`duplicate`, `superseded`, `abandoned`,
+`blocked`, or `closed_not_done`), related issue/PR/correction links, and current
+repo recovery state. A merge commit is neither required nor invented.
 
 ## Procedure
+
+For a completed-PR outcome, perform steps 1–5. For an authorized non-merge
+outcome, instead verify that the issue is not being represented as completed
+work, record the reason and relationship to any successor or failed attempt,
+then continue with the applicable evidence, closeout-review, status and stop
+steps below. Do not close a live executable issue merely because a draft
+closeout or failed PR exists.
 
 1. Confirm the PR is merged and record the merge commit.
 2. Inspect `closingIssuesReferences`.
@@ -108,7 +118,10 @@ was found.
 
 ## Stop States
 
-- `blocked`: PR not merged, issue not satisfied, closeout evidence is missing, or the required issue closeout decision-analysis comment is missing.
+- `blocked`: a claimed completed PR is not merged; a non-merge closure lacks
+  exact authority, outcome or relationship evidence; the issue is not
+  satisfied at its claimed outcome; or the required closeout decision-analysis
+  comment is missing.
 - `no_status_refresh_needed`: issue and status surfaces are accurate.
 - `status_refresh_required`: repo-level recovery state would mislead the next session.
 - `closed_out`: issue and status surfaces are accurate.

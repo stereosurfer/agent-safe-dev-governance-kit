@@ -88,8 +88,11 @@ Use `docs/DOCUMENT_MAP.md` only if the work unit points to additional context.
     projection. A URL, search result, packet digest, or model assertion is not
     evidence that this receiver read the current GitHub authority. If no
     permitted observable live read is available, leave a partial handoff with
-    the unknowns and stop before repository mutation. Do not treat a saved
-    snapshot alone as proof of GitHub unavailability.
+    the unknowns and stop before repository mutation, except for the already
+    defined, independently verified GitHub-outage path: a complete validated
+    `github_unavailable_fallback` may bound local work inside its recorded
+    scope when no escalation applies, but never a PR or external action. A
+    saved snapshot alone is not outage evidence.
 
 If this work actually uses a Kanban runtime, its card/lease/completion state is
 runtime evidence only. Check its exact GitHub link and completion contract;
