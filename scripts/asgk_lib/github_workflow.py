@@ -671,10 +671,31 @@ def parse_closeout_yaml_subset(source):
     return value
 
 
+def standalone_yaml_blocks(body):
+    """Yield only top-level canonical YAML fences, not nested Markdown examples."""
+    lines = body.splitlines()
+    opening = None
+    start = 0
+    for index, line in enumerate(lines):
+        fence = re.fullmatch(r' {0,3}(`{3,}|~{3,})(.*)', line)
+        if opening is None:
+            if fence:
+                opening = fence.group(1)
+                start = index + 1
+                info = fence.group(2).strip()
+                canonical = line.startswith('```') and len(opening) == 3 and info in ('yaml', 'yml')
+            continue
+        if (fence and fence.group(1)[0] == opening[0]
+                and len(fence.group(1)) >= len(opening) and not fence.group(2).strip()):
+            if canonical:
+                yield '\n'.join(lines[start:index])
+            opening = None
+
+
 def yaml_closeout_candidate(body):
-    """Find a fenced pointer, not a parsed or shape-checked YAML closeout."""
-    for match in re.finditer(r'(?ms)^```(?:yaml|yml)[ \t]*\n(.*?)^```[ \t]*$', body):
-        lines = [line for line in match.group(1).splitlines()
+    """Find a standalone fenced pointer, not a parsed or shape-checked closeout."""
+    for block in standalone_yaml_blocks(body):
+        lines = [line for line in block.splitlines()
                  if line.strip() and not line.lstrip().startswith('#')]
         if lines and lines[0].startswith('issue_closeout_review:'):
             return True
@@ -682,12 +703,12 @@ def yaml_closeout_candidate(body):
 
 
 def yaml_closeout_shape(body, issue_url):
-    blocks = list(re.finditer(r'(?ms)^```(?:yaml|yml)[ \t]*\n(.*?)^```[ \t]*$', body))
-    markers = [match for match in blocks if re.search(r'(?m)^issue_closeout_review:', match.group(1))]
+    markers = [block for block in standalone_yaml_blocks(body)
+               if re.search(r'(?m)^issue_closeout_review:', block)]
     if len(markers) != 1:
         return False
     try:
-        value = parse_closeout_yaml_subset(markers[0].group(1))
+        value = parse_closeout_yaml_subset(markers[0])
     except (ValueError, TypeError, json.JSONDecodeError):
         return False
     return substantive_closeout_shape(value['issue_closeout_review'], issue_url)
@@ -789,10 +810,9 @@ def search(snapshots, query):
         if node['json_closeout_shape_checked'] and query.casefold() in node['body'].casefold():
             return True
         if node['yaml_closeout_shape_checked']:
-            blocks = re.finditer(r'(?ms)^```(?:yaml|yml)[ \t]*\n(.*?)^```[ \t]*$', node['body'])
-            block = next((match for match in blocks
-                          if re.search(r'(?m)^issue_closeout_review:', match.group(1))), None)
-            return bool(block and query.casefold() in block.group(1).casefold())
+            block = next((item for item in standalone_yaml_blocks(node['body'])
+                          if re.search(r'(?m)^issue_closeout_review:', item)), None)
+            return bool(block and query.casefold() in block.casefold())
         return query.casefold() in node['body'].casefold()
 
     selected = [node for node in nodes.values() if node['kind'] == 'comment'

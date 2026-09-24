@@ -454,6 +454,24 @@ class GithubWorkflowTests(unittest.TestCase):
         self.assertEqual([comment_url], [item['url'] for item in checked['matches']])
         self.assertEqual('yaml_subset_shape_checked', checked['matches'][0]['evidence_class'])
 
+    def test_nested_markdown_yaml_example_never_forms_closeout_edge(self):
+        snapshot = copy.deepcopy(self.final)
+        snapshot['issue']['state'] = 'closed'
+        comment_url = self.packet['issue'] + '#issuecomment-95'
+        for opening, closing in (('````markdown', '````'), ('~~~~markdown', '~~~~')):
+            with self.subTest(opening=opening):
+                snapshot['comments'] = [dict(
+                    html_url=comment_url,
+                    body=opening + '\n' + self.canonical_yaml_closeout() + '\n' + closing,
+                )]
+                searched = w.search([snapshot], 'Keep trace')
+                self.assertEqual([], searched['matches'])
+                self.assertEqual([], searched['candidates'])
+                traced = w.trace([snapshot], self.packet['issue'])
+                issue_node = next(node for node in traced['nodes'] if node['url'] == self.packet['issue'])
+                self.assertNotIn(comment_url, issue_node['links'])
+                self.assertIn('WF_CLOSEOUT_NOT_FOUND', [item['code'] for item in traced['findings']])
+
     def test_malformed_and_wrong_issue_yaml_remain_candidates_not_proof(self):
         snapshot = copy.deepcopy(self.final)
         snapshot['issue']['state'] = 'closed'
