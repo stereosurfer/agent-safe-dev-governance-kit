@@ -184,10 +184,10 @@ mechanical_entrypoints:
 ```
 
 The map is a navigation aid. It does not create a second authority layer.
-`v3/**` remains candidate source under #372 except the required
-`v3/capability_evolution.py` compatibility wrapper and
-`v3/test_capability_evolution.py` catalog tests integrated by #399. Template,
-Skill and other uncut-over v3 sources remain candidate until separately
+The root workflow and catalog implementations are canonical under
+`scripts/asgk_lib/`; their named `v3/` compatibility wrappers and focused
+tests support the public CLI and `doctor`. Uncut-over `v3/` templates, Skills
+and design proposals remain non-default candidates under #372 until separately
 reviewed. Optional Hermes/Kanban run state is
 outside this map and never replaces GitHub work authority. A Codex+GitHub-only
 recurring content job has no Kanban dependency; its schedule is a trigger, not
