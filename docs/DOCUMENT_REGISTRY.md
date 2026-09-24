@@ -26,7 +26,6 @@ only when a frontier-guided assessment identifies a missing equivalent.
 relationship:
   docs/DOCUMENT_MAP.md: compact navigation router
   docs/DOCUMENT_REGISTRY.md: complete document registry
-  docs/control/DOCUMENT_MAP_POLICY.md: maintenance and split policy
 ```
 
 Do not read this file by default. Read it only when:
@@ -79,7 +78,6 @@ roles:
 | `docs/INSTALL_SURFACE.md` | canonical | frontier-guided read-only target assessment, evaluator/Skill/tool boundaries, invariants, license handling, and minimum sufficient adaptation | no | assessing ASGK adoption or a material upgrade, target evidence review, implementation planning after an assessment | `lane_07_docs_handoff` |
 | `docs/SKILL_PACK.md` | summary | ASGK skill usage modes, guided evidence and judgment contract, maintenance touchpoints, and no-new-gates constraint | no | installing or referencing ASGK skills, reviewing architecture-to-skill impact, field testing, target adoption or upgrade assessment | `lane_07_docs_handoff` |
 | `docs/DOCUMENT_REGISTRY.md` | canonical | complete repo-local document registry | no | canonical ownership lookup, registry repair, document-map split work | `lane_07_docs_handoff` |
-| `docs/control/DOCUMENT_MAP_POLICY.md` | canonical | document-map router/registry split, size limits, and maintenance rules | no | document-map structure changes, registry split work, target-template navigation changes | `lane_07_docs_handoff` |
 | `docs/EVOLUTION_MODEL.md` | canonical | document-driven ASGK self-evolution loop, evidence boundaries, independent handoff proof, and recovery rules | no | evolution-model changes, self-evolution review, or handoff-proof review | `lane_07_docs_handoff` |
 
 ## Target Assessment And Optional References
@@ -88,7 +86,6 @@ roles:
 |---|---|---|---:|---|---|
 | `templates/DOCUMENT_MAP.template.md` | template | optional target-project navigation reference when assessment finds no equivalent surface | no | assessment recommends creating a target-owned compact router | `lane_07_docs_handoff` |
 | `templates/DOCUMENT_REGISTRY.template.md` | template | optional target-project ownership-registry reference when assessment finds no equivalent surface | no | assessment recommends creating a target-owned registry | `lane_07_docs_handoff` |
-| `templates/decision_packet.template.yaml` | historical_evidence | superseded parallel decision-packet projection awaiting W6B removal; not current authority | no | bounded W6B migration lookup only | `lane_07_docs_handoff` |
 
 ## Source-Distributed Skills
 
@@ -130,9 +127,7 @@ rule:
 | `docs/control/COMPACT_HANDOFF_PROFILE.md` | conditional | canonical handoff-core projection plus CURRENT_STATUS impact and freshness checks | no | compact handoff or CURRENT_STATUS freshness validation | `lane_00_controller` |
 | `schemas/handoff_packet.schema.json` | schema | machine-readable core handoff and compact-projection shape | no | handoff schema, validator, or fixture work | `lane_02_schema_contracts` |
 | `docs/handoff/CURRENT_STATUS.md` | status | repo-level compact current state and next safe work | yes | all sessions and handoff updates | `lane_07_docs_handoff` |
-| `docs/handoff/DECISIONS.md` | status | durable architecture/governance decisions | no | decision lookup or update | `lane_07_docs_handoff` |
 | `docs/handoff/ISSUE_CLOSEOUT_REVIEW_RULES.md` | status | writing rules for mandatory issue closeout decision analysis in GitHub issue comments | no | closeout review, governance health check, upgrade audit, or similar prior-work lookup | `lane_07_docs_handoff` |
-| `docs/handoff/AGENT_LOG.md` | status | optional agent report log or links | no | handoff/reporting work | `lane_07_docs_handoff` |
 
 Canonical ownership rule for handoff work:
 
@@ -151,18 +146,13 @@ handoff_canonical_sources:
 
 | Document | Role | Canonical for | Read by default | Read when | Owned by lane |
 |---|---|---|---:|---|---|
-| `docs/control/CONTROL_LAYER_V0.md` | historical_evidence | superseded duplicate operating-rule surface awaiting W6B removal; cannot override `AGENTS.md` | no | bounded W6B migration lookup only | `lane_00_controller` |
-| `docs/control/WORK_UNIT_STATE_MODEL.md` | historical_evidence | superseded duplicate work-unit model awaiting W6B removal; cannot override live issue/PR authority | no | bounded W6B migration lookup only | `lane_00_controller` |
 | `docs/control/ISSUE_HYGIENE_GATE.md` | canonical | stale issue detection and issue-start gate | no | before selecting or closing issues | `lane_00_controller` |
-| `docs/control/FAILURE_THRESHOLDS.md` | canonical | stop thresholds and notification conditions | no | repeated failures, blockers | `lane_00_controller` |
 | `docs/control/CONTEXT_BUDGET_POLICY.md` | canonical | exact context-read gate, advisory read-set classifications, handoff recovery read set, and recorded expansion rules | no | context selection, handoff recovery, token-budget review | `lane_00_controller` |
 | `docs/control/AGENT_CAPABILITY_MATRIX.md` | canonical | task risk and minimum capability, including the frontier-capability floor for target adoption and material-upgrade assessment; low-risk merge compatibility, human gates, escalation/downscope, and context binding | no | task risk review, target adoption or material-upgrade assessment, escalation, downscoping, merge eligibility review | `lane_00_controller` |
 | `docs/control/VALIDATION_STRATEGY.md` | canonical | common JSON evidence envelope, validation proof boundaries, result and human-gate semantics, validation-layer responsibilities, negative-fixture ownership rules, fail-closed policy-gate validation, and validator change requirements | no | validation/tooling work, policy-gate checker review | `lane_06_ci_github` |
 | `docs/control/PR_REVIEW_CHECKLIST.md` | canonical | repeatable PR review sequence, current-status freshness review, and outcomes | no | PR review, current-status impact review, merge readiness | `lane_00_controller` |
 | `docs/control/NEGATIVE_TEST_PLAN.md` | canonical | human-readable negative-case intent, risk classification, candidate fixture paths, and planned gaps; not executable scenario expectations | no | negative fixture or validator work | `lane_00_controller` |
 | `docs/control/SOURCE_ONLY_RELEASE_POLICY.md` | canonical | Source-only release gates, human-gated release execution boundary, distribution boundary, version applicability, and release-history source-of-truth boundary | no | source-only release planning, release execution review, release-state closeout, distribution-boundary review | `lane_07_docs_handoff` |
-| `docs/control/DOCUMENT_MAP_POLICY.md` | canonical | document-map router/registry split, size limits, and maintenance rules | no | document-map structure changes, registry split work, target-template navigation changes | `lane_07_docs_handoff` |
-| `docs/control/DECISION_POINT_REGISTRY.md` | historical_evidence | superseded parallel decision router awaiting W6B removal; cannot expand the current issue read set or authority | no | bounded W6B migration lookup only | `lane_07_docs_handoff` |
 | `docs/control/TARGET_INSTALL_CHECKLIST.md` | canonical | target-assessment questions, existing-control comparison, minimum sufficient adaptation, evidence, uncertainty, and outcome conditions | no | target adoption or material-upgrade assessment, target issue preparation | `lane_07_docs_handoff` |
 
 Capability matrix boundary rule:
@@ -260,7 +250,6 @@ storage_specialized_policies:
 | `templates/task_packet.template.yaml` | template | optional issue-refinement starting point derived from the task-packet contract | no | creating an issue-refinement packet | `lane_00_controller` |
 | `.github/ISSUE_TEMPLATE/agent_task.yml` | template | GitHub issue authority-capture projection for the 13 fields plus two execution gates | no | issue-template or work-unit authority changes | `lane_06_ci_github` |
 | `examples/task_packet.example.yaml` | example | sample GitHub-unavailable fallback; conditional local-work scope only, never PR or merge authority | no | onboarding, task-packet examples | `lane_07_docs_handoff` |
-| `docs/control/AGENT_REPORT_FORMAT.md` | canonical | required agent report sections | no | PR handoff/reporting work | `lane_00_controller` |
 | `schemas/agent_report.schema.json` | schema | machine-readable report fields | no | report validation work | `lane_02_schema_contracts` |
 | `examples/agent_report.example.md` | example | sample report | no | onboarding, report examples | `lane_07_docs_handoff` |
 

@@ -264,13 +264,10 @@ read_sets:
       - current GitHub issue or PR
       - related issue or PR metadata when there is a declared dependency
     optional_read:
-      - docs/control/FAILURE_THRESHOLDS.md
-      - docs/control/WORK_UNIT_STATE_MODEL.md
       - changed file list for related open PRs
     stop_if:
       - issue_or_pr_dependency_unclear
       - allowed_path_overlap_without_authorization
-      - failure_threshold_reached
       - current_work_unit_unclear
 
   promotion_or_output_readiness:
