@@ -57,6 +57,12 @@ progressive_disclosure_surfaces:
     path: docs/SKILL_PACK.md
     purpose: guided evidence and judgment procedures with source-distributed usage modes
     read_by_default: false
+  nondefault_3_0_candidate:
+    path: v3/README.md
+    purpose: entry to candidate design and tests during the bounded #372 integration; not current root authority
+    read_by_default: false
+    read_when:
+      - a live #372 child issue or PR explicitly scopes candidate comparison
   issue_closeout_review_rules: {path: docs/handoff/ISSUE_CLOSEOUT_REVIEW_RULES.md, purpose: writing rules for mandatory issue closeout decision analysis in GitHub issue comments, read_by_default: false}
 ```
 
