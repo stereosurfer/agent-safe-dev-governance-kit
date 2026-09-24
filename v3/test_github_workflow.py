@@ -596,7 +596,9 @@ class GithubWorkflowTests(unittest.TestCase):
         for prose in ('Note: the draft design was rejected.',
                       'Draft design was rejected.',
                       'The draft design was not final, so we rejected it.',
-                      'The draft decision did not close the issue; this review is final.'):
+                      'The draft decision did not close the issue; this review is final.',
+                      'The unfinalized draft design was rejected in favor of the shipped approach.',
+                      'The unposted draft announcement was rejected; this is the final closeout.'):
             with self.subTest(prose=prose):
                 target['body'] = prose + '\n\n' + original
                 searched = w.search([snapshot], 'Keep GitHub as work ledger')
