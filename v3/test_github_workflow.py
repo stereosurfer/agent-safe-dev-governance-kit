@@ -39,6 +39,8 @@ class GithubWorkflowTests(unittest.TestCase):
     def observed_packet(self, source='gh_api'):
         snapshot = copy.deepcopy(self.snapshot)
         snapshot['source'] = source
+        w.git(self.root, 'remote', 'add', 'upstream',
+              'git@github.com:example/asgk-synthetic.git')
         return snapshot, w.project(snapshot, self.assignment, self.root)
 
     def observe(self):
@@ -46,6 +48,7 @@ class GithubWorkflowTests(unittest.TestCase):
 
     def test_issue_projection_positive(self):
         self.assertEqual(self.packet, self.project())
+        self.assertEqual('not_checked_fixture_without_remote', self.packet['checkout_identity'])
         self.assertIn(self.packet['issue'], w.work_text(self.packet))
         self.assertNotIn('merge_allowed', w.work_text(self.packet))
         self.assertIn('not a worker-verified live issue read', w.work_text(self.packet))
@@ -90,6 +93,21 @@ class GithubWorkflowTests(unittest.TestCase):
     def test_wrong_repository(self):
         self.snapshot['repository'] = 'other/repo'
         self.fails('ISSUE_ID', self.project)
+
+    def test_real_snapshot_requires_matching_checkout_remote(self):
+        self.snapshot['source'] = 'gh_api'
+        self.fails('REPO_IDENTITY', self.project)
+        w.git(self.root, 'remote', 'add', 'upstream', 'https://github.com/other/repo.git')
+        self.fails('REPO_IDENTITY', self.project)
+
+    def test_matching_non_origin_remote_binds_real_snapshot(self):
+        self.snapshot['source'] = 'connector_export'
+        w.git(self.root, 'remote', 'add', 'upstream', 'ssh://git@github.com/example/asgk-synthetic.git')
+        self.assertEqual('matching_configured_github_remote', self.project()['checkout_identity'])
+
+    def test_fixture_with_wrong_configured_remote_is_rejected(self):
+        w.git(self.root, 'remote', 'add', 'upstream', 'https://github.com/other/repo.git')
+        self.fails('REPO_IDENTITY', self.project)
 
     def test_closed_issue_no_new_work(self):
         self.snapshot['issue']['state'] = 'closed'
@@ -242,12 +260,42 @@ class GithubWorkflowTests(unittest.TestCase):
         failed['pr']['head']['sha'] = self.assignment['base_sha']
         failed['pr']['merged'] = False
         failed['pr']['merge_commit_sha'] = None
-        failed['pr']['body'] = 'Rejected first approach; replacement follows.'
+        failed['pr']['body'] = ('References ' + self.packet['issue'] +
+                                '#issuecomment-99. Rejected first approach; replacement follows.')
         self.final['prs'].insert(0, failed)
         result, text = w.closeout_draft(self.final, self.packet, self.report, self.root, 'completed')
         self.assertEqual('pass', result['result'])
         self.assertIn(failed['pr']['html_url'], text)
+        self.assertIn('pr_body_issue_reference', text)
         self.assertIn('"merge_commit": null', text)
+
+    def test_unrelated_selected_pr_cannot_join_closeout(self):
+        unrelated = copy.deepcopy(self.final['prs'][0])
+        unrelated['pr']['number'] = 2
+        unrelated['pr']['html_url'] = self.packet['issue'].replace('/issues/1', '/pull/2')
+        unrelated['pr']['head']['sha'] = self.assignment['base_sha']
+        unrelated['pr']['merged'] = False
+        unrelated['pr']['merge_commit_sha'] = None
+        unrelated['pr']['body'] = 'Unrelated change with no issue reference.'
+        self.final['prs'].insert(0, unrelated)
+        self.fails('UNRELATED_PR', lambda: w.closeout_draft(
+            self.final, self.packet, self.report, self.root, 'completed'))
+
+    def test_issue_comment_backlink_preserves_failed_attempt(self):
+        failed = copy.deepcopy(self.final['prs'][0])
+        failed['pr']['number'] = 2
+        failed['pr']['html_url'] = self.packet['issue'].replace('/issues/1', '/pull/2')
+        failed['pr']['head']['sha'] = self.assignment['base_sha']
+        failed['pr']['merged'] = False
+        failed['pr']['merge_commit_sha'] = None
+        failed['pr']['body'] = 'Rejected attempt.'
+        self.final['prs'].insert(0, failed)
+        self.final['comments'] = [dict(html_url=self.packet['issue'] + '#issuecomment-99',
+                                       body='Rejected attempt: ' + failed['pr']['html_url'])]
+        refreshed = w.project(self.final, self.assignment, self.root, review=True)
+        self.report['packet_id'] = refreshed['packet_id']
+        _, text = w.closeout_draft(self.final, refreshed, self.report, self.root, 'completed')
+        self.assertIn('issue_comment_pr_reference', text)
 
     def test_open_failed_attempt_blocks_completed_closeout(self):
         failed = copy.deepcopy(self.final['prs'][0])
@@ -311,10 +359,67 @@ class GithubWorkflowTests(unittest.TestCase):
         self.assertEqual(1, len(result['matches']))
         self.assertIn('#issuecomment-', result['matches'][0]['url'])
 
+    def test_canonical_yaml_closeout_is_searchable(self):
+        snapshot = copy.deepcopy(self.final)
+        snapshot['issue']['state'] = 'closed'
+        snapshot['comments'] = [dict(html_url=self.packet['issue'] + '#issuecomment-50',
+            body='Completed.\n\n```yaml\nissue_closeout_review:\n  issue: "#1"\n'
+                 '  status: completed\n  decision_analysis:\n    decision_made: "Keep trace"\n```\n')]
+        result = w.search([snapshot], 'Keep trace')
+        self.assertEqual([snapshot['comments'][0]['html_url']], [x['url'] for x in result['matches']])
+        issue_node = next(x for x in w.trace([snapshot], self.packet['issue'])['nodes']
+                          if x['url'] == self.packet['issue'])
+        self.assertIn(snapshot['comments'][0]['html_url'], issue_node['links'])
+
+    def test_marker_quote_and_wrong_issue_do_not_create_closeout_edges(self):
+        snapshot = copy.deepcopy(self.final)
+        snapshot['issue']['state'] = 'closed'
+        bodies = [
+            'I object to issue_closeout_review as proof of completion.',
+            '> ```yaml\n> issue_closeout_review:\n>   issue: "#1"\n>   status: completed\n> ```',
+            '```yaml\nissue_closeout_review:\n  issue: "#999"\n'
+            '  status: completed\n  decision_analysis:\n    decision_made: "wrong issue"\n```',
+            '```json\n{"issue_closeout_review":{"issue":"https://github.com/example/asgk-synthetic/issues/999",'
+            '"status":"completed","decision_analysis":{}}}\n```',
+        ]
+        snapshot['comments'] = [dict(html_url=self.packet['issue'] + f'#issuecomment-{n+50}', body=body)
+                                for n, body in enumerate(bodies)]
+        self.assertEqual([], w.search([snapshot], 'issue_closeout_review')['matches'])
+        issue_node = next(x for x in w.trace([snapshot], self.packet['issue'])['nodes']
+                          if x['url'] == self.packet['issue'])
+        self.assertFalse(any(comment['html_url'] in issue_node['links'] for comment in snapshot['comments']))
+
+    def test_open_issue_does_not_index_premature_closeout(self):
+        snapshot = copy.deepcopy(self.indexed_final)
+        snapshot['issue']['state'] = 'open'
+        self.assertEqual([], w.search([snapshot], 'Keep GitHub as work ledger')['matches'])
+        issue_node = next(x for x in w.trace([snapshot], self.packet['issue'])['nodes']
+                          if x['url'] == self.packet['issue'])
+        self.assertNotIn(snapshot['comments'][0]['html_url'], issue_node['links'])
+
+    def test_draft_banner_is_not_indexed_even_after_issue_closes(self):
+        snapshot = copy.deepcopy(self.indexed_final)
+        draft = (self.out / 'artifacts' / 'CLOSEOUT_DRAFT.md').read_text(encoding='utf-8')
+        snapshot['comments'][0]['body'] = draft
+        self.assertEqual([], w.search([snapshot], 'Keep GitHub as work ledger')['matches'])
+        issue_node = next(x for x in w.trace([snapshot], self.packet['issue'])['nodes']
+                          if x['url'] == self.packet['issue'])
+        self.assertNotIn(snapshot['comments'][0]['html_url'], issue_node['links'])
+
     def test_cross_issue_trace_handles_cycles(self):
         result = w.trace([self.indexed_final, self.prior], self.packet['issue'])
         self.assertTrue(any(n['url'] == self.prior['issue']['html_url'] for n in result['nodes']))
         self.assertEqual(len(result['nodes']), len({n['url'] for n in result['nodes']}))
+
+    def test_shorthand_pr_is_not_invented_as_issue(self):
+        snapshot = copy.deepcopy(self.final)
+        snapshot['issue']['body'] += '\nCompared #3 with unresolved #999.\n'
+        result = w.trace([snapshot], self.packet['issue'], 0)
+        issue_node = result['nodes'][0]
+        self.assertIn(snapshot['prs'][0]['pr']['html_url'], issue_node['links'])
+        self.assertNotIn('https://github.com/example/asgk-synthetic/issues/3', issue_node['links'])
+        self.assertIn('#999', issue_node['unresolved_shorthand_refs'])
+        self.assertIn('#999', result['unresolved_shorthand_refs'])
 
     def test_unresolved_trace_is_honest(self):
         result = w.trace([self.indexed_final], self.prior['issue']['html_url'])
@@ -375,6 +480,7 @@ class GithubWorkflowTests(unittest.TestCase):
         self.assertEqual(packet['packet_id'], metadata['packet_id'])
 
         invalid = self.out / 'invalid-card-output'
+        w.git(self.root, 'remote', 'remove', 'upstream')
         fixture_args = ['card-draft', '--snapshot', str(self.out / 'artifacts' / 'snapshot.json'),
                         '--packet', str(self.out / 'artifacts' / 'packet.json'),
                         '--repo-root', str(self.root), '--out', str(invalid)]

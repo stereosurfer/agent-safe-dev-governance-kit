@@ -1,4 +1,6 @@
 import copy
+import contextlib
+import io
 import json
 import tempfile
 import unittest
@@ -122,7 +124,15 @@ class CapabilityIndexTests(unittest.TestCase):
             path = Path(temp) / 'index.json'
             path.write_text(json.dumps(self.index), encoding='utf-8')
             # The example's content_ref paths are intentionally not materialized.
-            self.assertEqual(0, c.main(['check', '--index', str(path)]))
+            output = io.StringIO()
+            with contextlib.redirect_stdout(output):
+                self.assertEqual(0, c.main(['check', '--index', str(path)]))
+            result = json.loads(output.getvalue())
+            self.assertIn('reference syntax', result['mechanically_checked'])
+            self.assertNotIn('local references', result['mechanically_checked'])
+            self.assertIn('content_ref file existence', result['not_checked'])
+            for projection in (c.browse(self.index, 'research'), c.select(self.index, 'research', 'handoff')):
+                self.assertIn('content_ref file existence', projection['not_checked'])
 
     def test_first_live_lesson_is_only_a_bounded_observed_pointer(self):
         catalog = asgk3.load(LIVE_LESSON_INDEX)
