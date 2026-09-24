@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "purpose": "capability_catalog",
+  "records": [
+    {
+      "id": "github-nondefault-base-closeout-368",
+      "kind": "lesson",
+      "domain": "governance",
+      "tree_path": ["github", "nondefault-base", "closeout"],
+      "state": "observed",
+      "title": "Manual closeout after one non-default-base merge",
+      "summary": "One #368 closeout reports manual issue closure after PR #369 merged to a non-default base; not a universal GitHub rule.",
+      "tags": ["github", "issue-closeout"],
+      "applies_when": "Inspecting linked-issue status after a PR to a non-default branch merges.",
+      "does_not_apply_when": "Assuming the behavior for default-branch merges or other untested GitHub configurations.",
+      "source_ref": "https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/368",
+      "evidence_refs": ["https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/368#issuecomment-5805341585"],
+      "content_ref": "v3/lessons/github-nondefault-base-closeout.md",
+      "decision_ref": null,
+      "supersedes": [],
+      "capability_version": null
+    }
+  ]
+}
