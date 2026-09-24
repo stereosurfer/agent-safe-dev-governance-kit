@@ -76,7 +76,10 @@ Confirm:
 - [ ] PR does not include unrelated cleanup.
 - [ ] PR does not mix docs, code, schema, CI, and policy work unless explicitly scoped.
 - [ ] Generated/runtime artifacts are absent.
-- [ ] Protected paths are absent.
+- [ ] Protected governance paths, if changed, are explicitly within the issue
+      scope, escalated, and reviewed under the applicable current-head gate.
+- [ ] Hard-forbidden paths such as `.git/`, secrets, credentials, and private
+      material are absent.
 
 Block when:
 
@@ -208,24 +211,24 @@ live `check-pr`.
 
 Confirm:
 
-- [ ] No Artifact Root writes from repo task.
-- [ ] No Local State Root writes from repo task.
+- [ ] Any destination outside the source repo is explicitly authorized by the
+      issue or target-owned delivery contract; no external write is inferred
+      from an example or a named storage root.
 - [ ] No runtime outputs committed.
 - [ ] No SQLite live DB, preview cache, model cache, or scratch files committed.
 - [ ] No private source materials committed.
 
 Block when:
 
-- [ ] Storage roots are mixed.
+- [ ] A task-specific storage or retention boundary is violated.
 - [ ] Runtime artifact boundary is unclear.
 - [ ] Externalized preparation outputs are moved into the repo without authorization.
 
 Canonical references:
 
 ```text
-docs/architecture/STORAGE_PROFILE.md
+docs/architecture/LOG_AND_RECORD_RETENTION_POLICY.md
 docs/architecture/RUNTIME_ARTIFACT_POLICY.md
-docs/architecture/CACHE_AND_STATE_POLICY.md
 docs/architecture/EXTERNALIZED_RESPONSIBILITY_BOUNDARY.md
 ```
 
@@ -455,7 +458,8 @@ Use when:
 
 - [ ] Human-gated operation is outside durable scope or was rejected.
 - [ ] Scope is wrong.
-- [ ] Protected path or runtime artifact is present.
+- [ ] Protected governance path lacks explicit scope/gate, or a hard-forbidden
+      path, private source, or runtime artifact is present.
 - [ ] Validation fails for unclear reasons.
 - [ ] Required change would exceed allowed paths.
 - [ ] The issue is stale or not a valid source of truth.

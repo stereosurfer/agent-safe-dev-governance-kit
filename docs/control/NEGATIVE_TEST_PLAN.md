@@ -31,7 +31,7 @@ context_budget: docs/control/CONTEXT_BUDGET_POLICY.md
 agent_capability_matrix: docs/control/AGENT_CAPABILITY_MATRIX.md
 human_gates: docs/control/HUMAN_GATED_OPERATIONS.md
 runtime_artifact_policy: docs/architecture/RUNTIME_ARTIFACT_POLICY.md
-storage_profile: docs/architecture/STORAGE_PROFILE.md
+record_placement: docs/architecture/LOG_AND_RECORD_RETENTION_POLICY.md
 merge_decision_record: docs/control/MERGE_DECISION_RECORD.md
 ```
 
@@ -104,9 +104,6 @@ validation evidence.
 | `NEG-010-private-binary-source` | `.pdf`, `.docx`, `.png`, `.tif`, etc outside fixture/example allowlist | blocked | governance_hygiene.py | `examples/negative/changed_paths.private-binary.txt` | Prevent private/source material commits. |
 | `NEG-011-invalid-json-schema` | malformed JSON under a present `schemas/` path | blocked | source_validation.py | `planned_unimplemented: isolated invalid schema fixture` | Live source validation checks parseability without making every schema a retained prerequisite. |
 | `NEG-012-invalid-example-json` | malformed JSON under present positive examples | blocked | source_validation.py | `planned_unimplemented: isolated invalid positive-example fixture` | Do not put malformed examples in normal examples. |
-| `NEG-013-storage-roots-equal` | `artifact_root == local_state_root` in the legacy fixed storage profile | not_source_validation | W7B bounded decision | `examples/negative/storage_profile.same-root.json` | The optional fixed storage family is not an ASGK source prerequisite. |
-| `NEG-014-drive-api-enabled-default` | `app_managed_drive_api: true` in the legacy fixed storage profile | not_source_validation | W7B bounded decision | `examples/negative/storage_profile.drive-api.json` | Source validation does not infer target storage or external-action policy from this fixture. |
-| `NEG-015-cache-not-local-only` | legacy fixed-profile cache placement differs | not_source_validation | W7B bounded decision | `planned_unimplemented: no new fixture before W7B` | Do not recreate a fixed target storage oracle during source validation. |
 | `NEG-016-summary-as-canonical` | PR relies on summary doc against canonical conflict | request_changes | PR review / document map | `planned_unimplemented: summary conflict fixture` | Requires canonical source. |
 | `NEG-017-context-expansion-unrecorded` | agent reads extra policy docs but report omits context expansion | request_changes | PR review / context budget | `planned_unimplemented: unrecorded context expansion fixture` | Context drift risk. |
 | `NEG-018-low-level-agent-security-work` | `fast_basic` or `standard` performs security boundary work | blocked | agent capability matrix / PR review | `planned_unimplemented: capability mismatch fixture` | Escalation required. |
@@ -335,7 +332,7 @@ blocked:
   - see chat as durable source
   - missing Merge Decision Record
   - runtime artifact committed
-  - protected path changed
+  - hard-forbidden path changed or protected governance path changed without explicit scope and gate
 
 human_gated:
   - new dependency
