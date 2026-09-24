@@ -592,13 +592,39 @@ class GithubWorkflowTests(unittest.TestCase):
         issue_url = snapshot['issue']['html_url']
         target = next(comment for comment in snapshot['comments']
                       if w.json_closeout_shape(comment['body'], issue_url))
-        target['body'] = 'Note: the draft design was rejected.\n\n' + target['body']
-        searched = w.search([snapshot], 'Keep GitHub as work ledger')
-        self.assertEqual('pass', searched['result'])
-        self.assertEqual('json_shape_checked', searched['matches'][0]['evidence_class'])
-        traced = w.trace([snapshot], issue_url)
-        issue_node = next(node for node in traced['nodes'] if node['url'] == issue_url)
-        self.assertIn(target['html_url'], issue_node['links'])
+        original = target['body']
+        for prose in ('Note: the draft design was rejected.',
+                      'Draft design was rejected.'):
+            with self.subTest(prose=prose):
+                target['body'] = prose + '\n\n' + original
+                searched = w.search([snapshot], 'Keep GitHub as work ledger')
+                self.assertEqual('pass', searched['result'])
+                self.assertEqual('json_shape_checked', searched['matches'][0]['evidence_class'])
+                traced = w.trace([snapshot], issue_url)
+                issue_node = next(node for node in traced['nodes'] if node['url'] == issue_url)
+                self.assertIn(target['html_url'], issue_node['links'])
+
+    def test_explicit_draft_banner_never_promotes_json_closeout(self):
+        snapshot = copy.deepcopy(self.indexed_final)
+        issue_url = snapshot['issue']['html_url']
+        target = next(comment for comment in snapshot['comments']
+                      if w.json_closeout_shape(comment['body'], issue_url))
+        original = target['body']
+        for banner in ('DRAFT — do not post or close issue.',
+                       'Status: DRAFT — do not post or close issue.',
+                       '**Status:** DRAFT — do not post or close issue.',
+                       'This is a DRAFT — do not post or close issue.',
+                       '# Issue Closeout Review DRAFT',
+                       '**DRAFT** — do not post or close issue.',
+                       '## DRAFT — do not post or close issue.',
+                       '⚠️ DRAFT — do not post or close issue.'):
+            with self.subTest(banner=banner):
+                target['body'] = banner + '\n\n' + original
+                searched = w.search([snapshot], 'Keep GitHub as work ledger')
+                self.assertEqual([], searched['matches'])
+                traced = w.trace([snapshot], issue_url)
+                issue_node = next(node for node in traced['nodes'] if node['url'] == issue_url)
+                self.assertNotIn(target['html_url'], issue_node['links'])
 
     def test_empty_or_partial_json_closeout_shapes_are_not_indexed(self):
         snapshot = copy.deepcopy(self.final)
