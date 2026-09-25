@@ -7,7 +7,7 @@
 `python3 scripts/asgk.py catalog --help`，`v3/capability_evolution.py` 也只代理；
 根目錄兩份 target 導覽模板已是可選參考，不在 `v3/`；11 個根目錄 Skills
 已依 #405 綜合修訂，`v3/skills/` 留作候選歷史而非第二套現行規則。
-3.0 尚未發布。
+本目錄不是發布入口；目前版本狀態以根目錄 `README.md` 與 GitHub Releases 為準。
 
 **ASGK 是一套讓人與 AI 能安全、順利交接工作的規則與工具。**
 看得懂工作狀態、接得下去長期工作、查得清楚證據與決策；
@@ -27,8 +27,10 @@ Hermes Kanban 可保存 Bot 的卡片、run 與 review 狀態，但不能取代 
 issue 的授權、PR/MDR 或 close-out。獨立 reviewer 守材料／能力升格等關口，
 不是每件事都要經過一個常駐「警察 Bot」。
 沒有 Hermes 的 Codex＋GitHub 工作也可沿用 GitHub 骨幹；定期排程只負責啟動，
-不是當次寫入或發布授權。這是 [#372 的必要驗收案例](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/372#issuecomment-5807050375)，
-尚未由本候選版的網站試點證明，也不預設每個網站都需要導入 ASGK。
+不是當次寫入或發布授權。這是 [#372 的必要驗收案例](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/372#issuecomment-5807050375)；
+後續 target-owned [網站 #1／PR #2](https://github.com/stereosurfer/little-q-rock-museum/issues/1#issuecomment-5826230588)
+已證明一個明標虛構的公開內容循環，沒有測定期排程或後續寫入權限，
+也不預設每個網站都需要導入 ASGK。
 
 若要在這個 repo 實際修改檔案，先讀**目前 main** 的 `AGENTS.md`、`README.md`、
 `docs/handoff/CURRENT_STATUS.md` 和選定的 live issue／PR；本 `v3/` 候選來源
@@ -110,8 +112,11 @@ target-owned assessment、普通 revert 與文件驅動自體進化都保留。
 它的 GitHub workflow 部分已由 #397 整合到根目錄 CLI 與 doctor；
 其餘尚未整合的候選來源不是已發布或已證實安全的產品。
 真正 Bot／Kanban 的範圍化交接已有 #361 實測，但其首次 issue 核對聲稱失敗；
-這不是生產安全或獨立 reviewer 證明。修正後的重測結果見 #362；target pilot
-仍未實測。
+這不是生產安全或獨立 reviewer 證明。修正後的重測結果見 #362；後續
+[context-defogger #8](https://github.com/stereosurfer/context-defogger/issues/8)
+完成唯讀適配評估，[little-q #1](https://github.com/stereosurfer/little-q-rock-museum/issues/1)
+完成一次無 Hermes 的公開內容循環。兩者都不證明普遍 target 適配、
+定期自動執行或本候選目錄可直接發布。
 [#369](https://github.com/stereosurfer/agent-safe-dev-governance-kit/pull/369) 已把修正合併進
 preview.1；[#371](https://github.com/stereosurfer/agent-safe-dev-governance-kit/pull/371)
 也已合併一筆 `observed` Lesson。#370 的[結案](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/370#issuecomment-5806869845)

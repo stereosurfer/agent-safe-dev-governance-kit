@@ -90,8 +90,10 @@ ASGK does not require Hermes, Kanban, a persistent Bot, or a separate police
 agent. When ASGK is used alongside Kanban, cards/runs belong to that runtime
 while GitHub retains ASGK work scope, PR/MDR, and closeout authority. Codex
 and GitHub alone can use the repository-governance loop; a recurring schedule
-starts a run, not that run's permission to edit or publish. The no-Hermes
-website case is a required 3.0 acceptance test, not a proven deployment yet.
+starts a run, not that run's permission to edit or publish. A [target-owned
+no-Hermes website pilot](https://github.com/stereosurfer/little-q-rock-museum/issues/1)
+has completed one clearly fictional public content cycle; recurring automation
+and later-run authority were not tested.
 
 Research, video, and translation are examples of capability evolution, not
 mandatory ASGK modules. A task's question/evidence graph belongs to its own
@@ -105,7 +107,12 @@ method. The eleven root source Skills have been synthesized for the 3.0
 operating contract under [#405](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/405).
 The target-owned, read-only [context-defogger #8](https://github.com/stereosurfer/context-defogger/issues/8)
 assessment is complete; it recommended minimum change, not target adoption.
-Independent cold handoff and a real no-Hermes website case remain release gates.
+The [#407 cold handoff](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/407)
+used an independent no-history AI substitute with OWNER approval and recovered a
+bounded accepted/rejected decision path. It was not an unfamiliar-human or
+cross-provider test and did not prove a complete workflow graph. The no-Hermes
+site pilot likewise proves one reviewed and published cycle, not a schedule.
+Neither result by itself authorizes the 3.0 release.
 
 Skills are not a new authority layer or a substitute for model judgment. They
 direct attention to relevant evidence, safety boundaries, uncertainty, and stop
@@ -248,7 +255,9 @@ actual change still needs its target's current durable authority and
 publication boundary. A low-risk website may need only its existing GitHub
 issue/PR, content/source rules, CI and compact closeout—or no ASGK adoption
 when those controls already suffice. This choice requires target evidence;
-the 3.0 website positive/negative tests have not yet been completed.
+the [3.0 website pilot](https://github.com/stereosurfer/little-q-rock-museum/issues/1#issuecomment-5826230588)
+tested one accepted fictional note against rejected real-collection, product,
+price, message, and site-setting paths. It did not test recurring updates.
 
 This repository's `docs/DOCUMENT_MAP.md` and `docs/DOCUMENT_REGISTRY.md` are
 repo-local. Do not copy them unchanged into a target repository. A target may
@@ -295,9 +304,11 @@ is active, but 3.0 is not released. The GitHub workflow portion of preview.1
 and optional metadata-only catalog are integrated into the public CLI and
 `doctor`. The existing root target navigation templates are optional references,
 not a required bundle; Stage 3 examples and their authority limits have been
-reviewed. Eleven source Skills have been synthesized under #405; a target-owned
-read-only pilot is recorded, while remaining lifecycle and website evidence
-still needs separately scoped work. The former 2.0
+reviewed. Eleven source Skills have been synthesized under #405; the bounded
+[#407 cold handoff](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/407)
+and target-owned [no-Hermes website pilot](https://github.com/stereosurfer/little-q-rock-museum/issues/1)
+are recorded with their limits. Final release readiness, exact-SHA approval,
+and post-release closeout remain. The former 2.0
 program and old runtime-adapter roadmaps are history, not instructions for the
 next work unit.
 
