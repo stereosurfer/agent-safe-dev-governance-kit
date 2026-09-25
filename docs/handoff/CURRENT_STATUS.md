@@ -4,7 +4,7 @@ This is the repository recovery snapshot. It is overwritten, not appended.
 Completed-work history and decision detail belong in GitHub issues, PRs,
 comments, releases, and merge commits.
 
-Last updated: `2026-09-24T15:24:57Z`
+Last updated: `2026-09-24T19:31:21Z`
 
 ## Durable source of truth
 
@@ -21,15 +21,15 @@ Last updated: `2026-09-24T15:24:57Z`
 
 ASGK v1.7.3 remains the latest completed source-only GitHub release under the
 Apache-2.0 license. Issue #372 coordinates the active ASGK 3.0 release program.
-The root README states the 3.0 product meaning; bounded root navigation,
-control-source, GitHub workflow CLI, and optional metadata-only catalog CLI
-cutovers are represented in current source. Both public namespaces use root
-library owners and `doctor` runs their regression checks. The root target
-templates are optional; Stage 3 examples are reviewed, not live-work proof.
-Eleven root Skills are synthesized under #405; `v3/skills/` remains candidate
-history, not an active second pack. Root target templates are optional
-references, not default target installs. Resolve live refs; #323 is prior 2.0
-evidence, not the next-work router.
+Root navigation, control, workflow and optional catalog cutovers are current;
+`doctor` runs root-owned regressions. Target templates are optional, and Stage 3
+examples are not live-work proof.
+Eleven root Skills are synthesized under #405; `v3/skills/` is candidate
+history. Resolve live refs; #323 is prior 2.0 evidence, not current routing.
+
+Target-owned [context-defogger #8](https://github.com/stereosurfer/context-defogger/issues/8)
+completed read-only assessment: minimum change, not adoption or write authority.
+Cold human handoff and the no-Hermes website case remain unproved.
 
 The product boundary is safe, smooth, traceable handoff between people and AI.
 The handoff remains independent of a specific model, provider, agent, or prior
@@ -59,7 +59,7 @@ issue: "#372 ASGK 3.0 source-only release program"
 pr: none
 branch: main
 state: active_program
-next_work_unit_decision: "Reconcile live #372 child and PR state; choose one exact-scope unit. Run Stage 4 cold handoff, no-Hermes website/GitHub-Kanban and target-owned pilot evidence before release audit."
+next_work_unit_decision: "Reconcile live #372 child and PR state; choose one exact-scope unit. The read-only target pilot is complete; finish cold handoff and no-Hermes website evidence before release audit."
 ```
 
 ## Current validation entrypoint
@@ -97,8 +97,9 @@ model cache, or external preparation outputs are authorized by this status.
 ## Next safe action
 
 Continue under #372 from current `main`; inspect live PRs and child issues
-before selecting one bounded unit. Prove cold handoff, GitHub/Kanban, target
-fit and release in the remaining stages. Only the selected issue or
+before selecting one bounded unit. Finish cold human handoff and no-Hermes
+website evidence, then audit and approve the release at its exact SHA. The
+read-only pilot does not authorize target edits. Only the selected issue or
 PR supplies scope; status, unpromoted `v3/` material, old plans and chat do not.
 Do not read the excluded visual guide.
 

@@ -102,8 +102,10 @@ corpus calls for progressive disclosure, not full-context loading or inflated
 Bot memory. The optional metadata-only catalog is available through the public
 root CLI; it does not read Lesson bodies, determine applicability, or promote a
 method. The eleven root source Skills have been synthesized for the 3.0
-operating contract under [#405](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/405);
-actual independent handoff and target evidence remain release gates.
+operating contract under [#405](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/405).
+The target-owned, read-only [context-defogger #8](https://github.com/stereosurfer/context-defogger/issues/8)
+assessment is complete; it recommended minimum change, not target adoption.
+Independent cold handoff and a real no-Hermes website case remain release gates.
 
 Skills are not a new authority layer or a substitute for model judgment. They
 direct attention to relevant evidence, safety boundaries, uncertainty, and stop
@@ -162,8 +164,15 @@ profile into a smaller project. The default layer remains generic.
 - GitHub snapshot/work projection, draft-only handoff and closeout, and bounded
   closeout search/trace through `python3 scripts/asgk.py workflow --help`.
   Capture uses GitHub GET only; supplied snapshots and local observations do
-  not grant current issue authority or approval. YAML closeout comments are
-  unverified candidate pointers, not complete decision-tree edges. Use one
+  not grant current issue authority or approval. A same-issue, substantive
+  closeout in the strict canonical YAML subset can yield a
+  `yaml_subset_shape_checked` edge; unsupported or malformed YAML remains an
+  unverified candidate. JSON needs one visible, top-level closeout block;
+  raw HTML-marked comments, nested-example closeouts, multiple visible JSON
+  closeouts, mixed JSON/YAML closeouts, or an explicit DRAFT primary decision
+  cannot create a checked edge. Search matches only named parsed decision
+  fields, not extra metadata, comment preambles or hidden examples. Shape checking does not prove the decision, evidence,
+  authorship, approval, or complete history. Use one
   snapshot per issue and one observation per PR per lookup; a closed issue
   without a recognizable supplied closeout is reported as incomplete, not
   silently treated as a complete trace.
@@ -286,8 +295,9 @@ is active, but 3.0 is not released. The GitHub workflow portion of preview.1
 and optional metadata-only catalog are integrated into the public CLI and
 `doctor`. The existing root target navigation templates are optional references,
 not a required bundle; Stage 3 examples and their authority limits have been
-reviewed. Eleven source Skills have been synthesized under #405; real
-lifecycle/target evidence still needs separately scoped work. The former 2.0
+reviewed. Eleven source Skills have been synthesized under #405; a target-owned
+read-only pilot is recorded, while remaining lifecycle and website evidence
+still needs separately scoped work. The former 2.0
 program and old runtime-adapter roadmaps are history, not instructions for the
 next work unit.
 

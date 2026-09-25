@@ -204,14 +204,23 @@ or establish authority. The workflow's `capture` uses GET only; `packet`,
 not GitHub or Kanban writes. Its common `result` distinguishes pass, fail,
 blocked and warning; unresolved links or YAML closeout candidates carry
 `domain_result: incomplete` and a nonblocking finding, with a nonzero exit.
-Only duplicate-free JSON receives bounded closeout shape checks; fenced YAML
-is an unparsed `candidate_unverified_yaml` pointer, never a complete edge.
+Only one visible, top-level, duplicate-free canonical JSON closeout in a comment
+can receive a bounded shape check. Any raw HTML-marked comment, JSON inside an
+outer Markdown example fence, multiple JSON closeout fences (including
+alternate case or delimiter), mixed JSON/YAML closeouts, and an explicit DRAFT
+JSON primary decision do not create a checked edge. A separate historical
+Markdown-fenced DRAFT example does not veto an otherwise final closeout.
+Search examines only named parsed decision, reusable-rule and applicability
+fields, not extra metadata or unrelated comment prose. The strict canonical YAML subset also receives bounded
+closeout shape checks. Only same-issue, substantive YAML yields a
+`yaml_subset_shape_checked` edge; malformed, unsupported, wrong-issue, or
+incomplete YAML remains a `candidate_unverified_yaml` pointer.
 Each lookup accepts only one snapshot per issue and one observation per PR;
 duplicate issue or PR inputs fail closed, even if their visible bodies match.
 Repository owner/name spelling is case-folded for duplicate-number and `#N`
 resolution within the supplied snapshot set.
-A visited closed issue without either supplied closeout form warns with
-`WF_CLOSEOUT_NOT_FOUND`; legacy prose may still exist. A JSON-path `pass` is
+A visited closed issue without a supplied recognized closeout or candidate warns with
+`WF_CLOSEOUT_NOT_FOUND`; legacy prose may still exist. A shape-checked-path `pass` is
 bounded traversal evidence, never proof of complete GitHub history. Snapshot
 labels and locally configured remotes do not authenticate GitHub state or grant
 issue authority.
@@ -547,7 +556,7 @@ proves:
   - branch-specific scenarios may additionally lock exact mechanically_checked and not_checked lists
   - positive and negative retained scenarios remain paired
   - target-evidence scenarios lock arbitrary-layout success, four distinct mismatch codes, and no-claim incompleteness
-  - workflow scenarios lock JSON shape-checked trace success, YAML candidate trace/search incompleteness, closed-issue closeout absence, duplicate-issue snapshot rejection, unresolved-trace warning, and invalid snapshot failure with exact exit and finding codes
+  - workflow scenarios lock JSON and canonical YAML-subset shape-checked trace/search success; HTML-marked, nested-example, alternate-fence multiple or mixed-format closeouts, explicit DRAFT primary decisions, unrelated-preamble and extra-metadata searches do not become checked decisions; malformed or wrong-issue YAML candidate incompleteness, closed-issue closeout absence, duplicate-issue snapshot rejection, unresolved-trace warning, and invalid snapshot failure retain exact exit and finding codes
   - catalog scenarios lock an observed-index and one-level browse pass, no-match and omitted-result warnings, and invalid purpose, duplicate-key and unreviewed-promotion failures
   - canonical and compact task-packet commands remain byte-for-byte equivalent
   - the canonical source command and bootstrap compatibility wrapper remain byte-for-byte equivalent for positive and negative inventory scenarios

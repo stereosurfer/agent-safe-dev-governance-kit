@@ -82,11 +82,18 @@ mandatory police Bot for every task. Review identity must be real, not a renamed
    reasons, rejected alternatives, applicability, evidence, known limits; maximum five
    decisions and 400 words. Reject overflow instead of truncating reasoning.
 5. Search explicit snapshots for closeout comments and trace durable links with bounded
-   hops. Duplicate-free JSON may form a shape-checked edge; fenced YAML is only a
-   provenance-labeled, unparsed candidate URL and makes the affected lookup incomplete.
+   hops. One visible, top-level, duplicate-free JSON closeout and same-issue,
+   substantive closeouts in the strict
+   canonical YAML subset may form distinct shape-checked edges. Malformed,
+   unsupported, wrong-issue, or incomplete YAML remains a provenance-labeled
+   unverified candidate URL and makes the affected lookup incomplete. JSON
+   in raw HTML-marked comments or an outer Markdown example fence, or multiple
+   JSON closeouts or mixed JSON/YAML closeouts in one comment, or an explicit
+   DRAFT primary decision, cannot form a checked edge. Search uses only named
+   parsed decision fields for a checked closeout, not extra metadata or surrounding prose.
    Require one snapshot per issue and one observation per PR; a visited closed
    issue without either supplied closeout form remains incomplete, since older
-   prose may exist. Even a passing JSON traversal is bounded, not proof of all
+   prose may exist. Even a passing shape-checked traversal is bounded, not proof of all
    historical decisions. Do not read the entire repo or invent links.
 
 Committed in-place changes use exact git base/head. Partial work can be handed off with

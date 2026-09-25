@@ -489,37 +489,11 @@ def closeout_draft(snapshot, packet, report, root, status):
     return result, text
 
 
-def json_closeout_shape(body, issue_url):
-    """Check only a duplicate-free JSON shape; never infer truth or authority."""
-    number = issue_url.rsplit('/', 1)[1]
-    statuses = ('completed', 'closed_not_done', 'duplicate', 'superseded', 'blocked')
+def checked_json_closeout(body, issue_url):
+    """Return one visible canonical JSON review, never its truth or authority."""
 
-    def material(value):
-        return (type(value) is str and bool(value.strip())
-                and value.strip().casefold() not in (
-                    'none', 'null', 'n/a', 'todo', 'tbd', 'pending', 'unknown',
-                    '|', '>', '-', '[]', '{}', '...',
-                ))
-
-    def substantive_json(review):
-        if review.get('issue') not in (issue_url, '#' + number) or review.get('status') not in statuses:
-            return False
-        analysis = review.get('decision_analysis')
-        if type(analysis) is not dict or not all(material(analysis.get(key))
-                for key in ('decision_made', 'why_this_path')):
-            return False
-        rejected = analysis.get('rejected_paths')
-        if type(rejected) is not list or not any(type(item) is dict
-                and material(item.get('path')) and material(item.get('reason')) for item in rejected):
-            return False
-        signal = analysis.get('reusable_signal')
-        if type(signal) is not dict or type(signal.get('applies_later')) is not bool or not material(signal.get('reason')):
-            return False
-        decisions = review.get('decisions')
-        return (type(decisions) is list and any(type(item) is dict
-                and material(item.get('decision')) and material(item.get('reason'))
-                and type(item.get('evidence')) is list
-                and any(material(ref) for ref in item['evidence']) for item in decisions))
+    if mixed_closeout_formats(body):
+        return None
 
     def unique_json_pairs(items):
         value = {}
@@ -532,35 +506,334 @@ def json_closeout_shape(body, issue_url):
     def reject_nonstandard_constant(value):
         raise ValueError('Nonstandard JSON constant: ' + value)
 
-    for match in re.finditer(r'(?ms)^```json[ \t]*\n(.*?)^```[ \t]*$', body):
+    closeouts = []
+    for block, canonical in standalone_closeout_fences(
+            body, ('json',), reject_html_tags=True):
         try:
-            value = json.loads(match.group(1), object_pairs_hook=unique_json_pairs,
+            value = json.loads(block, object_pairs_hook=unique_json_pairs,
                                parse_constant=reject_nonstandard_constant)
         except (ValueError, TypeError):
+            if 'issue_closeout_review' in block:
+                return None
             continue
-        if type(value) is not dict or type(value.get('issue_closeout_review')) is not dict:
+        if type(value) is dict and 'issue_closeout_review' in value:
+            if not canonical:
+                return None
+            closeouts.append(value['issue_closeout_review'])
+    if len(closeouts) == 1 and substantive_closeout_shape(closeouts[0], issue_url):
+        return closeouts[0]
+    return None
+
+
+def json_closeout_shape(body, issue_url):
+    return checked_json_closeout(body, issue_url) is not None
+
+
+def substantive_closeout_shape(review, issue_url):
+    """Shared, bounded shape check; contents and citations remain unverified."""
+    if type(review) is not dict:
+        return False
+    number = issue_url.rsplit('/', 1)[1]
+    statuses = ('completed', 'closed_not_done', 'duplicate', 'superseded', 'blocked')
+
+    def material(value):
+        return (type(value) is str and bool(value.strip())
+                and value.strip().casefold() not in (
+                    'none', 'null', 'n/a', 'todo', 'tbd', 'pending', 'unknown',
+                    '|', '>', '-', '[]', '{}', '...',
+                ))
+
+    if review.get('issue') not in (issue_url, '#' + number) or review.get('status') not in statuses:
+        return False
+    analysis = review.get('decision_analysis')
+    if type(analysis) is not dict or not all(material(analysis.get(key))
+            for key in ('decision_made', 'why_this_path')):
+        return False
+    rejected = analysis.get('rejected_paths')
+    if type(rejected) is not list or not any(type(item) is dict
+            and material(item.get('path')) and material(item.get('reason')) for item in rejected):
+        return False
+    signal = analysis.get('reusable_signal')
+    if type(signal) is not dict or type(signal.get('applies_later')) is not bool or not material(signal.get('reason')):
+        return False
+    decisions = review.get('decisions')
+    return (type(decisions) is list and any(type(item) is dict
+            and material(item.get('decision')) and material(item.get('reason'))
+            and type(item.get('evidence')) is list
+            and any(material(ref) for ref in item['evidence']) for item in decisions))
+
+
+def parse_closeout_yaml_subset(source):
+    """Parse a deliberately small two-space YAML subset; reject ambiguity."""
+    lines = []
+    for raw in source.splitlines():
+        if not raw.strip():
             continue
-        if substantive_json(value['issue_closeout_review']):
-            return True
-    return False
+        if raw.lstrip().startswith('#'):
+            if re.search(r'(?i)\bdraft\b', raw):
+                raise ValueError('Draft YAML comment')
+            continue
+        if '\t' in raw or raw.rstrip() != raw or raw.startswith(('---', '...')):
+            raise ValueError('Unsupported YAML syntax')
+        indent = len(raw) - len(raw.lstrip(' '))
+        if indent % 2:
+            raise ValueError('Noncanonical indentation')
+        lines.append((indent, raw[indent:]))
+    if not lines or lines[0][0] != 0 or len(lines) > 300:
+        raise ValueError('Missing or oversized YAML mapping')
+
+    def scalar(token):
+        if not token or token[0] in '&*!|>{}':
+            raise ValueError('Unsupported YAML scalar')
+        if token.startswith('"'):
+            value = json.loads(token)
+            if type(value) is not str:
+                raise ValueError('Expected quoted string')
+            return value
+        if token.startswith("'"):
+            if len(token) < 2 or not token.endswith("'"):
+                raise ValueError('Unclosed quoted string')
+            value = token[1:-1].replace("''", '')
+            if "'" in value:
+                raise ValueError('Unsupported single quote')
+            return token[1:-1].replace("''", "'")
+        if token.startswith('['):
+            if not token.endswith(']'):
+                raise ValueError('Unclosed inline list')
+            inner = token[1:-1]
+            if not inner.strip():
+                return []
+            parts = []
+            start = 0
+            quote = None
+            escaped = False
+            for pos, char in enumerate(inner):
+                if quote:
+                    if quote == '"' and char == '\\' and not escaped:
+                        escaped = True
+                        continue
+                    if char == quote and not escaped:
+                        quote = None
+                    escaped = False
+                elif char in ('"', "'"):
+                    quote = char
+                elif char == ',':
+                    parts.append(inner[start:pos].strip())
+                    start = pos + 1
+            if quote:
+                raise ValueError('Unclosed inline quote')
+            parts.append(inner[start:].strip())
+            if any(not part or part.startswith('[') for part in parts):
+                raise ValueError('Unsupported inline list')
+            return [scalar(part) for part in parts]
+        if (token in ('true', 'false')):
+            return token == 'true'
+        if (not re.fullmatch(r'[A-Za-z_][^#\[\]{},:&*!|>\'"`]*', token)
+                or token.strip() != token
+                or token.casefold() in ('true', 'false', 'null', 'yes', 'no', 'on', 'off', 'nan', 'inf')
+                or token.startswith(('?', '@', '%'))):
+            raise ValueError('Unsupported plain scalar')
+        return token
+
+    def field(line):
+        match = re.fullmatch(r'([A-Za-z_][A-Za-z0-9_]*):(?: (.*))?', line)
+        if not match:
+            raise ValueError('Expected mapping field')
+        return match.group(1), match.group(2)
+
+    def mapping(at, indent, first=None):
+        result = {}
+        if first is not None:
+            key, value = field(first)
+            if value is None:
+                if at >= len(lines) or lines[at][0] != indent + 2:
+                    raise ValueError('Missing nested value')
+                result[key], at = node(at, indent + 2)
+            else:
+                result[key] = scalar(value)
+        while at < len(lines) and lines[at][0] == indent and not lines[at][1].startswith('- '):
+            key, value = field(lines[at][1])
+            if key in result:
+                raise ValueError('Duplicate YAML key')
+            at += 1
+            if value is None:
+                if at >= len(lines) or lines[at][0] != indent + 2:
+                    raise ValueError('Missing nested value')
+                result[key], at = node(at, indent + 2)
+            else:
+                result[key] = scalar(value)
+        return result, at
+
+    def node(at, indent):
+        if at >= len(lines) or lines[at][0] != indent:
+            raise ValueError('Unexpected indentation')
+        if lines[at][1].startswith('- '):
+            result = []
+            while at < len(lines) and lines[at][0] == indent and lines[at][1].startswith('- '):
+                item = lines[at][1][2:]
+                at += 1
+                if re.match(r'[A-Za-z_][A-Za-z0-9_]*:', item):
+                    value, at = mapping(at, indent + 2, item)
+                else:
+                    value = scalar(item)
+                result.append(value)
+            return result, at
+        return mapping(at, indent)
+
+    value, end = node(0, 0)
+    if end != len(lines) or set(value) != {'issue_closeout_review'}:
+        raise ValueError('Extra or ambiguous YAML content')
+    return value
+
+
+def standalone_closeout_fences(body, languages, *, reject_html_tags=False):
+    """Yield visible top-level format fences with exact-canonical status."""
+    if (reject_html_tags and re.search(
+            r'(?i)<\s*(?:[!?]|/?\s*[A-Za-z][A-Za-z0-9-]*(?:\s|/?>))', body)):
+        return
+    lines = body.splitlines()
+    opening = None
+    in_html_comment = False
+    start = 0
+    for index, line in enumerate(lines):
+        if opening is None:
+            if in_html_comment:
+                if '-->' in line:
+                    in_html_comment = False
+                continue
+            if '<!--' in line:
+                if '-->' not in line.split('<!--', 1)[1]:
+                    in_html_comment = True
+                continue
+        fence = re.fullmatch(r' {0,3}(`{3,}|~{3,})(.*)', line)
+        if opening is None:
+            if fence:
+                opening = fence.group(1)
+                start = index + 1
+                info = fence.group(2).strip()
+                relevant = info.casefold() in languages
+                canonical = line.startswith('```') and len(opening) == 3 and info in languages
+            continue
+        if (fence and fence.group(1)[0] == opening[0]
+                and len(fence.group(1)) >= len(opening) and not fence.group(2).strip()):
+            if relevant:
+                yield '\n'.join(lines[start:index]), canonical
+            opening = None
+
+
+def visible_unfenced_prose(body):
+    """Remove top-level Markdown fence content before checking draft labels."""
+    opening = None
+    prose = []
+    for line in body.splitlines():
+        fence = re.fullmatch(r' {0,3}(`{3,}|~{3,})(.*)', line)
+        if opening is None:
+            if fence:
+                opening = fence.group(1)
+            else:
+                prose.append(line)
+        elif (fence and fence.group(1)[0] == opening[0]
+              and len(fence.group(1)) >= len(opening)
+              and not fence.group(2).strip()):
+            opening = None
+    return '\n'.join(prose)
+
+
+def standalone_yaml_blocks(body):
+    for block, canonical in standalone_closeout_fences(
+            body, ('yaml', 'yml'), reject_html_tags=True):
+        if canonical:
+            yield block
+
+
+def mixed_closeout_formats(body):
+    """A single comment cannot assert both JSON and YAML closeout authority."""
+    json_marker = any('issue_closeout_review' in block for block, _ in
+                      standalone_closeout_fences(body, ('json',), reject_html_tags=True))
+    yaml_marker = any('issue_closeout_review' in block for block, _ in
+                      standalone_closeout_fences(body, ('yaml', 'yml'), reject_html_tags=True))
+    return json_marker and yaml_marker
 
 
 def yaml_closeout_candidate(body):
-    """Find a fenced pointer, not a parsed or shape-checked YAML closeout."""
-    for match in re.finditer(r'(?ms)^```(?:yaml|yml)[ \t]*\n(.*?)^```[ \t]*$', body):
-        lines = [line for line in match.group(1).splitlines()
+    """Find a standalone fenced pointer, not a parsed or shape-checked closeout."""
+    for block in standalone_yaml_blocks(body):
+        lines = [line for line in block.splitlines()
                  if line.strip() and not line.lstrip().startswith('#')]
         if lines and lines[0].startswith('issue_closeout_review:'):
             return True
     return False
 
 
+def yaml_closeout_shape(body, issue_url):
+    if mixed_closeout_formats(body):
+        return False
+    markers = [block for block in standalone_yaml_blocks(body)
+               if re.search(r'(?m)^issue_closeout_review:', block)]
+    if len(markers) != 1:
+        return False
+    try:
+        value = parse_closeout_yaml_subset(markers[0])
+    except (ValueError, TypeError, json.JSONDecodeError):
+        return False
+    return substantive_closeout_shape(value['issue_closeout_review'], issue_url)
+
+
 def final_closeout_flags(body, issue):
     """Keep JSON shape evidence distinct from unverified YAML candidates."""
-    if (issue['state'] != 'closed'
-            or re.search(r'(?im)^#{1,6}[ \t]+issue closeout review[^\n]*\bdraft\b', body)):
-        return False, False
-    return json_closeout_shape(body, issue['html_url']), yaml_closeout_candidate(body)
+    if issue['state'] != 'closed':
+        return False, False, False
+    prose = visible_unfenced_prose(body)
+    def draft_banner(line):
+        line = line.strip()
+        while True:
+            stripped = re.sub(r'^(?:#{1,6}[ \t]+|>[ \t]*|[-*+][ \t]+|⚠️?[ \t]*)', '', line)
+            if stripped == line:
+                break
+            line = stripped
+        # Only a label about this closeout is disqualifying. Free prose about
+        # rejected draft designs or artifact publication is not that label.
+        return bool(
+            re.match(r'(?i)^(?:unposted|unfinalized)[ \t]+draft'
+                     r'(?:[ \t]+(?:closeout|review)\b|[ \t]*[-—–:.,!(/]|[ \t]*$)', line)
+            or re.match(r'(?i)^do not[ \t]+(?:post|close|publish)[ \t]*[-—–:]'
+                        r'[ \t]*draft\b', line)
+            or (re.match(r'(?i)^wip\b', line) and re.search(r'(?i)\bdraft\b', line))
+            or re.match(r'(?i)^issue closeout review[^\n]*\bdraft\b', line)
+            or re.match(r'(?i)^(?:\*\*)?status[ \t]*[:—–-](?:\*\*)?[ \t]*'
+                        r'(?:\*\*)?draft\b', line)
+            or re.match(r'(?i)^(?:\[|\*{1,3})?draft(?:\]|\*{1,3})?'
+                        r'(?:[ \t]+(?:closeout|review)\b(?:[ \t]+review\b)?)?'
+                        r'(?:[ \t]*$|[ \t]*[-—–:.,!(/]'
+                        r'|[ \t]+do not[ \t]+(?:post|close|publish)\b)', line)
+            or re.match(r'(?i)^this (?:closeout|review) is a[ \t]+draft\b', line)
+            or re.match(r'(?i)^this is a[ \t]+draft'
+                        r'(?:[ \t]+(?:closeout|review)\b|[ \t]*[-—–:.,!]|[ \t]*$)', line))
+    explicit_draft = any(draft_banner(line) for line in prose.splitlines())
+    json_review = checked_json_closeout(body, issue['html_url']) if not explicit_draft else None
+    json_checked = (json_review is not None and not draft_banner(
+        json_review['decision_analysis']['decision_made']))
+    if explicit_draft:
+        return json_checked, False, False
+    candidate = yaml_closeout_candidate(body)
+    def yaml_draft_marker(block):
+        for line in block.splitlines():
+            stripped = line.strip()
+            if stripped.startswith('#') and draft_banner(stripped[1:].strip()):
+                return True
+            # A draft label in the primary decision marks an unposted review.
+            # Rejected alternatives and reasons may legitimately describe a
+            # draft closeout; scanning every scalar would erase that history.
+            scalar = re.match(r'^\s*decision_made:\s*(.*)$', line)
+            if scalar and draft_banner(scalar.group(1).strip().strip('"\'')):
+                return True
+        return False
+    if candidate and any(yaml_draft_marker(block)
+                         for block in standalone_yaml_blocks(body)
+                         if re.search(r'(?m)^issue_closeout_review:', block)):
+        return json_checked, False, False
+    yaml_checked = candidate and yaml_closeout_shape(body, issue['html_url'])
+    return json_checked, yaml_checked, candidate and not yaml_checked
 
 
 def index_snapshots(snapshots):
@@ -597,7 +870,8 @@ def index_snapshots(snapshots):
         comment_flags = {c['html_url']: final_closeout_flags(c['body'], issue)
                          for c in snapshot['comments']}
         json_closeout_urls = [link for link, flags in comment_flags.items() if flags[0]]
-        yaml_candidate_urls = [link for link, flags in comment_flags.items() if flags[1]]
+        yaml_closeout_urls = [link for link, flags in comment_flags.items() if flags[1]]
+        yaml_candidate_urls = [link for link, flags in comment_flags.items() if flags[2]]
         entries = [(issue['html_url'], issue['body'], 'issue')]
         entries += [(c['html_url'], c['body'], 'comment') for c in snapshot['comments']]
         for item in snapshot['prs']:
@@ -618,15 +892,17 @@ def index_snapshots(snapshots):
             unresolved_shorthand = sorted('#' + n for n in shorthand
                                           if (repository_key, n) not in known)
             if kind == 'issue':
-                refs.update(json_closeout_urls)
+                refs.update(json_closeout_urls + yaml_closeout_urls)
             issue_comment = kind == 'comment' and link.startswith(issue['html_url'] + '#issuecomment-')
-            json_checked, yaml_candidate = comment_flags.get(link, (False, False)) if issue_comment else (False, False)
+            json_checked, yaml_checked, yaml_candidate = comment_flags.get(link, (False, False, False)) if issue_comment else (False, False, False)
             nodes[link] = dict(url=link, kind=kind, body=body, links=sorted(refs - {link}),
                                unresolved_shorthand_refs=unresolved_shorthand,
                                json_closeout_shape_checked=json_checked,
+                               yaml_closeout_shape_checked=yaml_checked,
                                candidate_unverified_yaml=yaml_candidate,
                                candidate_closeout_urls=sorted(yaml_candidate_urls) if kind == 'issue' else [],
                                json_closeout_urls=sorted(json_closeout_urls) if kind == 'issue' else [],
+                               yaml_closeout_urls=sorted(yaml_closeout_urls) if kind == 'issue' else [],
                                issue_state=issue['state'] if kind == 'issue' else None,
                                container_issue_url=issue['html_url'] if issue_comment else None,
                                source=snapshot['source'], captured_at=snapshot['captured_at'])
@@ -642,24 +918,65 @@ def candidate_pointer(node):
 def search(snapshots, query):
     words(query, 'query')
     nodes = index_snapshots(snapshots)
+    def query_in_decisions(review):
+        analysis = review['decision_analysis']
+        values = [analysis.get('decision_made'), analysis.get('why_this_path')]
+        for item in analysis.get('rejected_paths', []):
+            if type(item) is dict:
+                values.extend((item.get('path'), item.get('reason')))
+        signal = analysis.get('reusable_signal')
+        if type(signal) is dict:
+            values.append(signal.get('reason'))
+        for item in review['decisions']:
+            if type(item) is dict:
+                values.extend((item.get('decision'), item.get('reason'),
+                               item.get('reusable_rule')))
+                for field in ('applies_when', 'does_not_apply_when', 'evidence'):
+                    entries = item.get(field)
+                    if type(entries) is list:
+                        values.extend(entries)
+        return any(query.casefold() in value.casefold()
+                   for value in values if type(value) is str)
+
+    def query_in_closeout(node):
+        if node['json_closeout_shape_checked']:
+            review = checked_json_closeout(node['body'], node['container_issue_url'])
+            return review is not None and query_in_decisions(review)
+        if node['yaml_closeout_shape_checked']:
+            block = next((item for item in standalone_yaml_blocks(node['body'])
+                          if re.search(r'(?m)^issue_closeout_review:', item)), None)
+            if block is None:
+                return False
+            try:
+                parsed = parse_closeout_yaml_subset(block)
+            except (ValueError, TypeError, json.JSONDecodeError):
+                return False
+            return query_in_decisions(parsed['issue_closeout_review'])
+        return query.casefold() in node['body'].casefold()
+
     selected = [node for node in nodes.values() if node['kind'] == 'comment'
-                and query.casefold() in node['body'].casefold()]
+                and query_in_closeout(node)]
     matches = [dict(url=node['url'], kind='comment', excerpt=node['body'][:280],
-                    evidence_class='json_shape_checked', source=node['source'],
+                    evidence_class=('json_shape_checked' if node['json_closeout_shape_checked']
+                                    else 'yaml_subset_shape_checked'), source=node['source'],
                     captured_at=node['captured_at'])
-               for node in selected if node['json_closeout_shape_checked']]
+               for node in selected if node['json_closeout_shape_checked'] or node['yaml_closeout_shape_checked']]
     candidates = [candidate_pointer(node) for node in selected if node['candidate_unverified_yaml']]
     result = envelope('warning' if candidates else 'pass', matches=matches,
                       candidates=candidates,
                       search_scope='One selected snapshot per issue and one observation per PR; closed-issue '
-                      'duplicate-free JSON shape matches and unverified fenced YAML candidate pointers; '
+                      'one visible canonical JSON and strict YAML-subset decision-field shape matches, '
+                      'plus unverified fenced YAML candidates; '
                       'no repository scan or truth check')
-    result['not_checked'].append('YAML syntax, self-declared issue identity, or decision substance')
+    result['mechanically_checked'] = ['supplied snapshot shape', 'single selected observation per issue and PR',
+        'closed-issue single visible canonical JSON closeout shape',
+        'strict YAML-subset closeout shape and matching issue identity', 'case-insensitive query match']
+    result['not_checked'].append('closeout decision substance and cited evidence authenticity')
     if candidates:
         result['domain_result'] = 'incomplete'
         result['derived_state'] = 'incomplete'
         result['findings'] = [dict(code='WF_YAML_CANDIDATE_UNVERIFIED', field='candidates',
-            reason='Fenced YAML closeout pointers were found but not parsed or shape-checked', blocking=False)]
+            reason='Fenced YAML closeout pointers failed strict subset parsing, shape checks, or the single-format requirement', blocking=False)]
     return result
 
 
@@ -680,15 +997,20 @@ def trace(snapshots, start, max_hops=5):
             unresolved.append(link)
             continue
         node = nodes[link]
-        found.append(dict(url=link, kind=node['kind'], hops=depth, links=node['links'],
-                          unresolved_shorthand_refs=node['unresolved_shorthand_refs'], source=node['source']))
+        entry = dict(url=link, kind=node['kind'], hops=depth, links=node['links'],
+                     unresolved_shorthand_refs=node['unresolved_shorthand_refs'], source=node['source'])
+        if node['json_closeout_shape_checked'] or node['yaml_closeout_shape_checked']:
+            entry['evidence_class'] = ('json_shape_checked' if node['json_closeout_shape_checked']
+                                       else 'yaml_subset_shape_checked')
+        found.append(entry)
         for candidate_url in node['candidate_closeout_urls']:
             if candidate_url in nodes:
                 candidates[candidate_url] = candidate_pointer(nodes[candidate_url])
         if node['candidate_unverified_yaml']:
             candidates[link] = candidate_pointer(node)
         if (node['kind'] == 'issue' and node['issue_state'] == 'closed'
-                and not node['json_closeout_urls'] and not node['candidate_closeout_urls']):
+                and not node['json_closeout_urls'] and not node['yaml_closeout_urls']
+                and not node['candidate_closeout_urls']):
             closeout_not_found.add(link)
         unresolved_shorthand.update(node['unresolved_shorthand_refs'])
         if depth < max_hops:
@@ -702,10 +1024,14 @@ def trace(snapshots, start, max_hops=5):
                     candidates=[candidates[key] for key in sorted(candidates)],
                     closeout_not_found=sorted(closeout_not_found),
                     trace_scope='One selected snapshot per issue and one observation per PR; linked evidence only; '
-                    'JSON shape-checked closeout edges and separate unverified YAML candidate pointers; visited closed issues '
+                    'JSON and strict YAML-subset shape-checked closeout edges, plus unverified YAML candidates; visited closed issues '
                     'without either are incomplete; a pass does not prove complete history; unresolved '
                     'shorthand is not guessed to be an issue or PR')
-    result['not_checked'].append('YAML syntax, self-declared issue identity, or decision substance')
+    result['mechanically_checked'] = ['supplied snapshot shape', 'single selected observation per issue and PR',
+        'durable URL links', 'closed-issue JSON and strict YAML-subset shape-checked closeout edges',
+        'separate unverified YAML candidate URLs', 'visited closed-issue closeout presence',
+        'known-snapshot shorthand links', 'bounded traversal and unresolved references']
+    result['not_checked'].append('closeout decision substance and cited evidence authenticity')
     if incomplete:
         result['domain_result'] = 'incomplete'
         result['derived_state'] = 'incomplete'
@@ -715,11 +1041,11 @@ def trace(snapshots, start, max_hops=5):
                 blocking=False))
         if candidates:
             result['findings'].append(dict(code='WF_YAML_CANDIDATE_UNVERIFIED', field='candidates',
-                reason='YAML candidate URLs are visible but cannot form a shape-checked decision-tree edge',
+                reason='YAML candidate URLs failed strict subset parsing, shape checks, or the single-format requirement and form no checked edge',
                 blocking=False))
         if closeout_not_found:
             result['findings'].append(dict(code='WF_CLOSEOUT_NOT_FOUND', field='closeout_not_found',
-                reason='A visited closed issue has no supplied JSON shape-checked closeout or YAML candidate; '
+                reason='A visited closed issue has no supplied shape-checked closeout or YAML candidate; '
                 'legacy prose or an omitted snapshot may still exist', blocking=False))
     return result
 
@@ -919,9 +1245,9 @@ def run(args):
                                'controller-supplied provenance and bounded card fields'],
                 'search': ['supplied snapshot shape', 'single selected observation per issue and PR',
                            'closed-issue duplicate-free JSON closeout shape',
-                           'fenced YAML candidate marker without syntax validation', 'case-insensitive query match'],
+                           'strict YAML-subset closeout shape and matching issue identity', 'case-insensitive query match'],
                 'trace': ['supplied snapshot shape', 'single selected observation per issue and PR', 'durable URL links',
-                          'closed-issue JSON shape-checked closeout edge',
+                          'closed-issue JSON and strict YAML-subset shape-checked closeout edges',
                           'separate unverified YAML candidate URLs',
                           'visited closed-issue closeout presence', 'known-snapshot shorthand links',
                           'bounded traversal and unresolved references'],
