@@ -299,13 +299,13 @@ release_history_boundary:
 
 ```yaml
 current_release_reference:
-  latest_completed_release: "ASGK v1.7.3"
-  latest_completed_tag: v1.7.3
-  release_issue: "#321"
-  release_url: https://github.com/stereosurfer/agent-safe-dev-governance-kit/releases/tag/v1.7.3
+  latest_completed_release: "ASGK v3.0.0"
+  latest_completed_tag: v3.0.0
+  release_issue: "#412"
+  release_url: https://github.com/stereosurfer/agent-safe-dev-governance-kit/releases/tag/v3.0.0
   source_of_truth_for_history: "GitHub releases, release issues, PRs, MDRs, comments, tags, and merge commits"
   validation_for_freshness:
-    - python3 scripts/asgk.py release-state-check --tag v1.7.3 --release-title "ASGK v1.7.3"
+    - python3 scripts/asgk.py release-state-check --tag v3.0.0 --release-title "ASGK v3.0.0"
     - python3 scripts/asgk.py doctor
 ```
 
