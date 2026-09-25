@@ -4,7 +4,7 @@ This is the repository recovery snapshot. It is overwritten, not appended.
 Completed-work history and decision detail belong in GitHub issues, PRs,
 comments, releases, and merge commits.
 
-Last updated: `2026-09-24T19:31:21Z`
+Last updated: `2026-09-25T03:35:41Z`
 
 ## Durable source of truth
 
@@ -27,9 +27,9 @@ examples are not live-work proof.
 Eleven root Skills are synthesized under #405; `v3/skills/` is candidate
 history. Resolve live refs; #323 is prior 2.0 evidence, not current routing.
 
-Target-owned [context-defogger #8](https://github.com/stereosurfer/context-defogger/issues/8)
-completed read-only assessment: minimum change, not adoption or write authority.
-Cold human handoff and the no-Hermes website case remain unproved.
+Target-owned [context-defogger #8](https://github.com/stereosurfer/context-defogger/issues/8) completed read-only minimum-change assessment, not adoption or write authority.
+[#407](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/407) closed an OWNER-authorized no-history AI cold-read; unfamiliar-human, cross-provider, and complete-graph proof remain absent.
+Target-owned [little-q #1](https://github.com/stereosurfer/little-q-rock-museum/issues/1) completed one reviewed, fictional public content cycle; recurring automation and future-run authority remain unproved.
 
 The product boundary is safe, smooth, traceable handoff between people and AI.
 The handoff remains independent of a specific model, provider, agent, or prior
@@ -59,7 +59,7 @@ issue: "#372 ASGK 3.0 source-only release program"
 pr: none
 branch: main
 state: active_program
-next_work_unit_decision: "Reconcile live #372 child and PR state; choose one exact-scope unit. The read-only target pilot is complete; finish cold handoff and no-Hermes website evidence before release audit."
+next_work_unit_decision: "Under #372, audit current source/target claims and release gates, freeze only a verified candidate SHA, then seek a separate exact-SHA human-approved release issue. Do not redo #407 or the one-cycle website pilot."
 ```
 
 ## Current validation entrypoint
@@ -96,12 +96,10 @@ model cache, or external preparation outputs are authorized by this status.
 
 ## Next safe action
 
-Continue under #372 from current `main`; inspect live PRs and child issues
-before selecting one bounded unit. Finish cold human handoff and no-Hermes
-website evidence, then audit and approve the release at its exact SHA. The
-read-only pilot does not authorize target edits. Only the selected issue or
-PR supplies scope; status, unpromoted `v3/` material, old plans and chat do not.
-Do not read the excluded visual guide.
+Under #372, reconcile live PRs, audit #407 and little-q evidence at their
+actual limits, then freeze a verified SHA and seek separate human release
+approval. This status authorizes no target edit, tag, or release; only a
+selected issue/PR grants scope. Do not read the excluded visual guide.
 
 ```yaml
 reference_scope:
