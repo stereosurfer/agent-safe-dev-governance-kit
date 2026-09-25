@@ -4,7 +4,7 @@ This is the repository recovery snapshot. It is overwritten, not appended.
 Completed-work history and decision detail belong in GitHub issues, PRs,
 comments, releases, and merge commits.
 
-Last updated: `2026-09-25T03:35:41Z`
+Last updated: `2026-09-25T04:23:05Z`
 
 ## Durable source of truth
 
@@ -19,8 +19,10 @@ Last updated: `2026-09-25T03:35:41Z`
 
 ## Current snapshot
 
-ASGK v1.7.3 remains the latest completed source-only GitHub release under the
-Apache-2.0 license. Issue #372 coordinates the active ASGK 3.0 release program.
+ASGK v3.0.0 is the latest completed [source-only GitHub release](https://github.com/stereosurfer/agent-safe-dev-governance-kit/releases/tag/v3.0.0)
+under the Apache-2.0 license. [#412](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/412)
+records exact-commit OWNER approval and publication readback. Issue #372
+records ASGK 3.0 program closeout; release alone does not close it.
 Root navigation, control, workflow and optional catalog cutovers are current;
 `doctor` runs root-owned regressions. Target templates are optional, and Stage 3
 examples are not live-work proof.
@@ -37,16 +39,9 @@ chat. People may replace the worker; the durable work unit tells the successor
 what to do, where to do it, what not to do, what is forbidden, what evidence
 exists, and what comes next.
 
-The source contract has one 13-field work-unit identity and two execution gates.
-Task packets can narrow an issue but cannot replace it. Retained JSON validators
-use one evidence envelope with explicit checked and unchecked claims, stable
-finding codes, human-gate state, and a proof boundary. `doctor`, `validate`, and
-the negative suite use the retained scenario registry and source-validation
-engine.
-
-`target-evidence-check` checks only caller-supplied path and literal-text claims
-against an arbitrary target layout. A matching claim never proves target fit,
-governance depth, recommendation, approval, or readiness.
+The core issue contract has 13 task fields and two execution gates; task
+packets may narrow but not replace an issue. Validators report bounded
+mechanical evidence, never target fit, approval, or readiness.
 
 Superseded planning material is not current product authority. Completed source
 work and its accepted or rejected decisions are indexed from #372 and child
@@ -55,11 +50,12 @@ issue close-outs, not repeated in this recovery snapshot.
 ## Active work
 
 ```yaml
-issue: "#372 ASGK 3.0 source-only release program"
+program_issue: "#372 ASGK 3.0 source-only release program (verify live state)"
+issue: none
 pr: none
 branch: main
-state: active_program
-next_work_unit_decision: "Under #372, audit current source/target claims and release gates, freeze only a verified candidate SHA, then seek a separate exact-SHA human-approved release issue. Do not redo #407 or the one-cycle website pilot."
+state: released
+next_work_unit_decision: "Consult live #372: if milestone closure remains open, seek OWNER decision; otherwise start new work only from a new scoped issue. Do not redo completed pilots."
 ```
 
 ## Current validation entrypoint
@@ -96,10 +92,10 @@ model cache, or external preparation outputs are authorized by this status.
 
 ## Next safe action
 
-Under #372, reconcile live PRs, audit #407 and little-q evidence at their
-actual limits, then freeze a verified SHA and seek separate human release
-approval. This status authorizes no target edit, tag, or release; only a
-selected issue/PR grants scope. Do not read the excluded visual guide.
+Consult live #372 for release-state and milestone-closeout disposition. If
+closure remains open, seek the separate OWNER decision; if closed, start any
+new work from a new scoped issue. This status authorizes no target edit, new
+tag, release edit or program closure. Do not read the excluded visual guide.
 
 ```yaml
 reference_scope:

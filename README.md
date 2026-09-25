@@ -69,10 +69,10 @@ separate responsibilities.
 
 ## Product Shape
 
-The latest release is source-only. This repository's root entrypoints remain
-current-main governance while [the 3.0 program](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/372)
-integrates and tests the remaining non-default candidate material under
-[`v3/`](v3/README.md). The GitHub work-projection workflow is owned by
+ASGK v3.0.0 is the latest source-only release. This repository's root
+entrypoints are the released governance surface; remaining non-default
+material under [`v3/`](v3/README.md) is candidate/history, not a second
+authority. The GitHub work-projection workflow is owned by
 `scripts/asgk_lib/github_workflow.py` and exposed through
 `python3 scripts/asgk.py workflow --help`; `v3/asgk3.py` is a compatibility
 entry, not a second implementation:
@@ -112,7 +112,8 @@ used an independent no-history AI substitute with OWNER approval and recovered a
 bounded accepted/rejected decision path. It was not an unfamiliar-human or
 cross-provider test and did not prove a complete workflow graph. The no-Hermes
 site pilot likewise proves one reviewed and published cycle, not a schedule.
-Neither result by itself authorizes the 3.0 release.
+These bounded results are part of the [3.0 release decision](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/412),
+not proof of the untested capabilities named above.
 
 Skills are not a new authority layer or a substitute for model judgment. They
 direct attention to relevant evidence, safety boundaries, uncertainty, and stop
@@ -288,29 +289,20 @@ that remains human-gated.
 
 ## Current Release State
 
-ASGK v1.7.3 is the latest completed source-only GitHub release under the
-Apache-2.0 license.
-
-v1.7.3 is a v1.x PR-readiness fallback patch release. It keeps the v1.7.2
-source-local boundary baseline and tightens ASGK Skills so target repositories
-without the source-repo `check-pr` command can record that command as
-unavailable and use repository-local PR evidence instead. It remains a
-source-only GitHub release: no package, installer, runtime adapter, dependency,
-schema, workflow, repository visibility change, cloud/API/model lane, MCP
-change, or v2.0 work is included.
-
-The [ASGK 3.0 program](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/372)
-is active, but 3.0 is not released. The GitHub workflow portion of preview.1
-and optional metadata-only catalog are integrated into the public CLI and
-`doctor`. The existing root target navigation templates are optional references,
-not a required bundle; Stage 3 examples and their authority limits have been
-reviewed. Eleven source Skills have been synthesized under #405; the bounded
-[#407 cold handoff](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/407)
+ASGK v3.0.0 is the latest completed source-only GitHub release under the
+Apache-2.0 license. The [published release](https://github.com/stereosurfer/agent-safe-dev-governance-kit/releases/tag/v3.0.0)
+tag points to the exact approved source commit
+`f78f38154b0010f96062c1db1d1eddc2ec345012`; [release issue #412](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/412)
+holds the human approval, validation and publication readback. No package,
+installer, SaaS, runtime adapter or automatic Skill installation was published.
+The GitHub workflow projection, optional metadata-only catalog and eleven root
+source Skills are included. The bounded [#407 cold handoff](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/407)
 and target-owned [no-Hermes website pilot](https://github.com/stereosurfer/little-q-rock-museum/issues/1)
-are recorded with their limits. Final release readiness, exact-SHA approval,
-and post-release closeout remain. The former 2.0
-program and old runtime-adapter roadmaps are history, not instructions for the
-next work unit.
+remain evidence at their stated limits, not proof of recurring automation,
+human/cross-provider handoff or general Kanban integration. Milestone closure
+is recorded separately in [#372](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/372),
+not implied by the release. The former 2.0
+program and old runtime-adapter roadmaps are history, not current authority.
 
 ## What The Generic Core Does Not Supply
 
@@ -358,13 +350,13 @@ Bootstrap Kit v2.1
   = source lineage and template embryo
 
 ASGK v1.x
-  = latest released generic repo-governance line
+  = historical released generic repo-governance line
 
 ASGK v2.0
   = prior docs-driven evolution and retained historical evidence
 
 ASGK 3.0
-  = active release program with a non-default candidate, not yet published
+  = current v3.0.0 source-only release; program closure remains separate
 ```
 
 The lineage matters, but old roadmap labels are not current product authority.
