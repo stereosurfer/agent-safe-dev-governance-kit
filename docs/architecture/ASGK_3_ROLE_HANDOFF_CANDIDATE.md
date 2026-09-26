@@ -223,11 +223,13 @@ Hermes 同卡 `review` 與下游 QA 卡是兩種不同交接拓樸，實際工�
 
 量測時與現行 Codex＋GitHub 基線配對比較：取得授權至首次可編輯的 p50/p95 等待、治理閱讀與模型用量、重複完整閱讀次數、每單位協調／QA 往返次數；同時要求陌生接手者正確回答「做、去哪、不做、禁動、現有證據、下一步」，越權續做為零，且可在限定連結步數內找回決策。圖、模型會議或 validator pass 都不能替代這些實測。
 
-## v0.2 修訂圖：把會議缺口畫進責任與交接
+## v0.3 修訂圖：把 Subagent 分工與證據失效畫進交接
 
-v0.1 留在上方作為可追溯的比較基準。以下是待驗證的架構提案，不更改現行授權、合併或發布政策。圖中的「角色」是責任身分，不一定是不同的人或 Agent；低風險任務可由同一執行者兼任協調與領域工作，但不能把工作權威、檢查收據或渠道許可混成一項。
+v0.1 留在上方作為可追溯的比較基準；前一版 v0.2 保存在[此分支的起始 commit](https://github.com/stereosurfer/agent-safe-dev-governance-kit/blob/46b91fe06ba50b839fae9604761d2fd98dff8540/docs/architecture/ASGK_3_ROLE_HANDOFF_CANDIDATE.md)。以下仍是待驗證的架構提案，不更改現行授權、合併或發布政策。圖中的「角色」是責任身分，不一定是不同的人或 Agent；低風險任務可由同一執行者兼任協調與領域工作。Subagent 是短期執行方式，不是新權威或固定關卡。
 
-### 圖一（v0.2）：身分、權威與可選運行路徑
+這次 [Gatekeeper #1](https://github.com/stereosurfer/runtime-gatekeeper/issues/1#issuecomment-5843911371)／[草稿 PR #2](https://github.com/stereosurfer/runtime-gatekeeper/pull/2) 顯示另一種有用拓樸：主代理或專責協調者派出**單一寫入者**及**與寫入者分離的只讀冷審者**；執行者也可另派局部研究 Subagent。前兩者是兄弟角色，並非都掛在寫入者下面。獨立冷審依 issue 或風險才啟動，且不能批准合併；簡單的 Codex＋GitHub 工作依然可由同一執行者直達。Gatekeeper 的 Hermes 卡片曾在沒有成功 GitHub 讀取時宣稱已核對，故每項 `checked`、`done`、`pass` 都須區分模型主張、可讀的持久收據及實際來源／版次證據。這是一次有界觀察，不是成本改善或通用可靠性證明。
+
+### 圖一（v0.3）：身分、權威與可選運行路徑
 
 實線是可執行的交接或正式決定；虛線是提議、投影或證據回報，不會創設權限。紅色是有權決定的人／渠道，藍色是 GitHub 工作權威，紫色是可選的協調或派工，綠色是領域執行，灰色是機械收據，橙色是語意判斷。每個判斷節點都標出負責者。
 
@@ -248,14 +250,14 @@ flowchart TB
   end
 
   subgraph B["可選治理與派工｜不具授權權力"]
-    C["ASGK 協調者（人／Agent）｜跨期、跨角色、例外時讀治理並提出短卡／差異"]
-    K["Hermes Kanban｜可選持久卡；只派給已配置 Hermes Profile"]
+    C["協調／稽核者（人、主代理或專責 Subagent）｜跨期／跨角色時讀治理、派工、收束證據；不自行授權"]
+    K["Hermes Kanban｜可選持久卡；只提供卡片生命週期，不保證工作者有 GitHub 讀取能力"]
   end
 
   subgraph E["領域執行｜接手者每次 live read"]
-    W["Codex／人類直接工作者｜從 GitHub 直接核對權威並執行"]
-    HW["Hermes Profile 工作者｜接卡後仍核對 GitHub 權威與版本"]
-    S1["受支援時的短子任務｜摘要回父工作者；父工作者保存證據"]
+    W["人、Codex 主代理或單一 writer Subagent｜核對 GitHub、執行有界修改"]
+    HW["Hermes Profile 工作者｜接卡後須實際核對 GitHub；工具被拒則只報未知"]
+    S1["工作者的局部 Subagent｜研究／測試摘要回父工作者；不直接擴權"]
     S2["Group 持久討論｜責任人採錄結論；不自動寫入 GitHub"]
   end
 
@@ -263,6 +265,8 @@ flowchart TB
     I["領域／權利責任人（有相關變更或不確定時）｜判斷影響與可重用證據"]
     M["驗證器／CI｜受影響範圍的機械重檢及未檢項"]
     R["領域 QA（風險相稱）｜受影響產物的語意重檢"]
+    V["獨立冷審（可為只讀 Subagent，依 issue／風險）｜自行讀 current head、diff 與證據；不批准合併"]
+    B0["來源或收據不可核對｜接手者／稽核者標 unknown／blocked，不得稱已查或已完成"]
   end
 
   subgraph D["彼此獨立的交付邊界｜決定者"]
@@ -279,10 +283,17 @@ flowchart TB
   D0 -->|有權處置時記錄決策樹| G
   G -->|簡單工作：直接路徑，無必經協調者或 Hermes| W
   G -->|跨期／跨角色／例外：可選路徑| C
-  C -.->|不用 Hermes：短交接投影與 GitHub 連結| W
+  C -.->|不用 Hermes：可派單一 writer Subagent，短卡只是投影| W
+  C -.->|需要獨立冷審時另派只讀 Subagent；與 writer 分離| V
   C -.->|投影短卡：權威 URL／版次、做／去哪／不做／禁動、停止、來源／產物版、檢查與未檢、證據、下一步| K
   K -->|指定已配置 Profile；明列附件／持久位置| HW
   C -.->|差異提案；不能自行改權威| O
+  W -.->|實際讀取現行 issue／PR 與版本；留下可核對結果| G
+  HW -.->|獨立 live read；卡片連結或自述不是讀取收據| G
+  V -.->|只讀現行權威與 head，不沿用 writer 自評| G
+  W -.->|讀取失敗或只有投影| B0
+  HW -.->|工具拒絕或無來源收據| B0
+  B0 -.->|記 partial／blocked 與未檢項| G
   W -.->|局部任務| S1
   S1 -.->|摘要及限制| W
   HW -.->|僅 Hermes 預設運行環境支援 delegate_task 時| S1
@@ -291,6 +302,10 @@ flowchart TB
   HW -.->|可選持久討論| S2
   S2 -.->|結論先交責任工作者採錄| W
   S2 -.->|結論先交責任工作者採錄| HW
+  W -.->|確切產物、head 與未檢項；僅依需要| V
+  HW -.->|確切產物、head 與未檢項；僅依需要| V
+  V -.->|發現與限制回唯一寫入者；不得代寫| W
+  V -.->|若有協調者，回報可重用證據與未檢項| C
   W -->|日常適用檢查；不必經專責影響審查| M
   HW -->|日常適用檢查；不必經專責影響審查| M
   W -->|相關來源／權利／scope／head 變更或不確定| I
@@ -298,10 +313,14 @@ flowchart TB
   I -->|已知影響：工作者修訂後重檢| M
   I -->|需語意檢查時| R
   I -.->|未知／越權：停止並提請授權者決定| O
-  M -->|失敗：返工並重檢| W
+  M -->|授權範圍內可修：返工並重檢| W
+  M -->|由 Hermes 執行且範圍內可修：返工並重檢| HW
+  M -.->|範圍外、原因未知或重試耗盡：停止並記錄| G
   R -->|拒絕／修改：返工並重檢| W
+  R -->|由 Hermes 執行：受影響部分返工並重檢| HW
   M -.->|限定的檢查收據| J
   R -.->|風險相稱的語意結論| J
+  V -.->|獨立冷審結論及其未檢項；不是批准| J
   G -->|當前 head／scope／MDR| J
   O -.->|僅適用人類門檻時的當前 head 核准| J
   J -->|僅通過適用合併門檻| P
@@ -325,12 +344,12 @@ flowchart TB
   class C,K projection
   class T0,N,U,W,HW,S1,S2,P,X execution
   class M mechanical
-  class I,R semantic
+  class I,R,V,B0 semantic
 ```
 
-### 圖二（v0.2）：版次、檢查小迴圈與先合併後發布
+### 圖二（v0.3）：版次、Subagent 交接與先合併後發布
 
-此圖以一次**有實質變更**的工作為主；定期 no-op 在圖一入口即結束。圖中的責任人可為同一人，但每次移交都要留下可讀的權威、產物與未檢項。三次 M 接觸各有界：開工前只核對權威／輸入，產出後跑適用驗證，交付前輕量核對已宣告依賴與 head 是否仍新鮮；不是三次全套治理。Hermes 同卡 `request_review` 與「實作卡 `complete` 後由下游 QA 卡檢查」須在該工作選一種，不能把二者串成普遍必經步驟。Hermes implementer 與 reviewer 各依角色用 `complete`、`request_review`、`request_changes` 或 `block` 適當收束；卡片 `done`、PR required-check 收據都不是 ASGK 合併或發布權限。
+此圖以一次**有實質變更**的工作為主；定期 no-op 在圖一入口即結束。圖中的責任可由同一人兼任，也可由主代理派出相互獨立的 writer 與冷審 Subagent。協調者不必經；若使用 Subagent，唯一寫入者負責產物，冷審者只讀現行 GitHub 權威、確切 head 與 diff，不繼承寫入者的結論。開工身分核對隨工作者的 live read 一起做；現行工作要求機械檢查時仍照做，但不另設必經代理。產出後跑適用驗證；真正跨人交接、合併或公開前才輕量核對已宣告依賴與 head。Hermes 同卡 `request_review` 與「實作卡 `complete` 後由下游 QA 卡檢查」須在該工作選一種。卡片 `done`、PR required-check 收據及 Subagent 建議都不是合併或發布權限。
 
 ```mermaid
 sequenceDiagram
@@ -339,12 +358,14 @@ sequenceDiagram
   participant G as GitHub 現行工作權威
   actor D as Issue／PR 有權處置者（可與 W 同人）
   participant A as 獨立發布／補救工作授權紀錄
-  participant C as ASGK 協調者（可選）
+  participant C as 協調／稽核者（主代理或專責 Subagent，可選）
   participant K as Hermes Kanban／Profile（可選）
-  participant W as 領域工作者／父工作者
+  participant W as 領域工作者（人／主代理／單一 writer Subagent）
+  participant S as 工作者的局部 Subagent（可選）
   participant I as 領域／權利影響判斷者
   participant M as 驗證器／CI
   participant Q as 領域 QA（依風險）
+  participant V as 獨立冷審（可為只讀 Subagent，依 issue／風險）
   actor J as 合併決定者（依現行政策）
   actor H as 渠道 Owner
   participant P as 交付執行者
@@ -354,18 +375,32 @@ sequenceDiagram
   else 跨期、跨角色或例外：協調交接
     C->>G: 讀當前權威與必要治理；不全庫預設閱讀
     alt 不用 Hermes
-      C-->>W: 投影短交接與 GitHub 連結；不創設新權威
+      C-->>W: 派唯一 writer Subagent 或交主工作者；短卡不創設權威
+      opt issue／風險要求獨立冷審
+        C-->>V: 另派只讀 reviewer Subagent；與 writer 不共享修改權
+      end
     else 選用 Hermes
       C->>K: 建短卡：權威 URL／版次、做／去哪／不做／禁動、停止、版本、檢查／未檢、證據及下一步
       K->>W: 派已配置 Hermes Profile；交出卡片與附件／持久位置
-      Note over C,K: ready 卡卡住先診斷／修復派工、Profile、工作區；真有未解阻礙才記 blocked
+      Note over C,K: Kanban 給卡片生命週期，不保證 GitHub 工具可用；卡片卡住或工具被拒須明示
     end
   end
-  W->>G: 接手後 live read 現行權威；卡片／Group／子代理摘要不能替代
-  W->>M: 只核對開工權威與輸入基線身分；不預做產物檢查或冒稱權利判斷
+  W->>G: 實際讀現行權威並核對 scope／輸入基線；卡片或摘要不能替代
+  opt GitHub 實際回應且可核對
+    G-->>W: 來源內容與 revision／head；保留本次讀取結果
+  end
+  opt 現行工作要求機械化開工檢查
+    W->>M: 跑被要求的權威／輸入身分檢查；不是另派必經審查者
+    M-->>W: 列出已檢、失敗與未檢項
+  end
 
-  alt 不一致、未知或越權
-    M-->>W: 指明不一致與未檢項；停止受影響工作
+  alt 未實讀、GitHub 工具被拒或只有卡片投影
+    W->>G: 記讀取未完成與 unknown；不得標已核對
+    break 修復讀取能力並重新實讀前，不做受影響工作
+      W-->>C: 若有協調者，只回報工具／來源缺口，不請其代稱已查
+    end
+  else 已讀到來源，但版次不一致、範圍未知或越權
+    W->>G: 記來源、差異與受影響範圍；不得自行改權威
     W-->>O: 直接或經協調者提出差異；C 只能提案，不能自行擴張 scope
     alt 核准或改寫
       O->>G: 有權者記錄新範圍、限制及理由
@@ -375,7 +410,7 @@ sequenceDiagram
     else 未決
       O-->>W: 保持 blocked，未授權部分不得續做
     end
-  else 權威與版本一致
+  else 實際讀取且權威／版本一致
     opt 相關輸入／權利新引入、已變更或適用性不明
       W->>I: 製作前交來源身分與用途；由相應領域／權利責任人判斷
       I-->>W: 已確認可用；或權利未知／未准時僅可做不含真素材的占位草稿
@@ -383,13 +418,26 @@ sequenceDiagram
         W->>G: 留阻礙與權利決定位置；不得使用真實第三方素材或發布
       end
     end
-    W->>W: 製作有界產物；未清權利僅占位、不用真素材；採錄短任務／Group 結論與限制
-    loop 修訂受影響部分；通過、具證據 no-op 或停止才離開
-      W->>M: 跑適用路徑、測試、來源／產物版次檢查
-      M-->>W: pass／fail／未檢；失敗則修訂或停止
-      opt 風險要求領域檢查，且未選用後續 Kanban 同卡／下游 QA
-        W->>Q: 交確切產物與來源版；避免與 Kanban 審查重複
-        Q-->>W: 接受／改寫／未知；後兩者修訂重檢或停止
+    W->>W: 唯一寫入者製作有界產物；未清權利僅占位、不用真素材
+    opt 局部研究或測試可分派
+      W-->>S: 有界子任務與禁止事項；Subagent 不取得新路徑或合併權
+      S-->>W: 結果、實際來源與未檢項；由 W 採錄，不當成獨立核准
+    end
+    loop 只在授權範圍內返工；通過、具證據 no-op 或停止才離開
+      W->>M: 跑適用路徑、測試、來源／產物版次及專案聲明的副作用檢查
+      M-->>W: 各項 pass／fail／not_run 與證據限制
+      alt 通過且無未解必需檢查
+        opt 風險要求領域檢查，且未選用後續 Kanban 同卡／下游 QA
+          W->>Q: 交確切產物與來源版；避免與 Kanban 審查重複
+          Q-->>W: 接受／改寫／未知；後兩者修訂重檢或停止
+        end
+      else 可在既有 allowed paths 修復
+        W->>W: 只修受影響部分，下一輪重跑相應檢查
+      else 既有範圍外紅項、原因未知或重試耗盡
+        W->>G: 記失敗、未檢及 blocked；不擴路徑或把綠色子集合稱全通過
+        break 受影響工作停止，須由有權者決定後續範圍
+          W-->>O: 提出精確阻礙；不自行解禁
+        end
       end
     end
     opt 途中來源、術語、權利、scope 或 head 再變
@@ -420,35 +468,49 @@ sequenceDiagram
         W->>K: request_review，明列已存在的 scratch artifacts
         Note over K,Q: 卡片進 review；依配置由 reviewer Profile 或人類接手，不會自動產生結論
         Q->>K: reviewer 用 complete／request_changes／block 收束；PR-bound complete 須過已宣告的當前 head contract
-        W->>K: 責任工作者／協調者主動讀卡與附件收據，不假設原 worker 自動續跑
-        K-->>W: 接受收據才可交付；request_changes 重派實作者、修訂並重檢；未決／block 停止
       else 實作卡完成後接下游 QA 卡
         W->>K: complete，明列 artifacts；PR-bound 時先滿足宣告的當前 head completion contract
         K-->>Q: 僅預建且連好依賴的下游 QA 卡會 ready；配置的 QA Profile 再接手
         Q->>K: QA 工作者檢查並以相應動作收束；PR-bound complete 同樣檢查 contract
-        W->>K: 責任工作者／協調者主動讀下游 QA 卡與附件收據
-        K-->>W: 收到可接受的 QA 收據才可交付；失敗／未執行時停止
       else 無 Kanban 審查
         W->>K: complete，明列 artifacts；PR-bound complete 同樣先過 contract，真正外部阻礙才 block
       end
-      Note over K,W: 接手者／reviewer 讀回附件及持久位置；Kanban done 與 required-check 收據都不是 ASGK merge 權限
-    end
-    W->>M: 交付前輕量比對當前 head 與已宣告輸入依賴版次；只檢同一工作所需的 ID
-    alt 依賴或產物版本已變／不可確認
-      M-->>W: 舊收據失效或未知；停止交付
-      W->>I: 必要時判斷受影響部分並回到修訂／M／Q；不用全案重檢
-      break 新版次未通過適用重檢與授權前不得合併／發布
-        W->>G: 留新版次、失效證據與 blocked 理由
+      W->>K: 狀態轉換後主動讀回 comment、result、附件／持久位置及寫入時間
+      K-->>W: 傳回可見收據及 pending／缺損欄位；不證明 worker 主張為真
+      alt result／附件缺損、過早標 Checked，或無成功來源讀取支持
+        W->>G: 記 partial／blocked 與未核對主張；不能宣稱交接完成
+        break 收據或來源未補正前停止交付
+          W-->>C: 若有協調者，回報缺口；不得以卡片 done 越過
+        end
+      else 收據完成且主張在其時點有可核對來源
+        W->>G: 只記已核對的卡片收據與限制；仍無合併權
       end
-    else 版次仍一致
-      M-->>W: 限定的 freshness 收據與未檢項
+      Note over K,W: Kanban 提供生命週期，不保證 GitHub 工具或權限；done 與 required-check 收據不是 ASGK merge 權限
+    end
+    opt 真正跨人交接、合併或公開前的輕量 freshness 核對
+      W->>M: 只比對當前 head 與已宣告輸入依賴版次；不重跑全套治理
+      alt 依賴或產物版本已變／不可確認
+        M-->>W: 舊收據失效或未知；停止交付
+        W->>I: 必要時判斷受影響部分並回到修訂／M／Q；不用全案重檢
+        break 新版次未通過適用重檢與授權前不得合併／發布
+          W->>G: 留新版次、失效證據與 blocked 理由
+        end
+      else 版次仍一致
+        M-->>W: 限定的 freshness 收據與未檢項
+      end
+    end
+    opt issue 或風險要求獨立冷審（不等於每案固定第二人）
+      W->>V: 交現行 issue／PR、確切 head、diff、檢查證據與未檢項
+      V->>G: 自行讀當前權威與版本；不沿用 writer 自述
+      V-->>W: 回報發現、修訂範圍與證據限制；不批准合併
+      V->>G: 留可追溯冷審結論；後續 head 變動使此結論失效
     end
     W->>G: 記錄產物版本、證據位置、未檢項、提議的 disposition 與下一步；授權決定另由有權者記錄
     alt 有未解失敗／拒絕／改寫
       D->>G: 依當前 Issue／PR 權限記錄拒絕、改寫或 blocked 的理由與連結；不進入交付
     else 有權交付且當前版本仍一致
       opt PR 要合併（草稿可在此結束）
-        G->>J: 當前 head、MDR、機械／語意收據、適用人類門檻
+        G->>J: 精確 head、MDR、必需檢查逐項 pass／fail／not_run、冷審／語意限制及適用人類門檻
         alt 當前 head 通過現行政策及適用人類門檻
           J-->>P: 對此精確 head 准予合併；變更即須重新檢查／決定
           P->>G: 合併並讀回 GitHub 結果；失敗則 blocked，不假報結案
@@ -482,6 +544,17 @@ sequenceDiagram
     end
   end
 ```
+
+### v0.2 → v0.3：實跑後只修改責任與證據轉換
+
+| 實跑暴露的缺口 | v0.3 圖上處理 | 不擴張成什麼 |
+| --- | --- | --- |
+| Subagent 只被畫成寫入者的局部助手。 | C 可派唯一 writer 與另一路只讀 V；W 仍可派 S 做局部工作，直接路徑可無 C／V。 | 不要求每項工作三個 Agent，不讓審查 Subagent 自行改 scope 或批准合併。 |
+| Hermes 卡片宣稱讀過 GitHub，實際沒有成功讀取。 | W／HW 的現行來源讀取與 unknown／blocked 出口分開；可選 K 分支在狀態轉換後讀回 comment、result、附件與主張當時的來源。 | 不把工具軌跡變成所有人類或直接工作者的新通用稽核服務；#418 的成功也不能替這張卡背書。 |
+| 綠色子測試後仍有測試殘留，且範圍外既有 Clippy 紅項。 | M 只報各項 pass／fail／not_run；已授權修復才返工，範圍外／未知停止；專案宣告的副作用檢查納入適用驗證。 | 不把 Rust fixture 或進程掃描硬塞給網站、翻譯或影音任務；不以部分綠色稱全通過。 |
+| 草稿、交接、合併容易重複全套檢查。 | 開工核對隨實際來源讀取進行；機械開工檢查僅在當前工作要求時執行；freshness 只在真正交接、合併或公開前比對已宣告依賴。 | 不移除現行 ASGK 必需的驗證，也不宣稱本次已量到注意力或成本下降。 |
+
+以下 v0.1 → v0.2 表格與第二次會議是當時版本的**歷史記錄**；它們不會自動更新為 v0.3 的驗證結果。v0.3 的圖面可由 [#421](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/421) 評審，舊版仍可由上述固定 commit 讀回。
 
 ### v0.1 → v0.2 的可檢查修正
 
