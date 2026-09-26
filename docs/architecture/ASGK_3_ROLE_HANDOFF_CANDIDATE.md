@@ -517,6 +517,29 @@ Hermes 運行細節只屬可選分支：獨立 Codex CLI 不是現成 Kanban wor
 
 三例只支持有界的紙上冷接手與隔離檔案行為：代理能在明示限制下做局部修改或停止，且一處真實的圖面歧義被揭露並修正。它們**不**證明相對現行 3.0 的時間／token 優勢、真正 GitHub 接手、Hermes 卡片收據或外部發布安全；下一輪需有真實授權、可讀的來源／交付紀錄與可比較基線。
 
+## 真實唯讀交接：#416／#417 的有界證據
+
+這兩次測試使用真實 GitHub issue、隔離 Hermes board、既有 `default`／Luna Profile 與獨立 Codex 接手者；卡片是 issue 的投影，不是新授權。它們不改動本候選圖或現行政策，也不覆蓋上方歷史模擬記錄。
+
+| 測試 | 實際觀察與判定 | 尚未證明 |
+| --- | --- | --- |
+| [#416 首次 live smoke](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/416#issuecomment-5842432801) | 卡 `t_34a26c10` 確實派工並結束；worker 對 #415 虛構測試與真實交接未驗證的**語意判斷正確**，獨立接手者重讀 live 來源也同意。但結構化 `result` 是 `null`（完成事件 `result_len: 0`），普通卡片檢視缺來源連結、未檢項與下一步；須深入 run metadata／log 才能補看，故**角色交接收據失敗**，不能因 `done` 改稱通過。 | 可直接讀取的完整持久收據、穩定接手。 |
+| [#417 收據重測](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/417#issuecomment-5842574948) | 新卡 `t_e9a404b6` 有實質持久 comment 與非空 `result`（`result_len: 346`）；無前情接手者只用普通卡片／JSON 和 live GitHub 核對，不需 worker log。這是**小型唯讀收據與冷讀的窄幅通過**。但 worker 在 `kanban_complete` 寫入 result **之前**留言，當時卻已把「非空 result 持久存在」列為 Checked；後來的讀回通過不會抹去這項時間順序缺陷。 | 卡片自身的 live-read 證明、比較時間／token 成本、陌生真人接手、一般可靠性。 |
+
+兩次測試都未執行 repository 寫入、PR 審查、合併、部署或發布；下一輪收據應把「comment 已持久、result 待完成與讀回」和接手者驗證後的事實分開記錄。
+
+## 三例並行唯讀挑戰：#418 的有界證據
+
+[#418 彙總稽核](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/418#issuecomment-5842690682)記錄三張獨立 Hermes `default`／Luna 卡，分別由 Codex 協調，並由主代理讀回卡片、worker 操作證據及 live GitHub 來源。**三例均在各自限定範圍通過**：每張卡只跑一次、有實質持久 comment 與非空 result，完成後沒有回填；卡片仍只是 runtime 收據。
+
+| 注入情境 | 觀察到的有界結果 | 限制 |
+| --- | --- | --- |
+| A 正常收據，`t_7dd7e86c` | 正確分辨 #416 的收據失敗和 #417 的窄幅通過，也指出 #417 過早標 Checked；留下精確連結、檢查／未檢與下一步。 | 先前卡片結果沿用其 issue comment 證據，未重跑舊測試。 |
+| B 過期投影，`t_28096c28` | live 讀 #418 與分支 API，辨認當時候選 head `46b91fe06ba50b839fae9604761d2fd98dff8540`，拒絕把卡中舊的 `b533a9154762ec62d36f098fc91d9d58a7d1da3c` 當現行版。 | 只驗證該時點的 head 比對，不證明持續新鮮、內容正確或可合併。 |
+| C 缺損來源指標，`t_591917a9` | 不臆補卡中截斷的 `#issuecomment-`；回到 #418 `context_read_set` 所列完整 #416 comment URL，讀取並記錄解法與未檢項。 | 完整指標本就存在 issue 中，不是無指標的開放式來源搜尋。 |
+
+三位 worker 幾乎同時起跑，首個開始至最後完成為 **111 秒**，三者工作時間相加為 **242 秒**；這只觀察到並行重疊，沒有把 issue 準備、協調、審查、API 費用與直接 Codex 對照組納入，**不能宣稱端到端時間、token 或治理成本下降**。#418 沒測 repository 寫入／PR、合併、發布、陌生真人接手或一般可靠性。下一個小型 repo／PR 挑戰由 #419 限定範圍另行執行；其結果必須看該 PR 的現行 head、獨立審查與 CI，不可由這三張卡預支成功結論。本文件仍是非規範候選，不改現行 ASGK 授權或合併規則。
+
 ## 參考邊界
 
 - [ASGK 3.0 current README](https://github.com/stereosurfer/agent-safe-dev-governance-kit/blob/c73d965cd3f91a96cfd7a5ba94925d1aba226e92/README.md)
