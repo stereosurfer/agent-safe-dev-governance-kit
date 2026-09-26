@@ -517,6 +517,17 @@ Hermes 運行細節只屬可選分支：獨立 Codex CLI 不是現成 Kanban wor
 
 三例只支持有界的紙上冷接手與隔離檔案行為：代理能在明示限制下做局部修改或停止，且一處真實的圖面歧義被揭露並修正。它們**不**證明相對現行 3.0 的時間／token 優勢、真正 GitHub 接手、Hermes 卡片收據或外部發布安全；下一輪需有真實授權、可讀的來源／交付紀錄與可比較基線。
 
+## 真實唯讀交接：#416／#417 的有界證據
+
+這兩次測試使用真實 GitHub issue、隔離 Hermes board、既有 `default`／Luna Profile 與獨立 Codex 接手者；卡片是 issue 的投影，不是新授權。它們不改動本候選圖或現行政策，也不覆蓋上方歷史模擬記錄。
+
+| 測試 | 實際觀察與判定 | 尚未證明 |
+| --- | --- | --- |
+| [#416 首次 live smoke](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/416#issuecomment-5842432801) | 卡 `t_34a26c10` 確實派工並結束；worker 對 #415 虛構測試與真實交接未驗證的**語意判斷正確**，獨立接手者重讀 live 來源也同意。但結構化 `result` 是 `null`（完成事件 `result_len: 0`），普通卡片檢視缺來源連結、未檢項與下一步；須深入 run metadata／log 才能補看，故**角色交接收據失敗**，不能因 `done` 改稱通過。 | 可直接讀取的完整持久收據、穩定接手。 |
+| [#417 收據重測](https://github.com/stereosurfer/agent-safe-dev-governance-kit/issues/417#issuecomment-5842574948) | 新卡 `t_e9a404b6` 有實質持久 comment 與非空 `result`（`result_len: 346`）；無前情接手者只用普通卡片／JSON 和 live GitHub 核對，不需 worker log。這是**小型唯讀收據與冷讀的窄幅通過**。但 worker 在 `kanban_complete` 寫入 result **之前**留言，當時卻已把「非空 result 持久存在」列為 Checked；後來的讀回通過不會抹去這項時間順序缺陷。 | 卡片自身的 live-read 證明、比較時間／token 成本、陌生真人接手、一般可靠性。 |
+
+兩次測試都未執行 repository 寫入、PR 審查、合併、部署或發布；下一輪收據應把「comment 已持久、result 待完成與讀回」和接手者驗證後的事實分開記錄。
+
 ## 參考邊界
 
 - [ASGK 3.0 current README](https://github.com/stereosurfer/agent-safe-dev-governance-kit/blob/c73d965cd3f91a96cfd7a5ba94925d1aba226e92/README.md)
